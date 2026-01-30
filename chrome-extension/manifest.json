@@ -1,0 +1,59 @@
+{
+  "manifest_version": 3,
+  "name": "AutoReview AI - Review Reply Assistant",
+  "version": "1.0.0",
+  "description": "Generate AI-powered replies to Google, Facebook, and Yelp reviews with one click",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://www.google.com/*",
+    "https://business.google.com/*",
+    "https://www.facebook.com/*",
+    "https://business.facebook.com/*",
+    "https://www.yelp.com/*",
+    "https://www.tripadvisor.com/*",
+    "https://www.trustpilot.com/*",
+    "https://autoreview-ai.com/*",
+    "http://localhost:3000/*"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "background": {
+    "service_worker": "background/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.google.com/maps/*",
+        "https://business.google.com/*",
+        "https://www.facebook.com/*/reviews/*",
+        "https://business.facebook.com/*",
+        "https://www.yelp.com/*"
+      ],
+      "js": ["content/scraper.js"],
+      "css": ["content/styles.css"],
+      "run_at": "document_end"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["icons/*.png"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
