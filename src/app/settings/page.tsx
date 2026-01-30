@@ -253,7 +253,7 @@ export default function SettingsPage() {
             <CreditManager />
           )}
 
-          {/* AI Settings -->
+          {/* AI Settings */}
           {activeTab === 'ai' && (
             <div className="space-y-6">
               <h2 className="text-2xl font-semibold text-white mb-6">AI Configuration</h2>
