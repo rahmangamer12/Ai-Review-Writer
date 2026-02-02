@@ -159,8 +159,11 @@ export default function ConnectPlatformsPage() {
 
   // Load platforms on mount
   useEffect(() => {
-    const loaded = PlatformIntegrationManager.getPlatforms()
-    setPlatforms(loaded)
+    const loadPlatforms = async () => {
+      const loaded = await PlatformIntegrationManager.getPlatforms()
+      setPlatforms(loaded)
+    }
+    loadPlatforms()
   }, [])
 
   // Get selected platform data
@@ -347,7 +350,7 @@ export default function ConnectPlatformsPage() {
             </motion.div>
             <h2 className="text-3xl font-bold text-white mb-4">Call Scheduled!</h2>
             <p className="text-white/70 mb-6">
-              We'll send you a calendar invite within 24 hours with available time slots for your video call session.
+              We&apos;ll send you a calendar invite within 24 hours with available time slots for your video call session.
             </p>
             <div className="space-y-3">
               <motion.button
@@ -969,7 +972,7 @@ export default function ConnectPlatformsPage() {
 
                     {/* What's Included */}
                     <div className="glass-card border border-white/10 rounded-2xl p-6">
-                      <h3 className="text-lg font-semibold text-white mb-4">What's Included</h3>
+                      <h3 className="text-lg font-semibold text-white mb-4">Whats Included</h3>
                       <ul className="space-y-2">
                         {[
                           'Complete platform configuration',

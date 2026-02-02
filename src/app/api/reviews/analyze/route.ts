@@ -1,78 +1,189 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { longcatAI } from '@/lib/longcatAI';
+import { NextRequest, NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
+import { supabase } from '@/lib/supabase'
 
-export async function POST(request: NextRequest) {
+// GET - Analyze a single review or get review details
+export async function GET(req: NextRequest) {
   try {
-    const body = await request.json();
-    const { reviewText, rating, language = 'en' } = body;
-
-    if (!reviewText || typeof reviewText !== 'string') {
-      return NextResponse.json(
-        { error: 'Review text is required' },
-        { status: 400 }
-      );
+    const { userId } = await auth()
+    
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    console.log(`[Analyze API] Analyzing review: "${reviewText.substring(0, 50)}..."`);
+    const { searchParams } = new URL(req.url)
+    const reviewId = searchParams.get('id')
 
-    const [sentimentResult, deepAnalysis, languageResult] = await Promise.all([
-      longcatAI.analyzeSentiment(reviewText),
-      longcatAI.deepAnalyzeReview(reviewText),
-      language === 'auto' ? longcatAI.detectLanguage(reviewText) : Promise.resolve({ language, confidence: 1 })
-    ]);
+    if (!reviewId) {
+      return NextResponse.json({ error: 'Review ID required' }, { status: 400 })
+    }
 
-    const tone = sentimentResult.sentiment === 'negative' 
-      ? 'apologetic' 
-      : sentimentResult.sentiment === 'positive' 
-        ? 'enthusiastic' 
-        : 'friendly';
+    const { data: review, error } = await supabase
+      .from('reviews')
+      .select('*')
+      .eq('id', reviewId)
+      .eq('user_id', userId)
+      .single()
 
-    const responseResult = await longcatAI.generateReviewResponse(
-      reviewText,
-      rating || 3,
-      sentimentResult.sentiment,
-      tone
-    );
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
 
-    const result = {
-      sentiment: sentimentResult,
-      deep_analysis: deepAnalysis,
-      language: languageResult,
-      suggested_response: responseResult,
-      auto_approve: shouldAutoApprove(sentimentResult, rating, deepAnalysis.priority),
-      processing_time: new Date().toISOString(),
-    };
+    // Get reply if exists
+    const { data: reply } = await supabase
+      .from('replies')
+      .select('*')
+      .eq('review_id', reviewId)
+      .single()
 
-    console.log(`[Analyze API] Analysis complete - Sentiment: ${sentimentResult.sentiment}`);
-
-    return NextResponse.json({ success: true, data: result });
-
+    return NextResponse.json({ ...review, reply })
   } catch (error: any) {
-    console.error('[Analyze API Error]:', error);
-    return NextResponse.json(
-      { error: 'Failed to analyze review', details: error.message, success: false },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 }
 
-function shouldAutoApprove(sentiment: any, rating: number, priority: string) {
-  if (priority === 'urgent' || priority === 'high') {
-    return { approved: false, reason: 'High priority review requires human review', confidence: 0.9 };
+// POST - Create a new review
+export async function POST(req: NextRequest) {
+  try {
+    const { userId } = await auth()
+    
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await req.json()
+    const { 
+      content, 
+      rating, 
+      author_name, 
+      author_email,
+      platform = 'manual',
+      sentiment_label 
+    } = body
+
+    if (!content || !rating) {
+      return NextResponse.json({ error: 'Content and rating required' }, { status: 400 })
+    }
+
+    const { data: review, error } = await supabase
+      .from('reviews')
+      .insert({
+        user_id: userId,
+        review_text: content,
+        rating,
+        reviewer_name: author_name,
+        reviewer_email: author_email,
+        platform,
+        sentiment_label: sentiment_label || getSentimentFromRating(rating),
+        status: 'pending',
+      })
+      .select()
+      .single()
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json(review)
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
-  if (sentiment.sentiment === 'positive' && sentiment.confidence > 0.8 && rating >= 4) {
-    return { approved: true, reason: 'Positive review with high confidence', confidence: sentiment.confidence };
-  }
-  if (sentiment.sentiment === 'neutral' && sentiment.confidence > 0.9) {
-    return { approved: true, reason: 'Neutral review with very high confidence', confidence: sentiment.confidence };
-  }
-  return { approved: false, reason: 'Standard review requires human approval', confidence: sentiment.confidence };
 }
 
-export async function GET() {
-  return NextResponse.json({
-    status: 'Review Analysis API is running',
-    features: ['sentiment_analysis', 'deep_analysis', 'language_detection', 'response_generation'],
-    timestamp: new Date().toISOString()
-  });
+// PATCH - Update review status
+export async function PATCH(req: NextRequest) {
+  try {
+    const { userId } = await auth()
+    
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await req.json()
+    const { reviewId, status } = body
+
+    if (!reviewId || !status) {
+      return NextResponse.json({ error: 'Review ID and status required' }, { status: 400 })
+    }
+
+    // Verify review belongs to user
+    const { data: existing } = await supabase
+      .from('reviews')
+      .select('id')
+      .eq('id', reviewId)
+      .eq('user_id', userId)
+      .single()
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Review not found' }, { status: 404 })
+    }
+
+    const { data: review, error } = await supabase
+      .from('reviews')
+      .update({ status, updated_at: new Date().toISOString() })
+      .eq('id', reviewId)
+      .select()
+      .single()
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json(review)
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+// DELETE - Delete a review
+export async function DELETE(req: NextRequest) {
+  try {
+    const { userId } = await auth()
+    
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { searchParams } = new URL(req.url)
+    const reviewId = searchParams.get('id')
+
+    if (!reviewId) {
+      return NextResponse.json({ error: 'Review ID required' }, { status: 400 })
+    }
+
+    // Verify review belongs to user
+    const { data: existing } = await supabase
+      .from('reviews')
+      .select('id')
+      .eq('id', reviewId)
+      .eq('user_id', userId)
+      .single()
+
+    if (!existing) {
+      return NextResponse.json({ error: 'Review not found' }, { status: 404 })
+    }
+
+    // Delete replies first (cascade should handle this but being explicit)
+    await supabase.from('replies').delete().eq('review_id', reviewId)
+
+    // Delete review
+    const { error } = await supabase
+      .from('reviews')
+      .delete()
+      .eq('id', reviewId)
+
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 500 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 })
+  }
+}
+
+function getSentimentFromRating(rating: number): 'positive' | 'neutral' | 'negative' {
+  if (rating >= 4) return 'positive'
+  if (rating === 3) return 'neutral'
+  return 'negative'
 }
