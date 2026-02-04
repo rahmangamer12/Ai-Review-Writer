@@ -1,9 +1,13 @@
 'use client'
 
+'use client'
+
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import CreditManager from '@/components/CreditManager'
 import PageTransition from '@/components/transitions/PageTransition'
+import LocationPermission from '@/components/LocationPermission'
+import NotificationManager from '@/components/NotificationManager'
 
 interface Settings {
   autoApproval: boolean
@@ -122,6 +126,8 @@ export default function SettingsPage() {
         >
           <TabButton tab="general" label="General" icon="⚙️" />
           <TabButton tab="credits" label="Credits" icon="💎" />
+          <TabButton tab="notifications" label="Notifications" icon="🔔" />
+          <TabButton tab="location" label="Location" icon="📍" />
           <TabButton tab="ai" label="AI Settings" icon="🤖" />
           <TabButton tab="integrations" label="Integrations" icon="🔌" />
           <TabButton tab="advanced" label="Advanced" icon="🔧" />
@@ -251,6 +257,45 @@ export default function SettingsPage() {
           {/* Credits Tab */}
           {activeTab === 'credits' && (
             <CreditManager />
+          )}
+
+          {/* Notifications Tab */}
+          {activeTab === 'notifications' && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">🔔</span>
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-white">Notifications</h2>
+                  <p className="text-white/60">Manage your notification preferences</p>
+                </div>
+              </div>
+              <NotificationManager />
+            </div>
+          )}
+
+          {/* Location Tab */}
+          {activeTab === 'location' && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">📍</span>
+                </div>
+                <div>
+                  <h2 className="text-3xl font-bold text-white">Location Settings</h2>
+                  <p className="text-white/60">Manage your location preferences</p>
+                </div>
+              </div>
+              <LocationPermission 
+                onGranted={(location) => {
+                  console.log('Location granted:', location)
+                }}
+                onDenied={() => {
+                  console.log('Location denied')
+                }}
+              />
+            </div>
           )}
 
           {/* AI Settings */}

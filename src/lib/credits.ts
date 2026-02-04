@@ -191,11 +191,11 @@ export class CreditsManager {
     const featureAccess: Record<string, string[]> = {
       'free': ['basic_replies', 'sentiment', 'dashboard', '2_platforms'],
       'starter': ['basic_replies', 'sentiment', 'dashboard', '5_platforms', 'bulk_replies', 'templates', 'analytics'],
-      'professional': ['basic_replies', 'sentiment', 'dashboard', 'unlimited_platforms', 'bulk_replies', 'templates', 'analytics', 'slack', 'custom_tone'],
-      'enterprise': ['all_features']
+      'growth': ['basic_replies', 'sentiment', 'dashboard', 'unlimited_platforms', 'bulk_replies', 'templates', 'analytics', 'slack', 'custom_tone'],
+      'business': ['all_features']
     }
     
-    if (plan === 'enterprise') return true
+    if (plan === 'business') return true
     
     const planFeatures = featureAccess[plan] || []
     return planFeatures.includes(feature) || planFeatures.includes('all_features')
@@ -230,8 +230,8 @@ export class CreditsManager {
     const planHierarchy: Record<string, number> = {
       'free': 0,
       'starter': 1,
-      'professional': 2,
-      'enterprise': 3
+      'growth': 2,
+      'business': 3
     }
     return (planHierarchy[newPlan] || 0) > (planHierarchy[oldPlan] || 0)
   }

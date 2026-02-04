@@ -33,12 +33,12 @@ export default function CreditManager() {
 
   const getPlanCredits = () => {
     const planCredits: Record<string, number> = {
-      free: 50,
-      starter: 200,
-      professional: 600,
-      enterprise: 1500
+      'free': 20,
+      'starter': 100,
+      'growth': 300,
+      'business': 1000
     }
-    return planCredits[plan] || 50
+    return planCredits[plan] || 20
   }
 
   const creditPercentage = (credits / getPlanCredits()) * 100
