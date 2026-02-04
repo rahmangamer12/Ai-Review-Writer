@@ -45,7 +45,7 @@ export default function SettingsPage() {
   })
 
   const [saved, setSaved] = useState(false)
-  const [activeTab, setActiveTab] = useState<'general' | 'credits' | 'billing' | 'ai' | 'integrations' | 'advanced' | 'legal'>('general')
+  const [activeTab, setActiveTab] = useState<'general' | 'credits' | 'notifications' | 'location' | 'billing' | 'ai' | 'integrations' | 'advanced' | 'legal'>('general')
   const [currentPlan, setCurrentPlan] = useState<string>('free')
 
   useEffect(() => {
@@ -288,8 +288,8 @@ export default function SettingsPage() {
                 </div>
               </div>
               <LocationPermission 
-                onGranted={(location) => {
-                  console.log('Location granted:', location)
+                onGranted={() => {
+                  console.log('Location granted')
                 }}
                 onDenied={() => {
                   console.log('Location denied')
