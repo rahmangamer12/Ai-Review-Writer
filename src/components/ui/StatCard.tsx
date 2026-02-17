@@ -64,28 +64,28 @@ export default function StatCard({ title, value, subtitle, icon: Icon, trend, co
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay }}
       whileHover={{ scale: 1.02, y: -4 }}
-      className={`relative overflow-hidden rounded-2xl border ${colors.border} bg-gradient-to-br ${colors.bg} p-6 transition-all duration-300 shadow-lg ${colors.glow} backdrop-blur-sm`}
+      className={`relative overflow-hidden rounded-xl sm:rounded-2xl border ${colors.border} bg-gradient-to-br ${colors.bg} p-3 sm:p-4 md:p-5 lg:p-6 transition-all duration-300 shadow-lg ${colors.glow} backdrop-blur-sm touch-enhanced`}
     >
       {/* Background glow effect */}
       <div className={`absolute -right-6 -top-6 h-24 w-24 rounded-full bg-gradient-to-br ${colors.bg} opacity-50 blur-2xl`} />
-      
+
       <div className="relative z-10">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-sm font-medium text-gray-400">{title}</p>
-            <div className="mt-2 flex items-baseline gap-2">
-              <h3 className="text-3xl font-bold text-white">{value}</h3>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs sm:text-sm md:text-base font-medium text-gray-400 truncate">{title}</p>
+            <div className="mt-1 sm:mt-2 flex flex-wrap items-baseline gap-1 sm:gap-2">
+              <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-3xl font-bold text-white truncate">{value}</h3>
               {trend && (
-                <span className={`flex items-center gap-1 text-xs font-medium ${trend.isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {trend.isPositive ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                <span className={`flex items-center gap-0.5 sm:gap-1 text-[10px] sm:text-xs md:text-sm font-medium ${trend.isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {trend.isPositive ? <TrendingUp className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4" /> : <TrendingDown className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4" />}
                   {Math.abs(trend.value)}%
                 </span>
               )}
             </div>
-            {subtitle && <p className="mt-1 text-xs text-gray-500">{subtitle}</p>}
+            {subtitle && <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs md:text-sm text-gray-500 truncate">{subtitle}</p>}
           </div>
-          <div className={`rounded-xl p-3 ${colors.icon}`}>
-            <Icon className="h-6 w-6" />
+          <div className={`flex-shrink-0 rounded-lg sm:rounded-xl p-2 sm:p-3 ${colors.icon}`}>
+            <Icon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-6 lg:w-6" />
           </div>
         </div>
       </div>

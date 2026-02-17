@@ -428,54 +428,57 @@ function ReviewsContent() {
       </div>
 
       {/* Header */}
-      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#0a0a0f]/80 backdrop-blur-xl">
+      <header className="sticky top-[57px] lg:top-0 z-40 border-b border-white/5 bg-[#0a0a0f]/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-4">
+          <div className="flex h-14 sm:h-16 items-center justify-between gap-2">
+            <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
               <button
                 onClick={() => router.push('/dashboard')}
-                className="rounded-lg p-2 text-gray-400 hover:bg-white/5 hover:text-white transition-colors"
+                className="rounded-lg p-1.5 sm:p-2 text-gray-400 hover:bg-white/5 hover:text-white transition-colors flex-shrink-0"
               >
-                <ArrowLeft className="h-5 w-5" />
+                <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
-              <div>
-                <h1 className="text-lg font-bold text-white">Reviews Management</h1>
-                <p className="text-xs text-gray-500">{totalCount} total reviews</p>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-sm sm:text-lg font-bold text-white truncate">Reviews Management</h1>
+                <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">{totalCount} total reviews</p>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              {/* Agentic Mode Toggle */}
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+              {/* Agentic Mode Toggle - Mobile icon only */}
               <button
                 onClick={() => setAgenticMode(!agenticMode)}
-                className={`hidden sm:flex items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium transition-colors ${
                   agenticMode 
                     ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400' 
                     : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
                 }`}
+                title="Agentic Mode"
               >
-                <Brain className="h-4 w-4" />
-                Agentic
+                <Brain className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden md:inline">Agentic</span>
               </button>
 
               <button
                 onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-                className="hidden sm:flex rounded-lg border border-white/10 bg-white/5 p-2 text-gray-400 hover:text-white transition-colors"
+                className="hidden sm:flex rounded-lg border border-white/10 bg-white/5 p-1.5 sm:p-2 text-gray-400 hover:text-white transition-colors"
+                title="Toggle View"
               >
-                {viewMode === 'list' ? <LayoutGrid className="h-5 w-5" /> : <List className="h-5 w-5" />}
+                {viewMode === 'list' ? <LayoutGrid className="h-4 w-4 sm:h-5 sm:w-5" /> : <List className="h-4 w-4 sm:h-5 sm:w-5" />}
               </button>
 
               <button
                 onClick={() => fetchReviews(currentPage)}
                 disabled={loading}
-                className="rounded-lg border border-white/10 bg-white/5 p-2 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                className="rounded-lg border border-white/10 bg-white/5 p-1.5 sm:p-2 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
+                title="Refresh"
               >
-                <RefreshCw className={`h-5 w-5 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-4 w-4 sm:h-5 sm:w-5 ${loading ? 'animate-spin' : ''}`} />
               </button>
 
               <button
                 onClick={() => setShowAIGenerator(true)}
-                className="hidden sm:flex items-center gap-2 rounded-lg bg-purple-600/20 px-3 py-2 text-sm font-medium text-purple-400 hover:bg-purple-600/30 transition-colors"
+                className="hidden lg:flex items-center gap-2 rounded-lg bg-purple-600/20 px-3 py-2 text-sm font-medium text-purple-400 hover:bg-purple-600/30 transition-colors"
               >
                 <Bot className="h-4 w-4" />
                 AI Generator
@@ -483,17 +486,18 @@ function ReviewsContent() {
 
               <button
                 onClick={() => router.push('/reviews/add')}
-                className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-500 transition-colors"
+                className="flex items-center gap-1.5 sm:gap-2 rounded-lg bg-purple-600 px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white hover:bg-purple-500 transition-colors"
               >
-                <Plus className="h-4 w-4" />
-                Add Review
+                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="hidden sm:inline">Add Review</span>
+                <span className="sm:hidden">Add</span>
               </button>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Agentic Mode Banner */}
         {agenticMode && (
           <motion.div
@@ -765,46 +769,48 @@ function ReviewsContent() {
                       }`} />
 
                       <div className="pl-4">
-                        <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
-                          <div className="flex items-center gap-3">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-sm font-bold">
+                        <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-3 mb-3">
+                          <div className="flex items-center gap-3 w-full sm:w-auto">
+                            <div className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-sm sm:text-base font-bold">
                               {authorName.charAt(0).toUpperCase()}
                             </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <h4 className="font-semibold text-white">{authorName}</h4>
-                                <span className={`rounded-full px-2 py-0.5 text-xs ${platformColor}`}>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h4 className="font-semibold text-white text-sm sm:text-base truncate">{authorName}</h4>
+                                <span className={`rounded-full px-2 py-0.5 text-xs sm:text-sm ${platformColor}`}>
                                   <span className="flex items-center gap-1">
-                                    <PlatformIcon platform={review.platform} className="h-3 w-3" />
+                                    <PlatformIcon platform={review.platform} className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                                     {review.platform}
                                   </span>
                                 </span>
                               </div>
-                              <p className="text-xs text-gray-500">
-                                {new Date(review.created_at).toLocaleDateString('en-US', { 
-                                  month: 'short', day: 'numeric', year: 'numeric' 
+                              <p className="text-xs text-gray-500 mt-1">
+                                {new Date(review.created_at).toLocaleDateString('en-US', {
+                                  month: 'short', day: 'numeric', year: 'numeric'
                                 })}
                               </p>
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-2">
-                            <div className="flex items-center gap-0.5">
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                            <div className="flex items-center gap-1">
                               {[...Array(5)].map((_, i) => (
-                                <Star key={i} className={`h-4 w-4 ${i < review.rating ? 'fill-yellow-500 text-yellow-500' : 'text-gray-700'}`} />
+                                <Star key={i} className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${i < review.rating ? 'fill-yellow-500 text-yellow-500' : 'text-gray-700'}`} />
                               ))}
                             </div>
-                            {sentiment && (
-                              <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-1 text-xs font-medium ${sentiment.color}`}>
-                                <sentiment.icon className="h-3 w-3" />
-                                {sentiment.label}
-                              </span>
-                            )}
-                            {getStatusBadge(review.status)}
+                            <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                              {sentiment && (
+                                <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 sm:px-2.5 sm:py-1 text-[10px] sm:text-xs font-medium ${sentiment.color}`}>
+                                  <sentiment.icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                                  {sentiment.label}
+                                </span>
+                              )}
+                              {getStatusBadge(review.status)}
+                            </div>
                           </div>
                         </div>
 
-                        <p className="text-sm leading-relaxed text-gray-300 mb-4 line-clamp-3">{reviewText}</p>
+                        <p className="text-sm sm:text-base leading-relaxed text-gray-300 mb-4 line-clamp-3 sm:line-clamp-4">{reviewText}</p>
 
                         {review.reply ? (
                           <div className="mb-4 rounded-lg border border-purple-500/20 bg-purple-500/10 p-3">
@@ -822,13 +828,13 @@ function ReviewsContent() {
                           </div>
                         ) : null}
 
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                          <div className="flex flex-wrap items-center gap-2">
                             {review.status === 'pending' && !review.reply && (
                               <button
                                 onClick={() => generateAIReply(review)}
                                 disabled={generatingReply === review.id}
-                                className="flex items-center gap-1.5 rounded-lg bg-purple-500/20 px-3 py-1.5 text-xs font-medium text-purple-400 transition-colors hover:bg-purple-500/30 disabled:opacity-50"
+                                className="flex items-center gap-1.5 rounded-lg bg-purple-500/20 px-3 py-2 text-xs sm:text-sm font-medium text-purple-400 transition-colors hover:bg-purple-500/30 disabled:opacity-50 touch-target"
                               >
                                 {generatingReply === review.id ? (
                                   <RefreshCw className="h-3.5 w-3.5 animate-spin" />
@@ -838,24 +844,24 @@ function ReviewsContent() {
                                 {generatingReply === review.id ? 'Generating...' : 'Generate Reply'}
                               </button>
                             )}
-                            
+
                             {review.status === 'pending' && review.reply && (
-                              <>
+                              <div className="flex flex-wrap items-center gap-2">
                                 <button
                                   onClick={() => updateReviewStatus(review.id, 'approved')}
-                                  className="flex items-center gap-1.5 rounded-lg bg-emerald-500/20 px-3 py-1.5 text-xs font-medium text-emerald-400 transition-colors hover:bg-emerald-500/30"
+                                  className="flex items-center gap-1.5 rounded-lg bg-emerald-500/20 px-3 py-2 text-xs sm:text-sm font-medium text-emerald-400 transition-colors hover:bg-emerald-500/30 touch-target"
                                 >
                                   <ThumbsUp className="h-3.5 w-3.5" />
                                   Approve
                                 </button>
                                 <button
                                   onClick={() => updateReviewStatus(review.id, 'rejected')}
-                                  className="flex items-center gap-1.5 rounded-lg bg-rose-500/20 px-3 py-1.5 text-xs font-medium text-rose-400 transition-colors hover:bg-rose-500/30"
+                                  className="flex items-center gap-1.5 rounded-lg bg-rose-500/20 px-3 py-2 text-xs sm:text-sm font-medium text-rose-400 transition-colors hover:bg-rose-500/30 touch-target"
                                 >
                                   <ThumbsDown className="h-3.5 w-3.5" />
                                   Reject
                                 </button>
-                              </>
+                              </div>
                             )}
                           </div>
 
@@ -866,17 +872,17 @@ function ReviewsContent() {
                                 setReplyText(review.reply?.reply_text || review.reply?.content || '')
                                 setShowReplyModal(true)
                               }}
-                              className="rounded-lg p-2 text-gray-500 hover:bg-white/5 hover:text-white transition-colors"
+                              className="rounded-lg p-2 text-gray-500 hover:bg-white/5 hover:text-white transition-colors touch-target"
                               title="Edit Reply"
                             >
-                              <Edit3 className="h-4 w-4" />
+                              <Edit3 className="h-4 w-4 sm:h-5 sm:w-5" />
                             </button>
                             <button
                               onClick={() => deleteReview(review.id)}
-                              className="rounded-lg p-2 text-gray-500 hover:bg-rose-500/20 hover:text-rose-400 transition-colors"
+                              className="rounded-lg p-2 text-gray-500 hover:bg-rose-500/20 hover:text-rose-400 transition-colors touch-target"
                               title="Delete Review"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
                             </button>
                           </div>
                         </div>

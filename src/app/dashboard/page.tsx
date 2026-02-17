@@ -15,7 +15,7 @@ import {
   ArrowUpRight, ArrowDownRight, Minus, Target, Crown,
   Lightbulb, FileText, Clock3, FilterX, MoreHorizontal,
   TrendingDown, Users, MousePointer, Award, Layers,
-  ZapIcon, Cpu, LineChart, AreaChart, BarChart
+  ZapIcon, Cpu, LineChart, AreaChart, BarChart, LayoutDashboard
 } from 'lucide-react'
 
 // Platform icon mapping
@@ -111,7 +111,7 @@ interface AIInsight {
   color: string
 }
 
-// Modern Stat Card Component
+// Modern Stat Card Component - Mobile Optimized
 const ModernStatCard = ({ title, value, subtitle, icon: Icon, trend, trendValue, color, delay = 0 }: any) => {
   const colorClasses: any = {
     blue: 'from-blue-500/20 to-blue-600/5 border-blue-500/30',
@@ -128,34 +128,34 @@ const ModernStatCard = ({ title, value, subtitle, icon: Icon, trend, trendValue,
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5 }}
       whileHover={{ scale: 1.02, y: -4 }}
-      className={`relative overflow-hidden rounded-2xl border bg-gradient-to-br ${colorClasses[color]} p-6 transition-all duration-300 hover:shadow-2xl`}
+      className={`relative overflow-hidden rounded-xl sm:rounded-2xl border bg-gradient-to-br ${colorClasses[color]} p-3 sm:p-4 md:p-5 lg:p-6 transition-all duration-300 hover:shadow-2xl touch-enhanced`}
     >
       {/* Background glow */}
       <div className={`absolute -right-10 -top-10 h-32 w-32 rounded-full bg-${color}-500/20 blur-3xl`} />
-      
+
       <div className="relative z-10">
-        <div className="flex items-start justify-between">
-          <div className={`rounded-xl bg-${color}-500/20 p-3`}>
-            <Icon className={`h-6 w-6 text-${color}-400`} />
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2">
+          <div className={`rounded-lg sm:rounded-xl bg-${color}-500/20 p-2 sm:p-3`}>
+            <Icon className={`h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-6 lg:w-6 text-${color}-400`} />
           </div>
           {trend && (
-            <div className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs font-medium ${
+            <div className={`flex items-center gap-0.5 sm:gap-1 rounded-full px-1.5 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-xs md:text-sm font-medium ${
               trend === 'up' ? 'bg-emerald-500/20 text-emerald-400' :
               trend === 'down' ? 'bg-rose-500/20 text-rose-400' :
               'bg-gray-500/20 text-gray-400'
             }`}>
-              {trend === 'up' ? <ArrowUpRight className="h-3 w-3" /> :
-               trend === 'down' ? <ArrowDownRight className="h-3 w-3" /> :
-               <Minus className="h-3 w-3" />}
+              {trend === 'up' ? <ArrowUpRight className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4" /> :
+               trend === 'down' ? <ArrowDownRight className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4" /> :
+               <Minus className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4" />}
               {trendValue}%
             </div>
           )}
         </div>
-        
-        <div className="mt-4">
-          <p className="text-3xl font-bold text-white">{value}</p>
-          <p className="mt-1 text-sm text-gray-400">{title}</p>
-          {subtitle && <p className="mt-1 text-xs text-gray-500">{subtitle}</p>}
+
+        <div className="mt-2 sm:mt-3 md:mt-4 lg:mt-4">
+          <p className="text-xl sm:text-2xl md:text-3xl lg:text-3xl font-bold text-white">{value}</p>
+          <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm md:text-base text-gray-400 truncate">{title}</p>
+          {subtitle && <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs md:text-sm text-gray-500 truncate">{subtitle}</p>}
         </div>
       </div>
     </motion.div>
@@ -165,28 +165,28 @@ const ModernStatCard = ({ title, value, subtitle, icon: Icon, trend, trendValue,
 // Modern Chart Component
 const ModernLineChart = ({ data, color = 'purple' }: { data: any[], color?: string }) => {
   const maxValue = Math.max(...data.map(d => d.count), 1)
-  
+
   return (
-    <div className="relative h-64 w-full">
+    <div className="relative h-48 sm:h-64 w-full">
       {/* Grid lines */}
       <div className="absolute inset-0 flex flex-col justify-between">
         {[...Array(5)].map((_, i) => (
           <div key={i} className="h-px w-full bg-white/5" />
         ))}
       </div>
-      
+
       {/* Chart bars */}
-      <div className="absolute inset-0 flex items-end justify-between gap-1">
+      <div className="absolute inset-0 flex items-end justify-between gap-0.5 sm:gap-1">
         {data.map((item, index) => {
           const height = (item.count / maxValue) * 100
           return (
-            <div key={index} className="group relative flex-1">
+            <div key={index} className="group relative flex-1 min-w-0">
               {/* Tooltip */}
-              <div className="absolute -top-12 left-1/2 z-20 hidden -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-gray-900 px-3 py-2 text-xs text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100">
+              <div className="absolute -top-12 left-1/2 z-20 hidden -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-gray-900 px-2 sm:px-3 py-1 sm:py-2 text-[10px] sm:text-xs text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100">
                 <p className="font-medium">{item.date}</p>
                 <p className="text-gray-400">{item.count} reviews</p>
               </div>
-              
+
               {/* Bar */}
               <motion.div
                 initial={{ height: 0 }}
@@ -207,7 +207,7 @@ const ModernLineChart = ({ data, color = 'purple' }: { data: any[], color?: stri
 const PlatformDistributionCard = ({ data }: { data: Record<string, number> }) => {
   const total = Object.values(data).reduce((a, b) => a + b, 0)
   const sorted = Object.entries(data).sort((a, b) => b[1] - a[1])
-  
+
   const platformColors: any = {
     google: 'bg-blue-500',
     facebook: 'bg-indigo-500',
@@ -218,22 +218,22 @@ const PlatformDistributionCard = ({ data }: { data: Record<string, number> }) =>
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {sorted.map(([platform, count], index) => {
         const percentage = total > 0 ? (count / total) * 100 : 0
         return (
           <div key={platform} className="group">
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <PlatformIcon platform={platform} className="h-4 w-4 text-gray-400" />
-                <span className="text-sm font-medium capitalize text-white">{platform}</span>
+                <PlatformIcon platform={platform} className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
+                <span className="text-sm sm:text-base font-medium capitalize text-white">{platform}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm font-bold text-white">{count}</span>
-                <span className="text-xs text-gray-500">({percentage.toFixed(1)}%)</span>
+                <span className="text-sm sm:text-base font-bold text-white">{count}</span>
+                <span className="text-xs sm:text-sm text-gray-500">({percentage.toFixed(1)}%)</span>
               </div>
             </div>
-            <div className="h-2.5 overflow-hidden rounded-full bg-white/5">
+            <div className="h-2 sm:h-2.5 overflow-hidden rounded-full bg-white/5">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${percentage}%` }}
@@ -251,7 +251,7 @@ const PlatformDistributionCard = ({ data }: { data: Record<string, number> }) =>
 // Sentiment Card
 const SentimentCard = ({ data }: { data: { positive: number, negative: number, neutral: number } }) => {
   const total = data.positive + data.negative + data.neutral
-  
+
   const sentiments = [
     { label: 'Positive', value: data.positive, color: 'bg-emerald-500', textColor: 'text-emerald-400', icon: ThumbsUp },
     { label: 'Neutral', value: data.neutral, color: 'bg-amber-500', textColor: 'text-amber-400', icon: Minus },
@@ -259,19 +259,22 @@ const SentimentCard = ({ data }: { data: { positive: number, negative: number, n
   ]
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 sm:space-y-4">
       {sentiments.map((item, index) => {
         const percentage = total > 0 ? (item.value / total) * 100 : 0
         return (
           <div key={item.label}>
-            <div className="mb-2 flex items-center justify-between">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2">
-                <item.icon className={`h-4 w-4 ${item.textColor}`} />
-                <span className="text-sm text-gray-300">{item.label}</span>
+                <item.icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${item.textColor}`} />
+                <span className="text-sm sm:text-base text-gray-300">{item.label}</span>
               </div>
-              <span className="text-sm font-bold text-white">{item.value}</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm sm:text-base font-bold text-white">{item.value}</span>
+                <span className="text-xs sm:text-sm text-gray-500">({percentage.toFixed(1)}%)</span>
+              </div>
             </div>
-            <div className="h-2 overflow-hidden rounded-full bg-white/5">
+            <div className="h-2 sm:h-2.5 overflow-hidden rounded-full bg-white/5">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${percentage}%` }}
@@ -575,27 +578,29 @@ export default function Dashboard() {
   // RENDER REVIEWS TAB
   const renderReviews = () => (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white">All Reviews</h2>
-          <p className="text-sm text-gray-500">Manage and respond to your customer reviews</p>
+          <h2 className="text-xl sm:text-2xl font-bold text-white">All Reviews</h2>
+          <p className="text-xs sm:text-sm text-gray-500">Manage and respond to your customer reviews</p>
         </div>
-        <div className="flex gap-3">
-          <button onClick={() => setShowAIGenerator(true)} className="flex items-center gap-2 rounded-lg bg-purple-600/20 px-4 py-2 text-sm font-medium text-purple-400 hover:bg-purple-600/30">
+        <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+          <button onClick={() => setShowAIGenerator(true)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-lg bg-purple-600/20 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-purple-400 hover:bg-purple-600/30 transition-all">
             <Bot className="h-4 w-4" />
-            AI Generator
+            <span className="hidden sm:inline">AI Generator</span>
+            <span className="sm:hidden">Generate</span>
           </button>
-          <button onClick={() => router.push('/reviews/add')} className="flex items-center gap-2 rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white hover:bg-purple-500">
+          <button onClick={() => router.push('/reviews/add')} className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-lg bg-purple-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-purple-500 transition-all">
             <Plus className="h-4 w-4" />
-            Add Review
+            <span className="hidden sm:inline">Add Review</span>
+            <span className="sm:hidden">Add</span>
           </button>
         </div>
       </div>
 
       {/* Reviews Content */}
       {loading ? (
-        <div className="space-y-4">
-          {[...Array(5)].map((_, i) => <div key={i} className="h-40 animate-pulse rounded-xl bg-white/5" />)}
+        <div className="space-y-3 sm:space-y-4">
+          {[...Array(5)].map((_, i) => <div key={i} className="h-32 sm:h-40 animate-pulse rounded-xl bg-white/5" />)}
         </div>
       ) : data?.recentReviews?.length ? (
         <div className="space-y-3">
@@ -605,36 +610,36 @@ export default function Dashboard() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.05 }}
-              className="rounded-xl border border-white/10 bg-white/[0.02] p-5 hover:border-white/20 transition-all"
+              className="rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:p-5 hover:border-white/20 transition-all"
             >
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-sm font-bold text-white">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                  <div className="flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-500 to-pink-500 text-xs sm:text-sm font-bold text-white">
                     {(review.reviewer_name || review.author_name || 'A').charAt(0).toUpperCase()}
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-white">{review.reviewer_name || review.author_name || 'Anonymous'}</h4>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <PlatformIcon platform={review.platform} />
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-semibold text-white text-sm sm:text-base truncate">{review.reviewer_name || review.author_name || 'Anonymous'}</h4>
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-gray-500">
+                      <PlatformIcon platform={review.platform} className="h-3 w-3 sm:h-4 sm:w-4" />
                       <span className="capitalize">{review.platform}</span>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
                   {[...Array(5)].map((_, i) => (
-                    <Star key={i} className={`h-4 w-4 ${i < review.rating ? 'fill-yellow-500 text-yellow-500' : 'text-gray-700'}`} />
+                    <Star key={i} className={`h-3 w-3 sm:h-4 sm:w-4 ${i < review.rating ? 'fill-yellow-500 text-yellow-500' : 'text-gray-700'}`} />
                   ))}
                 </div>
               </div>
-              <p className="mt-3 text-sm text-gray-300">{review.review_text || review.content}</p>
+              <p className="mt-2 sm:mt-3 text-xs sm:text-sm text-gray-300 line-clamp-3">{review.review_text || review.content}</p>
             </motion.div>
           ))}
         </div>
       ) : (
-        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-16 text-center">
-          <MessageSquare className="mx-auto mb-4 h-16 w-16 text-gray-600" />
-          <h3 className="text-xl font-semibold text-white mb-4">No reviews found</h3>
-          <button onClick={() => setShowAIGenerator(true)} className="rounded-lg bg-purple-600 px-6 py-3 font-medium text-white hover:bg-purple-500">
+        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-8 sm:p-16 text-center">
+          <MessageSquare className="mx-auto mb-3 sm:mb-4 h-12 w-12 sm:h-16 sm:w-16 text-gray-600" />
+          <h3 className="text-lg sm:text-xl font-semibold text-white mb-3 sm:mb-4">No reviews found</h3>
+          <button onClick={() => setShowAIGenerator(true)} className="rounded-lg bg-purple-600 px-5 py-2.5 sm:px-6 sm:py-3 text-sm sm:text-base font-medium text-white hover:bg-purple-500 transition-all">
             Generate AI Reviews
           </button>
         </div>
@@ -1088,131 +1093,39 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
       {/* Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+      <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-pink-600/5 rounded-full blur-3xl" />
       </div>
 
-      {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-white/5 bg-[#0a0a0f]/80 backdrop-blur-xl">
+      {/* Mobile Tabs - Horizontal scroll on mobile */}
+      <div className="sticky top-[57px] lg:top-0 z-40 border-b border-white/5 bg-[#0a0a0f]/95 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            {/* Logo */}
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-600 to-pink-600 shadow-lg shadow-purple-500/25">
-                <Sparkles className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-white">AutoReview AI</h1>
-                <p className="text-xs text-gray-500">Dashboard</p>
-              </div>
-            </div>
-
-            {/* Navigation Tabs */}
-            <nav className="hidden md:flex items-center gap-1 bg-white/5 rounded-xl p-1">
-              {[
-                { id: 'overview', label: 'Overview', icon: BarChart3 },
-                { id: 'reviews', label: 'Reviews', icon: MessageSquare },
-                { id: 'analytics', label: 'Analytics', icon: Activity },
-              ].map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    activeTab === item.id
-                      ? 'bg-purple-600 text-white'
-                      : 'text-gray-400 hover:text-white'
-                  }`}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-
-            {/* Actions */}
-            <div className="flex items-center gap-2">
-              {/* Notifications */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowNotifications(!showNotifications)}
-                  className="relative rounded-lg p-2 text-gray-400 hover:bg-white/5 hover:text-white transition-colors"
-                >
-                  <Bell className="h-5 w-5" />
-                  {notifications.filter(n => !n.read).length > 0 && (
-                    <span className="absolute top-1 right-1 h-4 w-4 rounded-full bg-rose-500 text-[10px] font-bold text-white flex items-center justify-center">
-                      {notifications.filter(n => !n.read).length}
-                    </span>
-                  )}
-                </button>
-
-                <AnimatePresence>
-                  {showNotifications && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 top-full mt-2 w-80 rounded-xl border border-white/10 bg-[#0f0f14] shadow-2xl z-50"
-                    >
-                      <div className="flex items-center justify-between p-4 border-b border-white/10">
-                        <h3 className="font-semibold text-white">Notifications</h3>
-                      </div>
-                      <div className="p-4 text-center text-gray-500">
-                        <Bell className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p className="text-sm">No notifications</p>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Profile */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowProfile(!showProfile)}
-                  className="flex items-center gap-2 rounded-lg p-2 text-gray-400 hover:bg-white/5 hover:text-white transition-colors"
-                >
-                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-sm font-bold text-white">
-                    {user?.firstName?.charAt(0) || 'U'}
-                  </div>
-                  <ChevronDown className="h-4 w-4" />
-                </button>
-
-                <AnimatePresence>
-                  {showProfile && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="absolute right-0 top-full mt-2 w-56 rounded-xl border border-white/10 bg-[#0f0f14] shadow-2xl z-50"
-                    >
-                      <div className="p-4 border-b border-white/10">
-                        <p className="font-medium text-white">{user?.fullName || 'User'}</p>
-                        <p className="text-xs text-gray-500 truncate">{user?.emailAddresses[0]?.emailAddress}</p>
-                      </div>
-                      <div className="p-2">
-                        <button onClick={() => { router.push('/profile'); setShowProfile(false) }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-400 hover:bg-white/5 hover:text-white">
-                          <User className="h-4 w-4" /> Profile
-                        </button>
-                        <button onClick={() => { router.push('/settings'); setShowProfile(false) }} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-gray-400 hover:bg-white/5 hover:text-white">
-                          <Settings className="h-4 w-4" /> Settings
-                        </button>
-                        <hr className="my-2 border-white/10" />
-                        <button onClick={handleSignOut} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-rose-400 hover:bg-rose-500/10">
-                          <LogOut className="h-4 w-4" /> Sign Out
-                        </button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-3">
+            {[
+              { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+              { id: 'reviews', label: 'Reviews', icon: MessageSquare },
+              { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+            ].map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                  activeTab === item.id
+                    ? 'bg-purple-600 text-white'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <item.icon className="h-4 w-4" />
+                {item.label}
+              </button>
+            ))}
           </div>
         </div>
-      </header>
+      </div>
 
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Error Message */}
         <AnimatePresence>
           {error && (
@@ -1257,7 +1170,7 @@ export default function Dashboard() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-3xl rounded-2xl border border-white/10 bg-[#0f0f14] p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+              className="w-full max-w-xs sm:max-w-md lg:max-w-3xl rounded-2xl border border-white/10 bg-[#0f0f14] p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto mobile-modal"
             >
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -1377,7 +1290,7 @@ export default function Dashboard() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-md rounded-2xl border border-white/10 bg-[#0f0f14] p-6 shadow-2xl"
+              className="w-full max-w-xs sm:max-w-md rounded-2xl border border-white/10 bg-[#0f0f14] p-4 sm:p-6 shadow-2xl mobile-modal"
             >
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">

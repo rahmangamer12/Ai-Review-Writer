@@ -217,19 +217,19 @@ export default function AIChatbot() {
   return (
     <>
       {/* Chat Button */}
-      <div className="fixed bottom-6 right-6 z-50">
+      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50">
         <AnimatePresence>
           {showTooltip && !isOpen && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
-              className="absolute bottom-full right-0 mb-3"
+              className="absolute bottom-full right-0 mb-2 sm:mb-3 hidden sm:block"
             >
-              <div className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-4 py-2.5 rounded-2xl shadow-lg text-sm font-medium whitespace-nowrap flex items-center gap-2">
-                <Sparkles className="w-4 h-4" />
+              <div className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 rounded-2xl shadow-lg text-xs sm:text-sm font-medium whitespace-nowrap flex items-center gap-2">
+                <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
                 Ask me anything! I&apos;m Sarah
-                <div className="absolute -bottom-2 right-6 w-0 h-0 border-l-8 border-r-8 border-t-8 border-l-transparent border-r-transparent border-t-violet-600" />
+                <div className="absolute -bottom-2 right-4 sm:right-6 w-0 h-0 border-l-6 border-r-6 border-t-6 sm:border-l-8 sm:border-r-8 sm:border-t-8 border-l-transparent border-r-transparent border-t-violet-600" />
               </div>
             </motion.div>
           )}
@@ -241,10 +241,10 @@ export default function AIChatbot() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsOpen(true)}
-          className={`${isOpen ? 'hidden' : 'flex'} items-center gap-3 bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white pl-5 pr-3 py-3 rounded-full shadow-lg hover:shadow-xl transition-all`}
+          className={`${isOpen ? 'hidden' : 'flex'} items-center gap-2 sm:gap-3 bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white pl-3 pr-2 py-2 sm:pl-5 sm:pr-3 sm:py-3 rounded-full shadow-lg hover:shadow-xl transition-all`}
         >
-          <span className="font-semibold">Ask Sarah</span>
-          <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-2xl backdrop-blur-sm">
+          <span className="font-semibold text-sm sm:text-base">Ask Sarah</span>
+          <div className="w-8 h-8 sm:w-10 sm:h-10 bg-white/20 rounded-full flex items-center justify-center text-xl sm:text-2xl backdrop-blur-sm">
             {SARAH_PROFILE.avatar}
           </div>
         </motion.button>
@@ -266,9 +266,9 @@ export default function AIChatbot() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="fixed bottom-4 right-4 md:bottom-6 md:right-6 w-[95vw] md:w-[480px] max-w-[480px] z-50"
+              className="fixed inset-4 sm:inset-auto sm:bottom-4 sm:right-4 md:bottom-6 md:right-6 sm:w-[420px] md:w-[480px] sm:max-h-[600px] md:max-h-[700px] z-50"
             >
-              <div className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[750px] border border-gray-200 dark:border-white/10">
+              <div className="bg-white dark:bg-gray-900 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col h-full border border-gray-200 dark:border-white/10">
                 
                 {/* Header */}
                 <div className="bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 p-4">
