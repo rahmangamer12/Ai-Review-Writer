@@ -20,6 +20,13 @@ export default function GlowingParticles() {
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    // Check if we're on a mobile device to reduce particle count
+    const isMobile = window.matchMedia('(max-width: 768px)').matches ||
+      navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry|IEMobile)/);
+
+    // Reduce particles on mobile devices for better performance
+    const particleCount = isMobile ? 10 : 30;
+
     const container = containerRef.current
     if (!container) return
 
@@ -27,15 +34,15 @@ export default function GlowingParticles() {
     const particleElements: HTMLDivElement[] = []
 
     // Create 3D particles
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < particleCount; i++) {
       const particle: Particle3D = {
         x: Math.random() * 100 - 50,
         y: Math.random() * 100 - 50,
         z: Math.random() * 100 - 50,
         size: Math.random() * 4 + 2,
-        speedX: (Math.random() - 0.5) * 0.2,
-        speedY: (Math.random() - 0.5) * 0.2,
-        speedZ: (Math.random() - 0.5) * 0.2,
+        speedX: (Math.random() - 0.5) * (isMobile ? 0.1 : 0.2), // slower on mobile
+        speedY: (Math.random() - 0.5) * (isMobile ? 0.1 : 0.2),
+        speedZ: (Math.random() - 0.5) * (isMobile ? 0.1 : 0.2),
         color: ['#06b6d4', '#a855f7', '#3b82f6'][Math.floor(Math.random() * 3)],
         rotationX: Math.random() * 360,
         rotationY: Math.random() * 360
@@ -48,8 +55,8 @@ export default function GlowingParticles() {
       element.style.borderRadius = '50%'
       element.style.backgroundColor = particle.color
       element.style.boxShadow = `0 0 ${particle.size * 3}px ${particle.color}`
-      element.style.transition = 'transform 0.1s ease-out'
-      
+      element.style.willChange = 'transform, opacity' // Improve performance
+
       container.appendChild(element)
       particles.push(particle)
       particleElements.push(element)
@@ -57,14 +64,23 @@ export default function GlowingParticles() {
 
     // Animation loop
     let animationId: number
-    
-    const animate = () => {
+    let lastTimestamp = 0
+    const frameInterval = isMobile ? 1000 / 30 : 1000 / 60 // 30fps on mobile, 60fps on desktop
+
+    const animate = (timestamp: number) => {
+      // Throttle animation based on frame rate
+      if (timestamp - lastTimestamp < frameInterval) {
+        animationId = requestAnimationFrame(animate)
+        return
+      }
+      lastTimestamp = timestamp
+
       particles.forEach((particle, i) => {
         particle.x += particle.speedX
         particle.y += particle.speedY
         particle.z += particle.speedZ
-        particle.rotationX += 1
-        particle.rotationY += 1
+        particle.rotationX += isMobile ? 0.5 : 1 // slower rotation on mobile
+        particle.rotationY += isMobile ? 0.5 : 1
 
         // Bounce at boundaries
         if (Math.abs(particle.x) > 50) particle.speedX *= -1
@@ -77,19 +93,14 @@ export default function GlowingParticles() {
         const y = particle.y * scale + 50
 
         const element = particleElements[i]
-        element.style.transform = `
-          translate3d(${x}vw, ${y}vh, 0)
-          rotateX(${particle.rotationX}deg)
-          rotateY(${particle.rotationY}deg)
-          scale(${scale})
-        `
+        element.style.transform = `translate3d(${x}vw, ${y}vh, 0) scale(${scale})`
         element.style.opacity = `${Math.max(0.3, scale)}`
       })
 
       animationId = requestAnimationFrame(animate)
     }
 
-    animate()
+    animate(0)
 
     return () => {
       cancelAnimationFrame(animationId)
@@ -98,10 +109,9 @@ export default function GlowingParticles() {
   }, [])
 
   return (
-    <div 
+    <div
       ref={containerRef}
       className="fixed inset-0 -z-10 pointer-events-none overflow-hidden"
-      style={{ perspective: '1000px' }}
     />
   )
 }

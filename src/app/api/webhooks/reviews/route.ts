@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { hybridWebhook, processManualImport, processScreenshot, processEmailForward } from '@/lib/webhooks/hybridWebhook';
 import { autoReplyScheduler } from '@/lib/auto-reply/scheduler';
+import { schedulerService } from '@/lib/schedulerService';
+import { auth } from '@clerk/nextjs/server';
 
 /**
  * POST /api/webhooks/reviews
@@ -10,13 +12,23 @@ import { autoReplyScheduler } from '@/lib/auto-reply/scheduler';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { 
+    const {
       source, // 'api', 'manual_import', 'screenshot', 'email_forward', 'chrome_extension'
       data,
-      options = {}
+      options = {},
+      userId: providedUserId // Allow passing userId from external systems
     } = body;
 
-    console.log(`[Webhook API] Incoming from source: ${source}`);
+    // Get current user using Clerk auth, but allow external webhook calls
+    const { userId: authenticatedUserId } = await auth();
+    const userId = providedUserId || authenticatedUserId;
+
+    if (!userId) {
+      // For unauthenticated requests, we still allow processing but skip auto-reply
+      console.log(`[Webhook API] Processing unauthenticated request from source: ${source}`);
+    } else {
+      console.log(`[Webhook API] Incoming from source: ${source} for user: ${userId}`);
+    }
 
     let processedReviews: any[] = [];
 
@@ -61,9 +73,17 @@ export async function POST(request: NextRequest) {
         );
     }
 
-    // Process with auto-reply rules
-    for (const review of processedReviews) {
-      await autoReplyScheduler.processReviewWithRules(review, options);
+    // Process with auto-reply rules using the new database-backed scheduler (only if userId exists)
+    if (userId) {
+      for (const review of processedReviews) {
+        await autoReplyScheduler.processReviewWithRules(review, userId, options);
+      }
+
+      // Potentially trigger scheduled tasks if needed (but only periodically to avoid over-triggering)
+      if (schedulerService.shouldRunScheduler()) {
+        console.log('[Webhook] Triggering scheduled tasks...');
+        await schedulerService.executeScheduledTasks();
+      }
     }
 
     return NextResponse.json({

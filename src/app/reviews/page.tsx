@@ -182,13 +182,19 @@ function ReviewsContent() {
       }
       
       const data = await response.json()
-      setReviews(data.reviews)
-      setPlatforms(data.platforms)
-      setTotalPages(data.totalPages)
-      setTotalCount(data.totalCount)
-      setCurrentPage(data.currentPage)
+      setReviews(data.reviews || [])
+      setPlatforms(data.platforms || [])
+      setTotalPages(data.totalPages || 1)
+      setTotalCount(data.totalCount || 0)
+      setCurrentPage(data.currentPage || page)
     } catch (err: any) {
+      console.error('Reviews fetch error:', err)
       setError(err.message || 'Failed to load reviews')
+      // Set empty data to prevent UI breaking
+      setReviews([])
+      setPlatforms([])
+      setTotalPages(1)
+      setTotalCount(0)
     } finally {
       setLoading(false)
     }
@@ -420,7 +426,7 @@ function ReviewsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen bg-[#0a0a0f] text-white" suppressHydrationWarning>
       {/* Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
@@ -428,7 +434,7 @@ function ReviewsContent() {
       </div>
 
       {/* Header */}
-      <header className="sticky top-[57px] lg:top-0 z-40 border-b border-white/5 bg-[#0a0a0f]/80 backdrop-blur-xl">
+      <header className="sticky top-[57px] lg:top-0 z-40 border-b border-white/5 bg-[#0a0a0f]/80 backdrop-blur-xl" suppressHydrationWarning>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 sm:h-16 items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
@@ -444,7 +450,7 @@ function ReviewsContent() {
               </div>
             </div>
 
-            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0" suppressHydrationWarning>
               {/* Agentic Mode Toggle - Mobile icon only */}
               <button
                 onClick={() => setAgenticMode(!agenticMode)}
@@ -454,6 +460,7 @@ function ReviewsContent() {
                     : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
                 }`}
                 title="Agentic Mode"
+                suppressHydrationWarning
               >
                 <Brain className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span className="hidden md:inline">Agentic</span>
@@ -463,6 +470,7 @@ function ReviewsContent() {
                 onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
                 className="hidden sm:flex rounded-lg border border-white/10 bg-white/5 p-1.5 sm:p-2 text-gray-400 hover:text-white transition-colors"
                 title="Toggle View"
+                suppressHydrationWarning
               >
                 {viewMode === 'list' ? <LayoutGrid className="h-4 w-4 sm:h-5 sm:w-5" /> : <List className="h-4 w-4 sm:h-5 sm:w-5" />}
               </button>
@@ -472,6 +480,7 @@ function ReviewsContent() {
                 disabled={loading}
                 className="rounded-lg border border-white/10 bg-white/5 p-1.5 sm:p-2 text-gray-400 hover:text-white transition-colors disabled:opacity-50"
                 title="Refresh"
+                suppressHydrationWarning
               >
                 <RefreshCw className={`h-4 w-4 sm:h-5 sm:w-5 ${loading ? 'animate-spin' : ''}`} />
               </button>
@@ -479,6 +488,7 @@ function ReviewsContent() {
               <button
                 onClick={() => setShowAIGenerator(true)}
                 className="hidden lg:flex items-center gap-2 rounded-lg bg-purple-600/20 px-3 py-2 text-sm font-medium text-purple-400 hover:bg-purple-600/30 transition-colors"
+                suppressHydrationWarning
               >
                 <Bot className="h-4 w-4" />
                 AI Generator
@@ -487,6 +497,7 @@ function ReviewsContent() {
               <button
                 onClick={() => router.push('/reviews/add')}
                 className="flex items-center gap-1.5 sm:gap-2 rounded-lg bg-purple-600 px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white hover:bg-purple-500 transition-colors"
+                suppressHydrationWarning
               >
                 <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                 <span className="hidden sm:inline">Add Review</span>

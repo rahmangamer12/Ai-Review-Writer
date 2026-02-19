@@ -128,34 +128,34 @@ const ModernStatCard = ({ title, value, subtitle, icon: Icon, trend, trendValue,
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5 }}
       whileHover={{ scale: 1.02, y: -4 }}
-      className={`relative overflow-hidden rounded-xl sm:rounded-2xl border bg-gradient-to-br ${colorClasses[color]} p-3 sm:p-4 md:p-5 lg:p-6 transition-all duration-300 hover:shadow-2xl touch-enhanced`}
+      className={`relative overflow-hidden rounded-xl sm:rounded-2xl border bg-gradient-to-br ${colorClasses[color]} p-4 transition-all duration-300 hover:shadow-2xl touch-enhanced`}
     >
       {/* Background glow */}
       <div className={`absolute -right-10 -top-10 h-32 w-32 rounded-full bg-${color}-500/20 blur-3xl`} />
 
       <div className="relative z-10">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2">
-          <div className={`rounded-lg sm:rounded-xl bg-${color}-500/20 p-2 sm:p-3`}>
-            <Icon className={`h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 lg:h-6 lg:w-6 text-${color}-400`} />
+          <div className={`rounded-lg sm:rounded-xl bg-${color}-500/20 p-2`}>
+            <Icon className={`h-5 w-5 text-${color}-400`} />
           </div>
           {trend && (
-            <div className={`flex items-center gap-0.5 sm:gap-1 rounded-full px-1.5 py-0.5 sm:px-2 sm:py-1 text-[10px] sm:text-xs md:text-sm font-medium ${
+            <div className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs sm:text-sm font-medium ${
               trend === 'up' ? 'bg-emerald-500/20 text-emerald-400' :
               trend === 'down' ? 'bg-rose-500/20 text-rose-400' :
               'bg-gray-500/20 text-gray-400'
             }`}>
-              {trend === 'up' ? <ArrowUpRight className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4" /> :
-               trend === 'down' ? <ArrowDownRight className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4" /> :
-               <Minus className="h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4" />}
+              {trend === 'up' ? <ArrowUpRight className="h-3 w-3 sm:h-4 sm:w-4" /> :
+               trend === 'down' ? <ArrowDownRight className="h-3 w-3 sm:h-4 sm:w-4" /> :
+               <Minus className="h-3 w-3 sm:h-4 sm:w-4" />}
               {trendValue}%
             </div>
           )}
         </div>
 
-        <div className="mt-2 sm:mt-3 md:mt-4 lg:mt-4">
-          <p className="text-xl sm:text-2xl md:text-3xl lg:text-3xl font-bold text-white">{value}</p>
-          <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm md:text-base text-gray-400 truncate">{title}</p>
-          {subtitle && <p className="mt-0.5 sm:mt-1 text-[10px] sm:text-xs md:text-sm text-gray-500 truncate">{subtitle}</p>}
+        <div className="mt-3">
+          <p className="text-xl sm:text-2xl font-bold text-white">{value}</p>
+          <p className="mt-1 text-sm text-gray-400 truncate">{title}</p>
+          {subtitle && <p className="mt-1 text-xs text-gray-500 truncate">{subtitle}</p>}
         </div>
       </div>
     </motion.div>
@@ -311,20 +311,49 @@ export default function Dashboard() {
   const [showExportModal, setShowExportModal] = useState(false)
   const [aiInsights, setAiInsights] = useState<AIInsight[]>([])
   const [showAIInsightsPanel, setShowAIInsightsPanel] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   const fetchAnalytics = async () => {
     if (!userId) return
     try {
       setRefreshing(true)
+      setError(null)
       const response = await fetch(`/api/analytics?days=${timeRange}`)
-      if (!response.ok) throw new Error('Failed to fetch analytics')
+      if (!response.ok) {
+        throw new Error('Failed to fetch analytics')
+      }
       const analyticsData = await response.json()
       setData(analyticsData)
       
       // Generate AI insights based on data
       generateAIInsights(analyticsData)
     } catch (err: any) {
+      console.error('Dashboard fetch error:', err)
       setError(err.message || 'Failed to load dashboard data')
+      // Set empty data to prevent UI breaking
+      setData({
+        stats: {
+          totalReviews: 0,
+          pendingReviews: 0,
+          repliedReviews: 0,
+          rejectedReviews: 0,
+          avgRating: 0,
+          responseRate: 0,
+          totalReplies: 0,
+          aiGeneratedReplies: 0,
+          editedReplies: 0,
+        },
+        sentimentDistribution: { positive: 0, negative: 0, neutral: 0 },
+        platformDistribution: {},
+        ratingDistribution: [0, 0, 0, 0, 0],
+        timeSeriesData: [],
+        recentReviews: [],
+      })
     } finally {
       setLoading(false)
       setRefreshing(false)

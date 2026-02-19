@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     const startDate = new Date()
     startDate.setDate(startDate.getDate() - days)
 
-    // Fetch reviews for analytics
+    // Fetch reviews for analytics with better error handling
     const { data: reviews, error: reviewsError } = await supabase
       .from('reviews')
       .select('*')
@@ -26,7 +26,25 @@ export async function GET(req: NextRequest) {
 
     if (reviewsError) {
       console.error('Analytics reviews error:', reviewsError)
-      return NextResponse.json({ error: reviewsError.message }, { status: 500 })
+      // Return empty data structure instead of error to prevent UI breaking
+      return NextResponse.json({
+        stats: {
+          totalReviews: 0,
+          pendingReviews: 0,
+          repliedReviews: 0,
+          rejectedReviews: 0,
+          avgRating: 0,
+          responseRate: 0,
+          totalReplies: 0,
+          aiGeneratedReplies: 0,
+          editedReplies: 0,
+        },
+        sentimentDistribution: { positive: 0, negative: 0, neutral: 0 },
+        platformDistribution: {},
+        ratingDistribution: [0, 0, 0, 0, 0],
+        timeSeriesData: [],
+        recentReviews: [],
+      })
     }
 
     // Fetch all user reviews for complete stats
@@ -39,11 +57,11 @@ export async function GET(req: NextRequest) {
       console.error('All reviews error:', allReviewsError)
     }
 
-    // Fetch replies for analytics
-    const { data: replies, error: repliesError } = await supabase
-      .from('replies')
-      .select('*')
-      .in('review_id', allReviews?.map(r => r.id) || [])
+    // Fetch replies for analytics only if we have reviews
+    const reviewIds = allReviews?.map(r => r.id) || []
+    const { data: replies, error: repliesError } = reviewIds.length > 0 
+      ? await supabase.from('replies').select('*').in('review_id', reviewIds)
+      : { data: null, error: null }
 
     if (repliesError) {
       console.error('Analytics replies error:', repliesError)

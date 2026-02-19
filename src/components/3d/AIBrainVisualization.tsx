@@ -12,13 +12,21 @@ interface AIBrainProps {
 
 function PulsingOrb({ sentiment, activity }: AIBrainProps) {
   const meshRef = useRef<THREE.Mesh>(null)
-  
+
+  // Check if we're on a mobile device to reduce complexity
+  const isMobile = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(max-width: 768px)').matches ||
+      navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry|IEMobile)/);
+  }, []);
+
   useFrame((state) => {
     if (meshRef.current) {
-      meshRef.current.rotation.x = state.clock.elapsedTime * 0.1
-      meshRef.current.rotation.y = state.clock.elapsedTime * 0.15
-      
-      const scale = 1 + Math.sin(state.clock.elapsedTime * 2) * 0.1 * activity
+      const rotationSpeed = isMobile ? 0.05 : 0.1; // Slower rotation on mobile
+      meshRef.current.rotation.x = state.clock.elapsedTime * rotationSpeed
+      meshRef.current.rotation.y = state.clock.elapsedTime * (rotationSpeed * 1.5)
+
+      const scale = 1 + Math.sin(state.clock.elapsedTime * (isMobile ? 1 : 2)) * 0.1 * activity
       meshRef.current.scale.setScalar(scale)
     }
   })
@@ -35,16 +43,16 @@ function PulsingOrb({ sentiment, activity }: AIBrainProps) {
 
   return (
     <Trail
-      width={2}
-      length={6}
+      width={isMobile ? 1 : 2}
+      length={isMobile ? 3 : 6}
       color={color}
       attenuation={(width) => width}
     >
-      <Sphere ref={meshRef} args={[1, 32, 32]}>
+      <Sphere ref={meshRef} args={[1, isMobile ? 16 : 32, isMobile ? 16 : 32]}> {/* Lower geometry on mobile */}
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={0.5}
+          emissiveIntensity={isMobile ? 0.3 : 0.5} // Less emissive on mobile
           roughness={0.2}
           metalness={0.8}
         />
@@ -55,38 +63,46 @@ function PulsingOrb({ sentiment, activity }: AIBrainProps) {
 
 function ParticleField({ sentiment }: { sentiment: number }) {
   const particlesRef = useRef<THREE.Points>(null)
-  
+
+  // Check if we're on a mobile device to reduce particle count
+  const isMobile = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(max-width: 768px)').matches ||
+      navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry|IEMobile)/);
+  }, []);
+
   const particles = useMemo(() => {
-    const count = 100
+    const count = isMobile ? 30 : 100 // Reduce particles on mobile
     const positions = new Float32Array(count * 3)
     const colors = new Float32Array(count * 3)
-    
+
     for (let i = 0; i < count; i++) {
       const theta = Math.random() * Math.PI * 2
       const phi = Math.acos((Math.random() * 2) - 1)
       const radius = 2 + Math.random() * 2
-      
+
       positions[i * 3] = radius * Math.sin(phi) * Math.cos(theta)
       positions[i * 3 + 1] = radius * Math.sin(phi) * Math.sin(theta)
       positions[i * 3 + 2] = radius * Math.cos(phi)
-      
-      const color = sentiment > 0.3 
+
+      const color = sentiment > 0.3
         ? [0.06, 0.72, 0.51] // Green
         : sentiment < -0.3
-        ? [0.94, 0.27, 0.27] // Red  
+        ? [0.94, 0.27, 0.27] // Red
         : [0, 0.83, 1] // Cyan
-      
+
       colors[i * 3] = color[0]
       colors[i * 3 + 1] = color[1]
       colors[i * 3 + 2] = color[2]
     }
-    
+
     return { positions, colors }
-  }, [sentiment])
+  }, [sentiment, isMobile])
 
   useFrame((state) => {
     if (particlesRef.current) {
-      particlesRef.current.rotation.y = state.clock.elapsedTime * 0.05
+      const rotationSpeed = isMobile ? 0.02 : 0.05 // Slower rotation on mobile
+      particlesRef.current.rotation.y = state.clock.elapsedTime * rotationSpeed
     }
   })
 
@@ -103,34 +119,45 @@ function ParticleField({ sentiment }: { sentiment: number }) {
         />
       </bufferGeometry>
       <pointsMaterial
-        size={0.05}
+        size={isMobile ? 0.03 : 0.05} // Smaller particles on mobile
         vertexColors
         transparent
-        opacity={0.6}
+        opacity={isMobile ? 0.4 : 0.6} // Lower opacity on mobile
       />
     </points>
   )
 }
 
 export default function AIBrainVisualization({ sentiment = 0, activity = 0.5 }: AIBrainProps) {
+  // Check if we're on a mobile device to reduce complexity
+  const isMobile = useMemo(() => {
+    if (typeof window === 'undefined') return false;
+    return window.matchMedia('(max-width: 768px)').matches ||
+      navigator.userAgent.match(/(iPhone|iPod|iPad|Android|BlackBerry|IEMobile)/);
+  }, []);
+
   return (
     <div className="w-full h-full min-h-[400px]">
       <Canvas
-        camera={{ position: [0, 0, 5], fov: 75 }}
+        camera={{
+          position: [0, 0, isMobile ? 6 : 5], // Further camera on mobile
+          fov: isMobile ? 90 : 75 // Wider fov on mobile
+        }}
         className="w-full h-full"
+        frameloop={isMobile ? 'never' : 'always'} // Disable continuous rendering on mobile when not needed
       >
-        <ambientLight intensity={0.3} />
-        <pointLight position={[10, 10, 10]} intensity={1} />
-        <pointLight position={[-10, -10, -10]} intensity={0.5} />
-        
+        <ambientLight intensity={isMobile ? 0.2 : 0.3} /> {/* Less intense on mobile */}
+        <pointLight position={[10, 10, 10]} intensity={isMobile ? 0.7 : 1} />
+        <pointLight position={[-10, -10, -10]} intensity={isMobile ? 0.3 : 0.5} />
+
         <PulsingOrb sentiment={sentiment} activity={activity} />
         <ParticleField sentiment={sentiment} />
-        
+
         <OrbitControls
           enableZoom={false}
           enablePan={false}
-          autoRotate
-          autoRotateSpeed={0.5}
+          autoRotate={!isMobile} // Disable auto-rotate on mobile to reduce performance impact
+          autoRotateSpeed={isMobile ? 0.2 : 0.5} // Slower rotation on mobile when enabled
           maxPolarAngle={Math.PI}
           minPolarAngle={0}
         />

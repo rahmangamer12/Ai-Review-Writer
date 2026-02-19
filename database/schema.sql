@@ -167,6 +167,64 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Add scheduled_replies table for auto-reply system
+CREATE TABLE scheduled_replies (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  review_id UUID REFERENCES reviews(id) ON DELETE CASCADE,
+  platform TEXT,
+  reply_text TEXT NOT NULL,
+  scheduled_for TIMESTAMP WITH TIME ZONE NOT NULL,
+  status TEXT CHECK (status IN ('pending', 'sent', 'failed', 'cancelled')) DEFAULT 'pending',
+  auto_post BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Add auto_reply_rules table
+CREATE TABLE auto_reply_rules (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  conditions JSONB DEFAULT '{}',
+  actions JSONB DEFAULT '{}',
+  is_active BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create indexes for better performance
+CREATE INDEX idx_scheduled_replies_user_id ON scheduled_replies(user_id);
+CREATE INDEX idx_scheduled_replies_review_id ON scheduled_replies(review_id);
+CREATE INDEX idx_scheduled_replies_status ON scheduled_replies(status);
+CREATE INDEX idx_scheduled_replies_scheduled_for ON scheduled_replies(scheduled_for);
+
+CREATE INDEX idx_auto_reply_rules_user_id ON auto_reply_rules(user_id);
+CREATE INDEX idx_auto_reply_rules_active ON auto_reply_rules(is_active);
+
+-- Add RLS policy for new tables
+ALTER TABLE scheduled_replies ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own scheduled replies" ON scheduled_replies FOR SELECT
+  USING (user_id = auth.uid());
+
+CREATE POLICY "Users can insert own scheduled replies" ON scheduled_replies FOR INSERT
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can update own scheduled replies" ON scheduled_replies FOR UPDATE
+  USING (user_id = auth.uid());
+
+ALTER TABLE auto_reply_rules ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own auto-reply rules" ON auto_reply_rules FOR SELECT
+  USING (user_id = auth.uid());
+
+CREATE POLICY "Users can insert own auto-reply rules" ON auto_reply_rules FOR INSERT
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can update own auto-reply rules" ON auto_reply_rules FOR UPDATE
+  USING (user_id = auth.uid());
+
 -- Function to update analytics daily
 CREATE OR REPLACE FUNCTION update_daily_analytics()
 RETURNS void AS $$
@@ -188,19 +246,19 @@ BEGIN
     FROM reviews
     WHERE user_id = user_record.user_id
       AND created_at >= CURRENT_DATE;
-    
+
     SELECT COALESCE(AVG(rating), 0) INTO avg_rating
     FROM reviews
     WHERE user_id = user_record.user_id
       AND created_at >= CURRENT_DATE;
-    
+
     SELECT COUNT(*) INTO total_reviews_count
     FROM reviews
     WHERE user_id = user_record.user_id
       AND created_at >= CURRENT_DATE;
-    
+
     -- Calculate auto-reply rate
-    SELECT CASE 
+    SELECT CASE
       WHEN COUNT(*) = 0 THEN 0
       ELSE (COUNT(*) FILTER (WHERE auto_approved = true)::DECIMAL / COUNT(*)) * 100
     END INTO auto_reply_percentage
@@ -208,9 +266,9 @@ BEGIN
     JOIN reviews rev ON r.review_id = rev.id
     WHERE rev.user_id = user_record.user_id
       AND rev.created_at >= CURRENT_DATE;
-    
+
     -- Calculate human intervention rate
-    SELECT CASE 
+    SELECT CASE
       WHEN COUNT(*) = 0 THEN 0
       ELSE (COUNT(*) FILTER (WHERE is_edited_by_human = true)::DECIMAL / COUNT(*)) * 100
     END INTO human_intervention_percentage
@@ -218,16 +276,16 @@ BEGIN
     JOIN reviews rev ON r.review_id = rev.id
     WHERE rev.user_id = user_record.user_id
       AND rev.created_at >= CURRENT_DATE;
-    
+
     -- Upsert analytics record
     INSERT INTO analytics (
-      user_id, date, total_reviews, sentiment_distribution, 
+      user_id, date, total_reviews, sentiment_distribution,
       average_rating, auto_reply_rate, human_intervention_rate
     ) VALUES (
       user_record.user_id, CURRENT_DATE, total_reviews_count, sentiment_dist,
       avg_rating, auto_reply_percentage, human_intervention_percentage
     )
-    ON CONFLICT (user_id, date) 
+    ON CONFLICT (user_id, date)
     DO UPDATE SET
       total_reviews = EXCLUDED.total_reviews,
       sentiment_distribution = EXCLUDED.sentiment_distribution,

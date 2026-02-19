@@ -142,6 +142,7 @@ export default function Navigation() {
             exit={{ opacity: 0 }}
             className="lg:hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-40"
             onClick={() => setMobileMenuOpen(false)}
+            aria-hidden="true"
           />
         )}
       </AnimatePresence>
@@ -155,6 +156,10 @@ export default function Navigation() {
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
             className="lg:hidden fixed top-[57px] left-0 bottom-0 w-[280px] max-w-[85vw] glass-card border-r border-primary/20 p-4 flex flex-col z-50 overflow-y-auto"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Mobile Navigation Menu"
+            aria-hidden={!mobileMenuOpen}
             suppressHydrationWarning
           >
             {/* Navigation Items */}
@@ -168,11 +173,12 @@ export default function Navigation() {
                 >
                   <Link
                     href={item.href}
-                    className={`relative flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group overflow-hidden ${
+                    className={`relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group overflow-hidden min-h-[44px] ${
                       isActive(item.href)
                         ? 'bg-primary/20 text-white border border-primary/30'
                         : 'text-white/70 hover:text-white hover:bg-white/10'
                     }`}
+                    onClick={() => setMobileMenuOpen(false)} // Close menu on item click
                   >
                     {/* Background Gradient on Active */}
                     {isActive(item.href) && (
@@ -215,12 +221,12 @@ export default function Navigation() {
               <SignedOut>
                 <div className="space-y-2">
                   <SignInButton mode="modal">
-                    <button className="w-full px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-medium transition-all border border-white/20">
+                    <button className="w-full px-3 py-3 min-h-[44px] bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-medium transition-all border border-white/20">
                       Sign In
                     </button>
                   </SignInButton>
                   <SignUpButton mode="modal">
-                    <button className="w-full px-3 py-2 bg-gradient-to-r from-primary to-accent text-white rounded-xl text-sm font-medium hover:opacity-90 transition-all shadow-lg">
+                    <button className="w-full px-3 py-3 min-h-[44px] bg-gradient-to-r from-primary to-accent text-white rounded-xl text-sm font-medium hover:opacity-90 transition-all shadow-lg">
                       Sign Up Free
                     </button>
                   </SignUpButton>

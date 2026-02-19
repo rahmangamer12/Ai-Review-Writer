@@ -98,6 +98,23 @@
   }
 }
 
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  /* Remove all animations and transitions */
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Maintain scroll-behavior smooth for usability */
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 /* Mobile Optimizations */
 @media (max-width: 640px) {
   /* Reduce animations on mobile for better performance */
@@ -112,33 +129,93 @@
     min-width: 44px;
   }
 
+  /* Don't override padding for inputs and text areas */
+  input, select, textarea {
+    padding: 0.625rem 1rem;
+  }
+
   /* Optimize font sizes for readability */
   body {
     font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1 {
     font-size: 1.5rem;
+    line-height: 2rem;
   }
 
   h2 {
     font-size: 1.25rem;
+    line-height: 1.75rem;
+  }
+
+  h3 {
+    font-size: 1.125rem;
+    line-height: 1.5rem;
   }
 
   /* Improve scrolling behavior */
   html {
     scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Optimize modal positioning for mobile keyboards */
   .mobile-modal {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
     max-height: 100vh;
+    max-height: 100dvh; /* Dynamic viewport height for mobile */
     overflow-y: auto;
+  }
+
+  /* Prevent zoom on input focus */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="url"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Optimize spacing for mobile */
+  .space-y-8 > * + * {
+    margin-top: 1.5rem;
+  }
+
+  .space-y-6 > * + * {
+    margin-top: 1rem;
+  }
+
+  /* Better grid layouts for mobile */
+  .grid-cols-2 {
+    grid-template-columns: repeat(1, minmax(0, 1fr));
+  }
+
+  .grid-cols-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grid-cols-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  /* Extra small screens grid */
+  @media (max-width: 375px) {
+    .grid-cols-2,
+    .grid-cols-3,
+    .grid-cols-4 {
+      grid-template-columns: repeat(1, minmax(0, 1fr));
+    }
   }
 }
 
@@ -147,7 +224,46 @@
   /* Adjust for landscape orientation */
   .landscape-optimize {
     max-height: 70vh;
+    max-height: 70dvh;
     overflow-y: auto;
+  }
+
+  /* Compact header in landscape */
+  header {
+    min-height: 3rem;
+  }
+
+  /* Reduce vertical spacing in landscape */
+  .space-y-6 > * + * {
+    margin-top: 0.75rem;
+  }
+}
+
+/* Extra Small Devices (phones in portrait, less than 375px) */
+@media (max-width: 374px) {
+  body {
+    font-size: 14px;
+  }
+
+  h1 {
+    font-size: 1.25rem;
+  }
+
+  h2 {
+    font-size: 1.125rem;
+  }
+
+  /* Tighter spacing for small screens */
+  .p-6 {
+    padding: 1rem;
+  }
+
+  .p-4 {
+    padding: 0.75rem;
+  }
+
+  .gap-4 {
+    gap: 0.75rem;
   }
 }
 

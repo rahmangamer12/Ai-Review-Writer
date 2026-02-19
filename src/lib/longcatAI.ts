@@ -48,17 +48,69 @@ interface ChatCompletionResponse {
   };
 }
 
+// Circuit breaker implementation
+class CircuitBreaker {
+  private failureCount = 0;
+  private lastFailureTime: number | null = null;
+  private state: 'CLOSED' | 'OPEN' | 'HALF_OPEN' = 'CLOSED';
+  private readonly failureThreshold = 5;
+  private readonly timeoutMs = 60000; // 1 minute
+
+  public async call<T>(fn: () => Promise<T>): Promise<T> {
+    if (this.state === 'OPEN') {
+      if (Date.now() - (this.lastFailureTime || 0) > this.timeoutMs) {
+        this.state = 'HALF_OPEN';
+      } else {
+        throw new Error('Circuit breaker is OPEN');
+      }
+    }
+
+    try {
+      const result = await fn();
+      this.onSuccess();
+      return result;
+    } catch (error) {
+      this.onFailure();
+      throw error;
+    }
+  }
+
+  private onSuccess() {
+    this.failureCount = 0;
+    this.state = 'CLOSED';
+  }
+
+  private onFailure() {
+    this.failureCount++;
+    this.lastFailureTime = Date.now();
+
+    if (this.failureCount >= this.failureThreshold) {
+      this.state = 'OPEN';
+    }
+  }
+
+  public isOpen() {
+    return this.state === 'OPEN';
+  }
+
+  public getFailureCount() {
+    return this.failureCount;
+  }
+}
+
 export class LongCatAI {
   private apiKey: string;
   private apiUrl: string;
+  private circuitBreaker: CircuitBreaker;
 
   constructor(apiKey?: string, apiUrl: string = LONGCAT_API_URL) {
     this.apiKey = apiKey || getApiKey();
     this.apiUrl = apiUrl;
+    this.circuitBreaker = new CircuitBreaker();
   }
 
   /**
-   * Send a chat completion request to LongCat AI
+   * Send a chat completion request to LongCat AI with retry and circuit breaker
    */
   async chat(
     messages: ChatMessage[],
@@ -66,46 +118,82 @@ export class LongCatAI {
     options: {
       max_tokens?: number;
       temperature?: number;
+      retries?: number;
+      timeout?: number;
     } = {}
   ): Promise<string> {
-    try {
-      if (!this.apiKey) {
-        console.warn('[LongCat] No API key found, using fallback responses');
-        throw new Error('No API key configured');
-      }
-
-      console.log('[LongCat] Sending request with model:', model);
-
-      const response = await fetch(this.apiUrl, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${this.apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model,
-          messages,
-          max_tokens: options.max_tokens || 1000,
-          temperature: options.temperature || 0.7,
-        } as ChatCompletionRequest),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[LongCat] API error:', response.status, errorText);
-        throw new Error(`LongCat API error: ${response.status} - ${errorText}`);
-      }
-
-      const data: ChatCompletionResponse = await response.json();
-      const content = data.choices[0]?.message?.content || "";
-      
-      console.log('[LongCat] Response received:', content.substring(0, 100) + '...');
-      
-      return content;
-    } catch (error) {
-      console.error("[LongCat] Error:", error);
-      throw error;
+    // Check if circuit breaker is open
+    if (this.circuitBreaker.isOpen()) {
+      console.warn('[LongCat] Circuit breaker is open, using fallback response');
+      throw new Error('LongCat service is temporarily unavailable (circuit breaker open)');
     }
+
+    const maxRetries = options.retries ?? 3;
+    const timeoutMs = options.timeout ?? 30000; // 30 seconds default timeout
+
+    // Function to make the API call with timeout
+    const makeCall = async (): Promise<string> => {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+      try {
+        if (!this.apiKey) {
+          console.warn('[LongCat] No API key found, using fallback responses');
+          throw new Error('No API key configured');
+        }
+
+        console.log('[LongCat] Sending request with model:', model);
+
+        const response = await fetch(this.apiUrl, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${this.apiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model,
+            messages,
+            max_tokens: options.max_tokens || 1000,
+            temperature: options.temperature || 0.7,
+          } as ChatCompletionRequest),
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('[LongCat] API error:', response.status, errorText);
+          throw new Error(`LongCat API error: ${response.status} - ${errorText}`);
+        }
+
+        const data: ChatCompletionResponse = await response.json();
+        const content = data.choices[0]?.message?.content || "";
+
+        console.log('[LongCat] Response received:', content.substring(0, 100) + '...');
+
+        return content;
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    };
+
+    // Execute with circuit breaker and retry logic
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        return await this.circuitBreaker.call(makeCall);
+      } catch (error) {
+        console.error(`[LongCat] Attempt ${attempt + 1} failed:`, error);
+
+        // If this was the last attempt, throw the error
+        if (attempt === maxRetries) {
+          throw error;
+        }
+
+        // Wait before retrying (exponential backoff)
+        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+      }
+    }
+
+    throw new Error('Max retries exceeded');
   }
 
   /**
@@ -144,7 +232,7 @@ Return ONLY the JSON object, no additional text.`;
           },
         ],
         "LongCat-Flash-Chat",
-        { temperature: 0.3 }
+        { temperature: 0.3, retries: 2 }
       );
 
       try {
@@ -163,7 +251,14 @@ Return ONLY the JSON object, no additional text.`;
       }
     } catch (error) {
       console.error("[LongCat] Sentiment analysis error:", error);
-      return { sentiment: "neutral", score: 0, confidence: 0.5, emotion: "neutral", topics: [] };
+      // Return a default sentiment when the API is unavailable
+      return {
+        sentiment: "neutral",
+        score: 0,
+        confidence: 0.5,
+        emotion: "neutral",
+        topics: [],
+      };
     }
   }
 
@@ -222,7 +317,7 @@ Return ONLY the JSON object.`;
           },
         ],
         "LongCat-Flash-Chat",
-        { temperature: 0.8 }
+        { temperature: 0.8, retries: 2 }
       );
 
       try {
@@ -306,7 +401,7 @@ Return ONLY a JSON object with:
           },
         ],
         "LongCat-Flash-Chat",
-        { temperature: 0.9, max_tokens: 500 }
+        { temperature: 0.9, max_tokens: 500, retries: 1 }
       );
 
       try {
@@ -338,10 +433,10 @@ Return ONLY a JSON object with:
             'Terrible service and quality. Expected much better.',
           ],
         };
-        
+
         const content = templates[rating]?.[0] || 'Average experience.';
         const sentiment = rating >= 4 ? 'positive' : rating === 3 ? 'neutral' : 'negative';
-        
+
         return {
           content,
           sentiment,
@@ -403,7 +498,7 @@ Return ONLY the JSON object.`;
           },
         ],
         "LongCat-Flash-Thinking",
-        { temperature: 0.4, max_tokens: 1500 }
+        { temperature: 0.4, max_tokens: 1500, retries: 2 }
       );
 
       try {
@@ -459,7 +554,7 @@ Return ONLY the JSON object.`;
           },
         ],
         "LongCat-Flash-Chat",
-        { temperature: 0.1, max_tokens: 100 }
+        { temperature: 0.1, max_tokens: 100, retries: 1 }
       );
 
       try {
@@ -484,7 +579,7 @@ Return ONLY the JSON object.`;
     summary: string;
   }> {
     try {
-      const reviewsSummary = reviews.slice(0, 20).map((r, i) => 
+      const reviewsSummary = reviews.slice(0, 20).map((r, i) =>
         `${i + 1}. Rating: ${r.rating}/5 - ${r.text}`
       ).join("\n");
 
@@ -513,7 +608,7 @@ Return ONLY a JSON object with these fields.`;
           },
         ],
         "LongCat-Flash-Thinking",
-        { temperature: 0.5, max_tokens: 2000 }
+        { temperature: 0.5, max_tokens: 2000, retries: 2 }
       );
 
       try {

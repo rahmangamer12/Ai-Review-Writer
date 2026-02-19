@@ -11,9 +11,9 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url)
-    const status = searchParams.get('status') as 'pending' | 'approved' | 'rejected' | null
-    const platform = searchParams.get('platform')
-    const sentiment = searchParams.get('sentiment')
+    const statusParam = searchParams.get('status')
+    const platformParam = searchParams.get('platform')
+    const sentimentParam = searchParams.get('sentiment')
     const search = searchParams.get('search')
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '20')
@@ -26,18 +26,19 @@ export async function GET(req: NextRequest) {
       .select('*', { count: 'exact' })
       .eq('user_id', userId)
 
-    // Apply filters
-    if (status) {
-      query = query.eq('status', status)
+    // Apply filters - only apply if not 'all'
+    if (statusParam && statusParam !== 'all') {
+      query = query.eq('status', statusParam as 'pending' | 'approved' | 'rejected')
     }
-    if (platform) {
-      query = query.eq('platform', platform)
+    if (platformParam && platformParam !== 'all') {
+      query = query.eq('platform', platformParam)
     }
-    if (sentiment) {
-      query = query.eq('sentiment_label', sentiment)
+    if (sentimentParam && sentimentParam !== 'all') {
+      query = query.eq('sentiment_label', sentimentParam)
     }
-    if (search) {
-      query = query.or(`reviewer_name.ilike.%${search}%,review_text.ilike.%${search}%`)
+    if (search && search.trim()) {
+      // Handle both old and new column names for compatibility
+      query = query.or(`reviewer_name.ilike.%${search}%,author_name.ilike.%${search}%,review_text.ilike.%${search}%,content.ilike.%${search}%`)
     }
 
     // Apply sorting
@@ -52,15 +53,21 @@ export async function GET(req: NextRequest) {
 
     if (error) {
       console.error('Reviews list error:', error)
-      return NextResponse.json({ error: error.message }, { status: 500 })
+      // Return empty structure instead of error
+      return NextResponse.json({
+        reviews: [],
+        totalCount: 0,
+        totalPages: 0,
+        currentPage: page,
+        platforms: [],
+      })
     }
 
-    // Fetch replies for these reviews
+    // Fetch replies for these reviews only if we have reviews
     const reviewIds = reviews?.map(r => r.id) || []
-    const { data: replies } = await supabase
-      .from('replies')
-      .select('*')
-      .in('review_id', reviewIds)
+    const { data: replies } = reviewIds.length > 0
+      ? await supabase.from('replies').select('*').in('review_id', reviewIds)
+      : { data: null }
 
     // Map replies to reviews
     const reviewsWithReplies = reviews?.map(review => ({

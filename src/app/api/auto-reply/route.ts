@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { 
-  autoReplyScheduler, 
-  getScheduledReplies, 
-  getAutoReplyRules, 
+import {
+  autoReplyScheduler,
+  getScheduledReplies,
+  getAutoReplyRules,
   updateAutoReplyRule,
   cancelScheduledReply,
-  scheduleReply
+  scheduleReply,
+  initializeUserAutoReply
 } from '@/lib/auto-reply/scheduler';
+import { auth } from '@clerk/nextjs/server';
 
 /**
  * POST /api/auto-reply
@@ -14,18 +16,31 @@ import {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Get current user using Clerk auth
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { action } = body;
 
     switch (action) {
       case 'schedule':
         const { reviewId, platform, replyText, delayMinutes, autoPost } = body;
-        const scheduled = scheduleReply(reviewId, platform, replyText, delayMinutes, autoPost);
+        const scheduled = await scheduleReply(userId, reviewId, platform, replyText, delayMinutes, autoPost);
+        if (!scheduled) {
+          return NextResponse.json({ error: 'Failed to schedule reply' }, { status: 500 });
+        }
         return NextResponse.json({ success: true, scheduled });
 
       case 'cancel':
         const { scheduledId } = body;
-        const cancelled = cancelScheduledReply(scheduledId);
+        const cancelled = await cancelScheduledReply(scheduledId);
         return NextResponse.json({ success: cancelled, message: cancelled ? 'Reply cancelled' : 'Could not cancel reply' });
 
       case 'execute_now':
@@ -50,25 +65,35 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
+    // Get current user using Clerk auth
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type');
 
     if (type === 'rules') {
-      const rules = getAutoReplyRules();
+      const rules = await getAutoReplyRules(userId);
       return NextResponse.json({ success: true, rules });
     }
 
     if (type === 'scheduled') {
       const status = searchParams.get('status') || undefined;
-      const replies = getScheduledReplies(status);
+      const replies = await getScheduledReplies(userId, status);
       return NextResponse.json({ success: true, replies });
     }
 
     // Default: return everything
     return NextResponse.json({
       success: true,
-      rules: getAutoReplyRules(),
-      scheduled: getScheduledReplies(),
+      rules: await getAutoReplyRules(userId),
+      scheduled: await getScheduledReplies(userId),
     });
 
   } catch (error: any) {
@@ -83,11 +108,21 @@ export async function GET(request: NextRequest) {
  */
 export async function PUT(request: NextRequest) {
   try {
+    // Get current user using Clerk auth
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     const { ruleId, updates } = body;
 
-    const updated = updateAutoReplyRule(ruleId, updates);
-    
+    const updated = await updateAutoReplyRule(userId, ruleId, updates);
+
     if (!updated) {
       return NextResponse.json({ error: 'Rule not found' }, { status: 404 });
     }
