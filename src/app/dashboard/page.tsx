@@ -167,7 +167,7 @@ const ModernLineChart = ({ data, color = 'purple' }: { data: any[], color?: stri
   const maxValue = Math.max(...data.map(d => d.count), 1)
 
   return (
-    <div className="relative h-48 sm:h-64 w-full">
+    <div className="relative h-48 sm:h-64 w-full min-w-0">
       {/* Grid lines */}
       <div className="absolute inset-0 flex flex-col justify-between">
         {[...Array(5)].map((_, i) => (
@@ -176,7 +176,7 @@ const ModernLineChart = ({ data, color = 'purple' }: { data: any[], color?: stri
       </div>
 
       {/* Chart bars */}
-      <div className="absolute inset-0 flex items-end justify-between gap-0.5 sm:gap-1">
+      <div className="absolute inset-0 flex items-end justify-between gap-0.5 sm:gap-1 min-w-0 overflow-x-auto">
         {data.map((item, index) => {
           const height = (item.count / maxValue) * 100
           return (
@@ -1130,8 +1130,8 @@ export default function Dashboard() {
 
       {/* Mobile Tabs - Horizontal scroll on mobile */}
       <div className="sticky top-[57px] lg:top-0 z-40 border-b border-white/5 bg-[#0a0a0f]/95 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-w-0">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-3 min-w-0">
             {[
               { id: 'overview', label: 'Overview', icon: LayoutDashboard },
               { id: 'reviews', label: 'Reviews', icon: MessageSquare },
@@ -1154,7 +1154,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 min-w-0">
         {/* Error Message */}
         <AnimatePresence>
           {error && (

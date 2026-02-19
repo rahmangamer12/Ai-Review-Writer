@@ -155,7 +155,7 @@ export default function Navigation() {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="lg:hidden fixed top-[57px] left-0 bottom-0 w-[280px] max-w-[85vw] glass-card border-r border-primary/20 p-4 flex flex-col z-50 overflow-y-auto"
+            className="lg:hidden fixed top-[57px] left-0 bottom-0 w-[280px] max-w-[90vw] glass-card border-r border-primary/20 p-4 flex flex-col z-50 overflow-y-auto"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile Navigation Menu"
@@ -245,7 +245,7 @@ export default function Navigation() {
       <motion.nav
         initial={{ x: -300 }}
         animate={{ x: 0 }}
-        className="hidden lg:flex w-72 h-full glass-card border-r border-primary/20 p-6 flex-col"
+        className="hidden lg:flex w-72 xl:w-80 h-full glass-card border-r border-primary/20 p-6 flex-col min-w-[288px]"
         suppressHydrationWarning
       >
         {/* Logo */}

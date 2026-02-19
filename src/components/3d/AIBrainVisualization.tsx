@@ -137,7 +137,7 @@ export default function AIBrainVisualization({ sentiment = 0, activity = 0.5 }: 
   }, []);
 
   return (
-    <div className="w-full h-full min-h-[400px]">
+    <div className="w-full h-full min-h-[300px] sm:min-h-[400px]">
       <Canvas
         camera={{
           position: [0, 0, isMobile ? 6 : 5], // Further camera on mobile
@@ -145,6 +145,11 @@ export default function AIBrainVisualization({ sentiment = 0, activity = 0.5 }: 
         }}
         className="w-full h-full"
         frameloop={isMobile ? 'never' : 'always'} // Disable continuous rendering on mobile when not needed
+        performance={{ min: isMobile ? 0.1 : 0.5 }} // Lower performance threshold on mobile
+        gl={{
+          alpha: true,
+          antialias: !isMobile // Disable antialiasing on mobile for performance
+        }}
       >
         <ambientLight intensity={isMobile ? 0.2 : 0.3} /> {/* Less intense on mobile */}
         <pointLight position={[10, 10, 10]} intensity={isMobile ? 0.7 : 1} />

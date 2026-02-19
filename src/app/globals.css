@@ -267,6 +267,51 @@
   }
 }
 
+/* Fix for flexbox and grid responsiveness */
+.overflow-auto,
+.overflow-y-auto,
+.overflow-x-auto {
+  min-width: 0;
+}
+
+.flex,
+.grid {
+  min-width: 0;
+}
+
+/* Responsive table fixes */
+.table-responsive {
+  display: block;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  -ms-overflow-style: -ms-autohiding-scrollbar;
+}
+
+/* Mobile touch targets */
+.btn-touch,
+.link-touch,
+.input-touch {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 11px 16px;
+}
+
+/* Responsive text sizing */
+.text-xs { font-size: 0.75rem; line-height: 1rem; } /* 12px */
+.text-sm { font-size: 0.875rem; line-height: 1.25rem; } /* 14px */
+.text-base { font-size: 1rem; line-height: 1.5rem; } /* 16px */
+.text-lg { font-size: 1.125rem; line-height: 1.75rem; } /* 18px */
+.text-xl { font-size: 1.25rem; line-height: 1.75rem; } /* 20px */
+.text-2xl { font-size: 1.5rem; line-height: 2rem; } /* 24px */
+
+/* Responsive on extra small screens */
+@media (max-width: 320px) {
+  .text-sm { font-size: 0.8125rem; line-height: 1.125rem; } /* ~13px */
+  .text-base { font-size: 0.875rem; line-height: 1.25rem; } /* 14px */
+  .text-lg { font-size: 1rem; line-height: 1.5rem; } /* 16px */
+}
+
 /* Large Touch Device Optimizations */
 @media (pointer: coarse) {
   /* Enhance touch targets for touch devices */

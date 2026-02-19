@@ -34,7 +34,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en" className="dark" suppressHydrationWarning>
         <head>
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
         {/* Pre-hydration script to suppress browser extension attributes - Client Only */}
           <script
             suppressHydrationWarning
@@ -90,9 +90,9 @@ export default function RootLayout({
           <ClientOnly>
             <DynamicBackground />
           </ClientOnly>
-          <div className="flex h-screen relative z-10" suppressHydrationWarning>
+          <div className="flex flex-col lg:flex-row h-screen relative z-10" suppressHydrationWarning>
             <Navigation />
-            <main className="flex-1 overflow-y-auto custom-scrollbar pt-[57px] lg:pt-0" suppressHydrationWarning>
+            <main className="flex-1 overflow-y-auto custom-scrollbar pt-[57px] lg:pt-0 min-w-0" suppressHydrationWarning>
               {children}
             </main>
           </div>
