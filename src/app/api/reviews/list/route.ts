@@ -53,14 +53,37 @@ export async function GET(req: NextRequest) {
 
     if (error) {
       console.error('Reviews list error:', error)
-      // Return empty structure instead of error
-      return NextResponse.json({
-        reviews: [],
-        totalCount: 0,
-        totalPages: 0,
-        currentPage: page,
-        platforms: [],
-      })
+      // Check if this is a connection/network error - if so, return more detailed response
+      if (error.message && (
+        error.message.includes('connection') ||
+        error.message.includes('network') ||
+        error.message.includes('fetch failed') ||
+        error.message.includes('ENOTFOUND') ||
+        error.message.includes('ECONNREFUSED') ||
+        error.message.includes('ETIMEDOUT')
+      )) {
+        console.warn('Database connection issue detected, returning mock reviews data')
+        // Return mock data to prevent UI breaking while indicating connection issue
+        return NextResponse.json({
+          reviews: [],
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: page,
+          platforms: [],
+          connectionStatus: 'disconnected',
+          message: 'Database connection failed - using mock data',
+        })
+      } else {
+        // Return empty structure instead of error
+        return NextResponse.json({
+          reviews: [],
+          totalCount: 0,
+          totalPages: 0,
+          currentPage: page,
+          platforms: [],
+          connectionStatus: 'ok',
+        })
+      }
     }
 
     // Fetch replies for these reviews only if we have reviews

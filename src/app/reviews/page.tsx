@@ -109,7 +109,7 @@ function ReviewsContent() {
   const searchParams = useSearchParams()
   const { userId } = useAuth()
   const { user } = useUser()
-  
+
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -119,6 +119,12 @@ function ReviewsContent() {
   const [generatingReply, setGeneratingReply] = useState<string | null>(null)
   const [replyText, setReplyText] = useState('')
   const [showReplyModal, setShowReplyModal] = useState(false)
+  const [mounted, setMounted] = useState(false)
+
+  // Prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true)
+  }, [])
   
   // AI Generator State
   const [showAIGenerator, setShowAIGenerator] = useState(false)
@@ -159,29 +165,29 @@ function ReviewsContent() {
 
   const fetchReviews = useCallback(async (page = currentPage) => {
     if (!userId) return
-    
+
     setLoading(true)
     setError(null)
-    
+
     try {
       const params = new URLSearchParams()
       params.append('page', page.toString())
       params.append('limit', itemsPerPage.toString())
       params.append('sortBy', filters.sortBy)
       params.append('sortOrder', filters.sortOrder)
-      
+
       if (filters.status !== 'all') params.append('status', filters.status)
       if (filters.platform !== 'all') params.append('platform', filters.platform)
       if (filters.sentiment !== 'all') params.append('sentiment', filters.sentiment)
       if (filters.search) params.append('search', filters.search)
-      
+
       const response = await fetch(`/api/reviews/list?${params}`)
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch reviews')
-      }
-      
       const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch reviews')
+      }
+
       setReviews(data.reviews || [])
       setPlatforms(data.platforms || [])
       setTotalPages(data.totalPages || 1)
@@ -189,7 +195,9 @@ function ReviewsContent() {
       setCurrentPage(data.currentPage || page)
     } catch (err: any) {
       console.error('Reviews fetch error:', err)
-      setError(err.message || 'Failed to load reviews')
+      // Provide user-friendly error message
+      setError('Unable to load reviews data. ' + (err.message || 'Please check your connection and environment variables.'))
+
       // Set empty data to prevent UI breaking
       setReviews([])
       setPlatforms([])
@@ -425,8 +433,20 @@ function ReviewsContent() {
     )
   }
 
+  if (!mounted) {
+    // Render a simple loading state during hydration to prevent mismatches
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500 mb-4"></div>
+          <p className="text-gray-400">Loading reviews...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white" suppressHydrationWarning>
+    <div className="min-h-screen bg-[#0a0a0f] text-white">
       {/* Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />

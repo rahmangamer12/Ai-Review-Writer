@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth, useUser } from '@clerk/nextjs'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  MessageSquare, Star, CheckCircle, Clock, AlertCircle, 
+import {
+  MessageSquare, Star, CheckCircle, Clock, AlertCircle,
   TrendingUp, Plus, Settings, Sparkles, ExternalLink,
   BarChart3, PieChart, Activity, Zap, RefreshCw, ChevronRight,
   Calendar, Filter, Bell, Search, User, LogOut, ChevronDown,
@@ -324,17 +324,21 @@ export default function Dashboard() {
       setRefreshing(true)
       setError(null)
       const response = await fetch(`/api/analytics?days=${timeRange}`)
-      if (!response.ok) {
-        throw new Error('Failed to fetch analytics')
-      }
       const analyticsData = await response.json()
+
+      if (!response.ok) {
+        throw new Error(analyticsData.error || 'Failed to fetch analytics')
+      }
+
       setData(analyticsData)
-      
+
       // Generate AI insights based on data
       generateAIInsights(analyticsData)
     } catch (err: any) {
       console.error('Dashboard fetch error:', err)
-      setError(err.message || 'Failed to load dashboard data')
+      // Provide user-friendly error message
+      setError('Unable to load analytics data. ' + (err.message || 'Please check your connection and environment variables.'))
+
       // Set empty data to prevent UI breaking
       setData({
         stats: {
@@ -1118,6 +1122,18 @@ export default function Dashboard() {
       </div>
     </motion.div>
   )
+
+  if (!mounted) {
+    // Render a simple loading state during hydration to prevent mismatches
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500 mb-4"></div>
+          <p className="text-gray-400">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-white">
