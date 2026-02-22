@@ -16,9 +16,9 @@ export async function POST(
 
     const { id } = await params
 
-    const { error } = await supabase
+    const { error } = await (supabase
       .from('notifications')
-      .update({ read: true, updated_at: new Date().toISOString() })
+      .update({ read: true, updated_at: new Date().toISOString() }) as any)
       .eq('id', id)
       .eq('user_id', userId)
 

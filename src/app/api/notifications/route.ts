@@ -11,9 +11,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: notifications, error } = await supabase
+    const { data: notifications, error } = await (supabase
       .from('notifications')
-      .select('*')
+      .select('*') as any)
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(50)
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { title, message, type = 'info' } = body
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase
       .from('notifications')
       .insert({
         user_id: userId,
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         message,
         type,
         read: false,
-      })
+      }) as any)
       .select()
       .single()
 

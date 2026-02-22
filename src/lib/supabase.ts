@@ -218,9 +218,9 @@ const createSupabaseClient = () => {
       from: (table: string) => {
         const originalFrom = client.from(table);
         return {
-          select: async (...args: any[]) => {
+          select: async (columns?: string, options?: any) => {
             try {
-              const result = await originalFrom.select(...args);
+              const result = await originalFrom.select(columns, options);
               // Check if the error is related to network/DNS issues
               if (result.error && (
                 result.error.message.includes('ENOTFOUND') ||
@@ -251,9 +251,9 @@ const createSupabaseClient = () => {
               return { data: [], error: { message: 'Request failed', status: 500 } };
             }
           },
-          insert: async (...args: any[]) => {
+          insert: async (values: any, options?: any) => {
             try {
-              const result = await originalFrom.insert(...args);
+              const result = await originalFrom.insert(values, options);
               if (result.error && (
                 result.error.message.includes('ENOTFOUND') ||
                 result.error.message.includes('network') ||
@@ -282,9 +282,9 @@ const createSupabaseClient = () => {
               return { data: [], error: { message: 'Request failed', status: 500 } };
             }
           },
-          update: async (...args: any[]) => {
+          update: async (values: any, options?: any) => {
             try {
-              const result = await originalFrom.update(...args);
+              const result = await originalFrom.update(values, options);
               if (result.error && (
                 result.error.message.includes('ENOTFOUND') ||
                 result.error.message.includes('network') ||
@@ -313,9 +313,9 @@ const createSupabaseClient = () => {
               return { data: [], error: { message: 'Request failed', status: 500 } };
             }
           },
-          upsert: async (...args: any[]) => {
+          upsert: async (values: any, options?: any) => {
             try {
-              const result = await originalFrom.upsert(...args);
+              const result = await originalFrom.upsert(values, options);
               if (result.error && (
                 result.error.message.includes('ENOTFOUND') ||
                 result.error.message.includes('network') ||
@@ -344,9 +344,9 @@ const createSupabaseClient = () => {
               return { data: [], error: { message: 'Request failed', status: 500 } };
             }
           },
-          delete: async (...args: any[]) => {
+          delete: async (options?: any) => {
             try {
-              const result = await originalFrom.delete(...args);
+              const result = await originalFrom.delete(options);
               if (result.error && (
                 result.error.message.includes('ENOTFOUND') ||
                 result.error.message.includes('network') ||
@@ -377,7 +377,7 @@ const createSupabaseClient = () => {
           },
           eq: (column: any, value: any) => {
             try {
-              const chainedQuery = originalFrom.eq(column, value);
+              const chainedQuery = (originalFrom as any).eq(column, value);
               return {
                 select: async (...args: any[]) => {
                   try {
@@ -685,7 +685,7 @@ const createSupabaseClient = () => {
           },
           gte: (column: any, value: any) => {
             try {
-              const chainedQuery = originalFrom.gte(column, value);
+              const chainedQuery = (originalFrom as any).gte(column, value);
               return {
                 select: async (...args: any[]) => {
                   try {
@@ -993,7 +993,7 @@ const createSupabaseClient = () => {
           },
           in: (column: any, value: any) => {
             try {
-              const chainedQuery = originalFrom.in(column, value);
+              const chainedQuery = (originalFrom as any).in(column, value);
               return {
                 select: async (...args: any[]) => {
                   try {
@@ -1301,7 +1301,7 @@ const createSupabaseClient = () => {
           },
           order: (column: any, options: any) => {
             try {
-              const chainedQuery = originalFrom.order(column, options);
+              const chainedQuery = (originalFrom as any).order(column, options);
               return {
                 select: async (...args: any[]) => {
                   try {
@@ -1478,7 +1478,7 @@ const createSupabaseClient = () => {
           },
           range: (from: number, to: number) => {
             try {
-              const chainedQuery = originalFrom.range(from, to);
+              const chainedQuery = (originalFrom as any).range(from, to);
               return {
                 select: async (...args: any[]) => {
                   try {
@@ -1644,7 +1644,7 @@ const createSupabaseClient = () => {
           },
           or: (filters: any) => {
             try {
-              const chainedQuery = originalFrom.or(filters);
+              const chainedQuery = (originalFrom as any).or(filters);
               return {
                 select: async (...args: any[]) => {
                   try {
@@ -1810,7 +1810,7 @@ const createSupabaseClient = () => {
           },
           not: (column: any, operator: any, value: any) => {
             try {
-              const chainedQuery = originalFrom.not(column, operator, value);
+              const chainedQuery = (originalFrom as any).not(column, operator, value);
               return {
                 select: async (...args: any[]) => {
                   try {
@@ -2047,36 +2047,42 @@ if (supabaseUrl && supabaseAnonKey) {
   if (typeof window !== 'undefined') {
     // Test connection once on client side (wrap in try-catch to prevent errors on mock client)
     try {
-      supabase.from('reviews').select('count', { count: 'exact', head: true }).then(({ error }) => {
-        if (error) {
-          console.warn('Supabase connection test failed:', error.message)
+      (async () => {
+        try {
+          const { error } = await supabase.from('reviews').select('count', { count: 'exact', head: true });
+          if (error) {
+            console.warn('Supabase connection test failed:', error.message)
+            console.info('Application will continue to work with mock data instead of database.')
+          } else {
+            console.log('✅ Supabase connection successful')
+          }
+        } catch (err: any) {
+          console.warn('Supabase connection test failed:', err.message)
           console.info('Application will continue to work with mock data instead of database.')
-        } else {
-          console.log('✅ Supabase connection successful')
         }
-      }).catch(err => {
-        console.warn('Supabase connection test failed:', err.message)
-        console.info('Application will continue to work with mock data instead of database.')
-      })
-    } catch (testError) {
+      })()
+    } catch (testError: any) {
       console.warn('Supabase connection test failed (likely using mock client):', testError.message)
       console.info('Application will continue to work with mock data instead of database.')
     }
   } else {
     // Server-side connection test
     try {
-      supabase.from('reviews').select('count', { count: 'exact', head: true }).then(({ error }) => {
-        if (error) {
-          console.warn('Supabase connection test failed:', error.message)
+      (async () => {
+        try {
+          const { error } = await supabase.from('reviews').select('count', { count: 'exact', head: true });
+          if (error) {
+            console.warn('Supabase connection test failed:', error.message)
+            console.info('Application will continue to work with mock data instead of database.')
+          } else {
+            console.log('✅ Supabase connection successful')
+          }
+        } catch (err: any) {
+          console.warn('Supabase connection test failed:', err.message)
           console.info('Application will continue to work with mock data instead of database.')
-        } else {
-          console.log('✅ Supabase connection successful')
         }
-      }).catch(err => {
-        console.warn('Supabase connection test failed:', err.message)
-        console.info('Application will continue to work with mock data instead of database.')
-      })
-    } catch (testError) {
+      })()
+    } catch (testError: any) {
       console.warn('Supabase connection test failed (likely using mock client):', testError.message)
       console.info('Application will continue to work with mock data instead of database.')
     }

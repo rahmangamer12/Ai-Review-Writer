@@ -103,7 +103,7 @@ export async function createDefaultRules(userId: string): Promise<AutoReplyRule[
   const createdRules: AutoReplyRule[] = [];
 
   for (const rule of rules) {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase
       .from('auto_reply_rules')
       .insert({
         user_id: userId,
@@ -111,7 +111,7 @@ export async function createDefaultRules(userId: string): Promise<AutoReplyRule[
         conditions: rule.conditions,
         actions: rule.actions,
         is_active: rule.isActive
-      })
+      }) as any)
       .select()
       .single();
 
@@ -142,9 +142,9 @@ export async function createDefaultRules(userId: string): Promise<AutoReplyRule[
  * Refresh the rules cache
  */
 export async function refreshRulesCache(userId: string): Promise<void> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase
     .from('auto_reply_rules')
-    .select('*')
+    .select('*') as any)
     .eq('user_id', userId);
 
   if (error) {
@@ -152,7 +152,7 @@ export async function refreshRulesCache(userId: string): Promise<void> {
     return;
   }
 
-  cachedRules = data.map(dbRule => ({
+  cachedRules = data.map((dbRule: any) => ({
     id: dbRule.id,
     name: dbRule.name,
     conditions: dbRule.conditions,
@@ -255,7 +255,7 @@ export async function processReviewWithRules(
       };
 
       // Save to database
-      const { data, error } = await supabase
+      const { data, error } = await (supabase
         .from('scheduled_replies')
         .insert({
           user_id: userId,
@@ -265,7 +265,7 @@ export async function processReviewWithRules(
           scheduled_for: scheduledReply.scheduled_for,
           status: scheduledReply.status,
           auto_post: scheduledReply.auto_post,
-        })
+        }) as any)
         .select()
         .single();
 
@@ -315,12 +315,12 @@ export async function executeReply(scheduledReply: ScheduledReply): Promise<bool
     // For now, simulate success
 
     // Update status in database
-    const { error } = await supabase
+    const { error } = await (supabase
       .from('scheduled_replies')
       .update({
         status: 'sent',
         updated_at: new Date().toISOString()
-      })
+      }) as any)
       .eq('id', scheduledReply.id);
 
     if (error) {
@@ -335,12 +335,12 @@ export async function executeReply(scheduledReply: ScheduledReply): Promise<bool
     console.error(`[Auto Reply] Failed to send reply:`, error);
 
     // Update status to failed in database
-    const { error: updateError } = await supabase
+    const { error: updateError } = await (supabase
       .from('scheduled_replies')
       .update({
         status: 'failed',
         updated_at: new Date().toISOString()
-      })
+      }) as any)
       .eq('id', scheduledReply.id);
 
     if (updateError) {
@@ -375,7 +375,7 @@ export async function scheduleReply(
     updated_at: new Date(),
   };
 
-  const { data, error } = await supabase
+  const { data, error } = await (supabase
     .from('scheduled_replies')
     .insert({
       user_id: userId,
@@ -385,7 +385,7 @@ export async function scheduleReply(
       scheduled_for: scheduled.scheduled_for,
       status: scheduled.status,
       auto_post: autoPost,
-    })
+    }) as any)
     .select()
     .single();
 
@@ -414,12 +414,12 @@ export async function scheduleReply(
  * Cancel a scheduled reply
  */
 export async function cancelScheduledReply(scheduledId: string): Promise<boolean> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase
     .from('scheduled_replies')
     .update({
       status: 'cancelled',
       updated_at: new Date().toISOString()
-    })
+    }) as any)
     .eq('id', scheduledId)
     .select()
     .single();
@@ -436,9 +436,9 @@ export async function cancelScheduledReply(scheduledId: string): Promise<boolean
  * Get all scheduled replies
  */
 export async function getScheduledReplies(userId: string, status?: string): Promise<ScheduledReply[]> {
-  let query = supabase
+  let query = (supabase
     .from('scheduled_replies')
-    .select('*')
+    .select('*') as any)
     .eq('user_id', userId);
 
   if (status) {
@@ -452,7 +452,7 @@ export async function getScheduledReplies(userId: string, status?: string): Prom
     return [];
   }
 
-  return data.map(dbReply => ({
+  return data.map((dbReply: any) => ({
     id: dbReply.id,
     user_id: dbReply.user_id,
     review_id: dbReply.review_id,
@@ -477,9 +477,9 @@ export async function getAutoReplyRules(userId: string): Promise<AutoReplyRule[]
   }
 
   // Fetch from database
-  const { data, error } = await supabase
+  const { data, error } = await (supabase
     .from('auto_reply_rules')
-    .select('*')
+    .select('*') as any)
     .eq('user_id', userId);
 
   if (error) {
@@ -487,7 +487,7 @@ export async function getAutoReplyRules(userId: string): Promise<AutoReplyRule[]
     return [];
   }
 
-  const rules = data.map(dbRule => ({
+  const rules = data.map((dbRule: any) => ({
     id: dbRule.id,
     name: dbRule.name,
     conditions: dbRule.conditions,
@@ -508,7 +508,7 @@ export async function getAutoReplyRules(userId: string): Promise<AutoReplyRule[]
  * Update auto-reply rule
  */
 export async function updateAutoReplyRule(userId: string, ruleId: string, updates: Partial<AutoReplyRule>): Promise<AutoReplyRule | null> {
-  const { data, error } = await supabase
+  const { data, error } = await (supabase
     .from('auto_reply_rules')
     .update({
       name: updates.name,
@@ -516,7 +516,7 @@ export async function updateAutoReplyRule(userId: string, ruleId: string, update
       actions: updates.actions,
       is_active: updates.isActive,
       updated_at: new Date().toISOString()
-    })
+    }) as any)
     .eq('id', ruleId)
     .eq('user_id', userId)
     .select()
@@ -546,9 +546,9 @@ export async function updateAutoReplyRule(userId: string, ruleId: string, update
  */
 export async function runScheduler(): Promise<void> {
   const now = new Date();
-  const { data: pendingReplies, error } = await supabase
+  const { data: pendingReplies, error } = await (supabase
     .from('scheduled_replies')
-    .select('*')
+    .select('*') as any)
     .eq('status', 'pending')
     .lte('scheduled_for', now.toISOString());
 
@@ -581,9 +581,9 @@ export async function runScheduler(): Promise<void> {
 // This would typically be called when a user first sets up auto-reply
 export async function initializeUserAutoReply(userId: string): Promise<void> {
   // Check if user already has rules
-  const { data, error } = await supabase
+  const { data, error } = await (supabase
     .from('auto_reply_rules')
-    .select('id')
+    .select('id') as any)
     .eq('user_id', userId)
     .limit(1);
 

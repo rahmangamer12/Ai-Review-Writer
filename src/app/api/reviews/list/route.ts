@@ -21,20 +21,20 @@ export async function GET(req: NextRequest) {
     const sortOrder = searchParams.get('sortOrder') || 'desc'
 
     // Build query
-    let query = supabase
+    let query = (supabase
       .from('reviews')
-      .select('*', { count: 'exact' })
+      .select('*', { count: 'exact' }) as any)
       .eq('user_id', userId)
 
     // Apply filters - only apply if not 'all'
     if (statusParam && statusParam !== 'all') {
-      query = query.eq('status', statusParam as 'pending' | 'approved' | 'rejected')
+      query = (query as any).eq('status', statusParam as 'pending' | 'approved' | 'rejected')
     }
     if (platformParam && platformParam !== 'all') {
-      query = query.eq('platform', platformParam)
+      query = (query as any).eq('platform', platformParam)
     }
     if (sentimentParam && sentimentParam !== 'all') {
-      query = query.eq('sentiment_label', sentimentParam)
+      query = (query as any).eq('sentiment_label', sentimentParam)
     }
     if (search && search.trim()) {
       // Handle both old and new column names for compatibility
@@ -87,25 +87,25 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch replies for these reviews only if we have reviews
-    const reviewIds = reviews?.map(r => r.id) || []
+    const reviewIds = reviews?.map((r: any) => r.id) || []
     const { data: replies } = reviewIds.length > 0
-      ? await supabase.from('replies').select('*').in('review_id', reviewIds)
+      ? await (supabase.from('replies').select('*') as any).in('review_id', reviewIds)
       : { data: null }
 
     // Map replies to reviews
-    const reviewsWithReplies = reviews?.map(review => ({
+    const reviewsWithReplies = reviews?.map((review: any) => ({
       ...review,
-      reply: replies?.find(r => r.review_id === review.id) || null,
+      reply: replies?.find((r: any) => r.review_id === review.id) || null,
     }))
 
     // Get unique platforms for filter
-    const { data: platforms } = await supabase
+    const { data: platforms } = await (supabase
       .from('reviews')
-      .select('platform')
+      .select('platform') as any)
       .eq('user_id', userId)
       .not('platform', 'is', null)
 
-    const uniquePlatforms = [...new Set(platforms?.map(p => p.platform) || [])]
+    const uniquePlatforms = [...new Set(platforms?.map((p: any) => p.platform) || [])]
 
     return NextResponse.json({
       reviews: reviewsWithReplies || [],

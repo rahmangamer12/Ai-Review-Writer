@@ -31,9 +31,9 @@ export async function POST(request: NextRequest) {
       }
 
       // Verify review belongs to user
-      const { data: existing } = await supabase
+      const { data: existing } = await (supabase
         .from('reviews')
-        .select('id')
+        .select('id') as any)
         .eq('id', reviewId)
         .eq('user_id', userId)
         .single()
@@ -43,36 +43,36 @@ export async function POST(request: NextRequest) {
       }
 
       // Check if reply exists
-      const { data: existingReply } = await supabase
+      const { data: existingReply } = await (supabase
         .from('replies')
-        .select('id')
+        .select('id') as any)
         .eq('review_id', reviewId)
         .single()
 
       let result
       if (existingReply) {
         // Update existing reply
-        result = await supabase
+        result = await (supabase
           .from('replies')
           .update({
             reply_text: replyText,
             ai_generated: aiGenerated,
             is_edited_by_human: !aiGenerated,
             updated_at: new Date().toISOString(),
-          })
+          }) as any)
           .eq('id', existingReply.id)
           .select()
           .single()
       } else {
         // Insert new reply
-        result = await supabase
+        result = await (supabase
           .from('replies')
           .insert({
             review_id: reviewId,
             reply_text: replyText,
             ai_generated: aiGenerated,
             is_edited_by_human: !aiGenerated,
-          })
+          }) as any)
           .select()
           .single()
       }

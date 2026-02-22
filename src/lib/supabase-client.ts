@@ -24,16 +24,16 @@ export async function fetchReviewsSafe(
   status?: 'pending' | 'approved' | 'rejected'
 ): Promise<{ data: SafeReview[] | null; error: string | null }> {
   try {
-    let query = supabase
+    let query = (supabase
       .from('reviews')
-      .select('*')
+      .select('*') as any)
       .eq('user_id', userId)
 
     if (status) {
-      query = query.eq('status', status)
+      query = (query as any).eq('status', status)
     }
 
-    const { data, error } = await query
+    const { data, error } = await (query as any)
       .order('created_at', { ascending: false })
       .limit(50)
 
@@ -91,9 +91,9 @@ export async function insertReviewSafe(
       status: review.status || 'pending',
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await (supabase
       .from('reviews')
-      .insert(insertData)
+      .insert(insertData) as any)
       .select()
       .single()
 
@@ -116,9 +116,9 @@ export async function updateReviewStatusSafe(
   status: 'pending' | 'approved' | 'rejected'
 ): Promise<{ success: boolean; error: string | null }> {
   try {
-    const { error } = await supabase
+    const { error } = await (supabase
       .from('reviews')
-      .update({ status, updated_at: new Date().toISOString() })
+      .update({ status, updated_at: new Date().toISOString() }) as any)
       .eq('id', reviewId)
 
     if (error) {
@@ -140,9 +140,9 @@ export async function getTabCountSafe(
   status: string
 ): Promise<{ count: number; error: string | null }> {
   try {
-    const { count, error } = await supabase
+    const { count, error } = await (supabase
       .from('reviews')
-      .select('*', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true }) as any)
       .eq('user_id', userId)
       .eq('status', status)
 

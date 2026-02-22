@@ -18,9 +18,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Review ID required' }, { status: 400 })
     }
 
-    const { data: review, error } = await supabase
+    const { data: review, error } = await (supabase
       .from('reviews')
-      .select('*')
+      .select('*') as any)
       .eq('id', reviewId)
       .eq('user_id', userId)
       .single()
@@ -30,9 +30,9 @@ export async function GET(req: NextRequest) {
     }
 
     // Get reply if exists
-    const { data: reply } = await supabase
+    const { data: reply } = await (supabase
       .from('replies')
-      .select('*')
+      .select('*') as any)
       .eq('review_id', reviewId)
       .single()
 
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Content and rating required' }, { status: 400 })
     }
 
-    const { data: review, error } = await supabase
+    const { data: review, error } = await (supabase
       .from('reviews')
       .insert({
         user_id: userId,
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
         platform,
         sentiment_label: sentiment_label || getSentimentFromRating(rating),
         status: 'pending',
-      })
+      }) as any)
       .select()
       .single()
 
@@ -107,9 +107,9 @@ export async function PATCH(req: NextRequest) {
     }
 
     // Verify review belongs to user
-    const { data: existing } = await supabase
+    const { data: existing } = await (supabase
       .from('reviews')
-      .select('id')
+      .select('id') as any)
       .eq('id', reviewId)
       .eq('user_id', userId)
       .single()
@@ -118,9 +118,9 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Review not found' }, { status: 404 })
     }
 
-    const { data: review, error } = await supabase
+    const { data: review, error } = await (supabase
       .from('reviews')
-      .update({ status, updated_at: new Date().toISOString() })
+      .update({ status, updated_at: new Date().toISOString() }) as any)
       .eq('id', reviewId)
       .select()
       .single()
@@ -139,7 +139,7 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   try {
     const { userId } = await auth()
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -152,9 +152,9 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Verify review belongs to user
-    const { data: existing } = await supabase
+    const { data: existing } = await (supabase
       .from('reviews')
-      .select('id')
+      .select('id') as any)
       .eq('id', reviewId)
       .eq('user_id', userId)
       .single()
@@ -164,12 +164,12 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Delete replies first (cascade should handle this but being explicit)
-    await supabase.from('replies').delete().eq('review_id', reviewId)
+    await (supabase.from('replies').delete() as any).eq('review_id', reviewId)
 
     // Delete review
-    const { error } = await supabase
+    const { error } = await (supabase
       .from('reviews')
-      .delete()
+      .delete() as any)
       .eq('id', reviewId)
 
     if (error) {

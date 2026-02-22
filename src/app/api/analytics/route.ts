@@ -17,9 +17,9 @@ export async function GET(req: NextRequest) {
     startDate.setDate(startDate.getDate() - days)
 
     // Fetch reviews for analytics with better error handling
-    const { data: reviews, error: reviewsError } = await supabase
+    const { data: reviews, error: reviewsError } = await (supabase
       .from('reviews')
-      .select('*')
+      .select('*') as any)
       .eq('user_id', userId)
       .gte('created_at', startDate.toISOString())
       .order('created_at', { ascending: false })
@@ -83,9 +83,9 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch all user reviews for complete stats
-    const { data: allReviews, error: allReviewsError } = await supabase
+    const { data: allReviews, error: allReviewsError } = await (supabase
       .from('reviews')
-      .select('*')
+      .select('*') as any)
       .eq('user_id', userId)
 
     if (allReviewsError) {
@@ -93,9 +93,9 @@ export async function GET(req: NextRequest) {
     }
 
     // Fetch replies for analytics only if we have reviews
-    const reviewIds = allReviews?.map(r => r.id) || []
-    const { data: replies, error: repliesError } = reviewIds.length > 0 
-      ? await supabase.from('replies').select('*').in('review_id', reviewIds)
+    const reviewIds = allReviews?.map((r: any) => r.id) || []
+    const { data: replies, error: repliesError } = reviewIds.length > 0
+      ? await (supabase.from('replies').select('*') as any).in('review_id', reviewIds)
       : { data: null, error: null }
 
     if (repliesError) {
@@ -104,32 +104,32 @@ export async function GET(req: NextRequest) {
 
     // Calculate statistics
     const totalReviews = allReviews?.length || 0
-    const pendingReviews = allReviews?.filter(r => r.status === 'pending').length || 0
-    const repliedReviews = allReviews?.filter(r => r.status === 'approved').length || 0
-    const rejectedReviews = allReviews?.filter(r => r.status === 'rejected').length || 0
+    const pendingReviews = allReviews?.filter((r: any) => r.status === 'pending').length || 0
+    const repliedReviews = allReviews?.filter((r: any) => r.status === 'approved').length || 0
+    const rejectedReviews = allReviews?.filter((r: any) => r.status === 'rejected').length || 0
     
     // Average rating
     const avgRating = totalReviews > 0
-      ? (allReviews?.reduce((acc, r) => acc + (r.rating || 0), 0) || 0) / totalReviews
+      ? (allReviews?.reduce((acc: number, r: any) => acc + (r.rating || 0), 0) || 0) / totalReviews
       : 0
 
     // Sentiment distribution
     const sentimentDistribution = {
-      positive: allReviews?.filter(r => r.sentiment_label === 'positive').length || 0,
-      negative: allReviews?.filter(r => r.sentiment_label === 'negative').length || 0,
-      neutral: allReviews?.filter(r => r.sentiment_label === 'neutral').length || 0,
+      positive: allReviews?.filter((r: any) => r.sentiment_label === 'positive').length || 0,
+      negative: allReviews?.filter((r: any) => r.sentiment_label === 'negative').length || 0,
+      neutral: allReviews?.filter((r: any) => r.sentiment_label === 'neutral').length || 0,
     }
 
     // Platform distribution
     const platformDistribution: Record<string, number> = {}
-    allReviews?.forEach(r => {
+    allReviews?.forEach((r: any) => {
       const platform = r.platform || 'unknown'
       platformDistribution[platform] = (platformDistribution[platform] || 0) + 1
     })
 
     // Rating distribution
     const ratingDistribution = [0, 0, 0, 0, 0]
-    allReviews?.forEach(r => {
+    allReviews?.forEach((r: any) => {
       const rating = Math.min(Math.max(Math.floor(r.rating || 0), 1), 5)
       ratingDistribution[rating - 1]++
     })
@@ -143,7 +143,7 @@ export async function GET(req: NextRequest) {
       timeSeriesData[dateKey] = { date: dateKey, count: 0, totalRating: 0 }
     }
 
-    reviews?.forEach(r => {
+    reviews?.forEach((r: any) => {
       const dateKey = r.created_at?.split('T')[0]
       if (dateKey && timeSeriesData[dateKey]) {
         timeSeriesData[dateKey].count++
@@ -153,8 +153,8 @@ export async function GET(req: NextRequest) {
 
     // Reply metrics
     const totalReplies = replies?.length || 0
-    const aiGeneratedReplies = replies?.filter(r => r.ai_generated).length || 0
-    const editedReplies = replies?.filter(r => r.is_edited_by_human).length || 0
+    const aiGeneratedReplies = replies?.filter((r: any) => r.ai_generated).length || 0
+    const editedReplies = replies?.filter((r: any) => r.is_edited_by_human).length || 0
 
     // Response rate
     const responseRate = totalReviews > 0 ? (repliedReviews / totalReviews) * 100 : 0

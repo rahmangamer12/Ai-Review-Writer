@@ -14,13 +14,15 @@ export async function POST(req: NextRequest) {
 
     console.log('[Agentic] Starting REAL AI agentic review processing for user:', userId)
 
-    // Fetch pending reviews
-    const { data: pendingReviews, error: fetchError } = await supabase
+    // Build and execute the query in one statement to avoid TypeScript issues
+    const pendingReviewsResponse = await (supabase
       .from('reviews')
-      .select('*')
+      .select('*') as any)
       .eq('user_id', userId)
       .eq('status', 'pending')
       .limit(10)
+
+    const { data: pendingReviews, error: fetchError } = pendingReviewsResponse
 
     if (fetchError) {
       console.error('[Agentic] Fetch error:', fetchError)
@@ -104,13 +106,13 @@ export async function POST(req: NextRequest) {
 
         // Step 4: Update review with sentiment and status
         console.log('[Agentic] Updating review status...')
-        const { error: updateError } = await supabase
+        const { error: updateError } = await (supabase
           .from('reviews')
-          .update({ 
+          .update({
             sentiment_label: sentiment,
             status: 'approved', // Auto-approve after generating reply
             updated_at: new Date().toISOString()
-          })
+          }) as any)
           .eq('id', review.id)
 
         if (updateError) {
@@ -160,18 +162,22 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { count: pendingCount, error: pendingError } = await supabase
+    const pendingCountResponse = await (supabase
       .from('reviews')
-      .select('*', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true }) as any)
       .eq('user_id', userId)
       .eq('status', 'pending')
 
-    const { count: processedToday, error: processedError } = await supabase
+    const { count: pendingCount, error: pendingError } = pendingCountResponse
+
+    const processedTodayResponse = await (supabase
       .from('reviews')
-      .select('*', { count: 'exact', head: true })
+      .select('*', { count: 'exact', head: true }) as any)
       .eq('user_id', userId)
       .eq('status', 'approved')
       .gte('updated_at', new Date(Date.now() - 86400000).toISOString())
+
+    const { count: processedToday, error: processedError } = processedTodayResponse
 
     return NextResponse.json({
       pending: pendingCount || 0,
