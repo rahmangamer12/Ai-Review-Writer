@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/scheduler",
-      "schedule": "*/10 * * * *"  // Run every 10 minutes
+      "schedule": "*/10 * * * *"
     }
   ]
 }
