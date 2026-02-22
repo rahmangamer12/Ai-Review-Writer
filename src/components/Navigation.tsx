@@ -104,6 +104,20 @@ export default function Navigation() {
       icon: '⚙️',
       description: 'Configure AI',
       gradient: 'from-orange-500 to-red-500'
+    },
+    {
+      href: '/extension',
+      label: 'Extension',
+      icon: '🔌',
+      description: 'Chrome Extension',
+      gradient: 'from-green-500 to-emerald-500'
+    },
+    {
+      href: '/docs',
+      label: 'Documentation',
+      icon: '📚',
+      description: 'Help & Guide',
+      gradient: 'from-blue-500 to-cyan-500'
     }
   ]
 
@@ -155,7 +169,7 @@ export default function Navigation() {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="lg:hidden fixed top-[57px] left-0 bottom-0 w-[280px] max-w-[90vw] glass-card border-r border-primary/20 p-4 flex flex-col z-50 overflow-y-auto"
+            className="lg:hidden fixed top-[57px] left-0 bottom-0 w-full max-w-[100vw] glass-card border-r border-primary/20 p-4 flex flex-col z-50 overflow-y-auto"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile Navigation Menu"
@@ -245,7 +259,7 @@ export default function Navigation() {
       <motion.nav
         initial={{ x: -300 }}
         animate={{ x: 0 }}
-        className="hidden lg:flex w-72 xl:w-80 h-full glass-card border-r border-primary/20 p-6 flex-col min-w-[288px]"
+        className="hidden lg:flex fixed left-0 top-0 bottom-0 w-72 xl:w-80 h-screen glass-card border-r border-primary/20 p-6 flex-col min-w-[288px]"
         suppressHydrationWarning
       >
         {/* Logo */}

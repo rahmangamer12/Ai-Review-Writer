@@ -90,10 +90,12 @@ export default function RootLayout({
           <ClientOnly>
             <DynamicBackground />
           </ClientOnly>
-          <div className="flex flex-col lg:flex-row h-screen relative z-10" suppressHydrationWarning>
+          <div className="flex flex-col lg:flex-row min-h-screen relative z-10" suppressHydrationWarning>
             <Navigation />
-            <main className="flex-1 overflow-y-auto custom-scrollbar pt-[57px] lg:pt-0 min-w-0" suppressHydrationWarning>
-              {children}
+            <main className="flex-1 overflow-y-auto custom-scrollbar pt-[57px] lg:pt-8 min-w-0 lg:pl-[288px]" suppressHydrationWarning>
+              <div className="max-w-7xl mx-auto w-full">
+                {children}
+              </div>
             </main>
           </div>
           

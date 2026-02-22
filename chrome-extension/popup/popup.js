@@ -1,7 +1,7 @@
 // AutoReview AI Chrome Extension - Popup Script
 
-const API_BASE_URL = 'https://autoreview-ai.com'; // Change to your domain
-// const API_BASE_URL = 'http://localhost:3000'; // For local testing
+// const API_BASE_URL = 'https://autoreview-ai.com'; // Change to your domain
+const API_BASE_URL = 'http://localhost:3000'; // For local testing
 
 // DOM Elements
 const elements = {

@@ -1146,7 +1146,7 @@ export default function Dashboard() {
 
       {/* Mobile Tabs - Horizontal scroll on mobile */}
       <div className="sticky top-[57px] lg:top-0 z-40 border-b border-white/5 bg-[#0a0a0f]/95 backdrop-blur-xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 min-w-0">
+        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 min-w-0">
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-3 min-w-0">
             {[
               { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -1156,7 +1156,7 @@ export default function Dashboard() {
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
                   activeTab === item.id
                     ? 'bg-purple-600 text-white'
                     : 'text-gray-400 hover:text-white hover:bg-white/5'
@@ -1170,7 +1170,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 min-w-0">
+      <main className="relative z-10 w-full px-4 sm:px-6 lg:px-8 min-w-0">
         {/* Error Message */}
         <AnimatePresence>
           {error && (

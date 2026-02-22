@@ -235,8 +235,8 @@ function addAIReplyButtons() {
 
 // Generate AI reply
 async function generateAIReply(review) {
-  const API_URL = 'https://autoreview-ai.com/api/reviews/generate-reply';
-  // const API_URL = 'http://localhost:3000/api/reviews/generate-reply';
+  const API_URL = 'http://localhost:3000/api/reviews/generate-reply';
+  // const API_URL = 'https://autoreview-ai.com/api/reviews/generate-reply';
   
   const response = await fetch(API_URL, {
     method: 'POST',

@@ -424,7 +424,7 @@ export default function AnalyticsPage() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-pink-600/5 rounded-full blur-[150px]" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-8 relative z-10">
+      <div className="w-full px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Header Section */}
         <motion.div
           initial={{ opacity: 0, y: -30 }}
