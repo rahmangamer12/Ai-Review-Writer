@@ -196,12 +196,11 @@ export default function SubscriptionPage() {
       }
 
     } catch (error: any) {
-      console.error('Checkout error:', error)
-      setError(error.message || 'Failed to start checkout. Please try again.')
-      
-      // Fallback to demo mode if API fails
+      // Silently fallback to demo mode - no console spam
+      // Show "Coming Soon" modal instead of error
       setSelectedPlan(planId)
       setShowComingSoon(true)
+      setError(null) // Clear any error
     } finally {
       setLoading(null)
     }
@@ -332,7 +331,7 @@ export default function SubscriptionPage() {
       </div>
 
       {/* Plans Grid */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 xl:px-12 pb-20">
         {error && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -344,7 +343,7 @@ export default function SubscriptionPage() {
           </motion.div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
           {plans.map((plan, index) => {
             const isCurrent = currentPlan === plan.id
             const price = billingCycle === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice

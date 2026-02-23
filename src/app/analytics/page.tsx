@@ -555,8 +555,8 @@ export default function AnalyticsPage() {
           </div>
         </motion.div>
 
-        {/* Stats Grid - 3D Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+        {/* Stats Grid - 3D Cards - Fully Responsive */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4 mb-6 sm:mb-8">
           {[
             { title: 'Total Reviews', value: stats.totalReviews, icon: MessageSquare, color: 'purple', trend: '+12%' },
             { title: 'Avg Rating', value: stats.avgRating, icon: Star, color: 'amber', trend: '+5%', suffix: '/5' },

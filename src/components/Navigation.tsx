@@ -11,7 +11,7 @@ function UserProfile() {
   const { user } = useUser()
   
   return (
-    <div className="glass rounded-xl p-3 sm:p-4">
+    <div className="rounded-xl p-3 sm:p-4 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 shadow-lg">
       <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
         <UserButton afterSignOutUrl="/" />
         <div className="flex-1 min-w-0">
@@ -24,10 +24,10 @@ function UserProfile() {
         </div>
       </div>
       <div className="text-[10px] sm:text-xs text-white/50">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between p-2 rounded-lg bg-white/5">
           <span>Plan: Free</span>
-          <Link href="/subscription" className="text-primary hover:underline">
-            Upgrade
+          <Link href="/subscription" className="text-primary hover:text-primary/80 hover:underline font-medium transition-all">
+            Upgrade ✨
           </Link>
         </div>
       </div>
@@ -255,11 +255,14 @@ export default function Navigation() {
         )}
       </AnimatePresence>
 
-      {/* Desktop Navigation */}
+      {/* Desktop Navigation - Compact for more space */}
       <motion.nav
         initial={{ x: -300 }}
         animate={{ x: 0 }}
-        className="hidden lg:flex fixed left-0 top-0 bottom-0 w-72 xl:w-80 h-screen glass-card border-r border-primary/20 p-6 flex-col min-w-[288px]"
+        className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 xl:w-72 h-screen bg-[#0a0a0f]/95 backdrop-blur-xl border-r border-white/10 p-3 lg:p-4 xl:p-5 flex-col overflow-y-auto shadow-2xl"
+        style={{
+          background: 'linear-gradient(180deg, rgba(10, 10, 15, 0.98) 0%, rgba(15, 15, 25, 0.95) 100%)',
+        }}
         suppressHydrationWarning
       >
         {/* Logo */}
@@ -281,7 +284,7 @@ export default function Navigation() {
         </motion.div>
 
         {/* Navigation Items */}
-        <div className="space-y-2 flex-1">
+        <div className="space-y-1.5 lg:space-y-2 flex-1 overflow-y-auto pr-2">
           {navItems.map((item, index) => (
             <motion.div
               key={item.href}
@@ -293,11 +296,14 @@ export default function Navigation() {
             >
               <Link
                 href={item.href}
-                className={`relative flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group overflow-hidden ${
+                className={`relative flex items-center gap-3 px-3 lg:px-4 py-2.5 lg:py-3 rounded-xl transition-all duration-300 group overflow-hidden ${
                   isActive(item.href)
-                    ? 'bg-primary/20 text-white border border-primary/30'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                    ? 'bg-gradient-to-r from-primary/30 to-primary/20 text-white border border-primary/40 shadow-lg shadow-primary/20'
+                    : 'text-white/70 hover:text-white hover:bg-white/10 hover:border hover:border-white/20'
                 }`}
+                style={{
+                  backdropFilter: 'blur(10px)',
+                }}
               >
                 {/* Background Gradient on Hover/Active */}
                 {(isActive(item.href) || isHovered === item.href) && (
@@ -318,14 +324,14 @@ export default function Navigation() {
                 )}
 
                 {/* Icon */}
-                <span className="text-2xl group-hover:scale-110 transition-transform relative z-10">
+                <span className="text-xl lg:text-2xl group-hover:scale-110 transition-transform relative z-10">
                   {item.icon}
                 </span>
 
                 {/* Content */}
                 <div className="flex-1 relative z-10">
-                  <p className="font-medium">{item.label}</p>
-                  <p className="text-xs opacity-60">{item.description}</p>
+                  <p className="font-medium text-sm lg:text-base">{item.label}</p>
+                  <p className="text-[10px] lg:text-xs opacity-60">{item.description}</p>
                 </div>
 
                 {/* Hover Arrow */}
@@ -343,12 +349,12 @@ export default function Navigation() {
           ))}
         </div>
 
-        {/* User Section */}
+        {/* User Section - Always visible at bottom */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="pt-6 border-t border-white/20 space-y-4"
+          className="pt-4 lg:pt-6 border-t border-white/20 space-y-3 lg:space-y-4 mt-auto flex-shrink-0"
         >
           {/* Auth Buttons */}
           <SignedOut>

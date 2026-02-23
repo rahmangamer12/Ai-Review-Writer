@@ -237,14 +237,24 @@ export default function LocationPermission({
               </motion.div>
             )}
 
-            {/* Granted State - No Address Yet */}
-            {permission === 'granted' && !address && location.latitude && (
-              <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                <div className="flex items-center gap-2 text-emerald-400 text-sm">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  <span>Getting address details...</span>
+            {/* Granted State - Show coordinates if no address */}
+            {permission === 'granted' && !address && location.latitude && location.longitude && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl"
+              >
+                <div className="flex items-center gap-2 text-emerald-400 text-sm mb-2">
+                  <Navigation className="w-4 h-4" />
+                  <span className="font-medium">Location Detected</span>
                 </div>
-              </div>
+                <p className="text-white text-lg font-semibold">
+                  {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+                </p>
+                <p className="text-white/50 text-xs mt-1">
+                  Coordinates detected successfully
+                </p>
+              </motion.div>
             )}
 
             {/* Denied State */}

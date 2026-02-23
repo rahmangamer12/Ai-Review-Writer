@@ -92,7 +92,7 @@ export function useLocation(): UseLocationReturn {
         })
       }
     } catch (err) {
-      console.error('Error checking permission:', err)
+      // Silently handle permission check error
     }
   }
 
@@ -124,7 +124,7 @@ export function useLocation(): UseLocationReturn {
         }
       }
     } catch (err) {
-      console.error('Error loading saved location:', err)
+      // Silently handle localStorage error
     }
   }
 
@@ -143,7 +143,7 @@ export function useLocation(): UseLocationReturn {
       }
       localStorage.setItem('user-location', JSON.stringify(data))
     } catch (err) {
-      console.error('Error saving location:', err)
+      // Silently handle localStorage save error
     }
   }
 
@@ -174,7 +174,7 @@ export function useLocation(): UseLocationReturn {
         fullAddress: data.display_name || null
       }
     } catch (err) {
-      console.error('Error reverse geocoding:', err)
+      // Silently handle error - Chrome extensions often interfere with fetch
       return null
     }
   }
@@ -183,6 +183,12 @@ export function useLocation(): UseLocationReturn {
   const requestLocation = useCallback(async (): Promise<boolean> => {
     if (!supported) {
       setError('Geolocation is not supported by your browser')
+      return false
+    }
+
+    // Check if running on HTTPS or localhost
+    if (typeof window !== 'undefined' && window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+      setError('Location access requires HTTPS connection')
       return false
     }
 
@@ -222,30 +228,35 @@ export function useLocation(): UseLocationReturn {
           resolve(true)
         },
         (err) => {
-          console.error('Geolocation error:', err)
+          // Silently handle geolocation errors (Chrome extensions often interfere)
+          // No console logging to avoid spam
           
           let errorMessage = 'Unable to retrieve your location'
+          let helpText = ''
           switch (err.code) {
             case err.PERMISSION_DENIED:
-              errorMessage = 'Location access denied by user'
+              errorMessage = 'Location access denied'
+              helpText = 'Please enable location permissions in your browser settings'
               setPermission('denied')
               break
             case err.POSITION_UNAVAILABLE:
               errorMessage = 'Location information unavailable'
+              helpText = 'Please check your device location settings'
               break
             case err.TIMEOUT:
               errorMessage = 'Location request timed out'
+              helpText = 'Please try again or check your connection'
               break
           }
           
-          setError(errorMessage)
+          setError(`${errorMessage}. ${helpText}`)
           setLoading(false)
           resolve(false)
         },
         {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 0
+          enableHighAccuracy: false, // Changed to false for better compatibility
+          timeout: 15000, // Increased timeout
+          maximumAge: 30000 // Allow cached location up to 30 seconds old
         }
       )
     })

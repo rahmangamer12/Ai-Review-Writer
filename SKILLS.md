@@ -1,107 +1,383 @@
-# AutoReview AI - Skills Documentation
+# SKILLS.md
 
-This document provides detailed information about the skills system in the AutoReview AI project and how to use various capabilities available through Claude Code.
+## Technical Skills & Patterns Used in AutoReview AI
 
-## Available Skills
+### Frontend Development
 
-### 1. Keybindings Help Skill
-**Name:** `keybindings-help`
-**Description:** Used when customizing keyboard shortcuts, rebind keys, adding chord bindings, or modifying the `~/.claude/keybindings.json` file.
-**Usage Examples:**
-- Rebind Ctrl+S for saving
-- Add a chord shortcut for submitting
-- Change the submit key
-- Customize keybindings in the configuration file
+#### React & Next.js
+- **App Router** (Next.js 16.1.4)
+  - Server Components for data fetching
+  - Client Components for interactivity
+  - API Routes for backend logic
+  - Dynamic routing and nested layouts
 
-## Using Skills in Claude Code
+- **React 19 Patterns**
+  - Custom hooks for reusable logic
+  - Context API for global state
+  - useEffect for side effects
+  - useState for local state
+  - useRef for DOM references
 
-Skills in Claude Code are specialized capabilities that provide domain-specific functionality. To use a skill, you reference it with the slash command format (e.g., `/keybindings-help`).
+- **TypeScript**
+  - Strict type checking
+  - Interface definitions
+  - Type safety across components
+  - Generic types for reusability
 
-**How to use skills:**
-1. Type the slash command followed by any parameters (e.g., `/keybindings-help`)
-2. Claude will execute the appropriate skill based on the available tools
-3. Some skills may require additional input or parameters
+#### UI/UX Design
 
-**Current available skill:**
-- `/keybindings-help` - For customizing keyboard shortcuts and keybindings
+- **Tailwind CSS 4**
+  - Utility-first approach
+  - Custom responsive breakpoints
+  - Dark mode support
+  - Custom animations
 
-## Project-Specific Skills
+- **Framer Motion**
+  - Page transitions
+  - Component animations
+  - Gesture handling
+  - Spring physics
 
-While this project doesn't have custom skills defined yet, you can create skills specific to the AutoReview AI platform by adding them to a `.claude/skills/` directory in your project.
+- **3D Graphics**
+  - Three.js for 3D visualizations
+  - React Three Fiber integration
+  - Performance optimization
+  - Mobile device handling
 
-### Potential Custom Skills for AutoReview AI
+#### Responsive Design
+- Mobile-first approach
+- Breakpoints: 320px, 375px, 640px, 768px, 1024px, 1920px
+- Touch-friendly interfaces (44px+ targets)
+- Dynamic viewport height (dvh)
+- Landscape orientation handling
+- Reduced motion support
 
-The following are examples of custom skills that could be implemented for this project:
+### Backend Development
 
-#### 1. Review Management Skill
-A skill to help manage reviews, analyze sentiment, or generate replies.
+#### API Development
+- **Next.js API Routes**
+  - RESTful endpoints
+  - Request validation
+  - Error handling
+  - Response formatting
 
-#### 2. Platform Integration Skill
-A skill to help connect or manage platform integrations (Google, Facebook, Yelp, etc.).
+- **Authentication**
+  - Clerk integration
+  - Protected routes
+  - Session management
+  - User context
 
-#### 3. Analytics Dashboard Skill
-A skill to help create or modify the 3D analytics dashboard components.
+#### Database Management
 
-#### 4. AI Configuration Skill
-A skill to help configure AI settings and parameters for the LongCat AI integration.
+- **Supabase (PostgreSQL)**
+  - Schema design
+  - Row Level Security (RLS)
+  - Complex queries
+  - Indexing strategy
+  - Migration management
 
-## Creating Custom Skills
+- **SQL Skills**
+  - Table relationships
+  - Constraints and triggers
+  - Performance optimization
+  - Query optimization
 
-To create a custom skill for the AutoReview AI project:
+### AI & Machine Learning
 
-1. Create a `.claude/skills/` directory in your project root
-2. Add a skill file with the format `skill-name.ts`
-3. Define the skill's functionality, parameters, and behavior
-4. Document the skill in this file
+#### LongCat AI Integration
+- **Chat Completions**
+  - System prompts
+  - Message history
+  - Temperature control
+  - Token management
 
-Example skill structure:
-```typescript
-// .claude/skills/review-analyzer.ts
-export default {
-  name: 'review-analyzer',
-  description: 'Analyze reviews and generate insights',
-  parameters: {
-    // Define expected parameters
-  },
-  handler: async (context, parameters) => {
-    // Skill implementation
-  }
-};
-```
+- **Sentiment Analysis**
+  - Text classification
+  - Confidence scoring
+  - Topic extraction
+  - Emotion detection
 
-## Current Skill Usage Limitations
+- **Response Generation**
+  - Tone customization
+  - Context awareness
+  - Multi-language support
+  - Template-based fallbacks
 
-Currently, the only defined skill in this project is the `keybindings-help` skill. As the project grows, additional skills can be defined to streamline common development tasks.
+#### AI Patterns
+- Circuit breaker implementation
+- Retry logic with exponential backoff
+- Fallback mechanisms
+- Caching strategies
+- Rate limiting
 
-## Development Skills
+### Payment Integration
 
-Beyond the defined skills, Claude Code can assist with various development tasks in the AutoReview AI project:
+#### Lemon Squeezy
+- Checkout flow
+- Webhook handling
+- Subscription management
+- Variant configuration
+- Payment verification
 
-- **Code Generation:** Creating new components, API routes, or utility functions
-- **Code Review:** Analyzing existing code for improvements, bugs, or best practices
-- **Debugging:** Identifying and fixing issues in the application
-- **Testing:** Writing or updating unit and integration tests
-- **Documentation:** Creating or updating documentation files
-- **Architecture:** Planning and implementing new features following project patterns
+### Chrome Extension Development
 
-## Best Practices for Skill Usage
+#### Extension Components
+- Manifest V3
+- Content scripts
+- Background scripts
+- Popup interface
+- Message passing
 
-1. **Use existing skills first:** Check if there's an existing skill that can help before creating new functionality
-2. **Follow project patterns:** When implementing new features, follow the existing architecture and patterns
-3. **Maintain consistency:** Ensure new skills match the overall project structure and coding standards
-4. **Document thoroughly:** Always update documentation when adding new skills or capabilities
-5. **Test functionality:** Verify that skills work as expected before using them in production code
+#### Web Scraping
+- DOM traversal
+- Data extraction
+- Platform detection
+- Error handling
+- Rate limiting
 
-## Integration with Project Tech Stack
+### DevOps & Deployment
 
-Skills in this project can leverage:
-- Next.js 16 and React 19 for UI components
-- TypeScript for type safety
-- Tailwind CSS for styling
-- Clerk for authentication-related skills
-- Supabase for database-related operations
-- LongCat AI for AI-related functionality
-- React Three Fiber for 3D visualization skills
-- Zustand for state management skills
+#### Development Tools
+- Git version control
+- npm package management
+- Environment variables
+- Build optimization
+- Development workflows
 
-For more specific help with any of these capabilities, please ask about the particular task you want to accomplish in the AutoReview AI project.
+#### Deployment Platforms
+- Vercel deployment
+- Environment configuration
+- Domain management
+- SSL certificates
+- Performance monitoring
+
+### Testing & Quality Assurance
+
+#### Testing Approaches
+- Manual testing
+- Browser DevTools
+- Responsive testing
+- API testing (curl/Postman)
+- Error scenario testing
+
+#### Code Quality
+- TypeScript strict mode
+- ESLint configuration
+- Code formatting (Prettier)
+- Comment documentation
+- Error handling patterns
+
+### Performance Optimization
+
+#### Frontend Optimization
+- Code splitting
+- Dynamic imports
+- Image optimization
+- Lazy loading
+- Bundle size optimization
+
+#### Backend Optimization
+- Database query optimization
+- API response caching
+- Connection pooling
+- Rate limiting
+- Error recovery
+
+### Security Practices
+
+#### Authentication & Authorization
+- Secure session management
+- Protected API routes
+- User data isolation
+- RLS policies
+
+#### Data Protection
+- Input validation
+- SQL injection prevention
+- XSS protection
+- CSRF protection
+- Secure environment variables
+
+### Design Patterns
+
+#### Software Architecture
+- Component-based architecture
+- Separation of concerns
+- DRY (Don't Repeat Yourself)
+- Single Responsibility Principle
+- Error boundary patterns
+
+#### State Management
+- Local state (useState)
+- Server state (API calls)
+- Global state (Context)
+- Derived state
+- State persistence
+
+### API Integration Patterns
+
+#### External APIs
+- OAuth 2.0 flow
+- API key management
+- Webhook handling
+- Rate limit handling
+- Error recovery
+
+#### Platform Integrations
+- Google My Business API
+- Facebook Graph API
+- Yelp Fusion API
+- Generic REST APIs
+- GraphQL (if needed)
+
+### Data Processing
+
+#### Data Transformation
+- JSON parsing
+- Data normalization
+- Type conversion
+- Validation
+- Sanitization
+
+#### Analytics
+- Metrics calculation
+- Trend analysis
+- Data aggregation
+- Time-series data
+- Statistical analysis
+
+### UI Component Patterns
+
+#### Reusable Components
+- Button variants
+- Form inputs
+- Modal dialogs
+- Card components
+- Navigation menus
+
+#### Layout Components
+- Responsive grids
+- Flex layouts
+- Container components
+- Section wrappers
+- Page layouts
+
+### Advanced React Patterns
+
+#### Custom Hooks
+- `useMediaQuery` - Responsive breakpoints
+- `useNotifications` - Notification system
+- `useLocation` - Geolocation
+- Data fetching hooks
+- Form handling hooks
+
+#### Component Composition
+- Higher-order components
+- Render props
+- Children patterns
+- Slot patterns
+- Compound components
+
+### Animation Techniques
+
+#### Framer Motion
+- Variants for animation states
+- Layout animations
+- Gesture animations
+- Scroll-triggered animations
+- Exit animations
+
+#### CSS Animations
+- Keyframe animations
+- Transition effects
+- Transform properties
+- Performance optimization
+- GPU acceleration
+
+### Accessibility (a11y)
+
+#### WCAG Compliance
+- Semantic HTML
+- ARIA attributes
+- Keyboard navigation
+- Screen reader support
+- Color contrast (AA/AAA)
+
+#### Responsive Accessibility
+- Touch target sizes
+- Focus indicators
+- Skip links
+- Reduced motion
+- Text scaling
+
+### Browser Compatibility
+
+#### Cross-browser Support
+- Modern browser features
+- Fallback strategies
+- Vendor prefixes
+- Polyfills
+- Feature detection
+
+### Debugging Skills
+
+#### Debugging Tools
+- React DevTools
+- Chrome DevTools
+- Network inspection
+- Console logging
+- Error tracking
+
+#### Problem Solving
+- Root cause analysis
+- Systematic debugging
+- Performance profiling
+- Memory leak detection
+- Error reproduction
+
+### Documentation Skills
+
+#### Code Documentation
+- Inline comments
+- Function documentation
+- README files
+- API documentation
+- Architecture diagrams
+
+#### User Documentation
+- Setup guides
+- Troubleshooting guides
+- Feature documentation
+- Best practices
+- FAQ sections
+
+### Project Management
+
+#### Development Workflow
+- Feature planning
+- Task breakdown
+- Progress tracking
+- Code review
+- Version control
+
+#### Collaboration
+- Git workflows
+- Pull requests
+- Code reviews
+- Documentation
+- Communication
+
+### Continuous Learning
+
+#### Staying Updated
+- Next.js updates
+- React ecosystem
+- AI/ML trends
+- Best practices
+- Security patches
+
+---
+
+**Skill Level**: Advanced
+**Experience**: Production-ready applications
+**Focus**: Full-stack development with AI integration

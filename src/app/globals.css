@@ -32,9 +32,11 @@
 
 /* Glass Effect */
 .glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.03) 100%);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
 .glass-card {
@@ -83,6 +85,133 @@
   animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
+/* Laptop Optimizations - 13-15 inch screens (1366px - 1536px) */
+@media (min-width: 1024px) and (max-width: 1536px) {
+  /* Optimize for common laptop resolutions (1366x768, 1440x900, 1536x864) */
+  .container,
+  .max-w-7xl {
+    max-width: 92%;
+    padding-left: 1.75rem;
+    padding-right: 1.75rem;
+  }
+
+  /* Better text sizing for smaller laptops */
+  h1 {
+    font-size: 2rem;
+    line-height: 2.25rem;
+  }
+
+  h2 {
+    font-size: 1.75rem;
+    line-height: 2rem;
+  }
+
+  h3 {
+    font-size: 1.375rem;
+    line-height: 1.875rem;
+  }
+
+  /* Optimize spacing for laptop screens */
+  .space-y-8 > * + * {
+    margin-top: 1.5rem;
+  }
+
+  .space-y-6 > * + * {
+    margin-top: 1.25rem;
+  }
+
+  /* Better grid layouts for laptops - 3 columns instead of 4 */
+  .grid-cols-4 {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .grid-cols-6 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  /* Optimize card sizes for laptops */
+  .glass-card,
+  .card-responsive {
+    padding: 1.25rem;
+  }
+
+  /* Better button sizes */
+  button,
+  .btn {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.9375rem;
+  }
+
+  /* Optimize modal widths */
+  .modal,
+  .dialog {
+    max-width: 85vw;
+  }
+
+  /* Better sidebar width */
+  aside,
+  nav {
+    max-width: 260px;
+  }
+}
+
+/* Laptop Optimizations - 15-17 inch screens (1536px - 1920px) */
+@media (min-width: 1536px) and (max-width: 1920px) {
+  /* Optimize for larger laptops (1600x900, 1680x1050, 1920x1080) */
+  .container,
+  .max-w-7xl {
+    max-width: 88%;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+
+  /* Better text sizing */
+  h1 {
+    font-size: 2.5rem;
+    line-height: 2.75rem;
+  }
+
+  h2 {
+    font-size: 2rem;
+    line-height: 2.25rem;
+  }
+
+  h3 {
+    font-size: 1.625rem;
+    line-height: 2rem;
+  }
+
+  /* Grid optimizations */
+  .grid-cols-6 {
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+  }
+
+  /* Card padding */
+  .glass-card,
+  .card-responsive {
+    padding: 1.75rem;
+  }
+}
+
+/* Large Desktop (1920px+) */
+@media (min-width: 1920px) {
+  .container,
+  .max-w-7xl {
+    max-width: 1680px;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+
+  /* Full grid layouts */
+  .grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  }
+
+  .grid-cols-6 {
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+  }
+}
+
 /* Tablet Optimizations */
 @media (min-width: 641px) and (max-width: 1024px) {
   /* Improve touch targets for tablet users */
@@ -95,6 +224,14 @@
   * {
     animation-duration: 0.4s !important;
     transition-duration: 0.3s !important;
+  }
+
+  /* Better layout for tablets */
+  .container,
+  .max-w-7xl {
+    max-width: 95%;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
   }
 }
 
@@ -306,10 +443,27 @@
 
 @media (min-width: 1024px) {
   .container-responsive {
-    max-width: 1280px;
-    max-width: 1500px;
-    padding-right: 2.5rem;
-    padding-left: 2.5rem;
+    max-width: 1200px;
+    padding-right: 2rem;
+    padding-left: 2rem;
+  }
+}
+
+/* Laptop specific (1366px - 1600px) - More spacious */
+@media (min-width: 1366px) and (max-width: 1600px) {
+  .container-responsive {
+    max-width: 1400px;
+    padding-right: 3rem;
+    padding-left: 3rem;
+  }
+}
+
+/* Large desktop (1600px+) - Maximum width */
+@media (min-width: 1600px) {
+  .container-responsive {
+    max-width: 1600px;
+    padding-right: 4rem;
+    padding-left: 4rem;
   }
 }
 

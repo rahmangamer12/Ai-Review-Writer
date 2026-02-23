@@ -92,8 +92,8 @@ export default function RootLayout({
           </ClientOnly>
           <div className="flex flex-col lg:flex-row min-h-screen relative z-10" suppressHydrationWarning>
             <Navigation />
-            <main className="flex-1 overflow-y-auto custom-scrollbar pt-[57px] lg:pt-8 min-w-0 lg:pl-[288px]" suppressHydrationWarning>
-              <div className="max-w-7xl mx-auto w-full">
+            <main className="flex-1 overflow-y-auto custom-scrollbar pt-[57px] lg:pt-8 min-w-0 lg:pl-64 xl:pl-72" suppressHydrationWarning>
+              <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8">
                 {children}
               </div>
             </main>

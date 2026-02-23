@@ -776,7 +776,7 @@ function ReviewsContent() {
           </div>
         ) : (
           <>
-            <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : 'space-y-4'}>
+            <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5' : 'space-y-4'}>
               <AnimatePresence mode="popLayout">
                 {reviews.map((review, index) => {
                   const authorName = review.reviewer_name || review.author_name || 'Anonymous'

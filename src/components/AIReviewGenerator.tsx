@@ -66,10 +66,20 @@ export default function AIReviewGenerator({ onGenerate }: AIReviewGeneratorProps
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          message: `Generate a realistic customer review based on: "${prompt}". 
-          Return ONLY valid JSON with this exact format:
-          {"content": "review text here", "rating": 1-5, "author": "Full Name", "sentiment": "positive/negative/neutral"}`,
-          model: 'LongCat-Flash-Chat'
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an expert review generator. Generate realistic customer reviews based on the user prompt.'
+            },
+            {
+              role: 'user',
+              content: `Generate a realistic customer review based on: "${prompt}".
+              Return ONLY valid JSON with this exact format:
+              {"content": "review text here", "rating": 1-5, "author": "Full Name", "sentiment": "positive/negative/neutral"}`
+            }
+          ],
+          model: 'LongCat-Flash-Chat',
+          temperature: 0.9
         })
       })
 
