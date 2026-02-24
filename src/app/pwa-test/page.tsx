@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Download, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import PWADebugPanel from '@/components/PWADebugPanel'
 
 export default function PWATestPage() {
   const [manifestLoaded, setManifestLoaded] = useState(false)
@@ -180,6 +181,9 @@ export default function PWATestPage() {
           </div>
         </div>
       </div>
+
+      {/* Debug Panel */}
+      <PWADebugPanel />
     </div>
   )
 }
