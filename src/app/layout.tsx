@@ -58,6 +58,19 @@ export default function RootLayout({
           <meta name="apple-mobile-web-app-capable" content="yes" />
           <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
           <meta name="apple-mobile-web-app-title" content="AutoReview AI" />
+          
+          {/* Service Worker Registration */}
+          <script dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('✅ Service Worker registered:', reg.scope))
+                    .catch(err => console.error('❌ Service Worker registration failed:', err));
+                });
+              }
+            `
+          }} />
         {/* Pre-hydration script to suppress browser extension attributes - Client Only */}
           <script
             suppressHydrationWarning
