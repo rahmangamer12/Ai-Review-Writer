@@ -8,6 +8,8 @@ import DynamicBackground from "@/components/DynamicBackground";
 import FeedbackWidget from "@/components/FeedbackWidget";
 import AIChatbot from "@/components/AIChatbot";
 import HydrationSuppressor from "@/components/HydrationSuppressor";
+import PWAInstallPrompt from "@/components/PWAInstallPrompt";
+import PWAUpdateNotification from "@/components/PWAUpdateNotification";
 import { ClerkProvider } from '@clerk/nextjs'
 
 const geistSans = Geist({
@@ -23,6 +25,20 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "AutoReview AI - Intelligent Review Management",
   description: "Automated customer review management with AI-powered sentiment analysis and intelligent responses",
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'AutoReview AI',
+  },
+};
+
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: '#8b5cf6',
 };
 
 export default function RootLayout({
@@ -35,6 +51,13 @@ export default function RootLayout({
       <html lang="en" className="dark" suppressHydrationWarning>
         <head>
           <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
+          {/* PWA Meta Tags */}
+          <link rel="manifest" href="/manifest.json" />
+          <meta name="theme-color" content="#8b5cf6" />
+          <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+          <meta name="apple-mobile-web-app-capable" content="yes" />
+          <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+          <meta name="apple-mobile-web-app-title" content="AutoReview AI" />
         {/* Pre-hydration script to suppress browser extension attributes - Client Only */}
           <script
             suppressHydrationWarning
@@ -110,6 +133,16 @@ export default function RootLayout({
           {/* Feedback Widget - LEFT SIDE */}
           <ClientOnly>
             <FeedbackWidget />
+          </ClientOnly>
+          
+          {/* PWA Install Prompt */}
+          <ClientOnly>
+            <PWAInstallPrompt />
+          </ClientOnly>
+          
+          {/* PWA Update & Offline Notifications */}
+          <ClientOnly>
+            <PWAUpdateNotification />
           </ClientOnly>
         </body>
       </html>

@@ -1,0 +1,55 @@
+PWA ICONS GUIDE - AutoReview AI
+================================
+
+REQUIRED ICONS:
+--------------
+You need to create the following PNG icons with your app logo:
+
+1. icon-72x72.png       (72x72 pixels)
+2. icon-96x96.png       (96x96 pixels)
+3. icon-128x128.png     (128x128 pixels)
+4. icon-144x144.png     (144x144 pixels)
+5. icon-152x152.png     (152x152 pixels)
+6. icon-192x192.png     (192x192 pixels) - IMPORTANT for Android
+7. icon-384x384.png     (384x384 pixels)
+8. icon-512x512.png     (512x512 pixels) - IMPORTANT for Android
+
+DESIGN GUIDELINES:
+-----------------
+✓ Background Color: Purple gradient (#8b5cf6 to #6366f1)
+✓ Logo: White "AR" or "AutoReview AI" text
+✓ Style: Modern, clean, professional
+✓ Format: PNG with transparency OR solid background
+✓ Safe Area: Keep important elements 10% from edges
+
+QUICK CREATE OPTIONS:
+--------------------
+
+Option 1 - Online Tool (EASIEST):
+→ Visit: https://www.pwabuilder.com/imageGenerator
+→ Upload one 512x512 image
+→ Download all sizes automatically
+
+Option 2 - Favicon Generator:
+→ Visit: https://realfavicongenerator.net/
+→ Upload your logo
+→ Select PWA option
+→ Download package
+
+Option 3 - Canva (FREE):
+→ Create 512x512 design on Canva
+→ Export as PNG
+→ Use Option 1 to generate all sizes
+
+TEMPORARY PLACEHOLDER:
+---------------------
+Current icons are placeholders.
+Replace them with actual icons before production deployment.
+
+LOCATION:
+--------
+Place all icons in: /public/icons/
+
+Files are referenced in:
+- /public/manifest.json
+- /src/app/layout.tsx

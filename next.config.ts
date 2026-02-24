@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
     ];
   },
 
-  // Configure headers for security
+  // Configure headers for security and PWA
   async headers() {
     return [
       {
@@ -57,6 +57,34 @@ const nextConfig: NextConfig = {
           {
             key: 'Referrer-Policy',
             value: 'no-referrer-when-downgrade',
+          },
+        ],
+      },
+      // PWA Service Worker
+      {
+        source: '/sw.js',
+        headers: [
+          {
+            key: 'Service-Worker-Allowed',
+            value: '/',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=0, must-revalidate',
+          },
+        ],
+      },
+      // PWA Manifest
+      {
+        source: '/manifest.json',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/manifest+json',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=3600',
           },
         ],
       },
