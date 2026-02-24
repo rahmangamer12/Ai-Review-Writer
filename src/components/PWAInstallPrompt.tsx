@@ -32,10 +32,10 @@ export default function PWAInstallPrompt() {
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
       
-      // Show prompt after 5 seconds
+      // Show prompt after 2 seconds (reduced from 5)
       setTimeout(() => {
         setShowPrompt(true)
-      }, 5000)
+      }, 2000)
     }
 
     window.addEventListener('beforeinstallprompt', handler)
@@ -44,7 +44,7 @@ export default function PWAInstallPrompt() {
     if (iOS && !isInStandalone && !dismissed) {
       setTimeout(() => {
         setShowPrompt(true)
-      }, 5000)
+      }, 2000)
     }
 
     return () => {
