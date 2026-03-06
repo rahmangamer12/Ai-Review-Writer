@@ -71,6 +71,19 @@ export default function NotificationManager({ className = '' }: NotificationMana
 
   const [isRequesting, setIsRequesting] = useState(false)
   const [showTestSuccess, setShowTestSuccess] = useState(false)
+  const [notificationSettings, setNotificationSettings] = useState({
+    reviewAlerts: true,
+    aiUpdates: true,
+    creditWarnings: true,
+    weeklySummaries: true
+  })
+
+  const toggleSetting = (key: keyof typeof notificationSettings) => {
+    setNotificationSettings(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }))
+  }
 
   const handleEnableNotifications = useCallback(async () => {
     setIsRequesting(true)
@@ -381,9 +394,18 @@ export default function NotificationManager({ className = '' }: NotificationMana
                 </div>
                 <span className="text-white/80 text-sm">Review Alerts</span>
               </div>
-              <div className="w-10 h-5 bg-emerald-500 rounded-full relative cursor-pointer">
-                <div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full" />
-              </div>
+              <button
+                onClick={() => toggleSetting('reviewAlerts')}
+                className={`w-10 h-5 rounded-full relative transition-all duration-200 ${
+                  notificationSettings.reviewAlerts
+                    ? 'bg-emerald-500'
+                    : 'bg-white/20'
+                }`}
+              >
+                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all duration-200 ${
+                  notificationSettings.reviewAlerts ? 'right-1' : 'left-1'
+                }`} />
+              </button>
             </div>
 
             <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
@@ -393,9 +415,18 @@ export default function NotificationManager({ className = '' }: NotificationMana
                 </div>
                 <span className="text-white/80 text-sm">AI Response Updates</span>
               </div>
-              <div className="w-10 h-5 bg-emerald-500 rounded-full relative cursor-pointer">
-                <div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full" />
-              </div>
+              <button
+                onClick={() => toggleSetting('aiUpdates')}
+                className={`w-10 h-5 rounded-full relative transition-all duration-200 ${
+                  notificationSettings.aiUpdates
+                    ? 'bg-emerald-500'
+                    : 'bg-white/20'
+                }`}
+              >
+                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all duration-200 ${
+                  notificationSettings.aiUpdates ? 'right-1' : 'left-1'
+                }`} />
+              </button>
             </div>
 
             <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
@@ -405,9 +436,18 @@ export default function NotificationManager({ className = '' }: NotificationMana
                 </div>
                 <span className="text-white/80 text-sm">Credit Warnings</span>
               </div>
-              <div className="w-10 h-5 bg-emerald-500 rounded-full relative cursor-pointer">
-                <div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full" />
-              </div>
+              <button
+                onClick={() => toggleSetting('creditWarnings')}
+                className={`w-10 h-5 rounded-full relative transition-all duration-200 ${
+                  notificationSettings.creditWarnings
+                    ? 'bg-emerald-500'
+                    : 'bg-white/20'
+                }`}
+              >
+                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all duration-200 ${
+                  notificationSettings.creditWarnings ? 'right-1' : 'left-1'
+                }`} />
+              </button>
             </div>
 
             <div className="flex items-center justify-between p-3 bg-white/5 rounded-lg">
@@ -417,14 +457,23 @@ export default function NotificationManager({ className = '' }: NotificationMana
                 </div>
                 <span className="text-white/80 text-sm">Weekly Summaries</span>
               </div>
-              <div className="w-10 h-5 bg-emerald-500 rounded-full relative cursor-pointer">
-                <div className="absolute right-1 top-1 w-3 h-3 bg-white rounded-full" />
-              </div>
+              <button
+                onClick={() => toggleSetting('weeklySummaries')}
+                className={`w-10 h-5 rounded-full relative transition-all duration-200 ${
+                  notificationSettings.weeklySummaries
+                    ? 'bg-emerald-500'
+                    : 'bg-white/20'
+                }`}
+              >
+                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all duration-200 ${
+                  notificationSettings.weeklySummaries ? 'right-1' : 'left-1'
+                }`} />
+              </button>
             </div>
           </div>
 
           <p className="text-white/40 text-xs mt-4">
-            Individual toggle controls coming soon. Currently, all notification types are enabled when you allow browser notifications.
+            Toggle individual notification types on or off as needed.
           </p>
         </motion.div>
       )}
