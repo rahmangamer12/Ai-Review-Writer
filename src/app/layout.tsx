@@ -10,6 +10,7 @@ import AIChatbot from "@/components/AIChatbot";
 import HydrationSuppressor from "@/components/HydrationSuppressor";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import PWAUpdateNotification from "@/components/PWAUpdateNotification";
+import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
 import { ClerkProvider } from '@clerk/nextjs'
 
 const geistSans = Geist({
@@ -59,18 +60,8 @@ export default function RootLayout({
           <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
           <meta name="apple-mobile-web-app-title" content="AutoReview AI" />
           
-          {/* Service Worker Registration */}
-          <script dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('✅ Service Worker registered:', reg.scope))
-                    .catch(err => console.error('❌ Service Worker registration failed:', err));
-                });
-              }
-            `
-          }} />
+          {/* Service Worker Registration moved to Client Component */}
+          {/* Moved to PWAUpdateNotification component to avoid hydration issues */}
         {/* Pre-hydration script to suppress browser extension attributes - Client Only */}
           <script
             suppressHydrationWarning
@@ -137,22 +128,27 @@ export default function RootLayout({
           
           {/* Hydration Suppressor for browser extension attributes */}
           <HydrationSuppressor />
-          
+
+          {/* Service Worker Registration - Runs on client only */}
+          <ClientOnly>
+            <ServiceWorkerRegistrar />
+          </ClientOnly>
+
           {/* AI Customer Support Chatbot - RIGHT SIDE - 24/7 Available */}
           <ClientOnly>
             <AIChatbot />
           </ClientOnly>
-          
+
           {/* Feedback Widget - LEFT SIDE */}
           <ClientOnly>
             <FeedbackWidget />
           </ClientOnly>
-          
+
           {/* PWA Install Prompt */}
           <ClientOnly>
             <PWAInstallPrompt />
           </ClientOnly>
-          
+
           {/* PWA Update & Offline Notifications */}
           <ClientOnly>
             <PWAUpdateNotification />
