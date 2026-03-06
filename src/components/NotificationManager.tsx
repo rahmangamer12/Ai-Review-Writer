@@ -80,18 +80,26 @@ export default function NotificationManager({ className = '' }: NotificationMana
   }, [requestPermission])
 
   const handleTestNotification = useCallback(() => {
+    // Ensure notifications are granted before attempting to show
+    if (!isGranted) {
+      console.warn('Cannot send test notification: permission not granted')
+      return
+    }
+
     const success = showNotification({
       title: '🎉 Notifications Working!',
       body: 'You\'ll receive updates like this when new reviews arrive.',
       icon: '/icon.png',
-      tag: 'test-notification'
+      tag: 'test-notification-' + Date.now() // Unique tag to prevent duplicates
     })
-    
+
     if (success) {
       setShowTestSuccess(true)
       setTimeout(() => setShowTestSuccess(false), 3000)
+    } else {
+      console.error('Failed to show test notification')
     }
-  }, [showNotification])
+  }, [showNotification, isGranted])
 
   const getStatusConfig = () => {
     if (!supported) {

@@ -103,7 +103,13 @@ export function useNotifications() {
 
   // Show notification
   const showNotification = useCallback((options: ShowNotificationOptions): boolean => {
-    if (!state.supported || state.permission !== 'granted') {
+    // Check if notifications are supported and permission is granted
+    if (!state.supported) {
+      console.warn('Cannot show notification: notifications not supported')
+      return false
+    }
+
+    if (state.permission !== 'granted') {
       console.warn('Cannot show notification: permission not granted')
       return false
     }
@@ -118,14 +124,14 @@ export function useNotifications() {
         silent: options.silent || false,
         data: options.data || { url: '/dashboard' }
       }
-      
+
       const notification = new Notification(options.title, notificationOptions)
 
       // Handle notification click
       notification.onclick = () => {
         window.focus()
         notification.close()
-        
+
         // Navigate to the specified URL
         const url = options.data?.url || '/dashboard'
         window.location.href = url
