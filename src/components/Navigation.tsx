@@ -9,24 +9,24 @@ import { Menu, X } from 'lucide-react'
 
 function UserProfile() {
   const { user } = useUser()
-  
+
   return (
-    <div className="rounded-xl p-3 sm:p-4 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 shadow-lg">
-      <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+    <div className="rounded-xl p-2 sm:p-3 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 shadow-lg">
+      <div className="flex items-center gap-2 mb-2">
         <UserButton afterSignOutUrl="/" />
         <div className="flex-1 min-w-0">
-          <p className="text-xs sm:text-sm font-medium text-white truncate">
+          <p className="text-xs font-medium text-white truncate">
             {user?.firstName || user?.username || 'User'}
           </p>
-          <p className="text-[10px] sm:text-xs text-white/60 truncate">
+          <p className="text-[9px] text-white/60 truncate">
             {user?.primaryEmailAddress?.emailAddress}
           </p>
         </div>
       </div>
-      <div className="text-[10px] sm:text-xs text-white/50">
+      <div className="text-[9px] text-white/50">
         <div className="flex items-center justify-between p-2 rounded-lg bg-white/5">
           <span>Plan: Free</span>
-          <Link href="/subscription" className="text-primary hover:text-primary/80 hover:underline font-medium transition-all">
+          <Link href="/subscription" className="text-primary hover:text-primary/80 hover:underline font-medium transition-all text-[9px]">
             Upgrade ✨
           </Link>
         </div>
@@ -248,7 +248,9 @@ export default function Navigation() {
               </SignedOut>
 
               <SignedIn>
-                <UserProfile />
+                <div className="overflow-y-auto max-h-40">
+                  <UserProfile />
+                </div>
               </SignedIn>
             </motion.div>
           </motion.nav>
@@ -259,7 +261,7 @@ export default function Navigation() {
       <motion.nav
         initial={{ x: -300 }}
         animate={{ x: 0 }}
-        className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 xl:w-72 h-screen bg-[#0a0a0f]/95 backdrop-blur-xl border-r border-white/10 p-3 lg:p-4 xl:p-5 flex-col overflow-y-auto shadow-2xl"
+        className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 xl:w-72 bg-[#0a0a0f]/95 backdrop-blur-xl border-r border-white/10 p-3 lg:p-4 xl:p-5 flex-col min-h-0 flex-1 shadow-2xl"
         style={{
           background: 'linear-gradient(180deg, rgba(10, 10, 15, 0.98) 0%, rgba(15, 15, 25, 0.95) 100%)',
         }}
@@ -360,12 +362,12 @@ export default function Navigation() {
           <SignedOut>
             <div className="space-y-2">
               <SignInButton mode="modal">
-                <button className="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-all border border-white/20">
+                <button className="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-all border border-white/20 text-sm">
                   Sign In
                 </button>
               </SignInButton>
               <SignUpButton mode="modal">
-                <button className="w-full px-4 py-2 bg-gradient-to-r from-primary to-accent text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-lg">
+                <button className="w-full px-4 py-2 bg-gradient-to-r from-primary to-accent text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-lg text-sm">
                   Sign Up Free
                 </button>
               </SignUpButton>
@@ -373,7 +375,9 @@ export default function Navigation() {
           </SignedOut>
 
           <SignedIn>
-            <UserProfile />
+            <div className="overflow-y-auto max-h-40 lg:max-h-48">
+              <UserProfile />
+            </div>
           </SignedIn>
         </motion.div>
       </motion.nav>
