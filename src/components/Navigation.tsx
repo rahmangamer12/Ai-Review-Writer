@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useUser } from '@clerk/nextjs'
-import { Menu, X } from 'lucide-react'
+import { Menu, X, Sparkles } from 'lucide-react'
 
 function UserProfile() {
   const { user } = useUser()
@@ -131,20 +131,25 @@ export default function Navigation() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-card border-b border-primary/20 px-4 py-3 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/10 px-4 py-3 flex items-center justify-between backdrop-blur-xl">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center font-bold text-sm">
-            AI
-          </div>
-          <h1 className="text-lg font-bold text-gradient">AutoReview</h1>
+          <motion.div 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            className="w-9 h-9 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/25"
+          >
+            <Sparkles className="w-4 h-4 text-white" />
+          </motion.div>
+          <h1 className="text-lg font-bold text-white">AutoReview</h1>
         </Link>
-        <button
+        <motion.button
+          whileTap={{ scale: 0.9 }}
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+          className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors border border-white/10"
           aria-label="Toggle menu"
         >
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+          {mobileMenuOpen ? <X className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-white" />}
+        </motion.button>
       </div>
 
       {/* Mobile Menu Overlay */}
