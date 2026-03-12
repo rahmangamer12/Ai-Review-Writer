@@ -23,9 +23,11 @@ export default function PWAInstallPrompt() {
     const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
     setIsIOS(iOS)
 
-    // Don't show if already installed or dismissed
-    const dismissed = localStorage.getItem('pwa-install-dismissed')
-    if (dismissed || isInStandalone) return
+    // Don't show if already installed
+    if (isInStandalone) return
+    
+    // Check if dismissed, but allow for manual trigger
+    // Removed auto-dismiss check to allow re-showing
 
     // Listen for the beforeinstallprompt event
     const handler = (e: Event) => {
@@ -41,7 +43,7 @@ export default function PWAInstallPrompt() {
     window.addEventListener('beforeinstallprompt', handler)
 
     // For iOS, show install prompt if not standalone
-    if (iOS && !isInStandalone && !dismissed) {
+    if (iOS && !isInStandalone) {
       setTimeout(() => {
         setShowPrompt(true)
       }, 2000)

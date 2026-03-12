@@ -67,9 +67,9 @@ export function useLocation(): UseLocationReturn {
       const isSupported = 'geolocation' in navigator
       setSupported(isSupported)
       
+      // Don't show error automatically - only show when user tries to request
       if (!isSupported) {
         setPermission('denied')
-        setError('Geolocation is not supported by your browser')
       }
     }
 
