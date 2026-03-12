@@ -9,10 +9,10 @@ import { Menu, X, Sparkles, LayoutDashboard, MessageSquare, BarChart3, Plug2, Us
 
 function UserProfile() {
   const { user } = useUser()
-  const { signOutUser } = useClerk()
+  const { signOut } = useClerk()
 
   const handleSignOut = async () => {
-    await signOutUser()
+    await signOut()
   }
 
   return (
