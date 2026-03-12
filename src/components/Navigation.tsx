@@ -4,15 +4,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useUser } from '@clerk/nextjs'
+import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useUser, useClerk } from '@clerk/nextjs'
 import { Menu, X, Sparkles, LayoutDashboard, MessageSquare, BarChart3, Plug2, User, Settings, FileText, Puzzle, LogOut } from 'lucide-react'
-import { signOut } from '@clerk/nextjs'
 
 function UserProfile() {
   const { user } = useUser()
+  const { signOutUser } = useClerk()
 
-  const handleSignOut = () => {
-    signOut({ redirectUrl: '/' })
+  const handleSignOut = async () => {
+    await signOutUser()
   }
 
   return (
