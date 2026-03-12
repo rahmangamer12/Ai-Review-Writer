@@ -21,6 +21,11 @@ export function useServiceWorker() {
 
         setRegistration(reg)
 
+        // Force update check on page load (helps with testing)
+        if (typeof window !== 'undefined' && window.location.search.includes('force-update=true')) {
+          await reg.update()
+        }
+
         // Check for updates
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing
