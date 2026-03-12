@@ -794,7 +794,7 @@ export default function Dashboard() {
                 <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <CheckCircle className="h-4 w-4 text-emerald-400" />
-                    <span className="text-sm font-medium text-emerald-400">What's Working</span>
+                    <span className="text-sm font-medium text-emerald-400">What&apos;s Working</span>
                   </div>
                   <ul className="space-y-2 text-sm text-gray-300">
                     <li className="flex items-start gap-2">
