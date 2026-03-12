@@ -99,18 +99,33 @@ export default function NotificationManager({ className = '' }: NotificationMana
       return
     }
 
+    // Force create a new notification each time
+    const timestamp = Date.now()
     const success = showNotification({
-      title: '🎉 Notifications Working!',
-      body: 'You\'ll receive updates like this when new reviews arrive.',
+      title: '🎉 Test Notification!',
+      body: 'Notifications are working properly! You\'ll receive updates when new reviews arrive.',
       icon: '/icon.png',
-      tag: 'test-notification-' + Date.now() // Unique tag to prevent duplicates
+      tag: `test-notification-${timestamp}`,
+      data: { url: '/dashboard' }
     })
 
     if (success) {
       setShowTestSuccess(true)
       setTimeout(() => setShowTestSuccess(false), 3000)
     } else {
-      console.error('Failed to show test notification')
+      // Try using browser notification directly as fallback
+      if (Notification.permission === 'granted') {
+        const notification = new Notification('🎉 Test Notification!', {
+          body: 'Notifications are working properly!',
+          icon: '/icon.png',
+          tag: `test-notification-${timestamp}`
+        })
+        setShowTestSuccess(true)
+        setTimeout(() => {
+          setShowTestSuccess(false)
+          notification.close()
+        }, 3000)
+      }
     }
   }, [showNotification, isGranted])
 
