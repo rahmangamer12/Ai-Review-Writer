@@ -1,10 +1,10 @@
 'use client'
 
 import { useServiceWorker } from '@/hooks/useServiceWorker'
-import { RefreshCw, Wifi, WifiOff } from 'lucide-react'
+import { RefreshCw, Wifi, WifiOff, X } from 'lucide-react'
 
 export default function PWAUpdateNotification() {
-  const { updateAvailable, isOnline, updateServiceWorker } = useServiceWorker()
+  const { updateAvailable, isOnline, updateServiceWorker, dismissUpdate } = useServiceWorker()
 
   if (!updateAvailable && isOnline) return null
 
@@ -21,6 +21,13 @@ export default function PWAUpdateNotification() {
               className="ml-2 bg-white text-green-600 px-4 py-1 rounded-full font-semibold hover:bg-green-50 transition-colors"
             >
               Update Now
+            </button>
+            <button
+              onClick={dismissUpdate}
+              className="ml-1 p-1 rounded-full hover:bg-white/20 transition-colors"
+              aria-label="Dismiss update notification"
+            >
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
