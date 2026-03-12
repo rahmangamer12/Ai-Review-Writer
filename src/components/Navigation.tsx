@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useUser } from '@clerk/nextjs'
-import { Menu, X, Sparkles } from 'lucide-react'
+import { Menu, X, Sparkles, LayoutDashboard, MessageSquare, BarChart3, Plug2, User, Settings, FileText, Puzzle } from 'lucide-react'
 
 function UserProfile() {
   const { user } = useUser()
@@ -66,56 +66,56 @@ export default function Navigation() {
     {
       href: '/dashboard',
       label: 'Dashboard',
-      icon: '📊',
+      icon: LayoutDashboard,
       description: 'Overview & Analytics',
       gradient: 'from-cyan-500 to-blue-500'
     },
     {
       href: '/reviews',
       label: 'Reviews',
-      icon: '💬',
+      icon: MessageSquare,
       description: 'Manage Reviews',
       gradient: 'from-purple-500 to-pink-500'
     },
     {
       href: '/analytics',
       label: 'Analytics',
-      icon: '📈',
+      icon: BarChart3,
       description: 'AI Insights',
       gradient: 'from-emerald-500 to-teal-500'
     },
     {
       href: '/connect-platforms',
       label: 'Platforms',
-      icon: '🔌',
+      icon: Plug2,
       description: 'Connect Reviews',
       gradient: 'from-yellow-500 to-orange-500'
     },
     {
       href: '/profile',
       label: 'Profile',
-      icon: '👤',
+      icon: User,
       description: 'My Account',
       gradient: 'from-rose-500 to-pink-500'
     },
     {
       href: '/settings',
       label: 'Settings',
-      icon: '⚙️',
+      icon: Settings,
       description: 'Configure AI',
       gradient: 'from-orange-500 to-red-500'
     },
     {
       href: '/extension',
       label: 'Extension',
-      icon: '🔌',
+      icon: Puzzle,
       description: 'Chrome Extension',
       gradient: 'from-green-500 to-emerald-500'
     },
     {
       href: '/docs',
       label: 'Documentation',
-      icon: '📚',
+      icon: FileText,
       description: 'Help & Guide',
       gradient: 'from-blue-500 to-cyan-500'
     }
@@ -218,7 +218,7 @@ export default function Navigation() {
                     )}
 
                     {/* Icon */}
-                    <span className="text-xl relative z-10">{item.icon}</span>
+                    <item.icon className="w-5 h-5 relative z-10 text-white/80" />
 
                     {/* Content */}
                     <div className="flex-1 relative z-10">
@@ -331,8 +331,8 @@ export default function Navigation() {
                 )}
 
                 {/* Icon */}
-                <span className="text-xl lg:text-2xl group-hover:scale-110 transition-transform relative z-10">
-                  {item.icon}
+                <span className="group-hover:scale-110 transition-transform relative z-10">
+                  {item.icon && <item.icon className="w-5 h-5 lg:w-6 lg:h-6 text-white/80" />}
                 </span>
 
                 {/* Content */}
