@@ -5,10 +5,15 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useUser } from '@clerk/nextjs'
-import { Menu, X, Sparkles, LayoutDashboard, MessageSquare, BarChart3, Plug2, User, Settings, FileText, Puzzle } from 'lucide-react'
+import { Menu, X, Sparkles, LayoutDashboard, MessageSquare, BarChart3, Plug2, User, Settings, FileText, Puzzle, LogOut } from 'lucide-react'
+import { signOut } from '@clerk/nextjs'
 
 function UserProfile() {
   const { user } = useUser()
+
+  const handleSignOut = () => {
+    signOut({ redirectUrl: '/' })
+  }
 
   return (
     <div className="rounded-xl p-2 sm:p-3 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 shadow-lg">
@@ -31,6 +36,13 @@ function UserProfile() {
           </Link>
         </div>
       </div>
+      <button
+        onClick={handleSignOut}
+        className="w-full mt-2 flex items-center justify-center gap-2 px-3 py-2 rounded-lg bg-red-500/20 hover:bg-red-500/40 text-red-400 hover:text-red-300 transition-colors text-xs font-medium"
+      >
+        <LogOut className="w-4 h-4" />
+        Sign Out
+      </button>
     </div>
   )
 }

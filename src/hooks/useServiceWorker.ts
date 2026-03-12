@@ -61,6 +61,10 @@ export function useServiceWorker() {
     }
   }, [])
 
+  const dismissUpdate = () => {
+    setUpdateAvailable(false)
+  }
+
   const updateServiceWorker = () => {
     if (registration?.waiting) {
       registration.waiting.postMessage({ type: 'SKIP_WAITING' })
@@ -77,5 +81,6 @@ export function useServiceWorker() {
     updateAvailable,
     isOnline,
     updateServiceWorker,
+    dismissUpdate,
   }
 }
