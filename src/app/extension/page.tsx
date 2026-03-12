@@ -199,7 +199,7 @@ const ExtensionPage = () => {
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">2</div>
                     <div className="flex-1">
                       <h4 className="font-semibold text-white mb-1">Enable Developer Mode</h4>
-                      <p className="text-gray-400 text-sm">Toggle "Developer mode" in top-right corner</p>
+                      <p className="text-gray-400 text-sm">Toggle &quot;Developer mode&quot; in top-right corner</p>
                     </div>
                   </div>
 
@@ -207,7 +207,7 @@ const ExtensionPage = () => {
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">3</div>
                     <div className="flex-1">
                       <h4 className="font-semibold text-white mb-1">Load Unpacked</h4>
-                      <p className="text-gray-400 text-sm">Click "Load unpacked" button</p>
+                      <p className="text-gray-400 text-sm">Click &quot;Load unpacked&quot; button</p>
                     </div>
                   </div>
 
@@ -215,7 +215,7 @@ const ExtensionPage = () => {
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm font-bold">4</div>
                     <div className="flex-1">
                       <h4 className="font-semibold text-white mb-1">Select Extension Folder</h4>
-                      <p className="text-gray-400 text-sm">Select the <code className="bg-white/10 px-2 py-0.5 rounded text-xs">chrome-extension</code> folder (you may see a security warning, click "Keep" or "Retain")</p>
+                      <p className="text-gray-400 text-sm">Select the <code className="bg-white/10 px-2 py-0.5 rounded text-xs">chrome-extension</code> folder (you may see a security warning, click &quot;Keep&quot; or &quot;Retain&quot;)</p>
                     </div>
                   </div>
                 </div>
@@ -238,7 +238,7 @@ const ExtensionPage = () => {
                   </div>
                   <p className="text-gray-400 text-sm">
                     When installing, Chrome may show a security warning. This is normal for extensions not in Chrome Web Store.
-                    Simply click "Keep" or "Retain" when prompted, then install via "Load Unpacked".
+                    Simply click &quot;Keep&quot; or &quot;Retain&quot; when prompted, then install via &quot;Load Unpacked&quot;.
                   </p>
                 </div>
               </div>

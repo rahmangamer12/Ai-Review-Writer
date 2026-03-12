@@ -1,16 +1,16 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence, useMotionValue, useTransform, useSpring } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
 import { 
-  BarChart3, TrendingUp, TrendingDown, Minus, Star, MessageSquare, 
-  Clock, CheckCircle, AlertCircle, Download, RefreshCw, Calendar,
-  ArrowUpRight, ArrowDownRight, Target, Zap, Brain, Lightbulb,
-  FileText, PieChart, Activity, Users, Award, Globe, Filter,
-  ChevronDown, Sparkles, Cpu, Layers, Share2, Printer, MoreHorizontal,
-  ThumbsUp, ThumbsDown, Meh, Send, ChevronRight, X, Menu
+  BarChart3, TrendingUp, TrendingDown, Star, MessageSquare, 
+  Clock, CheckCircle, Download, RefreshCw,
+  ArrowUpRight, Target, Zap, Brain, Lightbulb,
+  FileText, PieChart, Activity, Award, Globe,
+  ChevronDown, Sparkles, Cpu, Layers, Share2, Printer,
+  ThumbsUp, ThumbsDown, Meh, Send
 } from 'lucide-react'
 import { longcatAI } from '@/lib/longcatAI'
 import { supabase } from '@/lib/supabase'
@@ -94,24 +94,32 @@ const AnimatedCounter = ({ value, duration = 2 }: { value: number, duration?: nu
 
 // Floating Particles Background
 const FloatingParticles = () => {
+  const particles = [...Array(30)].map((_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    duration: Math.random() * 10 + 10,
+    delay: Math.random() * 5,
+  }))
+  
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-      {[...Array(30)].map((_, i) => (
+      {particles.map((p) => (
         <motion.div
-          key={i}
+          key={p.id}
           className="absolute w-1 h-1 bg-purple-500/30 rounded-full"
           initial={{
-            x: Math.random() * (typeof window !== 'undefined' ? window.innerWidth : 1000),
-            y: Math.random() * (typeof window !== 'undefined' ? window.innerHeight : 800),
+            x: `${p.x}%`,
+            y: `${p.y}%`,
           }}
           animate={{
-            y: [null, -100],
+            y: [`${p.y}%`, `${p.y - 10}%`],
             opacity: [0, 1, 0],
           }}
           transition={{
-            duration: Math.random() * 10 + 10,
+            duration: p.duration,
             repeat: Infinity,
-            delay: Math.random() * 5,
+            delay: p.delay,
           }}
         />
       ))}
@@ -200,12 +208,11 @@ export default function AnalyticsPage() {
   const router = useRouter()
   const { userId } = useAuth()
   const [loading, setLoading] = useState(true)
-  const [insights, setInsights] = useState<any>(null)
-  const [reviews, setReviews] = useState<any[]>([])
+  const [insights, setInsights] = useState<{summary?: string; overall_trends?: string[]; common_praises?: string[]; common_complaints?: string[]; improvement_suggestions?: string[]} | null>(null)
+  const [reviews, setReviews] = useState<{id?: string; content?: string; review_text?: string; rating?: number; created_at?: string; status?: string; sentiment_label?: string}[]>([])
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d' | 'all'>('30d')
   const [showExportMenu, setShowExportMenu] = useState(false)
   const [aiLoading, setAiLoading] = useState(false)
-  const [selectedMetric, setSelectedMetric] = useState<string | null>(null)
   const [hoveredCard, setHoveredCard] = useState<number | null>(null)
   
   // Stats state
@@ -218,11 +225,7 @@ export default function AnalyticsPage() {
     aiGenerated: 0,
   })
 
-  useEffect(() => {
-    fetchData()
-  }, [timeRange])
-
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -237,7 +240,7 @@ export default function AnalyticsPage() {
       }
       
       // Fetch reviews
-      let query = (supabase as any)
+      let query = supabase
         .from('reviews')
         .select('*')
         .order('created_at', { ascending: false })
@@ -247,15 +250,16 @@ export default function AnalyticsPage() {
       }
       
       const { data: reviewsData } = await query.limit(200)
-      setReviews(reviewsData || [])
+      const reviews = (reviewsData || []) as {rating?: number; status?: string; sentiment_label?: string; content?: string; review_text?: string; created_at?: string}[]
+      setReviews(reviews)
       
       // Calculate stats
-      if (reviewsData && reviewsData.length > 0) {
-        const total = reviewsData.length
-        const avgRating = reviewsData.reduce((acc: number, r: any) => acc + (r.rating || 0), 0) / total
-        const responded = reviewsData.filter((r: any) => r.status === 'approved').length
-        const positive = reviewsData.filter((r: any) => r.sentiment_label === 'positive').length
-        const pending = reviewsData.filter((r: any) => r.status === 'pending').length
+      if (reviews && reviews.length > 0) {
+        const total = reviews.length
+        const avgRating = reviews.reduce((acc: number, r) => acc + (r.rating || 0), 0) / total
+        const responded = reviews.filter((r) => r.status === 'approved').length
+        const positive = reviews.filter((r) => r.sentiment_label === 'positive').length
+        const pending = reviews.filter((r) => r.status === 'pending').length
         
         setStats({
           totalReviews: total,
@@ -267,10 +271,10 @@ export default function AnalyticsPage() {
         })
         
         // Generate AI insights
-        const formattedReviews = reviewsData.slice(0, 20).map((r: any) => ({
-          text: r.content || r.review_text,
-          rating: r.rating,
-          date: r.created_at
+        const formattedReviews = reviews.slice(0, 20).map((r) => ({
+          text: r.content || r.review_text || '',
+          rating: r.rating || 0,
+          date: r.created_at || new Date().toISOString()
         }))
         
         try {
@@ -298,8 +302,12 @@ export default function AnalyticsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [timeRange])
   
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
+   
   const handleExport = (format: string) => {
     setShowExportMenu(false)
     // Mock export functionality

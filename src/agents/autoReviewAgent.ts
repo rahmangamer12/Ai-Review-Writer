@@ -257,7 +257,7 @@ export class AutoReviewAgent {
   async learnFromFeedback(params: {
     originalReply: string
     humanEditedReply: string
-    reviewContext: any
+    reviewContext: Record<string, unknown>
     feedbackType: 'edit' | 'approve' | 'reject'
   }) {
     const { originalReply, humanEditedReply, reviewContext, feedbackType } = params
@@ -287,23 +287,23 @@ export class AutoReviewAgent {
   /**
    * Generates dashboard insights from review data
    */
-  async generateDashboardInsights(reviewsData: any[], timePeriod: string = 'week') {
+  async generateDashboardInsights(reviewsData: {sentiment_label?: string; rating?: number; topics?: string[]}[], timePeriod: string = 'week') {
     const totalReviews = reviewsData.length
     const sentimentDistribution = reviewsData.reduce((acc: Record<string, number>, review) => {
-      acc[review.sentiment_label] = (acc[review.sentiment_label] || 0) + 1
+      acc[review.sentiment_label || 'unknown'] = (acc[review.sentiment_label || 'unknown'] || 0) + 1
       return acc
     }, {})
     
-    const averageRating = reviewsData.reduce((sum: number, review: any) => sum + review.rating, 0) / totalReviews || 0
+    const averageRating = reviewsData.reduce((sum: number, review) => sum + (review.rating || 0), 0) / totalReviews || 0
     
     const trendingTopics = reviewsData
-      .flatMap((review: any) => review.topics || [])
+      .flatMap((review) => review.topics || [])
       .reduce((acc: Record<string, number>, topic: string) => {
         acc[topic] = (acc[topic] || 0) + 1
         return acc
       }, {})
     
-    const recommendations = []
+    const recommendations: string[] = []
     
     if ((sentimentDistribution.negative || 0) > totalReviews * 0.3) {
       recommendations.push('High negative sentiment detected - consider proactive outreach')
@@ -316,7 +316,7 @@ export class AutoReviewAgent {
     return {
       sentiment_distribution: sentimentDistribution,
       trending_topics: Object.entries(trendingTopics)
-        .sort(([,a]: [string, any], [,b]: [string, any]) => (b as number) - (a as number))
+        .sort(([,a], [,b]) => (b as number) - (a as number))
         .slice(0, 5)
         .map(([topic]) => topic),
       performance_metrics: {
