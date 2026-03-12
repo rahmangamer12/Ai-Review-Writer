@@ -7,6 +7,8 @@ export default function SignInPage() {
         <SignIn 
           signUpUrl="/sign-up"
           redirectUrl="/dashboard"
+          afterSignInUrl="/dashboard"
+          afterSignUpUrl="/dashboard"
           appearance={{
             elements: {
               rootBox: "w-full",
