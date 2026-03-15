@@ -1,0 +1,16 @@
+Subject: Request to Unflag My GitHub Account
+
+Dear GitHub Support Team,
+
+My GitHub username is: rahmanmacapple-ui
+
+I am writing to request that you review and unflag my account. My account is currently flagged, due to which I cannot authorize third-party applications like Vercel.
+
+I have not performed any spam or abusive activities on my account. This may be a false positive or automated flag. I need to connect my GitHub account with Vercel for deployment purposes.
+
+Please investigate my account and remove the flag so I can continue using GitHub normally.
+
+Thank you for your time and assistance.
+
+Best regards,
+Abdul Rehman
