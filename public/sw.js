@@ -1,9 +1,9 @@
 // AutoReview AI - Main Service Worker (PWA)
-// Version: 1.0.0
+// Version: 1.0.1 - Fixed POST caching issue
 
-const CACHE_NAME = 'autoreview-ai-v1';
-const RUNTIME_CACHE = 'autoreview-runtime-v1';
-const IMAGE_CACHE = 'autoreview-images-v1';
+const CACHE_NAME = 'autoreview-ai-v1.0.1';
+const RUNTIME_CACHE = 'autoreview-runtime-v1.0.1';
+const IMAGE_CACHE = 'autoreview-images-v1.0.1';
 
 // Files to cache immediately on install
 const PRECACHE_ASSETS = [
@@ -80,24 +80,10 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Skip API calls from caching (always fetch fresh)
+  // API calls - just forward to network, don't intercept
+  // This fixes the "Network unavailable" error issue
   if (url.pathname.startsWith('/api/')) {
-    event.respondWith(
-      fetch(request)
-        .catch(() => {
-          return new Response(
-            JSON.stringify({ 
-              error: 'Network unavailable', 
-              offline: true 
-            }),
-            { 
-              headers: { 'Content-Type': 'application/json' },
-              status: 503
-            }
-          );
-        })
-    );
-    return;
+    return; // Let browser handle it normally
   }
 
   // Handle images separately with longer cache
@@ -161,6 +147,20 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Cache-first strategy for other assets (CSS, JS, fonts)
+  // Skip caching POST requests
+  if (request.method !== 'GET') {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  // Skip manifest.json and sw.js from caching
+  if (url.pathname === '/manifest.json' || url.pathname === '/sw.js') {
+    event.respondWith(
+      fetch(request).catch(() => new Response('{}', { status: 404, headers: { 'Content-Type': 'application/json' } }))
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(request)
       .then((cachedResponse) => {
@@ -170,8 +170,8 @@ self.addEventListener('fetch', (event) => {
 
         return fetch(request)
           .then((response) => {
-            // Cache successful responses
-            if (response.ok) {
+            // Cache successful GET responses only
+            if (response.ok && request.method === 'GET') {
               const responseClone = response.clone();
               caches.open(RUNTIME_CACHE)
                 .then((cache) => cache.put(request, responseClone));
@@ -180,7 +180,7 @@ self.addEventListener('fetch', (event) => {
           })
           .catch(() => {
             // Return error response
-            return new Response('Network error', { 
+            return new Response('Network error', {
               status: 408,
               headers: { 'Content-Type': 'text/plain' }
             });
