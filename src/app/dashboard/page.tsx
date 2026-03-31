@@ -332,8 +332,35 @@ export default function Dashboard() {
   const [showExportModal, setShowExportModal] = useState(false)
   const [aiInsights, setAiInsights] = useState<AIInsight[]>([])
   const [showAIInsightsPanel, setShowAIInsightsPanel] = useState(false)
+  const [isOffline, setIsOffline] = useState(false)
   // Removed: isSimulated - now using real data only
   const [mounted, setMounted] = useState(false)
+
+  // Better approach: Listen to browser online/offline events
+  useEffect(() => {
+    const handleOnline = () => {
+      setIsOffline(false)
+      fetchAnalytics()
+    }
+    
+    const handleOffline = () => {
+      setIsOffline(true)
+      const emptyData = getEmptyData()
+      setData(emptyData)
+      generateAIInsights(emptyData)
+    }
+
+    // Set initial state
+    setIsOffline(!navigator.onLine)
+
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -385,14 +412,14 @@ export default function Dashboard() {
       // Don't show error for aborted requests
       if (err instanceof Error && err.name === 'AbortError') return;
 
-      // Check if it's a network/offline error - handle silently
+      // Check if it's a network/offline error
       const errorMessage = err instanceof Error ? err.message : ''
       const isNetworkError = errorMessage.includes('Network') || 
                              errorMessage.includes('unavailable') ||
                              errorMessage.includes('Failed to fetch')
       
-      if (isNetworkError) {
-        // Silently set empty data for network errors - don't log as error
+      if (isNetworkError || isOffline) {
+        // Silently set empty data for offline mode
         const emptyData = getEmptyData()
         setData(emptyData)
         generateAIInsights(emptyData)
@@ -1202,6 +1229,24 @@ export default function Dashboard() {
         </div>
       </div>
     );
+  }
+
+  // Offline banner
+  if (isOffline) {
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] text-white">
+        <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-600/90 text-white px-4 py-2 text-center text-sm font-medium">
+          You are currently offline. Some features may not work properly.
+        </div>
+        <div className="pt-10">
+          {/* Render dashboard with empty/offline state */}
+          <div className="p-4">
+            <h1 className="text-2xl font-bold mb-4">Dashboard (Offline Mode)</h1>
+            <p className="text-gray-400">Your data will sync when you're back online.</p>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
