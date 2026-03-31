@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -6,11 +7,12 @@ import Navigation from "@/components/Navigation";
 import ClientOnly from "@/components/ClientOnly";
 import DynamicBackground from "@/components/DynamicBackground";
 import FeedbackWidget from "@/components/FeedbackWidget";
-import AIChatbot from "@/components/AIChatbot";
+import AIChatbot from "@/components/AIChatbotWidget";
 import HydrationSuppressor from "@/components/HydrationSuppressor";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import PWAUpdateNotification from "@/components/PWAUpdateNotification";
 import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import { ClerkProvider } from '@clerk/nextjs'
 
 const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
@@ -25,32 +27,15 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "AutoReview AI - Intelligent Review Management",
-  description: "Automated customer review management with AI-powered sentiment analysis and intelligent responses",
-  manifest: '/manifest.json',
-  appleWebApp: {
-    capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'AutoReview AI',
-  },
-};
-
-export const viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  maximumScale: 5,
-  userScalable: true,
-  themeColor: '#8b5cf6',
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider publishableKey={publishableKey}>
+    <ClerkProvider 
+      publishableKey={publishableKey}
+    >
       <html lang="en" className="dark" suppressHydrationWarning>
         <head>
           <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
@@ -64,9 +49,42 @@ export default function RootLayout({
           
           {/* Service Worker Registration moved to Client Component */}
           {/* Moved to PWAUpdateNotification component to avoid hydration issues */}
-        {/* Pre-hydration script to suppress browser extension attributes - Client Only */}
-          <script
-            suppressHydrationWarning
+        </head>
+        <body
+          className={cn(geistSans.variable, geistMono.variable, "antialiased bg-background text-foreground")}
+          suppressHydrationWarning
+        >
+          <DynamicBackground />
+          <ErrorBoundary>
+            <div className="flex flex-col lg:flex-row min-h-screen relative z-10" suppressHydrationWarning>
+              <Navigation />
+              <main className="flex-1 overflow-y-auto custom-scrollbar pt-[57px] lg:pt-8 min-w-0 lg:pl-64 xl:pl-72" suppressHydrationWarning>
+                <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8" suppressHydrationWarning>
+                  {children}
+                </div>
+              </main>
+            </div>
+          </ErrorBoundary>
+          
+          {/* Hydration Suppressor for browser extension attributes */}
+          <HydrationSuppressor />
+
+          {/* AI Customer Support Chatbot - Floating Widget */}
+          <AIChatbot />
+
+          {/* Feedback Widget - LEFT SIDE */}
+          <FeedbackWidget />
+
+          {/* PWA Install Prompt */}
+          <PWAInstallPrompt />
+
+          {/* PWA Update & Offline Notifications */}
+          <PWAUpdateNotification />
+
+          {/* Hydration Suppression Script - Using Next.js Script component to avoid warnings */}
+          <Script
+            id="hydration-suppressor-script"
+            strategy="afterInteractive"
             dangerouslySetInnerHTML={{
               __html: `
                 (function() {
@@ -87,8 +105,8 @@ export default function RootLayout({
                         for (var n = 0; n < nodes.length; n++) {
                           var node = nodes[n];
                           if (node.nodeType === 1) {
-                            if (node.hasAttribute && node.hasAttribute('bis_skin_checked')) needsClean = true;
-                            if (node.querySelector && node.querySelector('[bis_skin_checked]')) needsClean = true;
+                            if (node && node.hasAttribute && node.hasAttribute('bis_skin_checked')) needsClean = true;
+                            if (node && node.querySelector && node.querySelector('[bis_skin_checked]')) needsClean = true;
                           }
                         }
                       }
@@ -98,63 +116,17 @@ export default function RootLayout({
                       observer.observe(document.body, { childList: true, subtree: true });
                     }
                   }
-                  // Run immediately and setup observer
                   removeBisAttr();
                   if (document.readyState === 'loading') {
                     document.addEventListener('DOMContentLoaded', observe);
                   } else {
                     observe();
                   }
-                  // Periodic cleanup
-                  setInterval(removeBisAttr, 500);
+                  setInterval(removeBisAttr, 1000);
                 })();
               `,
             }}
           />
-        </head>
-        <body
-          className={cn(geistSans.variable, geistMono.variable, "antialiased bg-background text-foreground")}
-          suppressHydrationWarning
-        >
-          <ClientOnly>
-            <DynamicBackground />
-          </ClientOnly>
-          <div className="flex flex-col lg:flex-row min-h-screen relative z-10" suppressHydrationWarning>
-            <Navigation />
-            <main className="flex-1 overflow-y-auto custom-scrollbar pt-[57px] lg:pt-8 min-w-0 lg:pl-64 xl:pl-72" suppressHydrationWarning>
-              <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8">
-                {children}
-              </div>
-            </main>
-          </div>
-          
-          {/* Hydration Suppressor for browser extension attributes */}
-          <HydrationSuppressor />
-
-          {/* Service Worker Registration - Runs on client only */}
-          <ClientOnly>
-            <ServiceWorkerRegistrar />
-          </ClientOnly>
-
-          {/* AI Customer Support Chatbot - RIGHT SIDE - 24/7 Available */}
-          <ClientOnly>
-            <AIChatbot />
-          </ClientOnly>
-
-          {/* Feedback Widget - LEFT SIDE */}
-          <ClientOnly>
-            <FeedbackWidget />
-          </ClientOnly>
-
-          {/* PWA Install Prompt */}
-          <ClientOnly>
-            <PWAInstallPrompt />
-          </ClientOnly>
-
-          {/* PWA Update & Offline Notifications */}
-          <ClientOnly>
-            <PWAUpdateNotification />
-          </ClientOnly>
         </body>
       </html>
     </ClerkProvider>
