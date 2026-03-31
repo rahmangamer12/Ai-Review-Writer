@@ -385,18 +385,19 @@ export default function Dashboard() {
       // Don't show error for aborted requests
       if (err instanceof Error && err.name === 'AbortError') return;
 
-      console.error('Dashboard fetch error:', err)
+      // Check if it's a network/offline error - handle silently
+      const errorMessage = err instanceof Error ? err.message : ''
+      const isNetworkError = errorMessage.includes('Network') || 
+                             errorMessage.includes('unavailable') ||
+                             errorMessage.includes('Failed to fetch')
       
-      // Check if it's a network error
-      const errorMessage = err instanceof Error ? err.message : 'Please check your connection.'
-      
-      // Only set error state if it's a real error (not network/unavailable)
-      if (errorMessage.includes('Network') || errorMessage.includes('unavailable')) {
-        // Silently set empty data for network errors - don't disrupt UI
+      if (isNetworkError) {
+        // Silently set empty data for network errors - don't log as error
         const emptyData = getEmptyData()
         setData(emptyData)
         generateAIInsights(emptyData)
       } else {
+        console.error('Dashboard fetch error:', err)
         const emptyData = getEmptyData()
         setData(emptyData)
         generateAIInsights(emptyData)
