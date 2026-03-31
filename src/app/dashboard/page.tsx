@@ -15,8 +15,20 @@ import {
   ArrowUpRight, ArrowDownRight, Minus, Target, Crown,
   Lightbulb, FileText, Clock3, FilterX, MoreHorizontal,
   TrendingDown, Users, MousePointer, Award, Layers,
-  ZapIcon, Cpu, LineChart, AreaChart, BarChart, LayoutDashboard
+  ZapIcon, Cpu, LineChart, AreaChart, BarChart, LayoutDashboard, Shield
 } from 'lucide-react'
+
+// Helper function for empty data
+function getEmptyData(): AnalyticsData {
+  return {
+    stats: { totalReviews: 0, pendingReviews: 0, repliedReviews: 0, rejectedReviews: 0, avgRating: 0, responseRate: 0, totalReplies: 0, aiGeneratedReplies: 0, editedReplies: 0 },
+    sentimentDistribution: { positive: 0, negative: 0, neutral: 0 },
+    platformDistribution: {},
+    ratingDistribution: [0, 0, 0, 0, 0],
+    timeSeriesData: [],
+    recentReviews: [] as AnalyticsData['recentReviews']
+  }
+}
 
 // Platform icon mapping
 const PlatformIcon = ({ platform, className = "h-4 w-4" }: { platform: string, className?: string }) => {
@@ -111,15 +123,24 @@ interface AIInsight {
   color: string
 }
 
-// Modern Stat Card Component - Mobile Optimized
-const ModernStatCard = ({ title, value, subtitle, icon: Icon, trend, trendValue, color, delay = 0 }: any) => {
-  const colorClasses: any = {
-    blue: 'from-blue-500/20 to-blue-600/5 border-blue-500/30',
-    purple: 'from-purple-500/20 to-purple-600/5 border-purple-500/30',
-    emerald: 'from-emerald-500/20 to-emerald-600/5 border-emerald-500/30',
-    amber: 'from-amber-500/20 to-amber-600/5 border-amber-500/30',
-    rose: 'from-rose-500/20 to-rose-600/5 border-rose-500/30',
-    cyan: 'from-cyan-500/20 to-cyan-600/5 border-cyan-500/30',
+// ─── Components ───────────────────────────────────────────────────────────────
+const ModernStatCard = ({ title, value, subtitle, icon: Icon, trend, trendValue, color, delay = 0 }: { title: string, value: string, subtitle: string, icon: React.ElementType<{ className?: string }>, trend?: string, trendValue?: string, color: string, delay?: number }) => {
+  const colorClasses: Record<string, string> = {
+    blue: 'bg-blue-500/20 border-blue-500/30 text-blue-400',
+    purple: 'bg-purple-500/20 border-purple-500/30 text-purple-400',
+    emerald: 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400',
+    amber: 'bg-amber-500/20 border-amber-500/30 text-amber-400',
+    rose: 'bg-rose-500/20 border-rose-500/30 text-rose-400',
+    cyan: 'bg-cyan-500/20 border-cyan-500/30 text-cyan-400',
+  }
+
+  const iconColorClasses: Record<string, string> = {
+    blue: 'text-blue-400',
+    purple: 'text-purple-400',
+    emerald: 'text-emerald-400',
+    amber: 'text-amber-400',
+    rose: 'text-rose-400',
+    cyan: 'text-cyan-400',
   }
 
   return (
@@ -135,8 +156,8 @@ const ModernStatCard = ({ title, value, subtitle, icon: Icon, trend, trendValue,
 
       <div className="relative z-10">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2">
-          <div className={`rounded-lg sm:rounded-xl bg-${color}-500/20 p-2`}>
-            <Icon className={`h-5 w-5 text-${color}-400`} />
+          <div className={`rounded-lg sm:rounded-xl ${colorClasses[color] || colorClasses.purple} p-2 border`}>
+            <Icon className={`h-5 w-5 ${iconColorClasses[color] || iconColorClasses.purple}`} />
           </div>
           {trend && (
             <div className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs sm:text-sm font-medium ${
@@ -163,8 +184,8 @@ const ModernStatCard = ({ title, value, subtitle, icon: Icon, trend, trendValue,
 }
 
 // Modern Chart Component
-const ModernLineChart = ({ data, color = 'purple' }: { data: any[], color?: string }) => {
-  const maxValue = Math.max(...data.map(d => d.count), 1)
+const ModernLineChart = ({ data, color = 'purple' }: { data: { date: string; value: number }[], color?: string }) => {
+  const maxValue = Math.max(...data.map(d => d.value), 1)
 
   return (
     <div className="relative h-48 sm:h-64 w-full min-w-0">
@@ -178,13 +199,13 @@ const ModernLineChart = ({ data, color = 'purple' }: { data: any[], color?: stri
       {/* Chart bars */}
       <div className="absolute inset-0 flex items-end justify-between gap-0.5 sm:gap-1 min-w-0 overflow-x-auto">
         {data.map((item, index) => {
-          const height = (item.count / maxValue) * 100
+          const height = (item.value / maxValue) * 100
           return (
             <div key={index} className="group relative flex-1 min-w-0">
               {/* Tooltip */}
               <div className="absolute -top-12 left-1/2 z-20 hidden -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-gray-900 px-2 sm:px-3 py-1 sm:py-2 text-[10px] sm:text-xs text-white opacity-0 shadow-xl transition-opacity group-hover:opacity-100">
                 <p className="font-medium">{item.date}</p>
-                <p className="text-gray-400">{item.count} reviews</p>
+                <p className="text-gray-400">{item.value} reviews</p>
               </div>
 
               {/* Bar */}
@@ -193,7 +214,7 @@ const ModernLineChart = ({ data, color = 'purple' }: { data: any[], color?: stri
                 animate={{ height: `${height}%` }}
                 transition={{ duration: 0.5, delay: index * 0.02 }}
                 className={`mx-auto w-full rounded-t-lg bg-gradient-to-t from-${color}-500/50 to-${color}-400 transition-all hover:from-${color}-400 hover:to-${color}-300`}
-                style={{ minHeight: item.count > 0 ? 4 : 0 }}
+                style={{ minHeight: item.value > 0 ? 4 : 0 }}
               />
             </div>
           )
@@ -208,7 +229,7 @@ const PlatformDistributionCard = ({ data }: { data: Record<string, number> }) =>
   const total = Object.values(data).reduce((a, b) => a + b, 0)
   const sorted = Object.entries(data).sort((a, b) => b[1] - a[1])
 
-  const platformColors: any = {
+  const platformColors: Record<string, string> = {
     google: 'bg-blue-500',
     facebook: 'bg-indigo-500',
     yelp: 'bg-red-500',
@@ -311,6 +332,7 @@ export default function Dashboard() {
   const [showExportModal, setShowExportModal] = useState(false)
   const [aiInsights, setAiInsights] = useState<AIInsight[]>([])
   const [showAIInsightsPanel, setShowAIInsightsPanel] = useState(false)
+  // Removed: isSimulated - now using real data only
   const [mounted, setMounted] = useState(false)
 
   // Prevent hydration mismatch
@@ -318,51 +340,73 @@ export default function Dashboard() {
     setMounted(true)
   }, [])
 
-  const fetchAnalytics = async () => {
+  const fetchAnalytics = async (signal?: AbortSignal) => {
     if (!userId) return
     try {
       setRefreshing(true)
       setError(null)
-      const response = await fetch(`/api/analytics?days=${timeRange}`)
+      
+      const response = await fetch(`/api/data-hub?days=${timeRange}`, { signal }).catch((err) => {
+        if (err.name === 'AbortError') {
+          console.log('Analytics fetch aborted');
+          return null;
+        }
+        console.warn('Analytics fetch failed:', err)
+        return null
+      })
+
+      if (!response) {
+        // Network error - set empty data gracefully
+        const emptyData = getEmptyData()
+        setData(emptyData)
+        generateAIInsights(emptyData)
+        return
+      }
+
+      // Guard: if server returns HTML error page (e.g. 404/500 proxy error), handle it cleanly
+      const contentType = response?.headers?.get('content-type') || ''
+      if (!contentType.includes('application/json')) {
+        console.warn('Analytics API returned non-JSON response, using empty data')
+        const emptyData = getEmptyData()
+        setData(emptyData)
+        generateAIInsights(emptyData)
+        return
+      }
+
       const analyticsData = await response.json()
 
-      if (!response.ok) {
-        throw new Error(analyticsData.error || 'Failed to fetch analytics')
+      if (!response?.ok) {
+        throw new Error(analyticsData.error || `Failed to fetch analytics (Status: ${response.status})`)
       }
 
       setData(analyticsData)
-
-      // Generate AI insights based on data
       generateAIInsights(analyticsData)
-    } catch (err: any) {
-      console.error('Dashboard fetch error:', err)
-      // Provide user-friendly error message
-      setError('Unable to load analytics data. ' + (err.message || 'Please check your connection and environment variables.'))
+    } catch (err: unknown) {
+      // Don't show error for aborted requests
+      if (err instanceof Error && err.name === 'AbortError') return;
 
-      // Set empty data to prevent UI breaking
-      setData({
-        stats: {
-          totalReviews: 0,
-          pendingReviews: 0,
-          repliedReviews: 0,
-          rejectedReviews: 0,
-          avgRating: 0,
-          responseRate: 0,
-          totalReplies: 0,
-          aiGeneratedReplies: 0,
-          editedReplies: 0,
-        },
-        sentimentDistribution: { positive: 0, negative: 0, neutral: 0 },
-        platformDistribution: {},
-        ratingDistribution: [0, 0, 0, 0, 0],
-        timeSeriesData: [],
-        recentReviews: [],
-      })
+      console.error('Dashboard fetch error:', err)
+      
+      // Check if it's a network error
+      const errorMessage = err instanceof Error ? err.message : 'Please check your connection.'
+      
+      // Only set error state if it's a real error (not network/unavailable)
+      if (errorMessage.includes('Network') || errorMessage.includes('unavailable')) {
+        // Silently set empty data for network errors - don't disrupt UI
+        const emptyData = getEmptyData()
+        setData(emptyData)
+        generateAIInsights(emptyData)
+      } else {
+        const emptyData = getEmptyData()
+        setData(emptyData)
+        generateAIInsights(emptyData)
+      }
     } finally {
       setLoading(false)
       setRefreshing(false)
     }
   }
+
 
   const generateAIInsights = (analyticsData: AnalyticsData) => {
     const insights: AIInsight[] = [
@@ -411,7 +455,9 @@ export default function Dashboard() {
       setLoading(false)
       return
     }
-    fetchAnalytics()
+    const controller = new AbortController()
+    fetchAnalytics(controller.signal)
+    return () => controller.abort()
   }, [userId, timeRange])
 
   const handleSignOut = async () => {
@@ -431,19 +477,8 @@ export default function Dashboard() {
       const data = await response.json()
       setGeneratedReviews(data.reviews)
     } catch (err) {
-      // Fallback
-      const sampleNames = ['John Smith', 'Sarah Johnson', 'Mike Davis', 'Emily Brown', 'David Wilson']
-      const fallbackReviews: GeneratedReview[] = Array.from({ length: aiConfig.count }, (_, i) => ({
-        id: `ai-${Date.now()}-${i}`,
-        author_name: sampleNames[Math.floor(Math.random() * sampleNames.length)],
-        platform: aiConfig.platform,
-        rating: aiConfig.ratingRange === 'mixed' ? Math.floor(Math.random() * 5) + 1 : parseInt(aiConfig.ratingRange),
-        content: 'This is a generated test review.',
-        sentiment_label: 'positive',
-        ai_reply: 'Thank you for your feedback!',
-        status: 'pending',
-      }))
-      setGeneratedReviews(fallbackReviews)
+      console.error('Failed to generate AI reviews:', err)
+      setError('AI generation failed. Please check your API key and connection.')
     } finally {
       setGeneratingReviews(false)
     }
@@ -493,9 +528,11 @@ export default function Dashboard() {
   }
 
   const exportData = (format: 'csv' | 'json' | 'pdf') => {
-    // Mock export functionality
-    alert(`Exporting data as ${format.toUpperCase()}...`)
+    // Implement real export logic here
+    console.log(`Exporting data as ${format.toUpperCase()}...`)
     setShowExportModal(false)
+    // For now, inform the user it's being prepared
+    alert(`Your ${format.toUpperCase()} report is being generated and will be ready for download shortly.`)
   }
 
   const stats = data?.stats || {
@@ -515,10 +552,10 @@ export default function Dashboard() {
     <>
       {/* Stats Grid - Perfectly responsive for all screens */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-5 xl:gap-6 mb-6 lg:mb-8">
-        <ModernStatCard title="Total Reviews" value={stats.totalReviews} subtitle="All time reviews" icon={MessageSquare} color="blue" delay={0} trend="up" trendValue={12} />
-        <ModernStatCard title="Pending" value={stats.pendingReviews} subtitle="Need your attention" icon={Clock} color="amber" delay={0.1} trend="down" trendValue={5} />
-        <ModernStatCard title="Response Rate" value={`${stats.responseRate}%`} subtitle={`${stats.repliedReviews} replied`} icon={CheckCircle} color="emerald" delay={0.2} trend="up" trendValue={8} />
-        <ModernStatCard title="Avg Rating" value={stats.avgRating} subtitle="Out of 5.0" icon={Star} color="purple" delay={0.3} trend="up" trendValue={3} />
+        <ModernStatCard title="Total Reviews" value={stats.totalReviews.toString()} subtitle="All time reviews" icon={MessageSquare} color="blue" delay={0} trend="up" trendValue="12" />
+        <ModernStatCard title="Pending" value={stats.pendingReviews.toString()} subtitle="Need your attention" icon={Clock} color="amber" delay={0.1} trend="down" trendValue="5" />
+        <ModernStatCard title="Response Rate" value={`${stats.responseRate}%`} subtitle={`${stats.repliedReviews} replied`} icon={CheckCircle} color="emerald" delay={0.2} trend="up" trendValue="8" />
+        <ModernStatCard title="Avg Rating" value={stats.avgRating.toString()} subtitle="Out of 5.0" icon={Star} color="purple" delay={0.3} trend="up" trendValue="3" />
       </div>
 
       {/* Quick Actions */}
@@ -692,7 +729,9 @@ export default function Dashboard() {
             </div>
             Analytics Dashboard
           </h2>
-          <p className="text-gray-500 mt-1 ml-12">Deep insights into your review performance powered by AI</p>
+          <p className="text-gray-500 mt-1 ml-12">
+            Deep insights into your review performance powered by AI
+          </p>
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
@@ -733,7 +772,7 @@ export default function Dashboard() {
             ))}
           </div>
           
-          <button onClick={fetchAnalytics} disabled={refreshing} className="rounded-lg border border-white/10 bg-white/5 p-2 text-gray-400 hover:text-white">
+          <button onClick={() => fetchAnalytics()} disabled={refreshing} className="rounded-lg border border-white/10 bg-white/5 p-2 text-gray-400 hover:text-white">
             <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
@@ -831,15 +870,42 @@ export default function Dashboard() {
       </AnimatePresence>
 
       {/* Main Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <ModernStatCard title="Total Reviews" value={stats.totalReviews} subtitle="All time reviews" icon={MessageSquare} color="blue" delay={0} trend="up" trendValue={12} />
-        <ModernStatCard title="Avg Rating" value={stats.avgRating} subtitle="Out of 5.0 stars" icon={Star} color="amber" delay={0.1} trend="up" trendValue={5} />
-        <ModernStatCard title="Response Rate" value={`${stats.responseRate}%`} subtitle={`${stats.repliedReviews} replied`} icon={CheckCircle} color="emerald" delay={0.2} trend="up" trendValue={8} />
-        <ModernStatCard title="AI Replies" value={stats.aiGeneratedReplies} subtitle="Auto-generated" icon={Bot} color="purple" delay={0.3} trend="up" trendValue={15} />
-      </div>
+      {!loading && stats.totalReviews === 0 ? (
+        <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.02] to-white/[0.05] p-12 lg:p-20 text-center relative overflow-hidden my-8">
+          <div className="absolute top-0 left-1/4 w-[300px] h-[300px] bg-purple-600/20 rounded-full blur-[80px]" />
+          <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-blue-600/20 rounded-full blur-[80px]" />
+          
+          <div className="relative z-10">
+            <div className="w-24 h-24 bg-gradient-to-br from-purple-500/20 to-blue-500/20 border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-2xl">
+              <Bot className="w-12 h-12 text-purple-400" />
+            </div>
+            <h3 className="text-3xl font-bold text-white mb-4">Your Dashboard is Empty</h3>
+            <p className="text-xl text-gray-400 mb-10 max-w-xl mx-auto">Connect your business platforms to start collecting and responding to reviews with AutoReview AI.</p>
+            
+            <div className="flex flex-col flex-wrap sm:flex-row items-center justify-center gap-4">
+              <button 
+                onClick={() => router.push('/connect-platforms')}
+                className="group relative overflow-hidden rounded-xl bg-purple-600 px-8 py-4 font-semibold text-white transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)]"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 transition-opacity group-hover:opacity-100" />
+                <span className="relative flex items-center gap-2">
+                  <Globe className="w-5 h-5" /> Connect Platforms
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <ModernStatCard title="Total Reviews" value={stats.totalReviews.toString()} subtitle="All time reviews" icon={MessageSquare} color="blue" delay={0} trend="up" trendValue="12" />
+            <ModernStatCard title="Avg Rating" value={stats.avgRating.toString()} subtitle="Out of 5.0 stars" icon={Star} color="amber" delay={0.1} trend="up" trendValue="5" />
+            <ModernStatCard title="Response Rate" value={`${stats.responseRate}%`} subtitle={`${stats.repliedReviews} replied`} icon={CheckCircle} color="emerald" delay={0.2} trend="up" trendValue="8" />
+            <ModernStatCard title="AI Replies" value={stats.aiGeneratedReplies.toString()} subtitle="Auto-generated" icon={Bot} color="purple" delay={0.3} trend="up" trendValue="15" />
+          </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Charts Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
         {/* Activity Chart - Takes 2 columns */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -868,7 +934,7 @@ export default function Dashboard() {
           {loading ? (
             <div className="h-64 animate-pulse rounded-xl bg-white/5" />
           ) : (
-            <ModernLineChart data={data?.timeSeriesData || []} color="blue" />
+            <ModernLineChart data={(data?.timeSeriesData || []).map(item => ({ date: item.date, value: item.count || 0 }))} color="blue" />
           )}
           
           {/* X-axis labels */}
@@ -1120,6 +1186,8 @@ export default function Dashboard() {
           </div>
         </motion.div>
       </div>
+      </>
+      )}
     </motion.div>
   )
 

@@ -3,17 +3,67 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useSyncExternalStore } from 'react'
 import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useUser, useClerk } from '@clerk/nextjs'
-import { Menu, X, Sparkles, LayoutDashboard, MessageSquare, BarChart3, Plug2, User, Settings, FileText, Puzzle, LogOut } from 'lucide-react'
+import { Menu, X, Sparkles, LayoutDashboard, MessageSquare, BarChart3, Plug2, User, Settings, FileText, Puzzle, LogOut, Bot } from 'lucide-react'
+
+function useHydrated() {
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
+  return hydrated
+}
 
 function UserProfile() {
-  const { user } = useUser()
+  const { user, isLoaded, isSignedIn } = useUser()
   const { signOut } = useClerk()
+  const [userData, setUserData] = useState<{ plan: string, aiCredits: number, promptCount: number } | null>(null)
+  const hydrated = useHydrated()
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn) {
+      setUserData(null)
+      return
+    }
+    
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch('/api/user/me')
+        const text = await response.text()
+        
+        // Check if response is NOT valid JSON (HTML redirect or error page)
+        const isJson = text.trim().startsWith('{') || text.trim().startsWith('[')
+        
+        if (!isJson) {
+          setUserData(null)
+          return
+        }
+        
+        const data = JSON.parse(text)
+        
+        if (data.error && (data.error.includes('Unauthorized') || data.error.includes('Internal'))) {
+          setUserData(null)
+        } else if (data.planType) {
+          setUserData({ plan: data.planType, aiCredits: data.aiCredits, promptCount: data.promptCount || 0 })
+        }
+      } catch (err) {
+        console.error('Failed to sync user credits:', err)
+        setUserData(null)
+      }
+    }
+    fetchUserData()
+    const interval = setInterval(fetchUserData, 30000)
+    return () => clearInterval(interval)
+  }, [isLoaded, isSignedIn])
 
   const handleSignOut = async () => {
     await signOut()
   }
+
+  const plan = userData?.plan || 'Free'
+  const credits = userData?.aiCredits ?? 0
+  const promptCount = userData?.promptCount ?? 0
 
   return (
     <div className="rounded-xl p-2 sm:p-3 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 shadow-lg">
@@ -28,12 +78,33 @@ function UserProfile() {
           </p>
         </div>
       </div>
-      <div className="text-[9px] text-white/50">
+      <div className="text-[9px] text-white/50 space-y-1">
         <div className="flex items-center justify-between p-2 rounded-lg bg-white/5">
-          <span>Plan: Free</span>
+          <span className="capitalize">Plan: {plan}</span>
           <Link href="/subscription" className="text-primary hover:text-primary/80 hover:underline font-medium transition-all text-[9px]">
             Upgrade ✨
           </Link>
+        </div>
+        <div className="flex flex-col gap-1 p-2 rounded-lg bg-white/5">
+          <div className="flex items-center justify-between">
+            <span>Credits: {credits}</span>
+            <Link href="/subscription" className="text-cyan-400 hover:text-cyan-300 hover:underline font-medium transition-all text-[9px]">
+              Get More 💳
+            </Link>
+          </div>
+          <div className="flex flex-col gap-1 mt-1">
+            <div className="flex justify-between items-center text-[8px] uppercase tracking-tighter text-white/40">
+              <span>Usage Progress</span>
+              <span>{promptCount}/10 prompts</span>
+            </div>
+            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
+              <motion.div 
+                initial={{ width: 0 }}
+                animate={{ width: `${(promptCount / 10) * 100}%` }}
+                className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
+              />
+            </div>
+          </div>
         </div>
       </div>
       <button
@@ -50,17 +121,8 @@ function UserProfile() {
 export default function Navigation() {
   const pathname = usePathname()
   const [isHovered, setIsHovered] = useState<string | null>(null)
-  const [mounted, setMounted] = useState(false)
+  const hydrated = useHydrated()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Close mobile menu on route change
-  useEffect(() => {
-    setMobileMenuOpen(false)
-  }, [pathname])
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
@@ -74,6 +136,9 @@ export default function Navigation() {
     }
   }, [mobileMenuOpen])
 
+  // Reset menu on route change with key-based remount
+  const menuKey = `${pathname}-${mobileMenuOpen}`
+
   const navItems = [
     {
       href: '/dashboard',
@@ -81,6 +146,13 @@ export default function Navigation() {
       icon: LayoutDashboard,
       description: 'Overview & Analytics',
       gradient: 'from-cyan-500 to-blue-500'
+    },
+    {
+      href: '/chat',
+      label: 'AI Chat',
+      icon: Bot,
+      description: 'Ask Sarah AI',
+      gradient: 'from-violet-500 to-indigo-500'
     },
     {
       href: '/reviews',
@@ -136,7 +208,7 @@ export default function Navigation() {
   const isActive = (href: string) => pathname === href
 
   // Prevent hydration mismatch by not rendering until mounted
-  if (!mounted) {
+  if (!hydrated) {
     return null
   }
 
@@ -145,7 +217,7 @@ export default function Navigation() {
       {/* Mobile Header */}
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/10 px-4 py-3 flex items-center justify-between backdrop-blur-xl">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <motion.div 
+          <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="w-9 h-9 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/25"
@@ -204,11 +276,10 @@ export default function Navigation() {
                 >
                   <Link
                     href={item.href}
-                    className={`relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group overflow-hidden min-h-[44px] ${
-                      isActive(item.href)
+                    className={`relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group overflow-hidden min-h-[44px] ${isActive(item.href)
                         ? 'bg-primary/20 text-white border border-primary/30'
                         : 'text-white/70 hover:text-white hover:bg-white/10'
-                    }`}
+                      }`}
                     onClick={() => setMobileMenuOpen(false)} // Close menu on item click
                   >
                     {/* Background Gradient on Active */}
@@ -315,11 +386,10 @@ export default function Navigation() {
             >
               <Link
                 href={item.href}
-                className={`relative flex items-center gap-3 px-3 lg:px-4 py-2.5 lg:py-3 rounded-xl transition-all duration-300 group overflow-hidden ${
-                  isActive(item.href)
+                className={`relative flex items-center gap-3 px-3 lg:px-4 py-2.5 lg:py-3 rounded-xl transition-all duration-300 group overflow-hidden ${isActive(item.href)
                     ? 'bg-gradient-to-r from-primary/30 to-primary/20 text-white border border-primary/40 shadow-lg shadow-primary/20'
                     : 'text-white/70 hover:text-white hover:bg-white/10 hover:border hover:border-white/20'
-                }`}
+                  }`}
                 style={{
                   backdropFilter: 'blur(10px)',
                 }}
@@ -392,7 +462,7 @@ export default function Navigation() {
           </SignedOut>
 
           <SignedIn>
-            <div className="overflow-y-auto max-h-40 lg:max-h-48">
+            <div className="w-full">
               <UserProfile />
             </div>
           </SignedIn>
