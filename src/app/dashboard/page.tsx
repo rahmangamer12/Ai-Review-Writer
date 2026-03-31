@@ -421,7 +421,9 @@ export default function Dashboard() {
       // Don't show error for aborted requests
       if (err instanceof Error && err.name === 'AbortError') return;
 
+      // Log as warning instead of error - we handle it gracefully
       console.warn('Dashboard fetch error (caught):', err)
+      
       // Always set empty data - don't throw
       const emptyData = getEmptyData()
       setData(emptyData)
