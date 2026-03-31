@@ -369,16 +369,25 @@ export default function Dashboard() {
 
   const fetchAnalytics = async (signal?: AbortSignal) => {
     if (!userId) return
+    
+    // Skip fetch if already offline
+    if (isOffline) {
+      const emptyData = getEmptyData()
+      setData(emptyData)
+      generateAIInsights(emptyData)
+      return
+    }
+    
     try {
       setRefreshing(true)
       setError(null)
       
-      const response = await fetch(`/api/data-hub?days=${timeRange}`, { signal }).catch((err) => {
-        if (err.name === 'AbortError') {
-          console.log('Analytics fetch aborted');
-          return null;
-        }
-        console.warn('Analytics fetch failed:', err)
+      const response = await fetch(`/api/data-hub?days=${timeRange}`, { 
+        signal,
+        // Add cache control to prevent caching issues
+        cache: 'no-store'
+      }).catch((err) => {
+        console.warn('Analytics fetch caught error:', err)
         return null
       })
 
@@ -412,23 +421,11 @@ export default function Dashboard() {
       // Don't show error for aborted requests
       if (err instanceof Error && err.name === 'AbortError') return;
 
-      // Check if it's a network/offline error
-      const errorMessage = err instanceof Error ? err.message : ''
-      const isNetworkError = errorMessage.includes('Network') || 
-                             errorMessage.includes('unavailable') ||
-                             errorMessage.includes('Failed to fetch')
-      
-      if (isNetworkError || isOffline) {
-        // Silently set empty data for offline mode
-        const emptyData = getEmptyData()
-        setData(emptyData)
-        generateAIInsights(emptyData)
-      } else {
-        console.error('Dashboard fetch error:', err)
-        const emptyData = getEmptyData()
-        setData(emptyData)
-        generateAIInsights(emptyData)
-      }
+      console.warn('Dashboard fetch error (caught):', err)
+      // Always set empty data - don't throw
+      const emptyData = getEmptyData()
+      setData(emptyData)
+      generateAIInsights(emptyData)
     } finally {
       setLoading(false)
       setRefreshing(false)
