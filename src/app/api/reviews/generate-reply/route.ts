@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       // Verify review belongs to user
       const { data: existing } = await (supabase
         .from('reviews')
-        .select('id') as any)
+        .select('id') )
         .eq('id', reviewId)
         .eq('user_id', userId)
         .single()
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       // Check if reply exists
       const { data: existingReply } = await (supabase
         .from('replies')
-        .select('id') as any)
+        .select('id') )
         .eq('review_id', reviewId)
         .single()
 
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
             ai_generated: aiGenerated,
             is_edited_by_human: !aiGenerated,
             updated_at: new Date().toISOString(),
-          }) as any)
+          }) )
           .eq('id', existingReply.id)
           .select()
           .single()
@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
             reply_text: replyText,
             ai_generated: aiGenerated,
             is_edited_by_human: !aiGenerated,
-          }) as any)
+          }) )
           .select()
           .single()
       }
@@ -144,11 +144,12 @@ export async function POST(request: NextRequest) {
       }
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Generate Reply API Error]:', error)
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ 
       error: 'Failed to process request', 
-      details: error.message, 
+      details: message, 
       success: false 
     }, { status: 500 })
   }

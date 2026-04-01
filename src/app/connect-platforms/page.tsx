@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useSyncExternalStore } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
@@ -156,15 +156,24 @@ export default function ConnectPlatformsPage() {
   
   // Video call states
   const [videoFormState, handleVideoSubmit] = useForm("xreqgero")
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
 
   // Load platforms on mount
   useEffect(() => {
-    const loadPlatforms = async () => {
-      const loaded = await PlatformIntegrationManager.getPlatforms()
+    if (!hydrated) return
+    
+    const loadPlatforms = () => {
+      const loaded = PlatformIntegrationManager.getPlatforms()
       setPlatforms(loaded)
     }
     loadPlatforms()
-  }, [])
+  }, [hydrated])
+
+  // Show loading state while platforms load
+  const isLoadingPlatforms = hydrated && platforms.length === 0
 
   // Get selected platform data
   const selectedPlatformData = platforms.find(p => p.id === selectedPlatform)
@@ -206,10 +215,17 @@ export default function ConnectPlatformsPage() {
     setTesting(true)
     setTestResult(null)
     
-    const result = await PlatformIntegrationManager.testConnection(selectedPlatform, formData)
-    setTestResult(result)
-    
-    setTesting(false)
+    try {
+      const result = await PlatformIntegrationManager.testConnection(selectedPlatform, formData)
+      setTestResult(result)
+    } catch (err) {
+      setTestResult({ 
+        success: false, 
+        message: 'Connection test failed. Please check your credentials and try again.' 
+      })
+    } finally {
+      setTesting(false)
+    }
   }
 
   // Save platform configuration
@@ -218,22 +234,26 @@ export default function ConnectPlatformsPage() {
     
     setSaving(true)
     
-    const test = await PlatformIntegrationManager.testConnection(selectedPlatform, formData)
-    
-    if (test.success) {
-      const saved = PlatformIntegrationManager.savePlatform(selectedPlatform, formData)
-      if (saved) {
-        const updated = PlatformIntegrationManager.getPlatforms()
-        setPlatforms(updated)
-        setSelectedPlatform(null)
-        setFormData({})
-        setTestResult(null)
+    try {
+      const test = await PlatformIntegrationManager.testConnection(selectedPlatform, formData)
+      
+      if (test.success) {
+        const saved = PlatformIntegrationManager.savePlatform(selectedPlatform, formData)
+        if (saved) {
+          const updated = PlatformIntegrationManager.getPlatforms()
+          setPlatforms(updated)
+          setSelectedPlatform(null)
+          setFormData({})
+          setTestResult(null)
+        }
+      } else {
+        setTestResult({ success: false, message: test.message })
       }
-    } else {
-      setTestResult(test)
+    } catch (err) {
+      setTestResult({ success: false, message: 'Failed to save. Please try again.' })
+    } finally {
+      setSaving(false)
     }
-    
-    setSaving(false)
   }
 
   // Disconnect platform
@@ -525,7 +545,22 @@ export default function ConnectPlatformsPage() {
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {platforms.map((platform, index) => (
+                      {!hydrated || platforms.length === 0 ? (
+                        // Loading skeleton
+                        [...Array(6)].map((_, i) => (
+                          <div key={i} className="glass-card border border-white/10 rounded-2xl p-6 animate-pulse">
+                            <div className="flex items-center gap-4">
+                              <div className="w-14 h-14 rounded-xl bg-white/10" />
+                              <div className="space-y-2">
+                                <div className="h-5 w-32 bg-white/10 rounded" />
+                                <div className="h-4 w-20 bg-white/10 rounded" />
+                              </div>
+                            </div>
+                            <div className="mt-4 h-4 w-full bg-white/10 rounded" />
+                          </div>
+                        ))
+                      ) : (
+                        platforms.map((platform, index) => (
                         <motion.div
                           key={platform.id}
                           initial={{ opacity: 0, y: 20 }}
@@ -574,7 +609,8 @@ export default function ConnectPlatformsPage() {
                             </div>
                           )}
                         </motion.div>
-                      ))}
+                      ))
+                      )}
                     </div>
                   </motion.div>
                 </div>

@@ -24,6 +24,8 @@ import {
 export default function ChatPage() {
   const router = useRouter()
   const { isLoaded, isSignedIn, userId } = useAuth()
+  
+  // ALL HOOKS MUST BE CALLED BEFORE ANY RETURNS!
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
   const [userData, setUserData] = useState<UserData | null>(null)
@@ -42,6 +44,22 @@ export default function ChatPage() {
   const [showMoreMenu, setShowMoreMenu] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [input, setInput] = useState('')
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const chatContainerRef = useRef<HTMLDivElement>(null)
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const recognitionRef = useRef<any>(null)
+  const moreMenuRef = useRef<HTMLDivElement>(null)
+
+  const currentSession = useMemo(() => sessions.find(s => s.id === currentSessionId), [sessions, currentSessionId])
+  const messages = useMemo(() => currentSession?.messages || [], [currentSession])
+  const activeModel = useMemo(() => getModelById(selectedModel), [selectedModel])
+
+  const addNotification = useCallback((text: string, type: Notification['type'] = 'success') => {
+    const id = uuidv4()
+    setNotifications(prev => [...prev, { id, text, type }])
+    setTimeout(() => setNotifications(prev => prev.filter(n => n.id !== id)), 3000)
+  }, [])
 
   // Auth check - redirect to sign-in if not authenticated
   useEffect(() => {
@@ -74,22 +92,6 @@ export default function ChatPage() {
       </div>
     )
   }
-
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const chatContainerRef = useRef<HTMLDivElement>(null)
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const recognitionRef = useRef<any>(null)
-  const moreMenuRef = useRef<HTMLDivElement>(null)
-
-  const currentSession = useMemo(() => sessions.find(s => s.id === currentSessionId), [sessions, currentSessionId])
-  const messages = useMemo(() => currentSession?.messages || [], [currentSession])
-  const activeModel = useMemo(() => getModelById(selectedModel), [selectedModel])
-
-  const addNotification = useCallback((text: string, type: Notification['type'] = 'success') => {
-    const id = uuidv4()
-    setNotifications(prev => [...prev, { id, text, type }])
-    setTimeout(() => setNotifications(prev => prev.filter(n => n.id !== id)), 3000)
-  }, [])
 
   const fetchUserData = useCallback(async () => {
     try {
@@ -137,7 +139,6 @@ export default function ChatPage() {
         setSessions([])
       }
     } catch (err) { 
-      console.error('Failed to fetch sessions:', err) 
       setSessions([])
     }
   }, [currentSessionId])

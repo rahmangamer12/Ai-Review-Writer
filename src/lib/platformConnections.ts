@@ -13,20 +13,33 @@ export interface ConnectionResult {
   message?: string;
 }
 
-// Mock connections for demo (when APIs not configured)
+// Platform Connection Manager
+// Handles all platform connections requiring REAL credentials - NO MOCK ALLOWED
+
+export interface ConnectionResult {
+  success: boolean;
+  platform: string;
+  connected: boolean;
+  error?: string;
+  setupRequired?: boolean;
+  setupUrl?: string;
+  message?: string;
+}
+
+// Connect to platform - MUST have real API credentials
 export async function connectPlatform(platformId: string, userId: string): Promise<ConnectionResult> {
   try {
     const response = await fetch(`/api/platforms/${platformId}/connect?userId=${userId}`);
     const data = await response.json();
 
     if (!response.ok) {
-      // API not configured - use mock mode
-      if (data.setupRequired) {
+      // API not properly configured - user needs to enter real credentials
+      if (data.setupRequired || data.error?.includes('not configured')) {
         return {
-          success: true, // Still allow "connection" in demo mode
+          success: false,
           platform: platformId,
-          connected: true,
-          message: `Connected to ${platformId} (Demo Mode - ${data.message})`,
+          connected: false,
+          error: data.message || 'Platform credentials required. Please configure real API keys.',
         };
       }
       
@@ -34,9 +47,18 @@ export async function connectPlatform(platformId: string, userId: string): Promi
         success: false,
         platform: platformId,
         connected: false,
-        error: data.error || 'Connection failed',
-        setupRequired: data.setupRequired,
-        setupUrl: data.setupUrl,
+        error: data.error || 'Connection failed. Verify your credentials are correct.',
+        setupRequired: false, // Credentials exist but may be invalid
+      };
+    }
+
+    // Verify actual connection success
+    if (!data.success && !data.connected) {
+      return {
+        success: false,
+        platform: platformId,
+        connected: false,
+        error: data.error || 'Connection verification failed',
       };
     }
 
@@ -46,13 +68,12 @@ export async function connectPlatform(platformId: string, userId: string): Promi
       connected: true,
       message: `Successfully connected to ${platformId}`,
     };
-  } catch (error: any) {
-    // Fallback to mock mode for demo
+  } catch (error: unknown) {
     return {
-      success: true,
+      success: false,
       platform: platformId,
-      connected: true,
-      message: `Connected to ${platformId} (Demo Mode)`,
+      connected: false,
+      error: 'Connection failed. Verify your credentials and try again.',
     };
   }
 }

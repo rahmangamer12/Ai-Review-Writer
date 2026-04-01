@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { lemonSqueezy } from '@/lib/lemonsqueezy'
-import { CreditsManager } from '@/lib/credits'
+import prisma from '@/lib/db'
+import { sendUpgradeConfirmationEmail, sendLowCreditsEmail } from '@/lib/email'
+
+export const dynamic = 'force-dynamic'
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,23 +32,17 @@ export async function POST(request: NextRequest) {
     // Handle different webhook events
     switch (eventName) {
       case 'order_created':
-        await handleOrderCreated(event)
-        break
-      
       case 'subscription_created':
-        await handleSubscriptionCreated(event)
+      case 'subscription_payment_success':
+        await handlePaymentSuccess(event)
         break
       
       case 'subscription_updated':
-        await handleSubscriptionUpdated(event)
         break
       
       case 'subscription_cancelled':
-        await handleSubscriptionCancelled(event)
-        break
-      
-      case 'subscription_payment_success':
-        await handlePaymentSuccess(event)
+      case 'subscription_expired':
+        await handleSubscriptionExpired(event)
         break
       
       default:
@@ -62,51 +59,81 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function handleOrderCreated(event: any) {
-  console.log('Order created:', event.data.id)
-  const customData = event.meta?.custom_data
-  
-  if (customData?.userId && customData?.plan) {
-    // Activate plan and add credits
-    const planCredits = CreditsManager.getPlanCredits(customData.plan)
-    CreditsManager.addCredits(customData.userId, planCredits, `Purchased ${customData.plan} plan`)
-  }
-}
-
-async function handleSubscriptionCreated(event: any) {
-  console.log('Subscription created:', event.data.id)
-  const customData = event.meta?.custom_data
-  
-  if (customData?.userId && customData?.plan) {
-    // Store subscription details
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('autoreview-subscription', JSON.stringify({
-        id: event.data.id,
-        plan: customData.plan,
-        status: event.data.attributes.status,
-        renewsAt: event.data.attributes.renews_at
-      }))
-    }
-  }
-}
-
-async function handleSubscriptionUpdated(event: any) {
-  console.log('Subscription updated:', event.data.id)
-  // Handle plan changes, status updates, etc.
-}
-
-async function handleSubscriptionCancelled(event: any) {
-  console.log('Subscription cancelled:', event.data.id)
-  // Handle cancellation logic
-}
-
 async function handlePaymentSuccess(event: any) {
   console.log('Payment successful:', event.data.id)
   const customData = event.meta?.custom_data
   
   if (customData?.userId && customData?.plan) {
-    // Renew credits for the billing cycle
-    const planCredits = CreditsManager.getPlanCredits(customData.plan)
-    CreditsManager.addCredits(customData.userId, planCredits, `Monthly renewal - ${customData.plan} plan`)
+    const plan = customData.plan;
+    
+    let aiCredits = 20;
+    let maxPlatforms = 1;
+    
+    if (plan === 'starter') {
+      aiCredits = 100;
+      maxPlatforms = 3;
+    } else if (plan === 'professional' || plan === 'growth') {
+      aiCredits = 500;
+      maxPlatforms = 10;
+    } else if (plan === 'enterprise' || plan === 'business') {
+      aiCredits = 5000;
+      maxPlatforms = 100;
+    }
+
+    try {
+      const updatedUser = await prisma.user.update({
+        where: { id: customData.userId },
+        data: {
+          planType: plan,
+          aiCredits: aiCredits,
+          maxPlatforms: maxPlatforms
+        }
+      });
+      console.log(`✅ User ${customData.userId} upgraded to ${plan}`)
+
+      // 📧 Send Upgrade Confirmation Email
+      if (updatedUser.email) {
+        await sendUpgradeConfirmationEmail(
+          updatedUser.email,
+          updatedUser.name || 'there',
+          plan,
+          aiCredits
+        )
+      }
+    } catch (e) {
+      console.error(`❌ Failed to update user in DB:`, e)
+    }
   }
 }
+
+async function handleSubscriptionExpired(event: any) {
+  console.log('Subscription cancelled/expired:', event.data.id)
+  const customData = event.meta?.custom_data
+  
+  if (customData?.userId) {
+    try {
+      const updatedUser = await prisma.user.update({
+        where: { id: customData.userId },
+        data: {
+          planType: 'free',
+          aiCredits: 20,
+          maxPlatforms: 1
+        }
+      });
+      console.log(`❌ User ${customData.userId} reverted to free plan`)
+
+      // 📧 Send Low Credits warning after downgrade
+      if (updatedUser.email) {
+        await sendLowCreditsEmail(
+          updatedUser.email,
+          updatedUser.name || 'there',
+          20,
+          'free'
+        )
+      }
+    } catch (e) {
+      console.error(`❌ Failed to downgrade user in DB:`, e)
+    }
+  }
+}
+

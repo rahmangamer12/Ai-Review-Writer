@@ -1,83 +1,29 @@
 'use client'
 
-'use client'
-
-import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { useState, useEffect, useSyncExternalStore } from 'react'
+import Link from 'next/link'
+import { motion, AnimatePresence } from 'framer-motion'
+import { MessageSquare, LayoutDashboard, Database, Shield, Zap, Globe, Link as LinkIcon, Bell, Bot, Settings as SettingsIcon, AlertCircle, CheckCircle2, RefreshCcw, ExternalLink } from 'lucide-react'
+import { PlatformIntegrationManager } from '@/lib/platformIntegrations'
 import CreditManager from '@/components/CreditManager'
 import PageTransition from '@/components/transitions/PageTransition'
 import LocationPermission from '@/components/LocationPermission'
 import NotificationManager from '@/components/NotificationManager'
 
-interface Settings {
-  autoApproval: boolean
-  autoApprovalMinRating: number
-  aiTone: 'professional' | 'friendly' | 'empathetic' | 'enthusiastic' | 'thoughtful'
-  autoReplyEnabled: boolean
-  languageDetection: boolean
-  notificationsEnabled: boolean
-  emailNotifications: boolean
-  slackIntegration: boolean
-  webhookUrl: string
-  apiKey: string
-  moderationLevel: 'strict' | 'moderate' | 'relaxed'
-  businessName: string
-  businessType: string
-  responseTemplate: string
+function useHydrated() {
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
+  return hydrated
 }
 
-export default function SettingsPage() {
-  const [settings, setSettings] = useState<Settings>({
-    autoApproval: true,
-    autoApprovalMinRating: 4,
-    aiTone: 'friendly',
-    autoReplyEnabled: true,
-    languageDetection: true,
-    notificationsEnabled: true,
-    emailNotifications: true,
-    slackIntegration: false,
-    webhookUrl: '',
-    apiKey: '',
-    moderationLevel: 'moderate',
-    businessName: 'Your Business',
-    businessType: 'E-commerce',
-    responseTemplate: 'Thank you for your feedback! We appreciate your review.'
-  })
+type TabType = 'general' | 'credits' | 'notifications' | 'location' | 'billing' | 'ai' | 'integrations' | 'advanced' | 'legal'
 
-  const [saved, setSaved] = useState(false)
-  const [activeTab, setActiveTab] = useState<'general' | 'credits' | 'notifications' | 'location' | 'billing' | 'ai' | 'integrations' | 'advanced' | 'legal'>('general')
-  const [currentPlan, setCurrentPlan] = useState<string>('free')
-
-  useEffect(() => {
-    // Load settings from localStorage
-    const savedSettings = localStorage.getItem('autoreview-settings')
-    if (savedSettings) {
-      setSettings(JSON.parse(savedSettings))
-    }
-    
-    // Load current plan
-    const savedPlan = localStorage.getItem('autoreview-plan')
-    if (savedPlan) {
-      setCurrentPlan(savedPlan)
-    }
-  }, [])
-
-  const handleSave = () => {
-    localStorage.setItem('autoreview-settings', JSON.stringify(settings))
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
-  }
-
-  const handleReset = () => {
-    if (confirm('Are you sure you want to reset all settings to defaults?')) {
-      localStorage.removeItem('autoreview-settings')
-      window.location.reload()
-    }
-  }
-
-  const TabButton = ({ tab, label, icon }: { tab: typeof activeTab; label: string; icon: string }) => (
+function TabButton({ tab, label, icon, activeTab, onClick }: { tab: TabType; label: string; icon: string; activeTab: TabType; onClick: (t: TabType) => void }) {
+  return (
     <button
-      onClick={() => setActiveTab(tab)}
+      onClick={() => onClick(tab)}
       className={`flex items-center gap-2 px-4 py-2 md:px-6 md:py-3 rounded-lg transition-all text-sm md:text-base ${
         activeTab === tab
           ? 'bg-primary text-primary-foreground'
@@ -88,767 +34,626 @@ export default function SettingsPage() {
       <span className="font-medium">{label}</span>
     </button>
   )
+}
 
-  const ToggleSwitch = ({ enabled, onChange }: { enabled: boolean; onChange: (value: boolean) => void }) => (
+function ToggleSwitch({ enabled, onChange }: { enabled: boolean; onChange: (value: boolean) => void }) {
+  return (
     <button
       onClick={() => onChange(!enabled)}
-      className={`relative w-12 h-6 rounded-full transition-colors ${
+      type="button"
+      className={`relative w-12 h-6 rounded-full transition-colors flex items-center ${
         enabled ? 'bg-primary' : 'bg-white/20'
       }`}
     >
       <motion.div
-        animate={{ x: enabled ? 24 : 2 }}
+        animate={{ x: enabled ? 26 : 2 }}
         transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-        className="absolute top-1 w-4 h-4 bg-white rounded-full"
+        className="w-4 h-4 bg-white rounded-full mx-0.5"
       />
     </button>
   )
+}
+
+interface Settings {
+  autoApproval: boolean
+  autoApprovalMinRating: number
+  aiTone: 'professional' | 'friendly' | 'empathetic' | 'enthusiastic' | 'thoughtful'
+  autoReplyEnabled: boolean
+  languageDetection: boolean
+  notificationsEnabled: boolean
+  emailNotifications: boolean
+  slackIntegration: boolean
+  discordIntegration: boolean
+  webhookUrl: string
+  webhookSecret: string
+  apiKey: string
+  moderationLevel: 'strict' | 'moderate' | 'relaxed'
+  businessName: string
+  businessType: string
+  responseTemplate: string
+  chatbotEnabled: boolean
+  aiTemperature: number
+  maxTokens: number
+  piiRedaction: boolean
+  dataRetentionDays: number
+  betaFeatures: boolean
+}
+
+const defaultSettings: Settings = {
+  autoApproval: true,
+  autoApprovalMinRating: 4,
+  aiTone: 'friendly',
+  autoReplyEnabled: true,
+  languageDetection: true,
+  notificationsEnabled: true,
+  emailNotifications: true,
+  slackIntegration: false,
+  discordIntegration: false,
+  webhookUrl: '',
+  webhookSecret: '',
+  apiKey: '',
+  moderationLevel: 'moderate',
+  businessName: 'Your Business',
+  businessType: 'E-commerce',
+  responseTemplate: 'Thank you for your feedback! We appreciate your review.',
+  chatbotEnabled: true,
+  aiTemperature: 0.7,
+  maxTokens: 500,
+  piiRedaction: true,
+  dataRetentionDays: 90,
+  betaFeatures: false
+}
+
+export default function SettingsPage() {
+  const hydrated = useHydrated()
+  const [settings, setSettings] = useState<Settings>(defaultSettings)
+  const [saved, setSaved] = useState(false)
+  const [activeTab, setActiveTab] = useState<TabType>('general')
+  const [currentPlan, setCurrentPlan] = useState<string>('free')
+
+  useEffect(() => {
+    if (!hydrated) return
+    const savedSettings = localStorage.getItem('autoreview-settings')
+    if (savedSettings) {
+      try {
+        setSettings({ ...defaultSettings, ...JSON.parse(savedSettings) })
+      } catch (e) {
+        console.error('Failed to parse settings', e)
+      }
+    }
+  }, [hydrated])
+
+  const handleSave = () => {
+    localStorage.setItem('autoreview-settings', JSON.stringify(settings))
+    setSaved(true)
+    setTimeout(() => setSaved(false), 3000)
+    // Dispatch event to update other components
+    window.dispatchEvent(new CustomEvent('autoreview-settings-updated', { detail: settings }))
+  }
+
+  const handleReset = () => {
+    if (confirm('Are you sure you want to reset all settings to defaults?')) {
+      localStorage.removeItem('autoreview-settings')
+      window.location.reload()
+    }
+  }
+
+  if (!hydrated) return null
 
   return (
     <PageTransition>
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-4xl font-bold text-gradient mb-2">Settings</h1>
-          <p className="text-white/70">Configure your AutoReview AI preferences</p>
-        </motion.div>
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+            <h1 className="text-4xl font-bold text-gradient mb-2">Settings</h1>
+            <p className="text-white/70">Configure your AutoReview AI preferences</p>
+          </motion.div>
 
-        {/* Tabs */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap gap-4 mb-8"
-        >
-          <TabButton tab="general" label="General" icon="⚙️" />
-          <TabButton tab="credits" label="Credits" icon="💎" />
-          <TabButton tab="notifications" label="Notifications" icon="🔔" />
-          <TabButton tab="location" label="Location" icon="📍" />
-          <TabButton tab="ai" label="AI Settings" icon="🤖" />
-          <TabButton tab="integrations" label="Integrations" icon="🔌" />
-          <TabButton tab="advanced" label="Advanced" icon="🔧" />
-          <TabButton tab="legal" label="Legal & Privacy" icon="📄" />
-        </motion.div>
+          {/* Tabs */}
+          <div className="flex flex-wrap gap-4 mb-8">
+            <TabButton tab="general" label="General" icon="⚙️" activeTab={activeTab} onClick={setActiveTab} />
+            <TabButton tab="credits" label="Credits" icon="💎" activeTab={activeTab} onClick={setActiveTab} />
+            <TabButton tab="notifications" label="Notifications" icon="🔔" activeTab={activeTab} onClick={setActiveTab} />
+            <TabButton tab="ai" label="AI Settings" icon="🤖" activeTab={activeTab} onClick={setActiveTab} />
+            <TabButton tab="integrations" label="Integrations" icon="🔌" activeTab={activeTab} onClick={setActiveTab} />
+            <TabButton tab="advanced" label="Advanced" icon="🔧" activeTab={activeTab} onClick={setActiveTab} />
+          </div>
 
-        {/* Enhanced Settings Content */}
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="glass-card border-2 border-primary/20 rounded-2xl p-8 shadow-xl"
-        >
-          {/* Enhanced General Settings */}
-          {activeTab === 'general' && (
-            <div className="space-y-8">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
-                  <span className="text-2xl">⚙️</span>
+          {/* Settings Content */}
+          <div className="glass-card border-2 border-primary/20 rounded-2xl p-8 shadow-xl">
+            {activeTab === 'general' && (
+              <div className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="glass-card border-2 border-white/10 rounded-2xl p-6">
+                    <h3 className="text-xl font-semibold text-white mb-4">Business Information</h3>
+                    <div className="space-y-4">
+                      <div>
+                        <label className="block text-white mb-2 font-medium">Business Name</label>
+                        <input
+                          type="text"
+                          value={settings.businessName}
+                          onChange={(e) => setSettings({ ...settings, businessName: e.target.value })}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:border-primary transition-colors"
+                          placeholder="e.g. The Stove Club"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-white mb-2 font-medium">Business Type</label>
+                        <select
+                          value={settings.businessType}
+                          onChange={(e) => setSettings({ ...settings, businessType: e.target.value })}
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:border-primary transition-colors"
+                        >
+                          <option value="Restaurant">Restaurant</option>
+                          <option value="E-commerce">E-commerce</option>
+                          <option value="SaaS">SaaS</option>
+                          <option value="Retail">Retail</option>
+                          <option value="Hospitality">Hospitality</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="glass-card border-2 border-white/10 rounded-2xl p-6">
+                    <h3 className="text-xl font-semibold text-white mb-4">AI Context</h3>
+                    <div>
+                      <label className="block text-white mb-2 font-medium">Auto-Reply Template</label>
+                      <textarea
+                        value={settings.responseTemplate}
+                        onChange={(e) => setSettings({ ...settings, responseTemplate: e.target.value })}
+                        rows={4}
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:border-primary transition-colors"
+                        placeholder="Default message for reviews..."
+                      />
+                      <p className="text-xs text-white/40 mt-2">This is the fallback message used if AI generation is disabled.</p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-white">General Settings</h2>
-                  <p className="text-white/60">Configure your basic account information</p>
+
+                <div className="glass-card border-2 border-white/10 rounded-2xl p-6">
+                  <h3 className="text-xl font-semibold text-white mb-4">Location Settings</h3>
+                  <LocationPermission />
                 </div>
               </div>
+            )}
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="glass-card border-2 border-white/10 rounded-2xl p-6"
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-cyan-500/20 rounded-lg flex items-center justify-center">
-                      <span>🏢</span>
-                    </div>
-                    <h3 className="text-xl font-semibold text-white">Business Information</h3>
-                  </div>
+            {activeTab === 'credits' && <CreditManager />}
+            
+            {activeTab === 'notifications' && <NotificationManager />}
+
+            {activeTab === 'ai' && (
+              <div className="space-y-8">
+                <div className="glass-card border-2 border-white/10 rounded-2xl p-6">
+                  <h3 className="text-xl font-semibold text-white mb-6">AI Conversational Settings</h3>
                   
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-white mb-2 font-medium">Business Name</label>
-                      <input
-                        type="text"
-                        value={settings.businessName}
-                        onChange={(e) => setSettings({ ...settings, businessName: e.target.value })}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:border-cyan-500 transition-colors"
-                        placeholder="Enter your business name"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-white mb-2 font-medium">Business Type</label>
-                      <select
-                        value={settings.businessType}
-                        onChange={(e) => setSettings({ ...settings, businessType: e.target.value })}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:border-cyan-500 transition-colors [&>option]:bg-gray-800 [&>option]:text-white"
-                      >
-                        <option value="E-commerce">E-commerce</option>
-                        <option value="Restaurant">Restaurant</option>
-                        <option value="Hotel">Hotel</option>
-                        <option value="Service">Service Business</option>
-                        <option value="SaaS">SaaS</option>
-                        <option value="Other">Other</option>
-                      </select>
-                    </div>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  whileHover={{ scale: 1.02 }}
-                  className="glass-card border-2 border-white/10 rounded-2xl p-6"
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-                      <span>🔔</span>
-                    </div>
-                    <h3 className="text-xl font-semibold text-white">Notifications</h3>
-                  </div>
-
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-4 glass rounded-xl border border-emerald-500/20">
+                  <div className="space-y-6">
+                    <div className="flex items-center justify-between p-4 glass rounded-xl border border-primary/20 bg-primary/5">
                       <div>
-                        <h4 className="text-white font-medium">Browser Notifications</h4>
-                        <p className="text-white/60 text-sm">Get instant alerts for new reviews</p>
+                        <h4 className="text-white font-medium flex items-center gap-2">
+                          <MessageSquare className="w-4 h-4 text-primary" />
+                          Show Sarah AI Chatbot
+                        </h4>
+                        <p className="text-white/60 text-xs">Toggle the floating chat widget on all pages</p>
                       </div>
                       <ToggleSwitch
-                        enabled={settings.notificationsEnabled}
-                        onChange={async (value) => {
-                          if (value && 'Notification' in window) {
-                            const permission = await Notification.requestPermission()
-                            if (permission === 'granted') {
-                              setSettings({ ...settings, notificationsEnabled: true })
-                              new Notification('AutoReview AI', {
-                                body: 'Browser notifications enabled! You\'ll be notified of new reviews.',
-                                icon: '/favicon.ico'
-                              })
-                            } else {
-                              alert('Please enable notifications in your browser settings')
-                            }
-                          } else {
-                            setSettings({ ...settings, notificationsEnabled: value })
-                          }
+                        enabled={settings.chatbotEnabled}
+                        onChange={(value) => {
+                          setSettings({ ...settings, chatbotEnabled: value })
+                          window.dispatchEvent(new CustomEvent('chatbot-toggle', { detail: { enabled: value } }))
                         }}
                       />
                     </div>
 
-                    <div className="p-4 glass rounded-xl border border-amber-500/20">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <h4 className="text-white font-medium">Email Notifications</h4>
-                          <p className="text-white/60 text-sm">Daily review summaries</p>
-                        </div>
-                        <span className="text-xs px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 font-medium">
-                          Coming Soon
-                        </span>
+                    <div className="flex items-center justify-between p-4 glass rounded-xl border border-white/10">
+                      <div>
+                        <h4 className="text-white font-medium">Auto-Reply System</h4>
+                        <p className="text-white/60 text-xs">Let AI automatically respond to incoming reviews</p>
                       </div>
-                      <p className="text-white/50 text-sm">
-                        Configure email notifications in Advanced → Email Setup
-                      </p>
+                      <ToggleSwitch
+                        enabled={settings.autoReplyEnabled}
+                        onChange={(value) => setSettings({ ...settings, autoReplyEnabled: value })}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-white mb-3 text-sm font-medium">AI Persona & Tone</label>
+                      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                        {['professional', 'friendly', 'empathetic', 'enthusiastic', 'thoughtful'].map((tone) => (
+                          <button
+                            key={tone}
+                            onClick={() => setSettings({ ...settings, aiTone: tone as any })}
+                            className={`p-3 rounded-xl text-left transition-all border ${
+                              settings.aiTone === tone 
+                                ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20' 
+                                : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
+                            }`}
+                          >
+                            <span className="capitalize text-sm font-medium">{tone}</span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </motion.div>
-              </div>
-            </div>
-          )}
-
-          {/* Credits Tab */}
-          {activeTab === 'credits' && (
-            <CreditManager />
-          )}
-
-          {/* Notifications Tab */}
-          {activeTab === 'notifications' && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
-                  <span className="text-2xl">🔔</span>
-                </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-white">Notifications</h2>
-                  <p className="text-white/60">Manage your notification preferences</p>
                 </div>
               </div>
-              <NotificationManager />
-            </div>
-          )}
+            )}
 
-          {/* Location Tab */}
-          {activeTab === 'location' && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center">
-                  <span className="text-2xl">📍</span>
-                </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-white">Location Settings</h2>
-                  <p className="text-white/60">Manage your location preferences</p>
-                </div>
-              </div>
-              <LocationPermission 
-                onGranted={() => {
-                  console.log('Location granted')
-                }}
-                onDenied={() => {
-                  console.log('Location denied')
-                }}
-              />
-            </div>
-          )}
-
-          {/* AI Settings */}
-          {activeTab === 'ai' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-semibold text-white mb-6">AI Configuration</h2>
-
-              <div className="space-y-6">
-                <div className="flex items-center justify-between p-4 glass rounded-lg">
-                  <div>
-                    <h3 className="text-white font-medium">Auto-Reply</h3>
-                    <p className="text-white/60 text-sm">Let AI automatically respond to reviews</p>
-                  </div>
-                  <ToggleSwitch
-                    enabled={settings.autoReplyEnabled}
-                    onChange={(value) => setSettings({ ...settings, autoReplyEnabled: value })}
-                  />
-                </div>
-
-                <div className="flex items-center justify-between p-4 glass rounded-lg">
-                  <div>
-                    <h3 className="text-white font-medium">Auto-Approval</h3>
-                    <p className="text-white/60 text-sm">Automatically approve high-quality reviews</p>
-                  </div>
-                  <ToggleSwitch
-                    enabled={settings.autoApproval}
-                    onChange={(value) => setSettings({ ...settings, autoApproval: value })}
-                  />
-                </div>
-
-                {settings.autoApproval && (
-                  <div>
-                    <label className="block text-white mb-2 font-medium">
-                      Minimum Rating for Auto-Approval: {settings.autoApprovalMinRating} ⭐
-                    </label>
-                    <input
-                      type="range"
-                      min="1"
-                      max="5"
-                      value={settings.autoApprovalMinRating}
-                      onChange={(e) => setSettings({ ...settings, autoApprovalMinRating: parseInt(e.target.value) })}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-white/60 text-sm mt-1">
-                      <span>1 Star</span>
-                      <span>5 Stars</span>
+            {activeTab === 'integrations' && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8 pb-12"
+              >
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden p-8 rounded-3xl border border-white/10 shadow-[0_0_40px_rgba(99,102,241,0.1)]">
+                  <div className="absolute inset-0 bg-gradient-to-r from-violet-600/20 via-indigo-600/20 to-blue-600/20 backdrop-blur-xl -z-10" />
+                  <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20 mix-blend-overlay -z-10" />
+                  <div className="flex items-center gap-5 z-10">
+                    <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+                      <Zap className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70 tracking-tight">Global Platform Matrix</h3>
+                      <p className="text-indigo-200/80 font-medium mt-1 text-sm">Real-time bi-directional sync active across all connected nodes</p>
                     </div>
                   </div>
-                )}
-
-                <div>
-                  <label className="block text-white mb-2 font-medium">AI Response Style</label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {[
-                      { id: 'professional', name: 'Professional', icon: '🤵', desc: 'Formal and professional' },
-                      { id: 'friendly', name: 'Friendly', icon: '😊', desc: 'Warm and conversational' },
-                      { id: 'empathetic', name: 'Empathetic', icon: '💙', desc: 'Caring and understanding' },
-                      { id: 'enthusiastic', name: 'Enthusiastic', icon: '🎉', desc: 'Energetic and excited' },
-                      { id: 'thoughtful', name: 'Thoughtful', icon: '🌟', desc: 'Wise and considerate' }
-                    ].map((persona) => (
-                      <button
-                        key={persona.id}
-                        onClick={() => setSettings({ ...settings, aiTone: persona.id as any })}
-                        className={`p-3 rounded-lg transition-all text-left ${
-                          settings.aiTone === persona.id
-                            ? 'bg-primary text-primary-foreground border-2 border-primary'
-                            : 'glass text-white/70 hover:text-white hover:bg-white/10'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-2xl">{persona.icon}</span>
-                          <span className="font-semibold text-sm">{persona.name}</span>
-                        </div>
-                        <p className="text-xs opacity-80">{persona.desc}</p>
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-white/60 text-sm mt-3">
-                    💡 <strong>Tip:</strong> Choose a response style that matches your brand personality and target audience.
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between p-4 glass rounded-lg">
-                  <div>
-                    <h3 className="text-white font-medium">Language Detection</h3>
-                    <p className="text-white/60 text-sm">Detect and respond in customer's language</p>
-                  </div>
-                  <ToggleSwitch
-                    enabled={settings.languageDetection}
-                    onChange={(value) => setSettings({ ...settings, languageDetection: value })}
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-white mb-2 font-medium">Response Template</label>
-                  <textarea
-                    value={settings.responseTemplate}
-                    onChange={(e) => setSettings({ ...settings, responseTemplate: e.target.value })}
-                    className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-primary"
-                    rows={4}
-                    placeholder="Enter a default response template..."
-                  />
-                  <p className="text-white/60 text-sm mt-2">AI will use this as a base for generating responses</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Integrations */}
-          {activeTab === 'integrations' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-semibold text-white mb-6">Platform Integrations</h2>
-
-              <div className="space-y-6">
-                {/* Redirect to Platforms Page */}
-                <div className="glass-card border border-primary/20 rounded-lg p-8 text-center">
-                  <div className="text-6xl mb-4">🔌</div>
-                  <h3 className="text-2xl font-semibold text-white mb-3">Platform Integration Settings</h3>
-                  <p className="text-white/70 mb-6 max-w-2xl mx-auto">
-                    All platform connections and integrations can now be managed on the dedicated Platforms page.
-                  </p>
-                  <a
-                    href="/connect-platforms"
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-all hover:scale-105"
+                  <button 
+                    onClick={() => window.location.reload()} 
+                    className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-white font-bold transition-all text-sm border border-white/10 hover:border-white/30 shadow-xl z-10 backdrop-blur-md"
                   >
-                    <span>→</span> Go to Platforms Page
-                  </a>
-                </div>
-
-                {/* Connected Platforms */}
-                  <div className="glass-card border border-primary/20 rounded-lg p-6">
-                    <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                      <span>🎯</span> Your Connected Platforms
-                    </h3>
-                    <div className="space-y-3">
-                      {[
-                        { name: 'Google My Business', icon: '🔍', connected: false, popular: true },
-                        { name: 'Yelp', icon: '⭐', connected: false, popular: true },
-                        { name: 'Facebook', icon: '📘', connected: false, popular: false },
-                        { name: 'TripAdvisor', icon: '✈️', connected: false, popular: false },
-                        { name: 'Trustpilot', icon: '💚', connected: false, popular: false }
-                      ].map((platform) => (
-                        <div key={platform.name} className="flex justify-between items-center p-4 glass rounded-lg hover:bg-white/5 transition-all">
-                          <div className="flex items-center gap-3 flex-1">
-                            <span className="text-2xl">{platform.icon}</span>
-                            <div>
-                              <span className="text-white/90 font-medium">{platform.name}</span>
-                              {platform.popular && (
-                                <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400">
-                                  Popular
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          {platform.connected ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm px-3 py-1.5 rounded-full bg-emerald-500/20 text-emerald-400 font-medium">
-                                ✓ Connected
-                              </span>
-                              <button className="text-sm px-3 py-1.5 rounded-lg glass text-white/60 hover:text-white hover:bg-white/10 transition-colors">
-                                Settings
-                              </button>
-                            </div>
-                          ) : (
-                            <a
-                              href="/connect-platforms"
-                              className="text-sm px-4 py-2 rounded-lg bg-primary/20 text-primary hover:bg-primary hover:text-white transition-all font-medium"
-                            >
-                              Connect Now
-                            </a>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                <div className={`flex items-center justify-between p-4 glass rounded-lg ${currentPlan === 'free' || currentPlan === 'starter' ? 'opacity-50' : ''}`}>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-white font-medium">Slack Integration</h3>
-                      {(currentPlan === 'free' || currentPlan === 'starter') && (
-                        <span className="text-xs px-2 py-0.5 bg-purple-500/20 text-purple-400 rounded-full">
-                          Pro+
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-white/60 text-sm">
-                      {currentPlan === 'free' || currentPlan === 'starter' 
-                        ? 'Upgrade to Professional for Slack notifications' 
-                        : 'Send review notifications to Slack'}
-                    </p>
-                  </div>
-                  <ToggleSwitch
-                    enabled={settings.slackIntegration}
-                    onChange={(value) => {
-                      if ((currentPlan === 'free' || currentPlan === 'starter') && value) {
-                        alert('Slack integration requires Professional plan or higher. Please upgrade your plan.')
-                        return
-                      }
-                      setSettings({ ...settings, slackIntegration: value })
-                    }}
-                  />
-                </div>
-
-                {settings.slackIntegration && (
-                  <div>
-                    <label className="block text-white mb-2 font-medium">Slack Webhook URL</label>
-                    <input
-                      type="url"
-                      value={settings.webhookUrl}
-                      onChange={(e) => setSettings({ ...settings, webhookUrl: e.target.value })}
-                      className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-primary"
-                      placeholder="https://hooks.slack.com/services/..."
-                    />
-                    <p className="text-white/60 text-sm mt-2">
-                      <a href="https://api.slack.com/messaging/webhooks" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                        How to get Slack webhook URL →
-                      </a>
-                    </p>
-                    <button
-                      onClick={async () => {
-                        if (!settings.webhookUrl) {
-                          alert('Please enter a Slack webhook URL first')
-                          return
-                        }
-                        try {
-                          const response = await fetch(settings.webhookUrl, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                              text: '✅ Slack integration test from AutoReview AI! Your webhook is working correctly.'
-                            })
-                          })
-                          if (response.ok) {
-                            alert('✅ Test message sent! Check your Slack channel.')
-                          } else {
-                            alert('❌ Failed to send test message. Please check your webhook URL.')
-                          }
-                        } catch (error) {
-                          alert('❌ Error sending test message. Please verify your webhook URL.')
-                        }
-                      }}
-                      className="mt-3 px-4 py-2 bg-primary/20 text-primary rounded-lg hover:bg-primary/30 transition-colors text-sm font-medium"
-                    >
-                      Test Slack Connection
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Advanced Settings */}
-          {activeTab === 'advanced' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-semibold text-white mb-6">Advanced Settings</h2>
-
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-white mb-2 font-medium">Content Moderation Level</label>
-                  <div className="grid grid-cols-3 gap-3">
-                    {(['strict', 'moderate', 'relaxed'] as const).map((level) => (
-                      <button
-                        key={level}
-                        onClick={() => setSettings({ ...settings, moderationLevel: level })}
-                        className={`px-4 py-3 rounded-lg capitalize transition-all ${
-                          settings.moderationLevel === level
-                            ? 'bg-primary text-primary-foreground'
-                            : 'glass text-white/70 hover:text-white'
-                        }`}
-                      >
-                        {level}
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-white/60 text-sm mt-2">
-                    {settings.moderationLevel === 'strict' && 'Maximum filtering of potentially inappropriate content'}
-                    {settings.moderationLevel === 'moderate' && 'Balanced approach to content moderation'}
-                    {settings.moderationLevel === 'relaxed' && 'Minimal filtering, more freedom'}
-                  </p>
-                </div>
-
-                <div className="glass-card border border-yellow-500/20 rounded-lg p-6">
-                  <h3 className="text-white font-medium mb-2 flex items-center gap-2">
-                    <span>⚡</span> Performance
-                  </h3>
-                  <div className="space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-white/70">Cache Size</span>
-                      <span className="text-white">24.3 MB</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-white/70">API Calls (Today)</span>
-                      <span className="text-white">127</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-white/70">Processed Reviews</span>
-                      <span className="text-white">1,234</span>
-                    </div>
-                    <button
-                      onClick={() => {
-                        if (confirm('This will clear all cached data and reload the page. Continue?')) {
-                          // Clear localStorage
-                          localStorage.clear()
-                          // Clear sessionStorage
-                          sessionStorage.clear()
-                          // Clear service worker cache
-                          if ('caches' in window) {
-                            caches.keys().then(names => {
-                              names.forEach(name => caches.delete(name))
-                            })
-                          }
-                          alert('Cache cleared successfully! Page will reload.')
-                          window.location.reload()
-                        }
-                      }}
-                      className="w-full mt-4 px-4 py-2 glass rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
-                    >
-                      Clear Cache
-                    </button>
-                  </div>
-                </div>
-
-                <div className="glass-card border border-red-500/20 rounded-lg p-6">
-                  <h3 className="text-white font-medium mb-2 flex items-center gap-2">
-                    <span>⚠️</span> Danger Zone
-                  </h3>
-                  <p className="text-white/60 text-sm mb-4">
-                    These actions cannot be undone. Please be careful.
-                  </p>
-                  <div className="space-y-3">
-                    <button
-                      onClick={() => {
-                        if (confirm('Are you sure you want to reset ALL settings to default? This cannot be undone!')) {
-                          localStorage.removeItem('autoreview-settings')
-                          alert('All settings have been reset to defaults.')
-                          window.location.reload()
-                        }
-                      }}
-                      className="w-full px-4 py-2 bg-red-500/20 text-red-400 rounded-lg hover:bg-red-500/30 transition-colors font-medium"
-                    >
-                      Reset All Settings
-                    </button>
-                    <button
-                      onClick={() => {
-                        try {
-                          const data = {
-                            settings: JSON.parse(localStorage.getItem('autoreview-settings') || '{}'),
-                            exportDate: new Date().toISOString(),
-                            version: '1.0'
-                          }
-                          const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-                          const url = URL.createObjectURL(blob)
-                          const a = document.createElement('a')
-                          a.href = url
-                          a.download = `autoreview-settings-${new Date().toISOString().split('T')[0]}.json`
-                          document.body.appendChild(a)
-                          a.click()
-                          document.body.removeChild(a)
-                          URL.revokeObjectURL(url)
-                          alert('Settings exported successfully!')
-                        } catch (error) {
-                          alert('Failed to export settings. Please try again.')
-                        }
-                      }}
-                      className="w-full px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 transition-colors font-medium"
-                    >
-                      Export Data (JSON)
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Legal & Privacy */}
-          {activeTab === 'legal' && (
-            <div className="space-y-6">
-              <h2 className="text-2xl font-semibold text-white mb-6">Legal & Privacy</h2>
-
-              <div className="space-y-6">
-                <div className="glass-card border border-primary/20 rounded-lg p-6">
-                  <h3 className="text-white font-medium mb-4 flex items-center gap-2">
-                    <span>📜</span> Terms & Policies
-                  </h3>
-                  
-                  <div className="space-y-4">
-                    <a
-                      href="/privacy"
-                      className="flex items-center justify-between p-4 glass rounded-lg hover:bg-white/10 transition-all group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
-                          <span className="text-xl">🔒</span>
-                        </div>
-                        <div>
-                          <p className="text-white font-medium">Privacy Policy</p>
-                          <p className="text-white/60 text-sm">How we handle your data</p>
-                        </div>
-                      </div>
-                      <span className="text-white/40 group-hover:text-white/80 transition-colors">→</span>
-                    </a>
-
-                    <a
-                      href="/terms"
-                      className="flex items-center justify-between p-4 glass rounded-lg hover:bg-white/10 transition-all group"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-                          <span className="text-xl">📋</span>
-                        </div>
-                        <div>
-                          <p className="text-white font-medium">Terms of Service</p>
-                          <p className="text-white/60 text-sm">Service usage terms</p>
-                        </div>
-                      </div>
-                      <span className="text-white/40 group-hover:text-white/80 transition-colors">→</span>
-                    </a>
-                  </div>
-                </div>
-
-                <div className="glass-card border border-primary/20 rounded-lg p-6">
-                  <h3 className="text-white font-medium mb-4 flex items-center gap-2">
-                    <span>🛡️</span> Data & Security
-                  </h3>
-                  
-                  <div className="space-y-4 text-white/80 text-sm">
-                    <div className="flex items-start gap-3">
-                      <span className="text-emerald-400">✓</span>
-                      <div>
-                        <p className="font-medium text-white">End-to-End Encryption</p>
-                        <p className="text-white/60">All sensitive data is encrypted</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-3">
-                      <span className="text-emerald-400">✓</span>
-                      <div>
-                        <p className="font-medium text-white">GDPR Compliant</p>
-                        <p className="text-white/60">We follow EU data protection standards</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-3">
-                      <span className="text-emerald-400">✓</span>
-                      <div>
-                        <p className="font-medium text-white">Regular Security Audits</p>
-                        <p className="text-white/60">Continuous monitoring and updates</p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-start gap-3">
-                      <span className="text-emerald-400">✓</span>
-                      <div>
-                        <p className="font-medium text-white">No Data Selling</p>
-                        <p className="text-white/60">We never sell your information</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="glass-card border border-cyan-500/20 rounded-lg p-6">
-                  <h3 className="text-white font-medium mb-4 flex items-center gap-2">
-                    <span>📧</span> Contact & Support
-                  </h3>
-                  
-                  <div className="space-y-3 text-white/80 text-sm">
-                    <div className="glass rounded-lg p-3">
-                      <p className="text-white/60 text-xs mb-1">General Support</p>
-                      <p className="font-medium text-white">support@autoreview-ai.com</p>
-                    </div>
-                    
-                    <div className="glass rounded-lg p-3">
-                      <p className="text-white/60 text-xs mb-1">Privacy Concerns</p>
-                      <p className="font-medium text-white">privacy@autoreview-ai.com</p>
-                    </div>
-                    
-                    <div className="glass rounded-lg p-3">
-                      <p className="text-white/60 text-xs mb-1">Legal Inquiries</p>
-                      <p className="font-medium text-white">legal@autoreview-ai.com</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="glass-card border border-amber-500/20 rounded-lg p-6">
-                  <h3 className="text-white font-medium mb-2 flex items-center gap-2">
-                    <span>⚖️</span> Your Data Rights
-                  </h3>
-                  <p className="text-white/60 text-sm mb-4">
-                    You have full control over your data
-                  </p>
-                  
-                  <div className="space-y-2 text-white/80 text-sm">
-                    <div className="flex items-center gap-2">
-                      <span className="text-cyan-400">•</span>
-                      <span>Request a copy of your data</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-cyan-400">•</span>
-                      <span>Update or correct your information</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-cyan-400">•</span>
-                      <span>Delete your account and data</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-cyan-400">•</span>
-                      <span>Opt-out of marketing communications</span>
-                    </div>
-                  </div>
-                  
-                  <button
-                    onClick={() => alert('Please contact privacy@autoreview-ai.com to exercise your data rights.')}
-                    className="w-full mt-4 px-4 py-2 bg-cyan-500/20 text-cyan-400 rounded-lg hover:bg-cyan-500/30 transition-colors font-medium"
-                  >
-                    Request Data Access
+                    <RefreshCcw className="w-4 h-4" /> Force Sync
                   </button>
                 </div>
-              </div>
-            </div>
-          )}
-        </motion.div>
 
-        {/* Save Button */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="mt-8 flex justify-end gap-4"
-        >
-          <button
-            onClick={handleReset}
-            className="px-6 py-3 glass text-white/70 hover:text-white rounded-lg font-medium transition-colors"
-          >
-            Reset to Defaults
-          </button>
-          <button
-            onClick={handleSave}
-            className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center gap-2"
-          >
-            {saved ? (
-              <>
-                <span>✓</span> Saved!
-              </>
-            ) : (
-              <>
-                <span>💾</span> Save Settings
-              </>
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {PlatformIntegrationManager.getPlatforms().map((platform) => (
+                    <motion.div 
+                      whileHover={{ scale: 1.02, y: -5 }}
+                      key={platform.id} 
+                      className={`relative overflow-hidden p-6 rounded-3xl transition-all border-2 ${
+                        platform.connected 
+                          ? 'border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]' 
+                          : 'border-white/5 hover:border-indigo-500/30 shadow-xl'
+                      }`}
+                    >
+                      <div className={`absolute inset-0 opacity-10 -z-10 ${platform.connected ? 'bg-gradient-to-br from-emerald-500 to-teal-500' : 'bg-gradient-to-br from-indigo-500 to-purple-500'}`} />
+                      
+                      <div className="flex items-start justify-between mb-6">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-inner ${
+                            platform.connected ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5'
+                          }`}>
+                            {platform.icon}
+                          </div>
+                          <div>
+                            <h4 className="text-white font-bold text-base tracking-wide">{platform.name}</h4>
+                            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-1">Auto-Sync: Active</p>
+                          </div>
+                        </div>
+                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
+                          platform.connected 
+                            ? 'bg-emerald-500 text-white shadow-emerald-500/40' 
+                            : 'bg-white/5 text-white/40 border border-white/10'
+                        }`}>
+                          {platform.connected ? <CheckCircle2 className="w-3 h-3" /> : null}
+                          {platform.connected ? 'Live' : 'Offline'}
+                        </div>
+                      </div>
+                      <p className="text-xs text-white/60 mb-6 leading-relaxed min-h-[40px]">
+                        {platform.description}
+                      </p>
+                      <Link 
+                        href="/connect-platforms"
+                        className={`w-full py-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 border ${
+                          platform.connected 
+                            ? 'bg-emerald-500/10 hover:bg-emerald-500/20 border-emerald-500/20 text-emerald-400' 
+                            : 'bg-indigo-600 hover:bg-indigo-500 border-indigo-500 text-white shadow-lg shadow-indigo-600/20'
+                        }`}
+                      >
+                        {platform.connected ? 'Configure Node' : 'Initialize Connection'}
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="relative overflow-hidden p-8 rounded-3xl border border-white/10 bg-black/40 backdrop-blur-md">
+                    <div className="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-[60px] pointer-events-none" />
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="w-12 h-12 bg-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400 border border-indigo-500/20">
+                        <LinkIcon className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black text-white tracking-tight">Advanced Webhooks</h3>
+                        <p className="text-xs text-indigo-300/70 font-medium">Real-time event streaming</p>
+                      </div>
+                    </div>
+                    <div className="space-y-5 relative z-10">
+                      <div>
+                        <label className="block text-indigo-200 text-xs mb-2 font-bold uppercase tracking-widest">Endpoint URL</label>
+                        <input
+                          type="url"
+                          value={settings.webhookUrl}
+                          onChange={(e) => setSettings({ ...settings, webhookUrl: e.target.value })}
+                          className="w-full px-5 py-4 bg-black/50 border border-indigo-500/20 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm font-medium shadow-inner"
+                          placeholder="https://api.yourservice.com/webhook"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-indigo-200 text-xs mb-2 font-bold uppercase tracking-widest">Secret Key (AES-256)</label>
+                        <div className="flex gap-2">
+                          <input
+                            type="password"
+                            value={settings.webhookSecret}
+                            onChange={(e) => setSettings({ ...settings, webhookSecret: e.target.value })}
+                            className="flex-1 px-5 py-4 bg-black/50 border border-indigo-500/20 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm font-mono shadow-inner"
+                            placeholder="RE-xxxxxxxxxxxxxxxx"
+                          />
+                          <button className="px-5 py-4 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white rounded-xl text-xs font-black uppercase tracking-widest border border-indigo-500/20 transition-all shadow-lg">
+                            Rotate
+                          </button>
+                        </div>
+                      </div>
+                      <div className="pt-4">
+                        <button className="w-full py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-500/25">
+                          Transmit Test Payload
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="relative overflow-hidden p-8 rounded-3xl border border-white/10 bg-black/40 backdrop-blur-md">
+                    <div className="absolute -top-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-[60px] pointer-events-none" />
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="w-12 h-12 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+                        <Bell className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black text-white tracking-tight">Alert Destinations</h3>
+                        <p className="text-xs text-emerald-300/70 font-medium">Instant notification routing</p>
+                      </div>
+                    </div>
+                    <div className="space-y-4 relative z-10">
+                      <div className="flex items-center justify-between p-5 bg-black/40 rounded-2xl border border-white/5 hover:border-emerald-500/30 transition-all group">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-gradient-to-br from-[#4A154B] to-[#3B113C] rounded-xl flex items-center justify-center text-lg font-black text-white shadow-lg">S</div>
+                          <div>
+                            <p className="text-white text-sm font-bold">Slack Workspace</p>
+                            <p className="text-[10px] text-white/50 font-medium uppercase tracking-widest mt-1">Route to #alerts</p>
+                          </div>
+                        </div>
+                        <ToggleSwitch enabled={settings.slackIntegration} onChange={(v) => setSettings({ ...settings, slackIntegration: v })} />
+                      </div>
+
+                      <div className="flex items-center justify-between p-5 bg-black/40 rounded-2xl border border-white/5 hover:border-indigo-500/30 transition-all group">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 bg-gradient-to-br from-[#5865F2] to-[#4752C4] rounded-xl flex items-center justify-center text-lg font-black text-white shadow-lg">D</div>
+                          <div>
+                            <p className="text-white text-sm font-bold">Discord Server</p>
+                            <p className="text-[10px] text-white/50 font-medium uppercase tracking-widest mt-1">Real-time community alerts</p>
+                          </div>
+                        </div>
+                        <ToggleSwitch enabled={settings.discordIntegration} onChange={(v) => setSettings({ ...settings, discordIntegration: v })} />
+                      </div>
+
+                      <div className="pt-4">
+                        <p className="text-[10px] text-emerald-400/60 font-bold uppercase tracking-widest text-center">
+                          Enterprise users: Contact support for custom API routing.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
             )}
-          </button>
-        </motion.div>
+
+            {activeTab === 'advanced' && (
+              <motion.div 
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-8 pb-12"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="relative overflow-hidden p-8 rounded-3xl border border-white/10 bg-[#05050A] backdrop-blur-md shadow-2xl">
+                     <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
+                    <div className="flex items-center gap-4 mb-10">
+                      <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center text-primary border border-primary/30 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
+                        <Bot className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-black text-white tracking-tight">AI Engine Tuning</h3>
+                        <p className="text-xs text-primary/60 font-bold uppercase tracking-widest mt-1">Neural Network Parameters</p>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-10 relative z-10">
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <label className="text-white text-xs font-black uppercase tracking-widest">Creativity Variance</label>
+                          <span className="px-3 py-1 bg-primary text-white rounded-lg text-xs font-black shadow-lg shadow-primary/30">{settings.aiTemperature.toFixed(1)}</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.1"
+                          value={settings.aiTemperature}
+                          onChange={(e) => setSettings({ ...settings, aiTemperature: parseFloat(e.target.value) })}
+                          className="w-full h-3 bg-black rounded-lg appearance-none cursor-pointer accent-primary shadow-inner border border-white/5"
+                        />
+                        <div className="flex justify-between text-[9px] text-white/40 mt-3 font-black uppercase tracking-widest">
+                          <span>Rigid (0.0)</span>
+                          <span>Creative (1.0)</span>
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <label className="text-white text-xs font-black uppercase tracking-widest">Context Window (Tokens)</label>
+                          <span className="px-3 py-1 bg-indigo-500 text-white rounded-lg text-xs font-black shadow-lg shadow-indigo-500/30">{settings.maxTokens}</span>
+                        </div>
+                        <input
+                          type="range"
+                          min="100"
+                          max="2000"
+                          step="100"
+                          value={settings.maxTokens}
+                          onChange={(e) => setSettings({ ...settings, maxTokens: parseInt(e.target.value) })}
+                          className="w-full h-3 bg-black rounded-lg appearance-none cursor-pointer accent-indigo-400 shadow-inner border border-white/5"
+                        />
+                        <div className="flex justify-between text-[9px] text-white/40 mt-3 font-black uppercase tracking-widest">
+                          <span>Concise (100)</span>
+                          <span>Verbose (2000)</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-5 bg-primary/5 rounded-2xl border border-primary/20">
+                        <div>
+                          <p className="text-white text-sm font-bold flex items-center gap-2">
+                            Beta Algorithms <span className="px-2 py-0.5 bg-primary text-white rounded text-[9px] font-black uppercase tracking-widest shadow-sm">Early Access</span>
+                          </p>
+                          <p className="text-xs text-white/50 mt-1 font-medium">Next-gen sentiment neural parsing</p>
+                        </div>
+                        <ToggleSwitch enabled={settings.betaFeatures} onChange={(v) => setSettings({ ...settings, betaFeatures: v })} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="relative overflow-hidden p-8 rounded-3xl border border-white/10 bg-[#05050A] backdrop-blur-md shadow-2xl">
+                     <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-50" />
+                    <div className="flex items-center gap-4 mb-10">
+                      <div className="w-12 h-12 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-400 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                        <Shield className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-black text-white tracking-tight">Trust & Security</h3>
+                        <p className="text-xs text-emerald-400/60 font-bold uppercase tracking-widest mt-1">Compliance & Privacy</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-8 relative z-10">
+                      <div className="flex items-center justify-between p-5 bg-black/40 rounded-2xl border border-white/5 hover:border-emerald-500/30 transition-all group">
+                        <div>
+                          <p className="text-white text-sm font-bold">Aggressive PII Redaction</p>
+                          <p className="text-xs text-white/50 mt-1 font-medium">Deep scrub of names/emails before AI processing</p>
+                        </div>
+                        <ToggleSwitch enabled={settings.piiRedaction} onChange={(v) => setSettings({ ...settings, piiRedaction: v })} />
+                      </div>
+
+                      <div>
+                        <label className="block text-white text-xs mb-3 font-black uppercase tracking-widest">Data Retention Lifecycle</label>
+                        <select
+                          value={settings.dataRetentionDays}
+                          onChange={(e) => setSettings({ ...settings, dataRetentionDays: parseInt(e.target.value) })}
+                          className="w-full px-5 py-4 bg-black/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-emerald-500 transition-all text-sm font-bold pr-10 appearance-none shadow-inner"
+                        >
+                          <option value="30">30 Days (Strict Compliance)</option>
+                          <option value="90">90 Days (Industry Standard)</option>
+                          <option value="365">365 Days (Long-term Analysis)</option>
+                          <option value="0">Indefinite (Unlimited Storage)</option>
+                        </select>
+                      </div>
+
+                      <div className="p-5 bg-gradient-to-br from-emerald-500/10 to-teal-500/5 rounded-2xl border border-emerald-500/20 shadow-inner">
+                        <p className="text-xs text-emerald-400 font-black flex items-center gap-2 mb-2 uppercase tracking-widest">
+                          <CheckCircle2 className="w-4 h-4" /> Enterprise Grade Security
+                        </p>
+                        <p className="text-[11px] text-emerald-100/60 leading-relaxed font-medium">
+                          Data is encrypted at rest using AES-256-GCM. AutoReview AI maintains strict GDPR and CCPA compliance. We never monetize your customer data.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="relative p-8 rounded-3xl border border-white/10 bg-[#05050A] shadow-2xl">
+                    <div className="flex items-center gap-4 mb-8">
+                      <div className="w-12 h-12 bg-blue-500/20 rounded-2xl flex items-center justify-center text-blue-400 border border-blue-500/30">
+                        <Database className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black text-white tracking-tight">Data Portability</h3>
+                        <p className="text-xs text-blue-400/60 font-bold uppercase tracking-widest mt-1">Export Architecture</p>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <button 
+                        onClick={() => {
+                          const data = JSON.stringify({ settings, timestamp: new Date().toISOString() }, null, 2);
+                          const blob = new Blob([data], { type: 'application/json' });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = `autoreview-config-${new Date().toISOString().split('T')[0]}.json`;
+                          a.click();
+                        }}
+                        className="p-6 bg-black/40 hover:bg-blue-500/10 rounded-2xl border border-white/5 hover:border-blue-500/40 flex flex-col items-center gap-4 transition-all group shadow-inner"
+                      >
+                        <div className="w-12 h-12 bg-blue-500/10 rounded-xl flex items-center justify-center text-blue-400 group-hover:scale-110 group-hover:bg-blue-500 group-hover:text-white transition-all">
+                          <ExternalLink className="w-6 h-6" />
+                        </div>
+                        <span className="text-xs font-black text-white uppercase tracking-widest group-hover:text-blue-400">JSON Archive</span>
+                      </button>
+                      <button className="p-6 bg-black/40 hover:bg-emerald-500/10 rounded-2xl border border-white/5 hover:border-emerald-500/40 flex flex-col items-center gap-4 transition-all group shadow-inner">
+                        <div className="w-12 h-12 bg-emerald-500/10 rounded-xl flex items-center justify-center text-emerald-400 group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-white transition-all">
+                          <RefreshCcw className="w-6 h-6" />
+                        </div>
+                        <span className="text-xs font-black text-white uppercase tracking-widest group-hover:text-emerald-400">CSV Matrix</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="relative overflow-hidden p-8 rounded-3xl border border-rose-500/20 bg-[#1A0505] shadow-[0_0_30px_rgba(225,29,72,0.05)]">
+                    <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10 mix-blend-overlay -z-10" />
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-12 h-12 bg-rose-500/20 rounded-2xl flex items-center justify-center text-rose-500 border border-rose-500/30">
+                        <AlertCircle className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <h3 className="text-xl font-black text-rose-500 tracking-tight">Danger Zone</h3>
+                        <p className="text-xs text-rose-500/60 font-bold uppercase tracking-widest mt-1">Irreversible Actions</p>
+                      </div>
+                    </div>
+                    <p className="text-rose-200/60 text-xs mb-8 leading-relaxed font-medium">
+                      Executing these commands will permanently obliterate your current configuration state. Ensure you have secured a JSON archive before proceeding.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <button 
+                        onClick={handleReset}
+                        className="flex-1 py-4 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-rose-600/30"
+                      >
+                        Factory Reset
+                      </button>
+                      <button className="flex-1 py-4 bg-black/40 hover:bg-white/5 text-white/60 hover:text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all border border-rose-500/20">
+                        Purge Cache
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="relative overflow-hidden p-8 rounded-3xl border border-white/5 bg-gradient-to-b from-white/5 to-transparent text-center">
+                  <h4 className="text-white font-black text-xl mb-3 tracking-tight">AutoReview AI <span className="text-primary">v4.0.2 Premium</span></h4>
+                  <p className="text-white/40 text-[10px] uppercase tracking-widest leading-relaxed font-bold">
+                    Core Engine Build: stable.260329-0330 <br />
+                    Encrypted with AES-256-GCM. Network Environment: <span className="text-emerald-400">{process.env.NEXT_PUBLIC_VERCEL_ENV || 'Production Cluster'}</span>
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="mt-8 flex justify-end gap-4">
+            <button onClick={handleReset} className="px-6 py-3 glass text-white/70 hover:text-white rounded-lg">Reset</button>
+            <button onClick={handleSave} className="px-8 py-3 bg-primary text-white rounded-lg font-bold">
+              {saved ? '✓ Saved!' : '💾 Save Settings'}
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
     </PageTransition>
   )
 }

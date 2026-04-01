@@ -205,7 +205,7 @@ src/app/api/webhooks/       # Webhook handling
 
 ## Analytics API
 
-### \`/api/analytics\`
+### \`/api/stats-overview\`
 - **Method**: GET
 - **Auth**: Required
 - **Description**: Get comprehensive analytics data
@@ -434,32 +434,56 @@ npm run dev
   }
 
   const renderMarkdown = (content: string) => {
-    // Simple markdown renderer - in production you'd use a library like marked or react-markdown
+    const elements: React.ReactNode[] = []
     const lines = content.split('\n')
-    return lines.map((line, index) => {
-      if (line.startsWith('# ')) {
-        return <h1 key={index} className="text-3xl font-bold text-white mb-6">{line.substring(2)}</h1>
-      } else if (line.startsWith('## ')) {
-        return <h2 key={index} className="text-2xl font-semibold text-white mb-4 mt-8">{line.substring(3)}</h2>
-      } else if (line.startsWith('### ')) {
-        return <h3 key={index} className="text-xl font-medium text-white mb-3 mt-6">{line.substring(4)}</h3>
-      } else if (line.startsWith('- ')) {
-        return <li key={index} className="text-gray-300 mb-2 ml-4 list-disc">{line.substring(2)}</li>
-      } else if (line.startsWith('1. ')) {
-        return <li key={index} className="text-gray-300 mb-2 ml-4 list-decimal">{line.substring(3)}</li>
-      } else if (line.startsWith('```')) {
-        const isCodeBlock = line.startsWith('```')
-        if (isCodeBlock) {
-          const language = line.substring(3)
-          return <pre key={index} className="bg-gray-800 rounded-lg p-4 my-3 overflow-x-auto"><code className="text-gray-200">{language}</code></pre>
+    let inCodeBlock = false
+    let codeContent = ''
+    let codeLang = ''
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+
+      if (line.startsWith('```')) {
+        if (inCodeBlock) {
+          elements.push(
+            <div key={`code-${i}`} className="bg-[#0a0a0f] border border-white/10 rounded-xl my-5 overflow-hidden shadow-lg w-full max-w-full">
+              {codeLang && <div className="bg-white/5 border-b border-white/5 px-4 py-2 text-xs font-mono text-purple-400 capitalize">{codeLang}</div>}
+              <pre className="p-4 overflow-x-auto custom-scrollbar text-sm w-full">
+                <code className="text-gray-300 font-mono inline-block min-w-full">{codeContent.trimEnd()}</code>
+              </pre>
+            </div>
+          )
+          inCodeBlock = false
+          codeContent = ''
+        } else {
+          inCodeBlock = true
+          codeLang = line.substring(3).trim()
         }
-        return null
-      } else if (line.trim() === '') {
-        return <div key={index} className="h-4" />
-      } else {
-        return <p key={index} className="text-gray-300 mb-3">{line}</p>
+        continue
       }
-    })
+
+      if (inCodeBlock) {
+        codeContent += line + '\n'
+        continue
+      }
+
+      if (line.startsWith('# ')) {
+        elements.push(<h1 key={i} className="text-2xl sm:text-3xl font-bold text-white mb-6 mt-8 break-words">{line.substring(2)}</h1>)
+      } else if (line.startsWith('## ')) {
+        elements.push(<h2 key={i} className="text-xl sm:text-2xl font-semibold text-white mb-4 mt-8 break-words">{line.substring(3)}</h2>)
+      } else if (line.startsWith('### ')) {
+        elements.push(<h3 key={i} className="text-lg sm:text-xl font-medium text-white mb-3 mt-6 break-words">{line.substring(4)}</h3>)
+      } else if (line.startsWith('- ')) {
+        elements.push(<li key={i} className="text-gray-300 mb-2 ml-4 list-disc break-words leading-relaxed">{line.substring(2)}</li>)
+      } else if (line.match(/^\d+\.\s/)) {
+        elements.push(<li key={i} className="text-gray-300 mb-2 ml-4 list-decimal break-words leading-relaxed">{line.replace(/^\d+\.\s/, '')}</li>)
+      } else if (line.trim() === '') {
+        elements.push(<div key={i} className="h-4" />)
+      } else {
+        elements.push(<p key={i} className="text-gray-300 mb-3 leading-relaxed break-words">{line}</p>)
+      }
+    }
+    return elements
   }
 
   return (

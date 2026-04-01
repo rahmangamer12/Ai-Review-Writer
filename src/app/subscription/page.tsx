@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
-import { CreditsManager } from '@/lib/credits'
 import { 
   Check, Zap, Shield, Clock, CreditCard, ArrowRight, 
   Sparkles, Star, TrendingUp, Users, Loader2, AlertCircle,
@@ -109,19 +108,42 @@ export default function SubscriptionPage() {
   const [currentPlan, setCurrentPlan] = useState<string>('free')
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly')
   const [loading, setLoading] = useState<string | null>(null)
-  const [currentCredits, setCurrentCredits] = useState<number>(50)
+  const [currentCredits, setCurrentCredits] = useState<number>(0)
   const [error, setError] = useState<string | null>(null)
   const [showComingSoon, setShowComingSoon] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
 
   useEffect(() => {
-    const savedPlan = localStorage.getItem('autoreview-plan')
-    if (savedPlan) {
-      setCurrentPlan(savedPlan)
+    async function fetchUserData() {
+      if (user?.id) {
+        try {
+          const response = await fetch('/api/user/me')
+          const text = await response.text()
+          
+          const isJson = text.trim().startsWith('{') || text.trim().startsWith('[')
+          if (!isJson) {
+            setCurrentPlan('free')
+            setCurrentCredits(0)
+            return
+          }
+          
+          const data = JSON.parse(text)
+          
+          if (data.planType) {
+            setCurrentPlan(data.planType || 'free')
+            setCurrentCredits(data.aiCredits || 20)
+          } else {
+            setCurrentPlan('free')
+            setCurrentCredits(0)
+          }
+        } catch (err) {
+          console.error("Failed to fetch user limits", err)
+          setCurrentPlan('free')
+          setCurrentCredits(0)
+        }
+      }
     }
-    if (user?.id) {
-      setCurrentCredits(CreditsManager.getCredits(user.id))
-    }
+    fetchUserData()
   }, [user])
 
   const handleSubscribe = async (planId: string) => {
@@ -132,20 +154,14 @@ export default function SubscriptionPage() {
         return
       }
       
-      const confirmed = confirm('Downgrade to Free Plan? You will keep your current credits if more than 50.')
+      const confirmed = confirm('Downgrade to Free Plan? You will lose premium benefits.')
       if (!confirmed) return
 
       setLoading(planId)
       
-      if (user?.id) {
-        CreditsManager.handlePlanChange(user.id, currentPlan, 'free')
-        setCurrentCredits(CreditsManager.getCredits(user.id))
-      }
-      
-      localStorage.setItem('autoreview-plan', 'free')
-      setCurrentPlan('free')
+      // Handle free plan downgrade implicitly or explicitly (ideally through a billing portal)
+      alert('Plan downgrades are currently disabled in demo mode.')
       setLoading(null)
-      alert('Successfully downgraded to Free plan!')
       return
     }
 
@@ -343,7 +359,7 @@ export default function SubscriptionPage() {
           </motion.div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 lg:gap-8">
+        <div className="flex flex-wrap justify-center items-stretch gap-6 lg:gap-8">
           {plans.map((plan, index) => {
             const isCurrent = currentPlan === plan.id
             const price = billingCycle === 'yearly' ? plan.yearlyPrice : plan.monthlyPrice
@@ -356,8 +372,8 @@ export default function SubscriptionPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -5 }}
-                className={`relative rounded-2xl overflow-hidden ${
-                  plan.popular ? 'lg:scale-105 lg:-my-4 z-10' : ''
+                className={`relative rounded-2xl overflow-hidden flex-1 min-w-[280px] max-w-[360px] ${
+                  plan.popular ? 'lg:scale-105 z-10' : ''
                 }`}
               >
                 {plan.popular && (

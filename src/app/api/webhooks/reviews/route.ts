@@ -100,10 +100,11 @@ export async function POST(request: NextRequest) {
       })),
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Webhook API Error]:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: 'Failed to process webhook', details: error.message },
+      { error: 'Failed to process webhook', details: message },
       { status: 500 }
     );
   }

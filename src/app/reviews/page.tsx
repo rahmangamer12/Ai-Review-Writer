@@ -193,10 +193,11 @@ function ReviewsContent() {
       setTotalPages(data.totalPages || 1)
       setTotalCount(data.totalCount || 0)
       setCurrentPage(data.currentPage || page)
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Reviews fetch error:', err)
       // Provide user-friendly error message
-      setError('Unable to load reviews data. ' + (err.message || 'Please check your connection and environment variables.'))
+      const errorMessage = err instanceof Error ? err.message : 'Please check your connection and environment variables.'
+      setError('Unable to load reviews data. ' + errorMessage)
 
       // Set empty data to prevent UI breaking
       setReviews([])
@@ -206,7 +207,7 @@ function ReviewsContent() {
     } finally {
       setLoading(false)
     }
-  }, [userId, filters, currentPage])
+  }, [userId, filters, currentPage, itemsPerPage])
 
   useEffect(() => {
     if (userId) {
@@ -236,18 +237,9 @@ function ReviewsContent() {
       const data = await response.json()
       setGeneratedReviews(data.reviews)
     } catch (err) {
-      const sampleNames = ['John Smith', 'Sarah Johnson', 'Mike Davis', 'Emily Brown', 'David Wilson']
-      const fallbackReviews: GeneratedReview[] = Array.from({ length: aiConfig.count }, (_, i) => ({
-        id: `ai-${Date.now()}-${i}`,
-        author_name: sampleNames[Math.floor(Math.random() * sampleNames.length)],
-        platform: aiConfig.platform,
-        rating: aiConfig.ratingRange === 'mixed' ? Math.floor(Math.random() * 5) + 1 : parseInt(aiConfig.ratingRange),
-        content: 'This is a generated test review for demonstration purposes.',
-        sentiment_label: 'positive',
-        ai_reply: 'Thank you for your feedback!',
-        status: 'pending',
-      }))
-      setGeneratedReviews(fallbackReviews)
+      console.error('AI Review Generation Error:', err)
+      setError('Failed to generate reviews. Please check your AI API configuration and try again.')
+      setGeneratedReviews([])
     } finally {
       setGeneratingReviews(false)
     }
@@ -307,9 +299,10 @@ function ReviewsContent() {
       } else {
         alert(result.message || 'No pending reviews to process')
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('[Agentic] Error:', err)
-      setError(err.message || 'Agentic review failed')
+      const errorMessage = err instanceof Error ? err.message : 'Agentic review failed'
+      setError(errorMessage)
     } finally {
       setAgenticProcessing(false)
     }
@@ -318,16 +311,20 @@ function ReviewsContent() {
   // Generate AI Insights
   const generateAIInsights = async () => {
     try {
-      // Simulate AI insights
-      setAiInsights({
-        topSentiment: 'positive',
-        avgResponseTime: '2.5 hours',
-        improvementAreas: ['Response time', 'Negative reviews'],
-        recommendations: ['Enable auto-reply for 5-star reviews', 'Follow up on negative reviews within 1 hour'],
+      const response = await fetch('/api/reviews/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviews })
       })
+      
+      if (!response.ok) throw new Error('Failed to generate insights')
+      
+      const data = await response.json()
+      setAiInsights(data)
       setShowAIInsights(true)
     } catch (err) {
-      setError('Failed to generate insights')
+      console.error('AI Insights Error:', err)
+      setError('Failed to generate insights. Please ensure you have reviews to analyze.')
     }
   }
 
@@ -353,17 +350,8 @@ function ReviewsContent() {
       setReplyText(data.reply)
       setShowReplyModal(true)
     } catch (err) {
-      const authorName = review.reviewer_name || review.author_name || 'there'
-      let reply = ''
-      if (review.rating >= 4) {
-        reply = `Thank you ${authorName} for your wonderful review! We're thrilled you had such a great experience with us. Your feedback means the world to our team!`
-      } else if (review.rating === 3) {
-        reply = `Thank you ${authorName} for your feedback. We appreciate you taking the time to share your experience and are always looking for ways to improve.`
-      } else {
-        reply = `Hi ${authorName}, we sincerely apologize that your experience didn't meet your expectations. We'd love the opportunity to make this right. Please reach out to us directly so we can address your concerns.`
-      }
-      setReplyText(reply)
-      setShowReplyModal(true)
+      console.error('AI Reply Generation Error:', err)
+      setError('Failed to generate reply. Please check your AI API configuration and try again.')
     } finally {
       setGeneratingReply(null)
     }
@@ -748,30 +736,52 @@ function ReviewsContent() {
             ))}
           </div>
         ) : reviews.length === 0 ? (
-          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-16 text-center">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-white/5">
-              <MessageSquare className="h-10 w-10 text-gray-600" />
-            </div>
-            <h3 className="text-xl font-semibold text-white mb-2">No reviews found</h3>
-            <p className="text-gray-500 mb-8 max-w-md mx-auto">
-              {filters.search || filters.status !== 'all' || filters.platform !== 'all'
-                ? 'Try adjusting your filters'
-                : 'Get started by adding reviews or using AI generator'}
-            </p>
-            <div className="flex items-center justify-center gap-4">
-              <button
-                onClick={() => setShowAIGenerator(true)}
-                className="rounded-lg bg-purple-600 px-6 py-3 font-medium text-white hover:bg-purple-500"
-              >
-                <Bot className="mr-2 inline h-4 w-4" />
-                AI Generator
-              </button>
-              <button
-                onClick={() => router.push('/reviews/add')}
-                className="rounded-lg border border-white/10 bg-white/5 px-6 py-3 font-medium text-white hover:bg-white/10"
-              >
-                Add Review
-              </button>
+          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.02] to-white/[0.05] p-12 lg:p-20 text-center relative overflow-hidden">
+            <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-[100px]" />
+            <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px]" />
+            
+            <div className="relative z-10">
+              <div className="w-24 h-24 bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-2xl">
+                <MessageSquare className="w-12 h-12 text-purple-400" />
+              </div>
+              <h3 className="text-3xl font-bold text-white mb-4">No Reviews Found</h3>
+              <p className="text-xl text-gray-400 mb-10 max-w-xl mx-auto">
+                {filters.search || filters.status !== 'all' || filters.platform !== 'all'
+                  ? "We couldn't find any reviews matching your current filters. Try adjusting them to see more results."
+                  : "You haven't collected any reviews yet. Connect a platform or generate test data to get started."}
+              </p>
+              
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                {!(filters.search || filters.status !== 'all' || filters.platform !== 'all') && (
+                  <>
+                    <button
+                      onClick={() => setShowAIGenerator(true)}
+                      className="group relative overflow-hidden rounded-xl bg-purple-600 px-8 py-4 font-semibold text-white transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] block w-full sm:w-auto"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 transition-opacity group-hover:opacity-100" />
+                      <span className="relative flex items-center justify-center gap-2">
+                        <Bot className="w-5 h-5" /> AI Generator
+                      </span>
+                    </button>
+                    <button
+                      onClick={() => router.push('/connect-platforms')}
+                      className="group rounded-xl border border-white/10 bg-white/5 px-8 py-4 font-semibold text-white transition-all hover:bg-white/10 hover:border-white/20 block w-full sm:w-auto"
+                    >
+                      <span className="flex items-center justify-center gap-2 text-gray-300 group-hover:text-white">
+                        <Globe className="w-5 h-5 text-blue-400" /> Connect Platforms
+                      </span>
+                    </button>
+                  </>
+                )}
+                <button
+                  onClick={() => router.push('/reviews/add')}
+                  className={`group rounded-xl border border-white/10 bg-white/5 px-8 py-4 font-semibold text-white transition-all hover:bg-white/10 hover:border-white/20 block w-full sm:w-auto ${(filters.search || filters.status !== 'all' || filters.platform !== 'all') ? '' : 'sm:ml-2'}`}
+                >
+                  <span className="flex items-center justify-center gap-2 text-gray-300 group-hover:text-white">
+                    <Plus className="w-5 h-5 text-emerald-400" /> Add Manually
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         ) : (

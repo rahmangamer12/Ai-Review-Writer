@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
       message: 'Scheduler executed successfully',
       timestamp: new Date().toISOString()
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Scheduler API Error]:', error);
     // For production, return success even if there are errors to avoid cron job failures
     return NextResponse.json(
@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
       message: 'Scheduler executed successfully',
       timestamp: new Date().toISOString()
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Scheduler API Error]:', error);
     // For production, return success even if there are errors to avoid cron job failures
     return NextResponse.json(

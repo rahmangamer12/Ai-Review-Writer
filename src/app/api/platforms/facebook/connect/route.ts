@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
     authUrl.searchParams.set('state', userId);
 
     return NextResponse.json({ success: true, authUrl: authUrl.toString() });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
   }
 }

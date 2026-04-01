@@ -4,6 +4,12 @@ import { useState, useEffect } from 'react'
 import { Download, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import PWADebugPanel from '@/components/PWADebugPanel'
 
+function StatusIcon({ condition }: { condition: boolean }) {
+  return condition 
+    ? <CheckCircle className="w-5 h-5 text-green-500" /> 
+    : <XCircle className="w-5 h-5 text-red-500" />
+}
+
 export default function PWATestPage() {
   const [manifestLoaded, setManifestLoaded] = useState(false)
   const [swRegistered, setSWRegistered] = useState(false)
@@ -67,9 +73,6 @@ export default function PWATestPage() {
     setDeferredPrompt(null)
     setInstallable(false)
   }
-
-  const StatusIcon = ({ condition }: { condition: boolean }) => 
-    condition ? <CheckCircle className="w-5 h-5 text-green-500" /> : <XCircle className="w-5 h-5 text-red-500" />
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-indigo-900 to-blue-900 p-8">

@@ -1,17 +1,23 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
+
+function useHydrated() {
+  return useSyncExternalStore(
+    () => () => {},
+    () => false,
+    () => true
+  )
+}
 
 /**
  * Component to suppress hydration warnings caused by browser extensions
  * that inject attributes like 'bis_skin_checked' into the DOM.
  */
 export default function HydrationSuppressor() {
-  const [mounted, setMounted] = useState(false)
-
+  const hydrated = useHydrated()
+  
   useEffect(() => {
-    setMounted(true)
-    
     // Remove bis_skin_checked attributes added by browser extensions
     const removeExtensionAttributes = () => {
       const elements = document.querySelectorAll('[bis_skin_checked]')
@@ -63,7 +69,7 @@ export default function HydrationSuppressor() {
   }, [])
 
   // Don't render anything on server
-  if (!mounted) return null
+  if (!hydrated) return null
 
   return null
 }

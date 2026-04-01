@@ -89,42 +89,76 @@ export default function ProfilePage() {
     try {
       setLoading(true)
       
-      // Fetch reviews data first
+      const response = await fetch('/api/user/me')
+      const text = await response.text()
+      
+      const isJson = text.trim().startsWith('{') || text.trim().startsWith('[')
+      if (!isJson) {
+        setLoading(false)
+        return
+      }
+      
+      const userData = JSON.parse(text)
+      
+      if (!userData.planType) {
+        setLoading(false)
+        return
+      }
+      
+      // Fetch reviews data for stats
       type SupabaseResult<T> = { data: T | null; error: Error | null }
       const { data: reviews } = await (supabase.from('reviews').select('*') as unknown as Promise<SupabaseResult<ReviewData[]>>)
+      const { data: replies } = await (supabase.from('replies').select('*') as unknown as Promise<SupabaseResult<ReplyData[]>>)
       setReviewsData(reviews || [])
       
-      // Always regenerate profile with fresh data
-      const newProfile = await createDefaultProfile()
+      // Calculate real stats
+      const totalReviews = reviews?.length || 0
+      const totalReplies = replies?.length || 0
+      const avgRating = totalReviews > 0 
+        ? (reviews || []).reduce((sum: number, r: ReviewData) => sum + (r.rating || 0), 0) / totalReviews 
+        : 0
+      const responseRate = totalReviews > 0 ? (totalReplies / totalReviews) * 100 : 0
       
-      // Try to load saved customizations from localStorage
-      const profileKey = `autoreview-profile-${user.id}`
-      const storedProfile = localStorage.getItem(profileKey)
-      
-      if (storedProfile) {
-        const parsedProfile = JSON.parse(storedProfile)
-        // Merge user customizations with fresh data
-        newProfile.bio = parsedProfile.bio || newProfile.bio
-        newProfile.location = parsedProfile.location || newProfile.location
-        newProfile.phone = parsedProfile.phone || newProfile.phone
-        newProfile.website = parsedProfile.website || newProfile.website
-        newProfile.company = parsedProfile.company || newProfile.company
-        newProfile.role = parsedProfile.role || newProfile.role
-        newProfile.industry = parsedProfile.industry || newProfile.industry
-        // Use saved avatar if it's a custom upload, otherwise use Clerk avatar
-        if (parsedProfile.avatar_url && parsedProfile.avatar_url.startsWith('blob:')) {
-          newProfile.avatar_url = parsedProfile.avatar_url
-        }
+      const newProfile: UserProfile = {
+        id: user.id,
+        email: user.emailAddresses[0]?.emailAddress || '',
+        full_name: user.fullName || user.firstName || 'User',
+        avatar_url: user.imageUrl || null,
+        bio: userData.bio || 'AI-powered review management expert',
+        location: userData.location || '',
+        phone: userData.phone || '',
+        website: userData.website || '',
+        company: userData.company || '',
+        role: userData.role || '',
+        industry: userData.industry || 'Business Services',
+        plan: (userData.planType?.toLowerCase() as any) || 'free',
+        credits: userData.aiCredits || 0,
+        joined_date: user.createdAt?.toISOString() || new Date().toISOString(),
+        preferences: userData.preferences || {
+          theme: 'dark',
+          language: 'english',
+          notifications: true,
+          autoReply: true,
+          selectedPersona: 'friendly'
+        },
+        stats: {
+          total_reviews: totalReviews,
+          reviews_this_month: 0, // Could be calculated
+          avg_rating: Number(avgRating.toFixed(1)),
+          response_rate: Number(responseRate.toFixed(1)),
+          avg_response_time: 15,
+          total_replies: totalReplies,
+          platforms_connected: 0,
+          satisfaction_score: Math.min(100, Math.max(60, Math.floor(avgRating * 20 + responseRate * 0.2)))
+        },
+        achievements: [], // Could be fetched
+        activity: generateActivityLog([], [], totalReviews, totalReplies)
       }
       
       setProfile(newProfile)
       setEditedProfile(newProfile)
     } catch (error) {
       console.error('Error loading profile:', error)
-      // Create a minimal fallback profile on error
-      const fallbackProfile = await createDefaultProfile()
-      setProfile(fallbackProfile)
-      setEditedProfile(fallbackProfile)
     } finally {
       setLoading(false)
     }
@@ -206,18 +240,6 @@ export default function ProfilePage() {
       icon: '👤'
     })
 
-    // Add credit purchase activity if credits exist
-    const credits = CreditsManager.getCredits(user?.id || '')
-    if (credits > 0) {
-      activities.push({
-        id: 'activity-7',
-        type: 'credits_added',
-        description: `Added ${credits} credits to account`,
-        timestamp: new Date(now - 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days ago
-        icon: '💳'
-      })
-    }
-
     // Add account creation activity
     activities.push({
       id: 'activity-8',
@@ -233,157 +255,7 @@ export default function ProfilePage() {
     ).slice(0, 20)
   }
 
-  const createDefaultProfile = async (): Promise<UserProfile> => {
-    if (!user) throw new Error('No user found')
 
-    // Fetch real reviews data
-    type SupabaseResult<T> = { data: T | null; error: Error | null }
-    const { data: reviews } = await (supabase.from('reviews').select('*') as unknown as Promise<SupabaseResult<ReviewData[]>>)
-    const { data: replies } = await (supabase.from('replies').select('*') as unknown as Promise<SupabaseResult<ReplyData[]>>)
-    
-    const totalReviews = reviews?.length || 0
-    const totalReplies = replies?.length || 0
-    
-    // Calculate stats from real data
-    const avgRating = totalReviews > 0 
-      ? (reviews || []).reduce((sum: number, r: ReviewData) => sum + (r.rating || 0), 0) / totalReviews 
-      : 0
-    
-    const responseRate = totalReviews > 0 ? (totalReplies / totalReviews) * 100 : 0
-    
-    // Get current month reviews
-    const currentDate = new Date()
-    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
-    const reviewsThisMonth = (reviews || []).filter((r: ReviewData) => 
-      new Date(r.created_at) >= firstDayOfMonth
-    ).length || 0
-
-    // Get connected platforms from localStorage
-    const connectedPlatforms = ['google', 'yelp', 'facebook', 'tripadvisor', 'trustpilot']
-      .filter(platform => localStorage.getItem(`connected-${platform}`) === 'true')
-      .length
-
-    // Get current plan
-    const currentPlan = (localStorage.getItem('autoreview-plan') as UserProfile['plan']) || 'free'
-    
-    // Get correct credits based on plan
-    const correctCredits = CreditsManager.getPlanCredits(currentPlan)
-    
-    // Get existing saved profile to preserve custom fields
-    const profileKey = `autoreview-profile-${user.id}`
-    const savedProfileData = localStorage.getItem(profileKey)
-    const savedProfile = savedProfileData ? JSON.parse(savedProfileData) : null
-    
-    // Validate and fix credits if needed
-    let userCredits = savedProfile?.credits || 0
-    const savedPlan = savedProfile?.plan || 'free'
-    
-    // If plan changed or credits don't match plan, fix them
-    if (savedPlan !== currentPlan || userCredits !== correctCredits) {
-      console.log(`[Profile] Fixing credits: Plan=${currentPlan}, Old Credits=${userCredits}, New Credits=${correctCredits}`)
-      userCredits = correctCredits
-      
-      // Update saved profile with correct credits
-      if (savedProfile) {
-        savedProfile.credits = correctCredits
-        savedProfile.plan = currentPlan
-        localStorage.setItem(profileKey, JSON.stringify(savedProfile))
-      }
-    }
-    
-    // Also update CreditsManager
-    CreditsManager.setCredits(user.id, correctCredits, `Plan: ${currentPlan}`)
-
-    const profile: UserProfile = {
-      id: user.id,
-      email: user.emailAddresses[0]?.emailAddress || '',
-      full_name: user.fullName || user.firstName || 'User',
-      avatar_url: user.imageUrl || null,
-      bio: savedProfile?.bio || 'AI-powered review management expert',
-      location: savedProfile?.location || '',
-      phone: savedProfile?.phone || '',
-      website: savedProfile?.website || '',
-      company: savedProfile?.company || '',
-      role: savedProfile?.role || '',
-      industry: savedProfile?.industry || 'Business Services',
-      plan: currentPlan,
-      credits: correctCredits,
-      joined_date: user.createdAt?.toISOString() || new Date().toISOString(),
-      preferences: {
-        theme: 'dark',
-        language: 'english',
-        notifications: true,
-        autoReply: true,
-        selectedPersona: 'friendly'
-      },
-      stats: {
-        total_reviews: totalReviews,
-        reviews_this_month: reviewsThisMonth,
-        avg_rating: Number(avgRating.toFixed(1)),
-        response_rate: Number(responseRate.toFixed(1)),
-        avg_response_time: totalReplies > 0 ? Math.floor(Math.random() * 20) + 5 : 15, // 5-25 minutes based on activity
-        total_replies: totalReplies,
-        platforms_connected: connectedPlatforms,
-        satisfaction_score: Math.min(100, Math.max(60, Math.floor(avgRating * 20 + responseRate * 0.2)))
-      },
-      achievements: [
-        {
-          id: 'first_review',
-          title: 'First Steps',
-          description: 'Received your first review',
-          icon: '🎯',
-          unlocked: totalReviews > 0,
-          date: totalReviews > 0 ? new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString() : undefined
-        },
-        {
-          id: 'quick_responder',
-          title: 'Quick Responder',
-          description: 'Replied to 10 reviews',
-          icon: '⚡',
-          unlocked: totalReplies >= 10,
-          date: totalReplies >= 10 ? new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString() : undefined
-        },
-        {
-          id: 'platform_connector',
-          title: 'Platform Master',
-          description: 'Connected 3+ platforms',
-          icon: '🔌',
-          unlocked: connectedPlatforms >= 3,
-          date: connectedPlatforms >= 3 ? new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString() : undefined
-        },
-        {
-          id: 'review_champion',
-          title: 'Review Champion',
-          description: 'Managed 100+ reviews',
-          icon: '🏆',
-          unlocked: totalReviews >= 100,
-          date: totalReviews >= 100 ? new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString() : undefined
-        },
-        {
-          id: 'perfect_rating',
-          title: 'Excellence Award',
-          description: 'Maintained 4.5+ average rating',
-          icon: '⭐',
-          unlocked: avgRating >= 4.5,
-          date: avgRating >= 4.5 ? new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString() : undefined
-        },
-        {
-          id: 'ai_master',
-          title: 'AI Master',
-          description: 'Used AI responses 50+ times',
-          icon: '🤖',
-          unlocked: totalReplies >= 50,
-          date: totalReplies >= 50 ? new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString() : undefined
-        }
-      ],
-      activity: generateActivityLog(reviews || [], replies || [], totalReviews, totalReplies)
-    }
-
-    // Save the profile to localStorage to ensure credits are preserved
-    localStorage.setItem(profileKey, JSON.stringify(profile))
-    
-    return profile
-  }
 
   const handleSaveProfile = async () => {
     if (!user || !profile) return
@@ -620,24 +492,9 @@ export default function ProfilePage() {
                         </span>
                       </div>
                       
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center gap-2 px-3 py-1.5 glass rounded-lg">
-                          <CreditCard className="w-4 h-4 text-cyan-400" />
-                          <span className="text-white font-medium">{profile.credits} Credits</span>
-                        </div>
-                        {/* Fix Credits Button */}
-                        <button
-                          onClick={() => {
-                            const plan = localStorage.getItem('autoreview-plan') || 'free'
-                            const correctAmount = CreditsManager.getPlanCredits(plan)
-                            CreditsManager.setCredits(user?.id || '', correctAmount, `Manual sync - ${plan} plan`)
-                            window.location.reload()
-                          }}
-                          className="p-1.5 text-[10px] text-white/40 hover:text-white/70 hover:bg-white/10 rounded transition-all"
-                          title="Sync credits with plan"
-                        >
-                          🔄
-                        </button>
+                      <div className="flex items-center gap-2 px-3 py-1.5 glass rounded-lg">
+                        <CreditCard className="w-4 h-4 text-cyan-400" />
+                        <span className="text-white font-medium">{profile.credits} Credits</span>
                       </div>
                       
                       <div className="flex items-center gap-2 px-3 py-1.5 glass rounded-lg">

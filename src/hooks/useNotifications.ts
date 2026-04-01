@@ -8,6 +8,12 @@ interface NotificationState {
   serviceWorkerReady: boolean
 }
 
+interface NotificationAction {
+  action: string
+  title: string
+  icon?: string
+}
+
 interface ShowNotificationOptions {
   title: string
   body: string
@@ -16,7 +22,7 @@ interface ShowNotificationOptions {
   tag?: string
   requireInteraction?: boolean
   silent?: boolean
-  data?: any
+  data?: Record<string, unknown>
 }
 
 export function useNotifications() {
@@ -61,6 +67,23 @@ export function useNotifications() {
     checkServiceWorker()
   }, [])
 
+  // Register service worker
+  const registerServiceWorker = useCallback(async (): Promise<ServiceWorkerRegistration | null> => {
+    if (!('serviceWorker' in navigator)) {
+      return null
+    }
+
+    try {
+      const registration = await navigator.serviceWorker.register('/notification-sw.js')
+      console.log('Service Worker registered:', registration)
+      setState(prev => ({ ...prev, serviceWorkerReady: true }))
+      return registration
+    } catch (error) {
+      console.error('Service Worker registration failed:', error)
+      return null
+    }
+  }, [])
+
   // Request notification permission
   const requestPermission = useCallback(async (): Promise<boolean> => {
     if (!state.supported) {
@@ -82,24 +105,7 @@ export function useNotifications() {
       console.error('Error requesting notification permission:', error)
       return false
     }
-  }, [state.supported])
-
-  // Register service worker
-  const registerServiceWorker = async (): Promise<ServiceWorkerRegistration | null> => {
-    if (!('serviceWorker' in navigator)) {
-      return null
-    }
-
-    try {
-      const registration = await navigator.serviceWorker.register('/notification-sw.js')
-      console.log('Service Worker registered:', registration)
-      setState(prev => ({ ...prev, serviceWorkerReady: true }))
-      return registration
-    } catch (error) {
-      console.error('Service Worker registration failed:', error)
-      return null
-    }
-  }
+  }, [state.supported, registerServiceWorker])
 
   // Show notification
   const showNotification = useCallback((options: ShowNotificationOptions): boolean => {
@@ -133,7 +139,7 @@ export function useNotifications() {
         notification.close()
 
         // Navigate to the specified URL
-        const url = options.data?.url || '/dashboard'
+        const url = typeof options.data?.url === 'string' ? options.data.url : '/dashboard'
         window.location.href = url
       }
 
@@ -154,8 +160,8 @@ export function useNotifications() {
     try {
       const registration = await navigator.serviceWorker.ready
       
-      // Cast to any because TypeScript doesn't include 'actions' in NotificationOptions
-      const notificationOptions: any = {
+      // Create notification options with extended type support
+      const notificationOptions: NotificationOptions & { actions?: NotificationAction[] } = {
         body: options.body,
         icon: options.icon || '/icon.png',
         badge: options.badge || '/badge.png',
@@ -166,7 +172,7 @@ export function useNotifications() {
         actions: [
           { action: 'open', title: 'Open App' },
           { action: 'dismiss', title: 'Dismiss' }
-        ]
+        ] as NotificationAction[]
       }
       
       await registration.showNotification(options.title, notificationOptions)
@@ -180,7 +186,7 @@ export function useNotifications() {
   }, [state.serviceWorkerReady, showNotification])
 
   // Send message to service worker
-  const sendMessageToSW = useCallback(async (message: any): Promise<any> => {
+  const sendMessageToSW = useCallback(async (message: Record<string, unknown>): Promise<unknown> => {
     if (!state.serviceWorkerReady) {
       console.warn('Service Worker not ready')
       return null

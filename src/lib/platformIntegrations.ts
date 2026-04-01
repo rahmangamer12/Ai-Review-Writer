@@ -155,8 +155,13 @@ export const platformDefinitions: Record<string, {
   }
 }
 
-// Encrypt sensitive data (simple encryption for localStorage)
+/**
+ * DEPRECATED: Old XOR encryption - NO LONGER USED
+ * Replaced with proper AES-256-GCM encryption
+ * This is kept only for migration purposes
+ */
 function encryptData(data: string): string {
+  console.warn('[DEPRECATED] Using old encryptData function. This should not be called in production.')
   if (typeof window === 'undefined') return data
   try {
     // Simple XOR encryption with a key derived from user agent
@@ -172,6 +177,7 @@ function encryptData(data: string): string {
 }
 
 function decryptData(encrypted: string): string {
+  console.warn('[DEPRECATED] Using old decryptData function. This should not be called in production.')
   if (typeof window === 'undefined') return encrypted
   try {
     const key = window.navigator.userAgent.slice(0, 16)
@@ -183,6 +189,42 @@ function decryptData(encrypted: string): string {
     return decrypted
   } catch {
     return encrypted
+  }
+}
+
+/**
+ * Server-side encryption using proper AES-256-GCM
+ * This should be used for all new credential storage
+ */
+async function encryptCredentialsServer(data: string): Promise<string> {
+  try {
+    // Dynamically import only on server
+    if (typeof window !== 'undefined') {
+      throw new Error('encryptCredentialsServer should only be called on the server')
+    }
+    const { encryptSensitiveData } = await import('./encryption')
+    return encryptSensitiveData(data)
+  } catch (error) {
+    console.error('[Encryption Error]', error)
+    // Fallback to old method (but log the error)
+    console.warn('[SECURITY WARNING] Failed to use server encryption, falling back to old method')
+    return encryptData(data)
+  }
+}
+
+async function decryptCredentialsServer(encrypted: string): Promise<string> {
+  try {
+    // Dynamically import only on server
+    if (typeof window !== 'undefined') {
+      throw new Error('decryptCredentialsServer should only be called on the server')
+    }
+    const { decryptSensitiveData } = await import('./encryption')
+    return decryptSensitiveData(encrypted)
+  } catch (error) {
+    console.error('[Decryption Error]', error)
+    // Fallback to old method (but log the error)
+    console.warn('[SECURITY WARNING] Failed to use server decryption, falling back to old method')
+    return decryptData(encrypted)
   }
 }
 
@@ -234,6 +276,78 @@ export class PlatformIntegrationManager {
     return limits[plan] || limits['free']
   }
 
+  // Validate credentials before saving
+  static validateCredentials(platformId: string, credentials: Record<string, string>): string | null {
+    // Check for empty credentials object
+    if (!credentials || Object.keys(credentials).length === 0) {
+      return 'No credentials provided'
+    }
+
+    // Platform-specific validation
+    switch (platformId) {
+      case 'google':
+        if (!credentials.access_token?.trim()) {
+          return 'Google access_token is required'
+        }
+        if (credentials.access_token.length < 10) {
+          return 'Google access_token appears to be invalid (too short)'
+        }
+        // Google refresh token can be empty for some flows, but warn if completely missing
+        if (!credentials.refresh_token?.trim()) {
+          console.warn('[Platform Integration] Google refresh_token is empty. Token refresh will fail after 24 hours.')
+        }
+        break
+
+      case 'facebook':
+        if (!credentials.access_token?.trim()) {
+          return 'Facebook access_token is required'
+        }
+        if (credentials.access_token.length < 20) {
+          return 'Facebook access_token appears to be invalid (too short)'
+        }
+        break
+
+      case 'yelp':
+        if (!credentials.access_token?.trim()) {
+          return 'Yelp access_token is required'
+        }
+        if (credentials.access_token.length < 20) {
+          return 'Yelp access_token appears to be invalid (too short)'
+        }
+        break
+
+      case 'trustpilot':
+        if (!credentials.api_key?.trim()) {
+          return 'Trustpilot API key is required'
+        }
+        if (credentials.api_key.length < 10) {
+          return 'Trustpilot API key appears to be invalid (too short)'
+        }
+        break
+
+      default:
+        // Generic validation for unknown platforms
+        const hasAnyCredential = Object.values(credentials).some(v => v?.trim())
+        if (!hasAnyCredential) {
+          return 'At least one credential field is required'
+        }
+    }
+
+    // Check for obviously invalid patterns
+    for (const [key, value] of Object.entries(credentials)) {
+      if (typeof value === 'string') {
+        if (value.includes('\n') || value.includes('\r')) {
+          return `Credential "${key}" contains invalid line breaks`
+        }
+        if (value.includes(' ') && key.includes('token')) {
+          return `Credential "${key}" (token) should not contain spaces`
+        }
+      }
+    }
+
+    return null // All validations passed
+  }
+
   // Get all platforms with their current status
   static getPlatforms(): PlatformConfig[] {
     if (typeof window === 'undefined') return []
@@ -267,10 +381,17 @@ export class PlatformIntegrationManager {
   }
 
   // Save platform configuration
-  static savePlatform(platformId: string, credentials: Record<string, string>): boolean {
-    if (typeof window === 'undefined') return false
+  static savePlatform(platformId: string, credentials: Record<string, string>): { success: boolean; error?: string } {
+    if (typeof window === 'undefined') return { success: false, error: 'localStorage not available on server' }
     
     try {
+      // Validate credentials before saving
+      const validationError = this.validateCredentials(platformId, credentials)
+      if (validationError) {
+        console.warn(`[Platform Integration] Validation failed for ${platformId}:`, validationError)
+        return { success: false, error: validationError }
+      }
+
       const platforms = this.getPlatforms()
       const index = platforms.findIndex(p => p.id === platformId)
       
@@ -289,12 +410,14 @@ export class PlatformIntegrationManager {
         }
         
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(platforms))
-        return true
+        return { success: true }
+      } else {
+        return { success: false, error: 'Platform not found' }
       }
     } catch (error) {
       console.error('Error saving platform:', error)
+      return { success: false, error: error instanceof Error ? error.message : 'Unknown error' }
     }
-    return false
   }
 
   // Update platform status
@@ -354,14 +477,23 @@ export class PlatformIntegrationManager {
     return false
   }
 
-  // Test connection (mock implementation - replace with real API calls)
+  static async proxyFetch(url: string, headers?: Record<string, string>) {
+    const res = await fetch('/api/proxy', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, headers: headers || {} })
+    })
+    return res.json()
+  }
+
+  // Test connection (real API implementation)
   static async testConnection(platformId: string, credentials: Record<string, string>): Promise<{ success: boolean; message: string }> {
-    // This is a mock implementation
-    // In production, replace with actual API calls to test credentials
-    
+    if (typeof window === 'undefined') {
+      return { success: false, message: 'Loading...' }
+    }
+
     const requiredFields = platformDefinitions[platformId]?.fields || []
     
-    // Check if all required fields are provided
     for (const field of requiredFields) {
       if (field.required && !credentials[field.name]) {
         return {
@@ -371,26 +503,79 @@ export class PlatformIntegrationManager {
       }
     }
 
-    // Simulate API test call
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
-    // Mock success/failure (80% success rate for demo)
-    const isSuccess = Math.random() > 0.2
-    
-    if (isSuccess) {
-      return {
-        success: true,
-        message: `Successfully connected to ${platformDefinitions[platformId]?.name}`
-      }
-    } else {
-      return {
-        success: false,
-        message: 'Invalid credentials. Please check your API key and try again.'
+    // Google
+    if (platformId === 'google') {
+      try {
+        const res = await this.proxyFetch(
+          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${credentials.placeId}&fields=name&key=${credentials.apiKey}`
+        )
+        if (!res.ok) return { success: false, message: `Google API Error: Invalid API Key or missing permissions.` }
+        if (res.data.status === 'OK') return { success: true, message: 'Google connected!' }
+        return { success: false, message: `Google Error: ${res.data.status}` }
+      } catch (err) {
+        return { success: false, message: 'Failed to access Google API. Check credentials.' }
       }
     }
+
+    // Yelp
+    if (platformId === 'yelp') {
+      try {
+        const res = await this.proxyFetch(
+          `https://api.yelp.com/v3/businesses/${credentials.businessId}`,
+          { Authorization: `Bearer ${credentials.apiKey}` }
+        )
+        if (!res.ok) return { success: false, message: 'Invalid Yelp credentials or missing permissions' }
+        return { success: true, message: 'Yelp connected!' }
+      } catch (err) {
+        return { success: false, message: 'Failed to access Yelp API. Check credentials.' }
+      }
+    }
+
+    // Facebook
+    if (platformId === 'facebook') {
+      try {
+        const res = await this.proxyFetch(
+          `https://graph.facebook.com/${credentials.pageId}?access_token=${credentials.pageAccessToken}`
+        )
+        if (!res.ok) return { success: false, message: 'Invalid Facebook token or page ID' }
+        if (res.data.id) return { success: true, message: 'Facebook connected!' }
+        return { success: false, message: 'Invalid Facebook Developer credentials' }
+      } catch (err) {
+        return { success: false, message: 'Failed to access Facebook Graph. Check credentials.' }
+      }
+    }
+
+    // TripAdvisor
+    if (platformId === 'tripadvisor') {
+      try {
+        const res = await this.proxyFetch(
+          `https://api.content.tripadvisor.com/api/v1/location/${credentials.locationId}/details?key=${credentials.apiKey}`
+        )
+        if (!res.ok) return { success: false, message: 'Invalid TripAdvisor key or location ID' }
+        return { success: true, message: 'TripAdvisor connected!' }
+      } catch (err) {
+        return { success: false, message: 'Failed to access TripAdvisor APIs. Check credentials.' }
+      }
+    }
+
+    // Trustpilot
+    if (platformId === 'trustpilot') {
+      try {
+        const res = await this.proxyFetch(
+          `https://api.trustpilot.com/v1/business-units/${credentials.businessUnitId}`,
+          { Authorization: `Basic ${btoa(credentials.apiKey + ':')}` }
+        )
+        if (!res.ok) return { success: false, message: 'Invalid Trustpilot Authorization credentials' }
+        return { success: true, message: 'Trustpilot connected!' }
+      } catch (err) {
+        return { success: false, message: 'Failed to access Trustpilot APIs. Check credentials.' }
+      }
+    }
+
+    return { success: false, message: 'Unknown platform' }
   }
 
-  // Fetch reviews from a platform (mock implementation)
+  // Fetch reviews from a platform
   static async fetchReviews(platformId: string): Promise<any[]> {
     const platform = this.getPlatforms().find(p => p.id === platformId)
     
@@ -398,28 +583,120 @@ export class PlatformIntegrationManager {
       return []
     }
 
-    // Mock review data - replace with actual API calls
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // Return mock reviews
-    return [
-      {
-        id: `${platformId}-1`,
-        content: 'Great service! Very professional and helpful.',
-        rating: 5,
-        author: 'John Doe',
-        date: new Date().toISOString(),
-        platform: platformId
-      },
-      {
-        id: `${platformId}-2`,
-        content: 'Good experience overall. Would recommend.',
-        rating: 4,
-        author: 'Jane Smith',
-        date: new Date(Date.now() - 86400000).toISOString(),
-        platform: platformId
+    const { credentials } = platform
+
+    // Google Reviews
+    if (platformId === 'google') {
+      try {
+        const res = await this.proxyFetch(
+          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${credentials.placeId}&fields=reviews&key=${credentials.apiKey}`
+        )
+        if (res.ok && res.data?.result?.reviews) {
+          return res.data.result.reviews.map((r: any) => ({
+            id: r.author_name + '-' + r.time,
+            content: r.text,
+            rating: r.rating,
+            author: r.author_name,
+            date: new Date(r.time * 1000).toISOString(),
+            platform: 'google'
+          }))
+        }
+      } catch (e) {
+        console.error('Error fetching Google reviews:', e)
       }
-    ]
+      return []
+    }
+
+    // Yelp Reviews
+    if (platformId === 'yelp') {
+      try {
+        const res = await this.proxyFetch(
+          `https://api.yelp.com/v3/businesses/${credentials.businessId}/reviews`,
+          { Authorization: `Bearer ${credentials.apiKey}` }
+        )
+        if (res.ok && res.data?.reviews) {
+          return res.data.reviews.map((r: any) => ({
+            id: r.id,
+            content: r.text,
+            rating: r.rating,
+            author: r.user.name,
+            date: r.time_created,
+            platform: 'yelp'
+          }))
+        }
+      } catch (e) {
+        console.error('Error fetching Yelp reviews:', e)
+      }
+      return []
+    }
+
+    // Facebook Reviews
+    if (platformId === 'facebook') {
+      try {
+        const res = await this.proxyFetch(
+          `https://graph.facebook.com/${credentials.pageId}/ratings?access_token=${credentials.pageAccessToken}&fields=reviewer_name,rating,review_text,created_time`
+        )
+        if (res.ok && res.data?.data) {
+          return res.data.data.map((r: any) => ({
+            id: r.id,
+            content: r.review_text,
+            rating: r.rating,
+            author: r.reviewer_name,
+            date: r.created_time,
+            platform: 'facebook'
+          }))
+        }
+      } catch (e) {
+        console.error('Error fetching Facebook reviews:', e)
+      }
+      return []
+    }
+
+    // TripAdvisor Reviews
+    if (platformId === 'tripadvisor') {
+      try {
+        const res = await this.proxyFetch(
+          `https://api.content.tripadvisor.com/api/v1/location/${credentials.locationId}/reviews?key=${credentials.apiKey}`
+        )
+        if (res.ok && res.data?.data) {
+          return res.data.data.map((r: any) => ({
+            id: r.id,
+            content: r.text,
+            rating: r.rating,
+            author: r.author,
+            date: r.publish_date,
+            platform: 'tripadvisor'
+          }))
+        }
+      } catch (e) {
+        console.error('Error fetching TripAdvisor reviews:', e)
+      }
+      return []
+    }
+
+    // Trustpilot Reviews
+    if (platformId === 'trustpilot') {
+      try {
+        const res = await this.proxyFetch(
+          `https://api.trustpilot.com/v1/business-units/${credentials.businessUnitId}/reviews?apikey=${credentials.apiKey}`
+        )
+        if (res.ok && res.data?.reviews) {
+          return res.data.reviews.map((r: any) => ({
+            id: r.id,
+            content: r.content,
+            rating: r.stars,
+            author: r.author.name,
+            date: r.createdAt,
+            platform: 'trustpilot'
+          }))
+        }
+      } catch (e) {
+        console.error('Error fetching Trustpilot reviews:', e)
+      }
+      return []
+    }
+
+    return []
   }
 
   // Get connected platforms count

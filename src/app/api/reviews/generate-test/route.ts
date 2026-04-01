@@ -102,14 +102,21 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ 
       success: true, 
-      reviews,
+      reviews: reviews.map(r => ({
+        ...r,
+        is_fake: true,
+        is_test: true,
+        source: 'test_generator'
+      })),
       ai_provider: 'LongCat AI',
-      generated_at: new Date().toISOString()
+      generated_at: new Date().toISOString(),
+      warning: 'These are TEST/FAKE reviews for demonstration only. Do not post to production platforms.'
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Generate Test Reviews Error]:', error)
+    const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json({ 
-      error: error.message,
+      error: message,
       success: false 
     }, { status: 500 })
   }

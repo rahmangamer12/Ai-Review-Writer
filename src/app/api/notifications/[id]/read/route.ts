@@ -18,7 +18,7 @@ export async function POST(
 
     const { error } = await (supabase
       .from('notifications')
-      .update({ read: true, updated_at: new Date().toISOString() }) as any)
+      .update({ read: true, updated_at: new Date().toISOString() }) )
       .eq('id', id)
       .eq('user_id', userId)
 
@@ -27,7 +27,7 @@ export async function POST(
     }
 
     return NextResponse.json({ success: true })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
 }

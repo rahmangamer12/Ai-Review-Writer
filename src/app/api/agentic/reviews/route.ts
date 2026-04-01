@@ -15,9 +15,9 @@ export async function POST(req: NextRequest) {
     console.log('[Agentic] Starting REAL AI agentic review processing for user:', userId)
 
     // Build and execute the query in one statement to avoid TypeScript issues
-    const pendingReviewsResponse = await (supabase
+    const pendingReviewsResponse = await supabase
       .from('reviews')
-      .select('*') as any)
+      .select('*')
       .eq('user_id', userId)
       .eq('status', 'pending')
       .limit(10)
@@ -106,13 +106,13 @@ export async function POST(req: NextRequest) {
 
         // Step 4: Update review with sentiment and status
         console.log('[Agentic] Updating review status...')
-        const { error: updateError } = await (supabase
+        const { error: updateError } = await supabase
           .from('reviews')
           .update({
             sentiment_label: sentiment,
             status: 'approved', // Auto-approve after generating reply
             updated_at: new Date().toISOString()
-          }) as any)
+          })
           .eq('id', review.id)
 
         if (updateError) {
@@ -147,9 +147,10 @@ export async function POST(req: NextRequest) {
       ai_provider: 'LongCat AI',
       timestamp: new Date().toISOString()
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Agentic] Fatal error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
@@ -162,17 +163,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const pendingCountResponse = await (supabase
+    const pendingCountResponse = await supabase
       .from('reviews')
-      .select('*', { count: 'exact', head: true }) as any)
+      .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('status', 'pending')
 
     const { count: pendingCount, error: pendingError } = pendingCountResponse
 
-    const processedTodayResponse = await (supabase
+    const processedTodayResponse = await supabase
       .from('reviews')
-      .select('*', { count: 'exact', head: true }) as any)
+      .select('*', { count: 'exact', head: true })
       .eq('user_id', userId)
       .eq('status', 'approved')
       .gte('updated_at', new Date(Date.now() - 86400000).toISOString())
@@ -184,8 +185,9 @@ export async function GET(req: NextRequest) {
       processedToday: processedToday || 0,
       ai_provider: 'LongCat AI'
     })
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Agentic] Status error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    const message = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

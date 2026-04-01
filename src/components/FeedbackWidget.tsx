@@ -1,8 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useSyncExternalStore } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageSquare, X, Star, Send, CheckCircle, ThumbsUp } from 'lucide-react'
+
+function useHydrated() {
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
+  return hydrated
+}
 
 interface FeedbackData {
   rating: number
@@ -26,13 +34,14 @@ export default function FeedbackWidget() {
     email: '',
     pageUrl: ''
   })
+  const hydrated = useHydrated()
 
   // Exit Intent - Show when user tries to leave
   useEffect(() => {
+    if (!hydrated) return
+    
     const handleMouseLeave = (e: MouseEvent) => {
-      // Only trigger if mouse goes to top of page (address bar)
       if (e.clientY < 10 && !localStorage.getItem('feedback-exit-shown')) {
-        // Check if user has been on page for at least 10 seconds
         setTimeout(() => {
           setShowExitIntent(true)
           localStorage.setItem('feedback-exit-shown', 'true')
@@ -42,7 +51,17 @@ export default function FeedbackWidget() {
 
     document.addEventListener('mouseleave', handleMouseLeave)
     return () => document.removeEventListener('mouseleave', handleMouseLeave)
-  }, [])
+  }, [hydrated])
+
+  // Safe localStorage helper
+  const getStoredFeedbacks = (): FeedbackData[] => {
+    if (!hydrated) return []
+    try {
+      return JSON.parse(localStorage.getItem('autoreview-feedbacks') || '[]')
+    } catch {
+      return []
+    }
+  }
 
   const categories = [
     { id: 'bug', label: 'Bug Report', description: 'Something is broken', icon: '🐛' },
@@ -63,13 +82,13 @@ export default function FeedbackWidget() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!hydrated) return
+    
     setSubmitting(true)
 
-    // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1500))
 
-    // Store feedback in localStorage
-    const feedbacks = JSON.parse(localStorage.getItem('autoreview-feedbacks') || '[]')
+    const feedbacks = getStoredFeedbacks()
     const newFeedback = {
       ...formData,
       id: Date.now().toString(),
@@ -80,13 +99,11 @@ export default function FeedbackWidget() {
     feedbacks.push(newFeedback)
     localStorage.setItem('autoreview-feedbacks', JSON.stringify(feedbacks))
 
-    // Also send to your email (in production, use your backend)
     console.log('New Feedback:', newFeedback)
 
     setSubmitting(false)
     setStep('success')
 
-    // Reset after 3 seconds
     setTimeout(() => {
       setIsOpen(false)
       setShowExitIntent(false)
@@ -96,36 +113,8 @@ export default function FeedbackWidget() {
     }, 3000)
   }
 
-  // Show feedback location info
-  const getFeedbackLocation = () => {
-    return `
-📍 HOW TO ACCESS FEEDBACK DATA:
-
-Method 1 - Browser Console:
-1. Press F12 (Developer Tools)
-2. Go to Console tab
-3. Type: JSON.parse(localStorage.getItem('autoreview-feedbacks'))
-4. Press Enter
-
-Method 2 - LocalStorage:
-1. Press F12
-2. Go to Application/Storage tab
-3. Find LocalStorage → your domain
-4. Look for key: "autoreview-feedbacks"
-
-Method 3 - Export (Add this to your admin panel):
-const exportFeedbacks = () => {
-  const data = localStorage.getItem('autoreview-feedbacks');
-  const blob = new Blob([data], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'feedbacks.json';
-  a.click();
-}
-
-📝 Current Storage: ${JSON.parse(localStorage.getItem('autoreview-feedbacks') || '[]').length} feedbacks saved
-    `
+  const getFeedbackCount = () => {
+    return hydrated ? getStoredFeedbacks().length : 0
   }
 
   return (
@@ -139,11 +128,15 @@ const exportFeedbacks = () => {
         onClick={() => setIsOpen(true)}
         className="fixed bottom-4 left-4 sm:bottom-6 sm:left-6 z-40 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center group"
         title="Give Feedback"
+        suppressHydrationWarning
       >
-        <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" />
+        <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" suppressHydrationWarning />
         
         {/* Tooltip */}
-        <div className="absolute left-full ml-2 sm:ml-3 px-2 py-1 sm:px-3 sm:py-1.5 bg-white/10 backdrop-blur-sm rounded-lg text-white text-xs sm:text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block">
+        <div 
+          className="absolute left-full ml-2 sm:ml-3 px-2 py-1 sm:px-3 sm:py-1.5 bg-white/10 backdrop-blur-sm rounded-lg text-white text-xs sm:text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block"
+          suppressHydrationWarning
+        >
           Give Feedback
         </div>
       </motion.button>
@@ -407,11 +400,6 @@ const exportFeedbacks = () => {
           </>
         )}
       </AnimatePresence>
-
-      {/* Console log instructions for admin */}
-      <script dangerouslySetInnerHTML={{ __html: `
-        console.log("${getFeedbackLocation()}");
-      `}} />
     </>
   )
 }

@@ -45,7 +45,7 @@ export class ReviewManager {
   async initialize(userId: string): Promise<void> {
     try {
       // Load platform connections from database
-      const { data: connections } = await (supabase as any)
+      const { data: connections } = await (supabase )
         .from('platform_connections')
         .select('*')
         .eq('user_id', userId)
@@ -190,7 +190,7 @@ export class ReviewManager {
       }
 
       // Save to database
-      await (supabase as any)
+      await (supabase )
         .from('reviews')
         .upsert({
           external_id: review.externalId,
@@ -209,7 +209,7 @@ export class ReviewManager {
 
       // Save reply if posted
       if (shouldReply && !review.hasReply) {
-        await (supabase as any)
+        await (supabase )
           .from('replies')
           .insert({
             review_external_id: review.externalId,
