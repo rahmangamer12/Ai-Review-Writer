@@ -425,12 +425,12 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-[100dvh] w-full bg-[#030308] text-white overflow-hidden">
-      {/* Background Effects */}
+    <div className="flex h-[100dvh] w-screen bg-[#030308] text-white overflow-hidden">
+      {/* Background Effects - Full screen */}
       <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-violet-600/8 rounded-full blur-[150px]" />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-purple-600/8 rounded-full blur-[150px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-600/5 rounded-full blur-[200px]" />
+        <div className="absolute top-0 left-1/4 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-violet-600/8 rounded-full blur-[100px] sm:blur-[150px]" />
+        <div className="absolute bottom-0 right-1/4 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-purple-600/8 rounded-full blur-[100px] sm:blur-[150px]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] sm:w-[800px] h-[400px] sm:h-[800px] bg-indigo-600/5 rounded-full blur-[150px] sm:blur-[200px]" />
       </div>
 
       {/* Notifications */}
@@ -470,8 +470,8 @@ export default function ChatPage() {
         setSidebarOpen={setSidebarOpen}
       />
 
-      {/* Main Content */}
-      <main className="flex-1 flex flex-col h-full min-w-0 relative z-10">
+      {/* Main Content - Full width on mobile */}
+      <main className="flex-1 flex flex-col h-full min-w-0 w-full sm:w-auto relative z-10">
         {/* Header */}
         <header className="shrink-0 h-14 sm:h-16 border-b border-white/5 flex items-center justify-between px-3 sm:px-5 bg-[#08080f]/90 backdrop-blur-xl">
           <div className="flex items-center gap-2 sm:gap-4">
@@ -513,7 +513,7 @@ export default function ChatPage() {
             {/* Mobile Model Button */}
             <button
               onClick={() => setShowModelSelector(true)}
-              className="sm:hidden p-2 bg-white/5 hover:bg-white/10 rounded-xl"
+              className="sm:hidden p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl"
             >
               <Sparkles className="w-5 h-5 text-violet-400" />
             </button>
