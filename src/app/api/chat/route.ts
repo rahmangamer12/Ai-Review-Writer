@@ -12,13 +12,6 @@ const longcat = createOpenAI({
   baseURL: 'https://api.longcat.chat/openai/v1',
 });
 
-// Configure AgentRouter (DeepSeek) as a custom OpenAI provider
-// API key should be set in environment variable AGENTROUTER_API_KEY
-const agentrouter = createOpenAI({
-  apiKey: process.env.AGENTROUTER_API_KEY,
-  baseURL: 'https://agentrouter.org/v1',
-});
-
 // Allowed models for security
 const ALLOWED_MODELS = [
   'LongCat-Flash-Chat',
@@ -26,9 +19,6 @@ const ALLOWED_MODELS = [
   'LongCat-Flash-Thinking-2601',
   'LongCat-Flash-Lite',
   'LongCat-Flash-Omni-2603',
-  'deepseek-v3.2',
-  'deepseek-r1-0528',
-  'deepseek-v3.1'
 ];
 
 // Rate limiting map (simple in-memory implementation)
@@ -104,27 +94,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if DeepSeek is available
-    const isDeepSeek = selectedModel.toLowerCase().includes('deepseek') || selectedModel.toLowerCase().includes('r1');
-    if (isDeepSeek && !process.env.AGENTROUTER_API_KEY) {
-      return NextResponse.json(
-        { error: 'DeepSeek models are currently unavailable. Please select another model.' },
-        { status: 503 }
-      );
-    }
-
     // Check if LongCat is available
-    if (!isDeepSeek && !process.env.LONGCAT_AI_API_KEY) {
+    if (!process.env.LONGCAT_AI_API_KEY) {
       return NextResponse.json(
-        { error: 'LongCat models are currently unavailable. Please check your API key.' },
+        { error: 'AI models are currently unavailable. Please check your API key.' },
         { status: 503 }
       );
     }
 
     // 4. Provider Routing
-    const provider = isDeepSeek ? agentrouter : longcat;
+    const provider = longcat;
 
-    console.log(`[Chat API] Routing to ${isDeepSeek ? 'AgentRouter' : 'LongCat'} for model: ${selectedModel}`);
+    console.log(`[Chat API] Using LongCat for model: ${selectedModel}`);
 
     const currentPromptCount = (userDb as any).promptCount ?? 0;
     const currentCredits = (userDb as any).aiCredits ?? 0;

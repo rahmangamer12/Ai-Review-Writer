@@ -25,10 +25,12 @@ yarn-debug.log*
 yarn-error.log*
 
 # local env files - NEVER track these for production!
+.env
 .env.local
 .env*.local
 .env.production
 .env.backup
+.env.example
 
 # vercel
 .vercel
