@@ -66,7 +66,7 @@ export default function CreditManager() {
       <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="glass-card border-2 border-primary/20 rounded-2xl p-8 relative overflow-hidden"
+        className="glass-card border-2 border-primary/20 rounded-2xl p-4 sm:p-6 lg:p-8 relative overflow-hidden"
       >
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-blue-500 opacity-10"></div>
         
@@ -89,7 +89,7 @@ export default function CreditManager() {
 
           {/* Credit Progress Bar */}
           <div className="mb-6">
-            <div className="w-full bg-white/10 rounded-full h-4 overflow-hidden">
+              <div className="w-full bg-white/10 rounded-full h-3 sm:h-4 overflow-hidden">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${creditPercentage}%` }}
@@ -229,13 +229,13 @@ export default function CreditManager() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-black/50 flex items-center justify-center p-6 z-50"
+          className="fixed inset-0 bg-black/50 flex items-end sm:items-center justify-center p-0 sm:p-6 z-50"
           onClick={() => setShowUpgradeModal(false)}
         >
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="glass-card border-2 border-primary/20 rounded-2xl p-8 max-w-md w-full"
+            className="glass-card border-2 border-primary/20 rounded-t-3xl sm:rounded-2xl max-h-[90dvh] overflow-y-auto p-8 max-w-md w-full"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="text-center">

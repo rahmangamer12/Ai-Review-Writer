@@ -406,7 +406,7 @@ export default function ProfilePage() {
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card border-2 border-primary/20 rounded-2xl p-8 mb-6 relative overflow-hidden"
+          className="glass-card border-2 border-primary/20 rounded-2xl p-4 sm:p-6 lg:p-8 mb-6 relative overflow-hidden"
         >
           {/* Background Gradient */}
           <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/10 to-purple-500/10 opacity-50" />
@@ -415,7 +415,7 @@ export default function ProfilePage() {
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
               {/* Avatar Section */}
               <div className="relative group">
-                <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-primary/30 bg-linear-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full overflow-hidden border-4 border-primary/30 bg-linear-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                   {(editedProfile.avatar_url || profile.avatar_url) ? (
                     <Image
                       src={editedProfile.avatar_url || profile.avatar_url || ''}
@@ -425,7 +425,7 @@ export default function ProfilePage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-5xl font-bold text-white">
+                    <span className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">
                       {profile.full_name?.charAt(0) || 'U'}
                     </span>
                   )}
@@ -584,7 +584,7 @@ export default function ProfilePage() {
             <motion.button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as 'overview' | 'stats' | 'activity' | 'achievements' | 'settings' | string as unknown as 'overview' | 'stats' | 'activity' | 'achievements' | 'settings')}
-              className={`px-4 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 active:scale-[0.98] ${
+              className={`px-4 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 min-h-[44px] text-xs sm:text-sm active:scale-[0.98] ${
                 activeTab === tab.id
                   ? 'bg-primary text-primary-foreground shadow-lg'
                   : 'glass text-white/70 hover:text-white hover:bg-white/10'
@@ -609,7 +609,7 @@ export default function ProfilePage() {
             {activeTab === 'overview' && (
               <div className="space-y-6">
                 {/* Quick Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -1139,7 +1139,7 @@ export default function ProfilePage() {
                     Platform Performance
                   </h2>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
                     {(() => {
                       const platforms = [
                         { name: 'Google', icon: '🔍', key: 'google', color: 'from-blue-500 to-blue-600' },
@@ -1245,7 +1245,7 @@ export default function ProfilePage() {
 
                   <div className="space-y-6">
                     {/* Monthly Bar Chart */}
-                    <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-4">
                       {(() => {
                         const now = new Date()
                         const monthlyData: { month: string; reviews: number; avgRating: number; isCurrentMonth: boolean }[] = []
@@ -1728,7 +1728,7 @@ export default function ProfilePage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-6"
+              className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-6"
               onClick={() => setShowUpgradeModal(false)}
             >
               <motion.div

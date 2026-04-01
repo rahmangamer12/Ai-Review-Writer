@@ -215,7 +215,7 @@ export default function Navigation() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/10 px-4 py-3 flex items-center justify-between backdrop-blur-xl pt-[calc(0.75rem+env(safe-area-inset-top))]">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/10 px-4 py-2.5 flex items-center justify-between backdrop-blur-xl pt-[calc(0.5rem+env(safe-area-inset-top))]">
         <Link href="/dashboard" className="flex items-center gap-2 min-h-[44px] px-1">
           <motion.div
             whileTap={{ scale: 0.95 }}
@@ -343,6 +343,35 @@ export default function Navigation() {
           </motion.nav>
         )}
       </AnimatePresence>
+
+      {/* Bottom Tab Bar - Mobile Only (Native App Feel) */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0a0a0f]/95 backdrop-blur-xl border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
+        <div className="flex items-center justify-around py-1.5">
+          {[
+            { href: '/dashboard', icon: LayoutDashboard, label: 'Home' },
+            { href: '/reviews', icon: MessageSquare, label: 'Reviews' },
+            { href: '/chat', icon: Bot, label: 'Chat' },
+            { href: '/analytics', icon: BarChart3, label: 'Analytics' },
+            { href: '/profile', icon: User, label: 'Profile' },
+          ].map(item => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg min-w-0 transition-all active:scale-95 ${
+                isActive(item.href)
+                  ? 'text-purple-400'
+                  : 'text-white/40'
+              }`}
+            >
+              <item.icon className="w-5 h-5" />
+              <span className="text-[10px] truncate">{item.label}</span>
+              {isActive(item.href) && (
+                <div className="w-1 h-1 rounded-full bg-purple-400" />
+              )}
+            </Link>
+          ))}
+        </div>
+      </div>
 
       {/* Desktop Navigation - Fixed sidebar */}
       <nav
