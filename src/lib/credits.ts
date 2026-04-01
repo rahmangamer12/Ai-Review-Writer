@@ -16,17 +16,17 @@ export class CreditsManager {
   // Get user's current credits - ALWAYS validate against plan
   static getCredits(userId: string): number {
     if (typeof window === 'undefined') return 50
-    
+
     const profileKey = `autoreview-profile-${userId}`
     const profileData = localStorage.getItem(profileKey)
     const currentPlan = localStorage.getItem('autoreview-plan') || 'free'
     const correctCredits = this.getPlanCredits(currentPlan)
-    
+
     if (profileData) {
       const profile = JSON.parse(profileData)
       const savedPlan = profile.plan || 'free'
       const savedCredits = typeof profile.credits === 'number' ? profile.credits : correctCredits
-      
+
       // If plan changed, reset credits to plan default
       if (savedPlan !== currentPlan) {
         console.log(`[CreditsManager] Plan changed from ${savedPlan} to ${currentPlan}, updating credits: ${savedCredits} -> ${correctCredits}`)
@@ -35,7 +35,7 @@ export class CreditsManager {
         localStorage.setItem(profileKey, JSON.stringify(profile))
         return correctCredits
       }
-      
+
       // If credits don't match plan (and not due to usage), fix them
       // Allow credits to be less than plan max (due to usage), but not more
       if (savedCredits > correctCredits) {
@@ -44,10 +44,10 @@ export class CreditsManager {
         localStorage.setItem(profileKey, JSON.stringify(profile))
         return correctCredits
       }
-      
+
       return savedCredits
     }
-    
+
     // If no profile exists, create one with correct plan credits
     const newProfile = {
       credits: correctCredits,
@@ -61,27 +61,27 @@ export class CreditsManager {
   // Use credits
   static useCredits(userId: string, amount: number, action: string, details: string): boolean {
     if (typeof window === 'undefined') return false
-    
+
     const profileKey = `autoreview-profile-${userId}`
     const profileData = localStorage.getItem(profileKey)
-    
+
     if (!profileData) return false
-    
+
     const profile = JSON.parse(profileData)
     const currentCredits = profile.credits || 0
-    
+
     if (currentCredits < amount) {
       alert(`⚠️ Insufficient Credits!\n\nYou need ${amount} credits but only have ${currentCredits}.\n\nPlease upgrade your plan to continue.`)
       return false
     }
-    
+
     // Deduct credits
     profile.credits = currentCredits - amount
     localStorage.setItem(profileKey, JSON.stringify(profile))
-    
+
     // Log usage
     this.logUsage(userId, action, amount, details)
-    
+
     return true
   }
 
@@ -90,7 +90,7 @@ export class CreditsManager {
     const usageKey = `${this.USAGE_KEY_PREFIX}${userId}`
     const existingUsage = localStorage.getItem(usageKey)
     const usageArray: CreditUsage[] = existingUsage ? JSON.parse(existingUsage) : []
-    
+
     const newUsage: CreditUsage = {
       id: Date.now().toString(),
       userId,
@@ -99,26 +99,26 @@ export class CreditsManager {
       timestamp: new Date().toISOString(),
       details
     }
-    
+
     usageArray.unshift(newUsage) // Add to beginning
-    
+
     // Keep only last 100 entries
     if (usageArray.length > 100) {
       usageArray.splice(100)
     }
-    
+
     localStorage.setItem(usageKey, JSON.stringify(usageArray))
   }
 
   // Get usage history
   static getUsageHistory(userId: string, limit: number = 10): CreditUsage[] {
     if (typeof window === 'undefined') return []
-    
+
     const usageKey = `${this.USAGE_KEY_PREFIX}${userId}`
     const existingUsage = localStorage.getItem(usageKey)
-    
+
     if (!existingUsage) return []
-    
+
     const usageArray: CreditUsage[] = JSON.parse(existingUsage)
     return usageArray.slice(0, limit)
   }
@@ -126,16 +126,16 @@ export class CreditsManager {
   // Add credits (for upgrades)
   static addCredits(userId: string, amount: number, reason: string) {
     if (typeof window === 'undefined') return
-    
+
     const profileKey = `autoreview-profile-${userId}`
     const profileData = localStorage.getItem(profileKey)
-    
+
     if (!profileData) return
-    
+
     const profile = JSON.parse(profileData)
     profile.credits = (profile.credits || 0) + amount
     localStorage.setItem(profileKey, JSON.stringify(profile))
-    
+
     // Log the addition
     this.logUsage(userId, 'credit_added', -amount, reason)
   }
@@ -143,17 +143,17 @@ export class CreditsManager {
   // Set credits (for plan changes)
   static setCredits(userId: string, amount: number, reason: string) {
     if (typeof window === 'undefined') return
-    
+
     const profileKey = `autoreview-profile-${userId}`
     const profileData = localStorage.getItem(profileKey)
-    
+
     if (!profileData) return
-    
+
     const profile = JSON.parse(profileData)
     const oldCredits = profile.credits || 0
     profile.credits = amount
     localStorage.setItem(profileKey, JSON.stringify(profile))
-    
+
     // Log the change
     this.logUsage(userId, 'credits_set', oldCredits - amount, reason)
   }
@@ -172,31 +172,31 @@ export class CreditsManager {
   // Get user's current plan
   static getUserPlan(userId: string): string {
     if (typeof window === 'undefined') return 'free'
-    
+
     const profileKey = `autoreview-profile-${userId}`
     const profileData = localStorage.getItem(profileKey)
-    
+
     if (profileData) {
       const profile = JSON.parse(profileData)
       return profile.plan || 'free'
     }
-    
+
     return 'free'
   }
 
   // Check if user has access to a feature based on plan
   static hasFeatureAccess(userId: string, feature: string): boolean {
     const plan = this.getUserPlan(userId)
-    
+
     const featureAccess: Record<string, string[]> = {
       'free': ['basic_replies', 'sentiment', 'dashboard', '2_platforms'],
       'starter': ['basic_replies', 'sentiment', 'dashboard', '5_platforms', 'bulk_replies', 'templates', 'analytics'],
       'growth': ['basic_replies', 'sentiment', 'dashboard', 'unlimited_platforms', 'bulk_replies', 'templates', 'analytics', 'slack', 'custom_tone'],
       'business': ['all_features']
     }
-    
+
     if (plan === 'business') return true
-    
+
     const planFeatures = featureAccess[plan] || []
     return planFeatures.includes(feature) || planFeatures.includes('all_features')
   }
@@ -211,7 +211,7 @@ export class CreditsManager {
     // For upgrades: keep existing credits + add new plan allocation
     // For downgrades: set to new plan allocation
     const isUpgrade = this.isUpgrade(oldPlan, newPlan)
-    
+
     if (isUpgrade) {
       // Keep existing credits and add the difference
       const creditDifference = newPlanCredits - this.getPlanCredits(oldPlan)
@@ -245,7 +245,7 @@ export class CreditsManager {
       'sentiment_analysis': 1,   // 1 credit per sentiment analysis
       'auto_reply': 1,           // 1 credit per auto-reply
     }
-    
+
     return costs[action] || 1
   }
 }

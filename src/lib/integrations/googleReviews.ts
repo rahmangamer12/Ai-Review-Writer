@@ -92,6 +92,14 @@ export class GoogleReviewsAPI {
 
   private async refreshAccessToken(): Promise<void> {
     try {
+      // Validate refresh token exists
+      if (!this.config.refreshToken || this.config.refreshToken.trim() === '') {
+        throw new Error(
+          'Google refresh token is missing or empty. ' +
+          'User needs to re-authenticate with Google to restore access.'
+        )
+      }
+
       const response = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: {
@@ -105,10 +113,38 @@ export class GoogleReviewsAPI {
         })
       })
 
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('[Google Token Refresh Error]', {
+          status: response.status,
+          error: errorData.error,
+          error_description: errorData.error_description
+        })
+        
+        // If refresh token is invalid, it means the user needs to re-authenticate
+        if (response.status === 400 && errorData.error === 'invalid_grant') {
+          throw new Error(
+            'Google refresh token has expired or been revoked. ' +
+            'User needs to re-authenticate with Google.'
+          )
+        }
+        
+        throw new Error(`Google token refresh failed: ${response.status} ${errorData.error || 'Unknown error'}`)
+      }
+
       const data = await response.json()
+      
+      if (!data.access_token) {
+        throw new Error('Google API did not return access token in refresh response')
+      }
+      
+      // Update the access token
       this.config.accessToken = data.access_token
+      
+      // Log successful refresh (without exposing the token)
+      console.log('[Google Token Refresh] Successfully refreshed access token')
     } catch (error) {
-      console.error('Error refreshing token:', error)
+      console.error('[Google Token Refresh Error]:', error)
       throw error
     }
   }

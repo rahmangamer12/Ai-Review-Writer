@@ -38,13 +38,7 @@ export default function PermissionManager() {
   const [showNotificationModal, setShowNotificationModal] = useState(false)
   const [isRequesting, setIsRequesting] = useState(false)
 
-  // Check current permission status on mount
-  useEffect(() => {
-    checkPermissions()
-    loadSavedLocation()
-  }, [])
-
-  const checkPermissions = async () => {
+  const checkPermissions = useCallback(async () => {
     // Check location permission
     if (typeof navigator !== 'undefined' && 'geolocation' in navigator) {
       try {
@@ -87,9 +81,9 @@ export default function PermissionManager() {
     } else {
       setPermissions(prev => ({ ...prev, notification: 'denied' }))
     }
-  }
+  }, [])
 
-  const loadSavedLocation = () => {
+  const loadSavedLocation = useCallback(() => {
     const saved = localStorage.getItem('user-location')
     if (saved) {
       try {
@@ -98,7 +92,7 @@ export default function PermissionManager() {
         console.error('Error loading saved location:', e)
       }
     }
-  }
+  }, [])
 
   const requestLocation = async (): Promise<boolean> => {
     setIsRequesting(true)
@@ -146,8 +140,8 @@ export default function PermissionManager() {
           setIsRequesting(false)
           resolve(true)
         },
-        (error) => {
-          console.error('Location error:', error)
+        (error: GeolocationPositionError) => {
+          // Gracefully handled: user denied or extension blocked it. No need to spam console causing dev overlay.
           setPermissions(prev => ({ ...prev, location: 'denied' }))
           setIsRequesting(false)
           resolve(false)
@@ -213,7 +207,7 @@ export default function PermissionManager() {
         body,
         icon,
         badge: '/badge.png',
-        tag: 'autoreview-notification',
+        tag: `autoreview-notification-${Date.now()}`,
         requireInteraction: false,
         silent: false
       })

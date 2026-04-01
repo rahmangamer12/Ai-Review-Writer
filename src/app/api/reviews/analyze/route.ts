@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 
     const { data: review, error } = await (supabase
       .from('reviews')
-      .select('*') as any)
+      .select('*') )
       .eq('id', reviewId)
       .eq('user_id', userId)
       .single()
@@ -32,13 +32,13 @@ export async function GET(req: NextRequest) {
     // Get reply if exists
     const { data: reply } = await (supabase
       .from('replies')
-      .select('*') as any)
+      .select('*') )
       .eq('review_id', reviewId)
       .single()
 
     return NextResponse.json({ ...review, reply })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
 }
 
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
         platform,
         sentiment_label: sentiment_label || getSentimentFromRating(rating),
         status: 'pending',
-      }) as any)
+      }) )
       .select()
       .single()
 
@@ -85,8 +85,7 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(review)
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) { const message = error instanceof Error ? error.message : "Unknown error"; return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
@@ -109,7 +108,7 @@ export async function PATCH(req: NextRequest) {
     // Verify review belongs to user
     const { data: existing } = await (supabase
       .from('reviews')
-      .select('id') as any)
+      .select('id') )
       .eq('id', reviewId)
       .eq('user_id', userId)
       .single()
@@ -120,7 +119,7 @@ export async function PATCH(req: NextRequest) {
 
     const { data: review, error } = await (supabase
       .from('reviews')
-      .update({ status, updated_at: new Date().toISOString() }) as any)
+      .update({ status, updated_at: new Date().toISOString() }) )
       .eq('id', reviewId)
       .select()
       .single()
@@ -130,8 +129,7 @@ export async function PATCH(req: NextRequest) {
     }
 
     return NextResponse.json(review)
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) { const message = error instanceof Error ? error.message : "Unknown error"; return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 
@@ -154,7 +152,7 @@ export async function DELETE(req: NextRequest) {
     // Verify review belongs to user
     const { data: existing } = await (supabase
       .from('reviews')
-      .select('id') as any)
+      .select('id') )
       .eq('id', reviewId)
       .eq('user_id', userId)
       .single()
@@ -164,12 +162,12 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Delete replies first (cascade should handle this but being explicit)
-    await (supabase.from('replies').delete() as any).eq('review_id', reviewId)
+    await (supabase.from('replies').delete() ).eq('review_id', reviewId)
 
     // Delete review
     const { error } = await (supabase
       .from('reviews')
-      .delete() as any)
+      .delete() )
       .eq('id', reviewId)
 
     if (error) {
@@ -177,8 +175,7 @@ export async function DELETE(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) { const message = error instanceof Error ? error.message : "Unknown error"; return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 

@@ -2,45 +2,11 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, X, Star, Loader2, RefreshCw, Check } from 'lucide-react'
+import { Sparkles, X, Star, Loader2, RefreshCw, Check, AlertTriangle } from 'lucide-react'
 
 interface AIReviewGeneratorProps {
   onGenerate?: (review: { content: string; rating: number; author: string }) => void
 }
-
-// Mock review templates for when API fails
-const MOCK_REVIEWS = [
-  {
-    content: "Absolutely fantastic experience! The team went above and beyond to help me. Fast response time and excellent quality. Would highly recommend to anyone looking for top-notch service!",
-    rating: 5,
-    author: "Sarah Johnson",
-    sentiment: "positive"
-  },
-  {
-    content: "Good service overall. The product quality is decent and delivery was on time. There's still room for improvement in customer communication, but I'm satisfied with my purchase.",
-    rating: 4,
-    author: "Michael Chen",
-    sentiment: "positive"
-  },
-  {
-    content: "Average experience. Nothing exceptional but nothing terrible either. The price was fair for what I received. Might consider trying again in the future.",
-    rating: 3,
-    author: "Emily Davis",
-    sentiment: "neutral"
-  },
-  {
-    content: "Disappointed with the service. Waited too long for a response and the quality wasn't what I expected. Hopefully they can improve their processes.",
-    rating: 2,
-    author: "James Wilson",
-    sentiment: "negative"
-  },
-  {
-    content: "Terrible experience from start to finish. Rude staff, poor quality, and overpriced. Would not recommend to anyone. Save your money and go elsewhere!",
-    rating: 1,
-    author: "Lisa Thompson",
-    sentiment: "negative"
-  }
-]
 
 const SAMPLE_PROMPTS = [
   "Positive review about excellent customer service",
@@ -54,14 +20,14 @@ export default function AIReviewGenerator({ onGenerate }: AIReviewGeneratorProps
   const [loading, setLoading] = useState(false)
   const [prompt, setPrompt] = useState('')
   const [generatedReview, setGeneratedReview] = useState<any>(null)
-  const [useMockMode, setUseMockMode] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const generateReview = async () => {
     if (!prompt.trim()) return
 
     setLoading(true)
+    setError(null)
     try {
-      // Try to use LongCat AI API
       const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -84,39 +50,26 @@ export default function AIReviewGenerator({ onGenerate }: AIReviewGeneratorProps
       })
 
       if (!response.ok) {
-        throw new Error('API failed')
+        throw new Error(`AI service unavailable (${response.status})`)
       }
 
       const data = await response.json()
       
-      // Try to parse JSON from response
       let review
       try {
-        // Extract JSON from response text if needed
         const jsonMatch = data.response?.match(/\{[\s\S]*\}/)
         review = jsonMatch ? JSON.parse(jsonMatch[0]) : JSON.parse(data.response)
       } catch (parseError) {
-        console.log('JSON parse failed, using mock mode')
-        throw new Error('Parse failed')
+        throw new Error('Invalid response format from AI service')
       }
 
       if (review && review.content && review.rating) {
         setGeneratedReview(review)
       } else {
-        throw new Error('Invalid review format')
+        throw new Error('Invalid review format from AI service')
       }
-    } catch (error) {
-      console.log('Using mock reviews due to API error:', error)
-      // Use mock review based on sentiment in prompt
-      const isNegative = prompt.toLowerCase().includes('negative') || prompt.toLowerCase().includes('bad') || prompt.toLowerCase().includes('terrible')
-      const isPositive = prompt.toLowerCase().includes('positive') || prompt.toLowerCase().includes('good') || prompt.toLowerCase().includes('excellent') || prompt.toLowerCase().includes('5 star')
-      
-      let mockIndex = 2 // neutral default
-      if (isNegative) mockIndex = Math.floor(Math.random() * 2) + 3 // 3 or 4 (2-star or 1-star)
-      else if (isPositive) mockIndex = Math.floor(Math.random() * 2) // 0 or 1 (5-star or 4-star)
-      
-      setGeneratedReview(MOCK_REVIEWS[mockIndex])
-      setUseMockMode(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate review')
     } finally {
       setLoading(false)
     }
@@ -132,7 +85,7 @@ export default function AIReviewGenerator({ onGenerate }: AIReviewGeneratorProps
       setIsOpen(false)
       setGeneratedReview(null)
       setPrompt('')
-      setUseMockMode(false)
+      setError(null)
     }
   }
 
@@ -230,9 +183,10 @@ export default function AIReviewGenerator({ onGenerate }: AIReviewGeneratorProps
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-white/5 border border-white/10 rounded-xl p-5 space-y-4"
                   >
-                    {useMockMode && (
-                      <div className="text-xs text-amber-400/80 bg-amber-400/10 px-3 py-1.5 rounded-lg">
-                        ⚠️ Using demo mode (AI API unavailable)
+                    {error && (
+                      <div className="text-xs text-red-400/80 bg-red-400/10 px-3 py-1.5 rounded-lg flex items-center gap-2">
+                        <AlertTriangle className="w-3 h-3" />
+                        {error}
                       </div>
                     )}
                     
@@ -304,7 +258,7 @@ export default function AIReviewGenerator({ onGenerate }: AIReviewGeneratorProps
 
                 {generatedReview && (
                   <button
-                    onClick={() => { setGeneratedReview(null); setUseMockMode(false); }}
+                    onClick={() => { setGeneratedReview(null); setError(null); }}
                     className="w-full px-4 py-2 text-white/50 hover:text-white text-sm flex items-center justify-center gap-1 transition-colors"
                   >
                     <RefreshCw className="w-3 h-3" />

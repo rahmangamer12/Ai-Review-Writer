@@ -1,0 +1,29 @@
+
+> autoreview-ai@0.1.0 build
+> next build
+
+▲ Next.js 16.1.4 (Turbopack)
+- Environments: .env.local, .env
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 9.2s
+  Running TypeScript ...
+  Collecting page data using 11 workers ...
+[LongCat] API Key loaded: Yes (length: 29)
+Error: Invalid supabaseUrl: Must be a valid HTTP or HTTPS URL.
+    at <unknown> (D:\Abdul rehman file\The ai review\autoreview-ai\.next\server\chunks\src_lib_supabase_ts_791d4253._.js:37:43018)
+    at new rl (D:\Abdul rehman file\The ai review\autoreview-ai\.next\server\chunks\src_lib_supabase_ts_791d4253._.js:37:43200)
+    at module evaluation (D:\Abdul rehman file\The ai review\autoreview-ai\.next\server\chunks\src_lib_supabase_ts_791d4253._.js:37:47545)
+    at instantiateModule (D:\Abdul rehman file\The ai review\autoreview-ai\.next\server\chunks\[turbopack]_runtime.js:740:9)
+    at getOrInstantiateModuleFromParent (D:\Abdul rehman file\The ai review\autoreview-ai\.next\server\chunks\[turbopack]_runtime.js:763:12)
+    at Context.esmImport [as i] (D:\Abdul rehman file\The ai review\autoreview-ai\.next\server\chunks\[turbopack]_runtime.js:228:20)
+    at module evaluation (D:\Abdul rehman file\The ai review\autoreview-ai\.next\server\chunks\[root-of-the-server]__09ffd105._.js:83:852)
+    at instantiateModule (D:\Abdul rehman file\The ai review\autoreview-ai\.next\server\chunks\[turbopack]_runtime.js:740:9)
+    at getOrInstantiateModuleFromParent (D:\Abdul rehman file\The ai review\autoreview-ai\.next\server\chunks\[turbopack]_runtime.js:763:12)
+    at Context.esmImport [as i] (D:\Abdul rehman file\The ai review\autoreview-ai\.next\server\chunks\[turbopack]_runtime.js:228:20)
+
+> Build error occurred
+Error: Failed to collect page data for /api/auto-reply
+    at ignore-listed frames {
+  type: 'Error'
+}

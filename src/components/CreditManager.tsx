@@ -13,22 +13,39 @@ export default function CreditManager() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
 
   useEffect(() => {
-    if (isLoaded && user) {
-      // Get real credits from user profile
-      const currentCredits = CreditsManager.getCredits(user.id)
-      setCredits(currentCredits)
-      
-      // Get usage history
-      const history = CreditsManager.getUsageHistory(user.id, 10)
-      setUsageHistory(history)
-      
-      // Get plan from profile
-      const profileData = localStorage.getItem(`autoreview-profile-${user.id}`)
-      if (profileData) {
-        const profile = JSON.parse(profileData)
-        setPlan(profile.plan || 'free')
+    async function fetchUserData() {
+      if (isLoaded && user) {
+        try {
+          const response = await fetch('/api/user/me')
+          const text = await response.text()
+          
+          const isJson = text.trim().startsWith('{') || text.trim().startsWith('[')
+          if (!isJson) {
+            setPlan('free')
+            setCredits(0)
+            setUsageHistory([])
+            return
+          }
+          
+          const data = JSON.parse(text)
+          
+          if (data.planType) {
+            setPlan(data.planType || 'free')
+            setCredits(data.aiCredits || 20)
+            setUsageHistory([])
+          } else {
+            setPlan('free')
+            setCredits(0)
+            setUsageHistory([])
+          }
+        } catch (err) {
+          console.error("Failed to fetch user stats", err)
+          setPlan('free')
+          setCredits(0)
+        }
       }
     }
+    fetchUserData()
   }, [isLoaded, user])
 
   const getPlanCredits = () => {

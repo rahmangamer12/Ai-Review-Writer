@@ -53,9 +53,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
     }
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Auto Reply API Error]:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -96,9 +97,10 @@ export async function GET(request: NextRequest) {
       scheduled: await getScheduledReplies(userId),
     });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Auto Reply API Error]:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -129,8 +131,9 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true, rule: updated });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('[Auto Reply API Error]:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -1,0 +1,93 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String   @id @default(uuid()) // Maps to Clerk User ID
+  email            String   @unique
+  name             String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Subscription Details
+  stripeCustomerId String?  @unique
+  planType         String   @default("free") // free, starter, growth, business
+  aiCredits        Int      @default(20)
+  promptCount      Int      @default(0) // Tracks 0-9 prompts before deducting 1 credit
+  maxPlatforms     Int      @default(1)
+
+  // Relations
+  platforms        ConnectedPlatform[]
+  reviews          Review[]
+  chatSessions     ChatSession[]
+}
+
+model ConnectedPlatform {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  platformType String   // google, yelp, facebook
+  status       String   @default("connected") // connected, error, disconnected
+  credentials  Json     // Encrypted API keys and Place IDs
+  
+  lastSyncedAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Relations
+  reviews      Review[]
+
+  @@unique([userId, platformType])
+}
+
+model Review {
+  id             String   @id @default(uuid()) // Unique ID from Platform
+  platformId     String
+  platform       ConnectedPlatform @relation(fields: [platformId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  authorName     String
+  content        String
+  rating         Int
+  sentimentLabel String?  // positive, negative, neutral
+  status         String   @default("pending") // pending, approved, AI_replied
+  
+  aiReplyText    String?
+  sourceDate     DateTime // The time the review was posted on Google/Yelp
+  
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model ChatSession {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title     String   @default("New Conversation")
+  
+  messages  ChatMessage[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  sessionId String
+  session   ChatSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  
+  role      String   // user, assistant, system
+  content   String
+  
+  createdAt DateTime @default(now())
+}

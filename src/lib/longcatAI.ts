@@ -13,11 +13,22 @@ const getApiKey = () => {
   return '';
 };
 
-export type LongCatModel = "LongCat-Flash-Chat" | "LongCat-Flash-Thinking";
+export type LongCatModel = 
+  | "LongCat-Flash-Chat" 
+  | "LongCat-Flash-Thinking"
+  | "LongCat-Flash-Thinking-2601"
+  | "LongCat-Flash-Lite"
+  | "LongCat-Flash-Omni-2603";
 
-interface ChatMessage {
+export interface ChatMessageContentPart {
+  type: "text" | "image_url";
+  text?: string;
+  image_url?: { url: string, detail?: "auto" | "low" | "high" };
+}
+
+export interface ChatMessage {
   role: "system" | "user" | "assistant";
-  content: string;
+  content: string | ChatMessageContentPart[];
 }
 
 interface ChatCompletionRequest {
@@ -107,6 +118,24 @@ export class LongCatAI {
     this.apiKey = apiKey || getApiKey();
     this.apiUrl = apiUrl;
     this.circuitBreaker = new CircuitBreaker();
+    console.log('[LongCat] API Key loaded:', this.apiKey ? 'Yes (length: ' + this.apiKey.length + ')' : 'NO - Empty!');
+  }
+
+  // Always read fresh from env (in case of Next.js module caching)
+  private getFreshApiKey(): string {
+    return process.env.LONGCAT_AI_API_KEY || this.apiKey || '';
+  }
+
+  // Reset circuit breaker - useful when API key is updated
+  public resetCircuitBreaker(): void {
+    this.circuitBreaker = new CircuitBreaker();
+    console.log('[LongCat] Circuit breaker reset');
+  }
+
+  // Check if API key is configured
+  public hasApiKey(): boolean {
+    const key = this.getFreshApiKey();
+    return !!key && key.length > 0;
   }
 
   /**
@@ -122,10 +151,14 @@ export class LongCatAI {
       timeout?: number;
     } = {}
   ): Promise<string> {
+    // Check if API key is configured
+    if (!this.hasApiKey()) {
+      throw new Error('AI service is not configured. Please add your LONGCAT_AI_API_KEY to the .env file.');
+    }
+
     // Check if circuit breaker is open
     if (this.circuitBreaker.isOpen()) {
-      console.warn('[LongCat] Circuit breaker is open, using fallback response');
-      throw new Error('LongCat service is temporarily unavailable (circuit breaker open)');
+      throw new Error('AI service is temporarily unavailable (Circuit Breaker Open). Please try again in a few minutes.');
     }
 
     const maxRetries = options.retries ?? 3;
@@ -135,27 +168,39 @@ export class LongCatAI {
     const makeCall = async (): Promise<string> => {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+      const currentApiKey = this.getFreshApiKey();
 
       try {
-        if (!this.apiKey) {
-          console.warn('[LongCat] No API key found, using fallback responses');
-          throw new Error('No API key configured');
+        if (!currentApiKey) {
+          console.warn('[LongCat] No API key found, cannot make API call');
+          throw new Error('No API key configured. Please add LONGCAT_AI_API_KEY to your .env file.');
         }
 
         console.log('[LongCat] Sending request with model:', model);
 
+        const requestBody = {
+          model,
+          messages,
+          max_tokens: options.max_tokens || 1000,
+          temperature: options.temperature || 0.7,
+        };
+        
+        if (model.includes('Omni')) {
+          console.log('[LongCat] Request Detail (Omni):', {
+            model,
+            msgCount: messages.length,
+            roles: messages.map(m => m.role),
+            hasImages: messages.some(m => Array.isArray(m.content) && m.content.some(cp => cp.type === 'image_url'))
+          });
+        }
+
         const response = await fetch(this.apiUrl, {
           method: "POST",
           headers: {
-            "Authorization": `Bearer ${this.apiKey}`,
+            "Authorization": `Bearer ${currentApiKey}`,
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            model,
-            messages,
-            max_tokens: options.max_tokens || 1000,
-            temperature: options.temperature || 0.7,
-          } as ChatCompletionRequest),
+          body: JSON.stringify(requestBody as ChatCompletionRequest),
           signal: controller.signal,
         });
 
@@ -239,26 +284,12 @@ Return ONLY the JSON object, no additional text.`;
         const cleaned = response.replace(/```json\n?|\n?```/g, '').trim();
         return JSON.parse(cleaned);
       } catch (error) {
-        console.error("[LongCat] Failed to parse sentiment analysis:", error);
-        // Fallback based on rating keywords
-        const lower = reviewText.toLowerCase();
-        if (lower.includes('great') || lower.includes('amazing') || lower.includes('excellent') || lower.includes('love')) {
-          return { sentiment: "positive", score: 0.8, confidence: 0.9, emotion: "happy", topics: [] };
-        } else if (lower.includes('bad') || lower.includes('terrible') || lower.includes('worst') || lower.includes('hate')) {
-          return { sentiment: "negative", score: -0.8, confidence: 0.9, emotion: "angry", topics: [] };
-        }
-        return { sentiment: "neutral", score: 0, confidence: 0.5, emotion: "neutral", topics: [] };
+        console.error("[LongCat] Failed to parse sentiment analysis JSON:", error);
+        throw new Error('Failed to parse AI sentiment analysis response.');
       }
     } catch (error) {
       console.error("[LongCat] Sentiment analysis error:", error);
-      // Return a default sentiment when the API is unavailable
-      return {
-        sentiment: "neutral",
-        score: 0,
-        confidence: 0.5,
-        emotion: "neutral",
-        topics: [],
-      };
+      throw error;
     }
   }
 
@@ -324,36 +355,16 @@ Return ONLY the JSON object.`;
         const cleaned = response.replace(/```json\n?|\n?```/g, '').trim();
         const parsed = JSON.parse(cleaned);
         return {
-          response: parsed.response || parsed.reply || parsed.message || parsed.text || "Thank you for your feedback!",
+          response: parsed.response || parsed.reply || parsed.message || parsed.text,
           appropriateness_score: parsed.appropriateness_score || 0.8,
         };
       } catch (error) {
-        console.error("[LongCat] Failed to parse review response:", error);
-        // Return the raw response if it's not valid JSON
-        return {
-          response: response.replace(/[{}"]/g, '').replace(/response:|reply:/, '').trim() || "Thank you for your feedback!",
-          appropriateness_score: 0.7,
-        };
+        console.error("[LongCat] Failed to parse review response JSON:", error);
+        throw new Error('Failed to generate a valid AI response for the review.');
       }
     } catch (error) {
       console.error("[LongCat] Generate response error:", error);
-      // Fallback responses
-      if (rating >= 4) {
-        return {
-          response: `Thank you ${authorName} for your wonderful review! We're thrilled you had such a great experience with us. Your feedback means the world to our team!`,
-          appropriateness_score: 0.9,
-        };
-      } else if (rating === 3) {
-        return {
-          response: `Thank you ${authorName} for your feedback. We appreciate you taking the time to share your experience and are always looking for ways to improve.`,
-          appropriateness_score: 0.8,
-        };
-      } else {
-        return {
-          response: `Hi ${authorName}, we sincerely apologize that your experience didn't meet your expectations. We'd love the opportunity to make this right. Please reach out to us directly so we can address your concerns.`,
-          appropriateness_score: 0.85,
-        };
-      }
+      throw error;
     }
   }
 
@@ -408,50 +419,12 @@ Return ONLY a JSON object with:
         const cleaned = response.replace(/```json\n?|\n?```/g, '').trim();
         return JSON.parse(cleaned);
       } catch (error) {
-        // Fallback templates
-        const names = ['John Smith', 'Sarah Johnson', 'Mike Davis', 'Emily Brown'];
-        const templates: Record<number, string[]> = {
-          5: [
-            'Absolutely amazing experience! The service was top-notch and exceeded all my expectations.',
-            'Highly recommend! Great quality and friendly staff. Will definitely come back.',
-            'Outstanding! Everything was perfect from start to finish.',
-          ],
-          4: [
-            'Great experience overall. Minor improvements could be made but very satisfied.',
-            'Really enjoyed my visit. Good service and quality.',
-          ],
-          3: [
-            'It was okay. Nothing special but met my basic expectations.',
-            'Average experience. Some good points but room for improvement.',
-          ],
-          2: [
-            'Below average experience. Had some issues during my visit.',
-            'Not what I expected. Disappointed with several aspects.',
-          ],
-          1: [
-            'Very disappointed with the experience. Would not recommend.',
-            'Terrible service and quality. Expected much better.',
-          ],
-        };
-
-        const content = templates[rating]?.[0] || 'Average experience.';
-        const sentiment = rating >= 4 ? 'positive' : rating === 3 ? 'neutral' : 'negative';
-
-        return {
-          content,
-          sentiment,
-          author_name: names[Math.floor(Math.random() * names.length)],
-          ai_reply: 'Thank you for your feedback! We appreciate your review.',
-        };
+        console.error("[LongCat] Failed to parse test review JSON:", error);
+        throw new Error('Failed to generate a valid test review.');
       }
     } catch (error) {
       console.error("[LongCat] Generate test review error:", error);
-      return {
-        content: 'Great experience! Would recommend to others.',
-        sentiment: 'positive',
-        author_name: 'John Smith',
-        ai_reply: 'Thank you for your wonderful review!',
-      };
+      throw error;
     }
   }
 
@@ -505,24 +478,12 @@ Return ONLY the JSON object.`;
         const cleaned = response.replace(/```json\n?|\n?```/g, '').trim();
         return JSON.parse(cleaned);
       } catch (error) {
-        console.error("[LongCat] Failed to parse deep analysis:", error);
-        return {
-          key_insights: ["Review requires manual analysis"],
-          action_items: ["Review manually"],
-          customer_intent: "Unknown",
-          priority: "medium",
-          recommended_response_strategy: "Standard response",
-        };
+        console.error("[LongCat] Failed to parse deep analysis JSON:", error);
+        throw new Error('Failed to perform deep analysis on the review.');
       }
     } catch (error) {
       console.error("[LongCat] Deep analysis error:", error);
-      return {
-        key_insights: ["Review requires manual analysis"],
-        action_items: ["Review manually"],
-        customer_intent: "Unknown",
-        priority: "medium",
-        recommended_response_strategy: "Standard response",
-      };
+      throw error;
     }
   }
 
@@ -578,6 +539,11 @@ Return ONLY the JSON object.`;
     improvement_suggestions: string[];
     summary: string;
   }> {
+    // Check if API key is configured
+    if (!this.hasApiKey()) {
+      throw new Error('AI Insights are unavailable because the API key is not configured.');
+    }
+
     try {
       const reviewsSummary = reviews.slice(0, 20).map((r, i) =>
         `${i + 1}. Rating: ${r.rating}/5 - ${r.text}`
@@ -615,24 +581,12 @@ Return ONLY a JSON object with these fields.`;
         const cleaned = response.replace(/```json\n?|\n?```/g, '').trim();
         return JSON.parse(cleaned);
       } catch (error) {
-        console.error("[LongCat] Failed to parse insights:", error);
-        return {
-          overall_trends: [],
-          common_praises: [],
-          common_complaints: [],
-          improvement_suggestions: [],
-          summary: "Unable to generate insights at this time.",
-        };
+        console.error("[LongCat] Failed to parse insights JSON:", error);
+        throw new Error('Failed to generate business insights from reviews.');
       }
     } catch (error) {
       console.error("[LongCat] Insights error:", error);
-      return {
-        overall_trends: [],
-        common_praises: [],
-        common_complaints: [],
-        improvement_suggestions: [],
-        summary: "Unable to generate insights at this time.",
-      };
+      throw error;
     }
   }
 }

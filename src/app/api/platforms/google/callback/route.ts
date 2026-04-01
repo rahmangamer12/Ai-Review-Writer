@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
+import { supabase } from '@/lib/supabase';
 
 export async function GET(request: NextRequest) {
   try {
@@ -51,17 +52,36 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Store tokens securely in database (never in localStorage or frontend)
+    const { error: dbError } = await supabase
+      .from('platform_credentials')
+      .upsert({
+        user_id: userId,
+        platform: 'google',
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token, // This is critical!
+        expires_at: Date.now() + (tokens.expires_in * 1000),
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id,platform'
+      });
+
+    if (dbError) {
+      console.error('Failed to store tokens:', dbError);
+    }
+
+    // Send success to frontend (without tokens in URL)
     return new NextResponse(
       `<script>
         window.opener.postMessage({
           type: 'GOOGLE_AUTH_SUCCESS',
-          tokens: ${JSON.stringify(tokens)}
+          message: 'Google connected successfully'
         }, '*');
         window.close();
       </script>`,
       { headers: { 'Content-Type': 'text/html' } }
     );
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Google callback error:', error);
     return new NextResponse(
       `<script>window.opener.postMessage({type: 'GOOGLE_AUTH_ERROR', error: 'Server error'}, '*'); window.close();</script>`,

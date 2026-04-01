@@ -3,6 +3,8 @@
  * Choose the perfect tone for your brand
  */
 
+import { longcatAI } from './longcatAI'
+
 export interface Persona {
   id: string
   name: string
@@ -85,8 +87,7 @@ export const desiPersonas: Persona[] = [
 export async function generatePersonaReply(
   reviewText: string,
   rating: number,
-  personaId: string,
-  longcatAI: any
+  personaId: string
 ): Promise<string> {
   const persona = desiPersonas.find(p => p.id === personaId)
   

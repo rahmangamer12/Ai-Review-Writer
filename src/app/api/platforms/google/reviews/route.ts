@@ -44,9 +44,9 @@ export async function GET(request: NextRequest) {
         hasReply: !!r.reviewReply,
       })),
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error fetching Google reviews:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
   }
 }
 
@@ -101,8 +101,9 @@ export async function POST(request: NextRequest) {
       posted,
       replyText: finalReplyText,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error posting reply:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

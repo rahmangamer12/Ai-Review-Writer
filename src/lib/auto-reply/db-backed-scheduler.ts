@@ -111,7 +111,7 @@ export async function createDefaultRules(userId: string): Promise<AutoReplyRule[
         conditions: rule.conditions,
         actions: rule.actions,
         is_active: rule.isActive
-      }) as any)
+      }) )
       .select()
       .single();
 
@@ -144,7 +144,7 @@ export async function createDefaultRules(userId: string): Promise<AutoReplyRule[
 export async function refreshRulesCache(userId: string): Promise<void> {
   const { data, error } = await (supabase
     .from('auto_reply_rules')
-    .select('*') as any)
+    .select('*') )
     .eq('user_id', userId);
 
   if (error) {
@@ -231,11 +231,12 @@ export async function processReviewWithRules(
       // Generate reply if needed
       let replyText = action.template || '';
       if (action.autoGenerate && !replyText) {
+        const tone = (action.tone as 'professional' | 'friendly' | 'apologetic' | 'enthusiastic') || 'friendly';
         const aiResponse = await longcatAI.generateReviewResponse(
           review.text,
           review.rating,
           review.sentiment || 'neutral',
-          (action.tone as any) || 'friendly'
+          tone
         );
         replyText = aiResponse.response;
       }
@@ -265,7 +266,7 @@ export async function processReviewWithRules(
           scheduled_for: scheduledReply.scheduled_for,
           status: scheduledReply.status,
           auto_post: scheduledReply.auto_post,
-        }) as any)
+        }) )
         .select()
         .single();
 
@@ -320,7 +321,7 @@ export async function executeReply(scheduledReply: ScheduledReply): Promise<bool
       .update({
         status: 'sent',
         updated_at: new Date().toISOString()
-      }) as any)
+      }) )
       .eq('id', scheduledReply.id);
 
     if (error) {
@@ -340,7 +341,7 @@ export async function executeReply(scheduledReply: ScheduledReply): Promise<bool
       .update({
         status: 'failed',
         updated_at: new Date().toISOString()
-      }) as any)
+      }) )
       .eq('id', scheduledReply.id);
 
     if (updateError) {
@@ -385,7 +386,7 @@ export async function scheduleReply(
       scheduled_for: scheduled.scheduled_for,
       status: scheduled.status,
       auto_post: autoPost,
-    }) as any)
+    }) )
     .select()
     .single();
 
@@ -419,7 +420,7 @@ export async function cancelScheduledReply(scheduledId: string): Promise<boolean
     .update({
       status: 'cancelled',
       updated_at: new Date().toISOString()
-    }) as any)
+    }) )
     .eq('id', scheduledId)
     .select()
     .single();
@@ -438,7 +439,7 @@ export async function cancelScheduledReply(scheduledId: string): Promise<boolean
 export async function getScheduledReplies(userId: string, status?: string): Promise<ScheduledReply[]> {
   let query = (supabase
     .from('scheduled_replies')
-    .select('*') as any)
+    .select('*') )
     .eq('user_id', userId);
 
   if (status) {
@@ -479,7 +480,7 @@ export async function getAutoReplyRules(userId: string): Promise<AutoReplyRule[]
   // Fetch from database
   const { data, error } = await (supabase
     .from('auto_reply_rules')
-    .select('*') as any)
+    .select('*') )
     .eq('user_id', userId);
 
   if (error) {
@@ -516,7 +517,7 @@ export async function updateAutoReplyRule(userId: string, ruleId: string, update
       actions: updates.actions,
       is_active: updates.isActive,
       updated_at: new Date().toISOString()
-    }) as any)
+    }) )
     .eq('id', ruleId)
     .eq('user_id', userId)
     .select()
@@ -548,7 +549,7 @@ export async function runScheduler(): Promise<void> {
   const now = new Date();
   const { data: pendingReplies, error } = await (supabase
     .from('scheduled_replies')
-    .select('*') as any)
+    .select('*') )
     .eq('status', 'pending')
     .lte('scheduled_for', now.toISOString());
 
@@ -583,7 +584,7 @@ export async function initializeUserAutoReply(userId: string): Promise<void> {
   // Check if user already has rules
   const { data, error } = await (supabase
     .from('auto_reply_rules')
-    .select('id') as any)
+    .select('id') )
     .eq('user_id', userId)
     .limit(1);
 

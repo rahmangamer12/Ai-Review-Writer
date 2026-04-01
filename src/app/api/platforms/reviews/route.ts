@@ -10,13 +10,14 @@ export async function GET() {
     if (connectedPlatforms.length === 0) {
       return NextResponse.json({ 
         reviews: [],
-        message: 'No platforms connected'
-      })
+        message: 'No platforms connected',
+        success: true
+      }, { status: 200 })
     }
 
     // Fetch reviews from all connected platforms
     const allReviews = []
-    const errors = []
+    const errors: Array<{ platform: string; error: string }> = []
 
     for (const platform of connectedPlatforms) {
       try {
@@ -31,11 +32,16 @@ export async function GET() {
     // Sort by date (newest first)
     allReviews.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
+    // If we had errors fetching from ANY platform, return 207 Multi-Status
+    const statusCode = errors.length > 0 ? 207 : 200
+    
     return NextResponse.json({ 
       reviews: allReviews,
       platforms: connectedPlatforms.map(p => ({ id: p.id, name: p.name })),
-      errors: errors.length > 0 ? errors : undefined
-    })
+      errors: errors.length > 0 ? errors : undefined,
+      success: errors.length === 0,
+      partial_failure: errors.length > 0 && allReviews.length > 0
+    }, { status: statusCode })
   } catch (error) {
     console.error('Error fetching reviews:', error)
     return NextResponse.json(

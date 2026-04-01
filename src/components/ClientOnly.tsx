@@ -1,6 +1,14 @@
 'use client'
 
-import { useEffect, useState, ReactNode } from 'react'
+import { useState, useEffect, ReactNode } from 'react'
+
+function useHydrated() {
+  const [hydrated, setHydrated] = useState(false)
+  useEffect(() => {
+    setHydrated(true)
+  }, [])
+  return hydrated
+}
 
 interface ClientOnlyProps {
   children: ReactNode
@@ -8,13 +16,9 @@ interface ClientOnlyProps {
 }
 
 export default function ClientOnly({ children, fallback = null }: ClientOnlyProps) {
-  const [hasMounted, setHasMounted] = useState(false)
+  const hydrated = useHydrated()
 
-  useEffect(() => {
-    setHasMounted(true)
-  }, [])
-
-  if (!hasMounted) {
+  if (!hydrated) {
     return fallback
   }
 

@@ -4,28 +4,17 @@ import { useEffect } from 'react';
 
 export default function ServiceWorkerRegistrar() {
   useEffect(() => {
-    // Register service worker only on client side
-    if ('serviceWorker' in navigator && typeof window !== 'undefined') {
-      const registerServiceWorker = async () => {
-        try {
-          // Wait for window to load to avoid hydration issues
-          if (document.readyState === 'loading') {
-            await new Promise<void>((resolve) => {
-              window.addEventListener('load', () => resolve());
-            });
-          }
+    // Temporarily disabled - will enable after fixing manifest issue
+    console.log('⚠️ Service Worker temporarily disabled');
 
-          const registration = await navigator.serviceWorker.register('/sw.js');
-          console.log('✅ Service Worker registered:', registration.scope);
-        } catch (error) {
-          console.error('❌ Service Worker registration failed:', error);
-        }
-      };
-
-      // Delay registration to avoid hydration issues
-      const timer = setTimeout(registerServiceWorker, 100);
-
-      return () => clearTimeout(timer);
+    // Unregister existing service workers
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        registrations.forEach((registration) => {
+          registration.unregister();
+          console.log('🗑️ Unregistered old service worker');
+        });
+      });
     }
   }, []);
 

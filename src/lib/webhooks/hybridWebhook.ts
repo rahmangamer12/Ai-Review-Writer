@@ -67,11 +67,12 @@ export async function processIncomingReview(
   // Step 3: Generate AI reply
   let aiReply: string | undefined;
   if (options.autoReply !== false) {
+    const tone = (options.tone as 'professional' | 'friendly' | 'apologetic' | 'enthusiastic') || (sentiment.sentiment === 'negative' ? 'apologetic' : 'friendly');
     const replyResult = await longcatAI.generateReviewResponse(
       review.text,
       review.rating,
       sentiment.sentiment,
-      (options.tone as any) || (sentiment.sentiment === 'negative' ? 'apologetic' : 'friendly')
+      tone
     );
     aiReply = replyResult.response;
   }
@@ -143,10 +144,11 @@ export async function processManualImport(
   const processed: ProcessedReview[] = [];
 
   for (const review of reviews) {
+    const platform = (review.platform as 'google' | 'facebook' | 'yelp' | 'tripadvisor' | 'trustpilot' | 'other') || 'google';
     const incoming: IncomingReview = {
       id: `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       source: 'manual_import',
-      platform: (review.platform as any) || 'google',
+      platform: platform,
       author: review.author || 'Anonymous',
       rating: review.rating,
       text: review.text,
@@ -212,10 +214,11 @@ export async function processEmailForward(
   // Parse email to extract review
   const parsed = parseEmailContent(emailData);
 
+  const platform = (emailData.platform_hint as 'google' | 'facebook' | 'yelp' | 'tripadvisor' | 'trustpilot' | 'other') || 'google';
   const incoming: IncomingReview = {
     id: `email_${Date.now()}`,
     source: 'email_forward',
-    platform: (emailData.platform_hint as any) || 'google',
+    platform: platform,
     author: parsed.author || 'Customer',
     rating: parsed.rating || 5,
     text: parsed.text,
