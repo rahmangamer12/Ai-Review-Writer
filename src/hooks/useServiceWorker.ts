@@ -8,6 +8,24 @@ export function useServiceWorker() {
   const [isOnline, setIsOnline] = useState(true)
 
   useEffect(() => {
+    // Skip service worker registration in development
+    // This prevents the "Network unavailable" errors
+    if (process.env.NODE_ENV === 'development') {
+      console.log('⏭️ Service Worker skipped in development')
+      
+      // Still monitor online/offline
+      const handleOnline = () => setIsOnline(true)
+      const handleOffline = () => setIsOnline(false)
+      
+      window.addEventListener('online', handleOnline)
+      window.addEventListener('offline', handleOffline)
+      
+      return () => {
+        window.removeEventListener('online', handleOnline)
+        window.removeEventListener('offline', handleOffline)
+      }
+    }
+    
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
       return
     }
@@ -21,11 +39,6 @@ export function useServiceWorker() {
 
         setRegistration(reg)
 
-        // Force update check on page load (helps with testing)
-        if (typeof window !== 'undefined' && window.location.search.includes('force-update=true')) {
-          await reg.update()
-        }
-
         // Check for updates
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing
@@ -33,27 +46,21 @@ export function useServiceWorker() {
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // New service worker is installed but waiting
                 setUpdateAvailable(true)
               }
             })
           }
         })
 
-        // Check for updates every hour
-        setInterval(() => {
-          reg.update()
-        }, 60 * 60 * 1000)
-
-        console.log('✅ Service Worker registered successfully')
+        console.log('✅ Service Worker registered')
       } catch (error) {
-        console.error('❌ Service Worker registration failed:', error)
+        console.warn('⚠️ Service Worker registration failed:', error)
       }
     }
 
     registerServiceWorker()
 
-    // Monitor online/offline status
+    // Monitor online/offline
     const handleOnline = () => setIsOnline(true)
     const handleOffline = () => setIsOnline(false)
 
@@ -66,26 +73,16 @@ export function useServiceWorker() {
     }
   }, [])
 
-  const dismissUpdate = () => {
-    setUpdateAvailable(false)
-  }
+  const dismissUpdate = () => setUpdateAvailable(false)
 
   const updateServiceWorker = () => {
     if (registration?.waiting) {
       registration.waiting.postMessage({ type: 'SKIP_WAITING' })
-      
-      // Reload page after service worker is activated
       navigator.serviceWorker.addEventListener('controllerchange', () => {
         window.location.reload()
       })
     }
   }
 
-  return {
-    registration,
-    updateAvailable,
-    isOnline,
-    updateServiceWorker,
-    dismissUpdate,
-  }
+  return { registration, updateAvailable, isOnline, updateServiceWorker, dismissUpdate }
 }
