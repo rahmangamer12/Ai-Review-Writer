@@ -344,11 +344,9 @@ export default function Navigation() {
         )}
       </AnimatePresence>
 
-      {/* Desktop Navigation - Compact for more space */}
-      <motion.nav
-        initial={{ x: -300 }}
-        animate={{ x: 0 }}
-        className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 xl:w-72 bg-[#0a0a0f]/95 backdrop-blur-xl border-r border-white/10 p-3 lg:p-4 xl:p-5 flex-col min-h-0 flex-1 shadow-2xl"
+      {/* Desktop Navigation - Fixed sidebar */}
+      <nav
+        className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 xl:w-72 bg-[#0a0a0f]/95 backdrop-blur-xl border-r border-white/10 p-3 lg:p-4 xl:p-5 flex-col z-30 shadow-2xl"
         style={{
           background: 'linear-gradient(180deg, rgba(10, 10, 15, 0.98) 0%, rgba(15, 15, 25, 0.95) 100%)',
         }}
@@ -398,7 +396,7 @@ export default function Navigation() {
                   <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: isActive(item.href) ? 0.1 : 0.05 }}
-                    className={`absolute inset-0 bg-gradient-to-r ${item.gradient}`}
+                    className={`absolute inset-0 bg-gradient-to-r ${item.gradient} pointer-events-none`}
                   />
                 )}
 
@@ -406,7 +404,7 @@ export default function Navigation() {
                 {isActive(item.href) && (
                   <motion.div
                     layoutId="activeIndicator"
-                    className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b ${item.gradient} rounded-r-full`}
+                    className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-8 bg-gradient-to-b ${item.gradient} rounded-r-full pointer-events-none`}
                     transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                   />
                 )}
@@ -427,7 +425,7 @@ export default function Navigation() {
                   <motion.div
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="relative z-10"
+                    className="relative z-10 pointer-events-none"
                   >
                     <span className="text-primary">→</span>
                   </motion.div>
@@ -466,7 +464,7 @@ export default function Navigation() {
             </div>
           </SignedIn>
         </motion.div>
-      </motion.nav>
+      </nav>
     </>
   )
 }
