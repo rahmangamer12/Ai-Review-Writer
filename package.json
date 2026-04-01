@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "set NODE_OPTIONS=--max-old-space-size=4096 && next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint",
     "clean": "rmdir /s /q .next 2>nul || echo Cleaned",
