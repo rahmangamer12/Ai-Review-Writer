@@ -92,51 +92,6 @@ export const MODELS: AIModel[] = [
     contextTokens: 128000,
     supportsVision: true,
     supportsThinking: false
-  },
-  {
-    id: 'deepseek-v3.2',
-    name: 'DeepSeek V3.2',
-    shortName: 'DS V3.2',
-    iconName: 'Lightbulb',
-    description: 'Advanced reasoning model via AgentRouter with superior intelligence',
-    badge: 'DEEPSEEK',
-    badgeColor: 'orange',
-    quality: 95,
-    speed: 'Fast',
-    context: '64k',
-    contextTokens: 64000,
-    supportsVision: false,
-    supportsThinking: true
-  },
-  {
-    id: 'deepseek-v3.1',
-    name: 'DeepSeek V3.1',
-    shortName: 'DS V3.1',
-    iconName: 'Sparkles',
-    description: 'Latest DeepSeek model with enhanced capabilities',
-    badge: 'DEEPSEEK',
-    badgeColor: 'orange',
-    quality: 96,
-    speed: 'Fast',
-    context: '64k',
-    contextTokens: 64000,
-    supportsVision: false,
-    supportsThinking: true
-  },
-  {
-    id: 'deepseek-r1-0528',
-    name: 'DeepSeek R1',
-    shortName: 'R1',
-    iconName: 'Shield',
-    description: 'Advanced reasoning model for complex multi-step tasks',
-    badge: 'REASONING',
-    badgeColor: 'red',
-    quality: 97,
-    speed: 'Medium',
-    context: '128k',
-    contextTokens: 128000,
-    supportsVision: false,
-    supportsThinking: true
   }
 ]
 
@@ -149,10 +104,7 @@ export const MODEL_GROUPS = {
   ],
   reasoning: [
     'LongCat-Flash-Thinking',
-    'LongCat-Flash-Thinking-2601',
-    'deepseek-v3.2',
-    'deepseek-v3.1',
-    'deepseek-r1-0528'
+    'LongCat-Flash-Thinking-2601'
   ],
   vision: [
     'LongCat-Flash-Omni-2603'

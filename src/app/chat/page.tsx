@@ -692,7 +692,7 @@ export default function ChatPage() {
                     <Zap className="w-4 h-4 text-violet-400" />
                     Available Models
                   </h3>
-                  <p className="text-xs">Flash Chat, Flash Thinking, Flash Lite, Flash Omni, DeepSeek V3.2, DeepSeek R1</p>
+                  <p className="text-xs">Flash Chat, Flash Thinking, Flash Lite, Flash Omni, Thinking 2601</p>
                 </div>
               </div>
               <button 
