@@ -191,7 +191,7 @@ export default function AnimatedBackground() {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed top-0 left-0 w-full h-full -z-10 pointer-events-none"
+      className="fixed top-0 left-0 w-screen h-screen min-h-[100dvh] -z-10 pointer-events-none"
       style={{ 
         background: 'transparent',
         backgroundImage: 'linear-gradient(to bottom, rgba(3, 7, 18, 0.8), rgba(12, 18, 34, 0.9))'

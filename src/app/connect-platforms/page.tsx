@@ -388,7 +388,7 @@ export default function ConnectPlatformsPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-[100dvh] bg-background overflow-x-hidden">
+      <div className="min-h-[100dvh] overflow-x-hidden w-full">
         {/* Header */}
         <div className="bg-gradient-to-b from-primary/10 to-transparent">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

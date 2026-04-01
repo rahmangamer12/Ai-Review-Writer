@@ -400,7 +400,7 @@ export default function ProfilePage() {
 
   return (
     <PageTransition>
-    <div className="min-h-[100dvh] bg-background p-6 overflow-x-hidden">
+    <div className="min-h-[100dvh] p-6 overflow-x-hidden w-full">
       <div className="max-w-7xl mx-auto">
         {/* Profile Header */}
         <motion.div
