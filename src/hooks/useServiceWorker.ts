@@ -8,41 +8,17 @@ export function useServiceWorker() {
   const [isOnline, setIsOnline] = useState(true)
 
   useEffect(() => {
-    // Skip service worker registration in development
-    // This prevents the "Network unavailable" errors
-    if (process.env.NODE_ENV === 'development') {
-      console.log('⏭️ Service Worker skipped in development')
-      
-      // Still monitor online/offline
-      const handleOnline = () => setIsOnline(true)
-      const handleOffline = () => setIsOnline(false)
-      
-      window.addEventListener('online', handleOnline)
-      window.addEventListener('offline', handleOffline)
-      
-      return () => {
-        window.removeEventListener('online', handleOnline)
-        window.removeEventListener('offline', handleOffline)
-      }
-    }
-    
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
       return
     }
 
-    // Register service worker
     const registerServiceWorker = async () => {
       try {
-        const reg = await navigator.serviceWorker.register('/sw.js', {
-          scope: '/',
-        })
-
+        const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
         setRegistration(reg)
-
-        // Check for updates
+        
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing
-          
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
@@ -51,16 +27,14 @@ export function useServiceWorker() {
             })
           }
         })
-
-        console.log('✅ Service Worker registered')
       } catch (error) {
-        console.warn('⚠️ Service Worker registration failed:', error)
+        console.warn('Service Worker registration failed:', error)
       }
     }
 
     registerServiceWorker()
+    setIsOnline(navigator.onLine)
 
-    // Monitor online/offline
     const handleOnline = () => setIsOnline(true)
     const handleOffline = () => setIsOnline(false)
 
