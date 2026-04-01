@@ -196,7 +196,7 @@ export default function AnalyticsPage() {
   const hasData = stats && stats.totalReviews > 0
 
   return (
-    <div className="min-h-[100dvh] bg-[#05050a] text-white selection:bg-violet-500/30 overflow-x-hidden">
+    <div className="min-h-[100dvh] text-white selection:bg-violet-500/30 overflow-x-hidden w-full">
       {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-0 left-0 w-full h-full bg-[url('/noise.svg')] opacity-[0.02] mix-blend-overlay" />

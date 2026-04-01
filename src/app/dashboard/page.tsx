@@ -1248,7 +1248,7 @@ export default function Dashboard() {
   }
 
   return (
-      <div className="min-h-[100dvh] bg-[#0a0a0f] text-white overflow-x-hidden">
+      <div className="min-h-[100dvh] text-white overflow-x-hidden w-full">
       {/* Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />

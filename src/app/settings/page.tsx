@@ -142,7 +142,7 @@ export default function SettingsPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-[100dvh] bg-background p-6 overflow-x-hidden">
+      <div className="min-h-[100dvh] p-6 overflow-x-hidden w-full">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">

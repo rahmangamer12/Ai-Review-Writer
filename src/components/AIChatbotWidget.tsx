@@ -379,7 +379,7 @@ export default function AIChatbot() {
 
   return (
     <>
-      <div className="fixed bottom-3 right-3 sm:bottom-4 sm:right-4 md:bottom-6 md:right-6 z-50" suppressHydrationWarning>
+      <div className="fixed bottom-20 right-3 sm:bottom-4 sm:right-4 md:bottom-6 md:right-6 z-50 lg:bottom-6" suppressHydrationWarning>
         <AnimatePresence>
           {showTooltip && !isOpen && (
             <motion.div

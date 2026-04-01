@@ -9,6 +9,8 @@ html {
   overflow-x: hidden;
   overscroll-behavior-y: none;
   -webkit-overflow-scrolling: touch;
+  width: 100%;
+  min-width: 100%;
 }
 
 body {
@@ -18,6 +20,9 @@ body {
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+  width: 100%;
+  min-width: 100%;
+  position: relative;
 }
 
 /* Allow text selection in content areas */
@@ -400,4 +405,14 @@ button:active, a:active, [role="button"]:active, .touch-target:active {
 
 .dark {
   color-scheme: dark;
+}
+
+/* Ensure full width background on all devices */
+html, body, #__next {
+  width: 100%;
+  min-width: 100%;
+}
+
+body {
+  background: #0a0a0f;
 }
