@@ -215,10 +215,9 @@ export default function Navigation() {
   return (
     <>
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/10 px-4 py-3 flex items-center justify-between backdrop-blur-xl">
-        <Link href="/dashboard" className="flex items-center gap-2">
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/10 px-4 py-3 flex items-center justify-between backdrop-blur-xl pt-[calc(0.75rem+env(safe-area-inset-top))]">
+        <Link href="/dashboard" className="flex items-center gap-2 min-h-[44px] px-1">
           <motion.div
-            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="w-9 h-9 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/25"
           >
@@ -258,7 +257,7 @@ export default function Navigation() {
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="lg:hidden fixed top-[57px] left-0 bottom-0 w-full max-w-[100vw] glass-card border-r border-primary/20 p-4 flex flex-col z-50 overflow-y-auto"
+            className="lg:hidden fixed top-0 left-0 bottom-0 w-[85vw] max-w-[320px] glass-card border-r border-primary/20 p-4 flex flex-col z-50 overflow-y-auto overscroll-contain pt-[calc(3.5rem+env(safe-area-inset-top))] pb-[env(safe-area-inset-bottom)]"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile Navigation Menu"

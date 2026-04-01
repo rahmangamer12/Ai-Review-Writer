@@ -169,7 +169,7 @@ export default function AnalyticsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#05050a] flex flex-col items-center justify-center relative overflow-hidden">
+      <div className="min-h-[100dvh] bg-[#05050a] flex flex-col items-center justify-center relative overflow-hidden overflow-x-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(99,102,241,0.08),transparent_60%)]" />
         <div className="relative z-10 flex flex-col items-center">
           <motion.div 
@@ -196,7 +196,7 @@ export default function AnalyticsPage() {
   const hasData = stats && stats.totalReviews > 0
 
   return (
-    <div className="min-h-screen bg-[#05050a] text-white selection:bg-violet-500/30">
+    <div className="min-h-[100dvh] bg-[#05050a] text-white selection:bg-violet-500/30 overflow-x-hidden">
       {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-0 left-0 w-full h-full bg-[url('/noise.svg')] opacity-[0.02] mix-blend-overlay" />
@@ -265,10 +265,10 @@ export default function AnalyticsPage() {
                 Your analytics matrix is currently offline. Connect your business platforms to initialize real-time review ingestion.
               </p>
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
-                <button onClick={() => router.push('/connect-platforms')} className="w-full sm:w-auto px-8 py-4 bg-white text-black rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest hover:bg-violet-400 hover:text-white transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.15)]">
+                <button onClick={() => router.push('/connect-platforms')} className="w-full sm:w-auto px-8 py-4 bg-white text-black rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest hover:bg-violet-400 hover:text-white transition-all flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.15)] active:scale-[0.98]">
                   Connect Platforms <ArrowUpRight className="w-4 h-4" />
                 </button>
-                <button onClick={() => router.push('/dashboard')} className="w-full sm:w-auto px-8 py-4 bg-white/5 border border-white/10 text-white rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest hover:bg-white/10 transition-all">
+                <button onClick={() => router.push('/dashboard')} className="w-full sm:w-auto px-8 py-4 bg-white/5 border border-white/10 text-white rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest hover:bg-white/10 transition-all active:scale-[0.98]">
                   Return to Base
                 </button>
               </div>
@@ -480,7 +480,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Ultra Premium Footer */}
-      <footer className="relative z-10 border-t border-white/5 bg-[#080810]/80 backdrop-blur-xl py-8 sm:py-12">
+      <footer className="relative z-10 border-t border-white/5 bg-[#080810]/80 backdrop-blur-xl py-8 sm:py-12 pb-[env(safe-area-inset-bottom)]">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 text-center sm:text-left">
             <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/20 font-black text-xs">V4</div>

@@ -54,43 +54,54 @@ export default function SettingsModal({
 
   return (
     <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
-        onClick={onClose}
-      >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="w-full max-w-md max-h-[85vh] bg-[#0c0c18] border border-white/10 rounded-3xl overflow-hidden flex flex-col shadow-2xl"
-          onClick={e => e.stopPropagation()}
-        >
-          {/* Header */}
-          <div className="p-5 border-b border-white/5 bg-gradient-to-b from-[#0c0c18] to-[#0a0a14]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
-                  <Settings className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-xl font-bold">Settings</h2>
-                  <p className="text-xs text-white/40">Customize your experience</p>
+      {isOpen && (
+        <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[600] bg-black/90 backdrop-blur-md lg:hidden"
+            onClick={onClose}
+          />
+          <motion.div
+            initial={{ opacity: 0, y: '100%' }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="fixed inset-x-0 bottom-0 z-[601] lg:inset-0 lg:flex lg:items-center lg:justify-center pointer-events-none"
+          >
+            <motion.div
+              className="w-full lg:max-w-md bg-[#0c0c18] border-t lg:border border-white/10 rounded-t-3xl lg:rounded-3xl overflow-hidden flex flex-col shadow-2xl pointer-events-auto max-h-[92dvh] lg:max-h-[85dvh]"
+              onClick={e => e.stopPropagation()}
+            >
+              {/* Drag Handle (mobile) */}
+              <div className="lg:hidden flex justify-center pt-3 pb-1">
+                <div className="w-10 h-1 bg-white/20 rounded-full" />
+              </div>
+
+              {/* Header */}
+              <div className="p-5 border-b border-white/5 bg-gradient-to-b from-[#0c0c18] to-[#0a0a14]">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
+                      <Settings className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold">Settings</h2>
+                      <p className="text-xs text-white/40">Customize your experience</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={onClose}
+                    className="p-2 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
               </div>
-              <button
-                onClick={onClose}
-                className="p-2 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
 
-          {/* Content */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+              {/* Content */}
+              <div className="flex-1 overflow-y-auto p-4 space-y-4 overscroll-contain pb-[calc(1rem+env(safe-area-inset-bottom))]">
             {/* Chat Settings */}
             <div className="p-4 bg-white/[0.02] rounded-2xl border border-white/5">
               <div className="flex items-center gap-2 mb-4">
@@ -168,8 +179,10 @@ export default function SettingsModal({
               <Check className="w-4 h-4" /> Done
             </button>
           </div>
-        </motion.div>
-      </motion.div>
+            </motion.div>
+          </motion.div>
+        </>
+      )}
     </AnimatePresence>
   )
 }

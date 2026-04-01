@@ -133,7 +133,7 @@ export default function ChatSidebar({
           {isMobile && (
             <button
               onClick={() => setSidebarOpen(false)}
-              className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg"
+              className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg active:scale-[0.98]"
             >
               <X className="w-4 h-4" />
             </button>
@@ -160,7 +160,7 @@ export default function ChatSidebar({
           {localSearch && (
             <button
               onClick={() => setLocalSearch('')}
-              className="absolute right-2.5 sm:left-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white"
+              className="absolute right-2.5 sm:left-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white active:scale-[0.98]"
             >
               <X className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
             </button>
@@ -217,19 +217,19 @@ export default function ChatSidebar({
                 <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-0.5 sm:gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={(e) => handlePin(e, session.id)}
-                    className="p-1 sm:p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-amber-400 transition-colors"
+                    className="p-1 sm:p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-amber-400 transition-colors active:scale-[0.98]"
                   >
                     <Pin className={`w-3 sm:w-3.5 h-3 sm:h-3.5 ${session.isPinned ? 'fill-current' : ''}`} />
                   </button>
                   <button
                     onClick={(e) => handleEdit(e, session.id)}
-                    className="p-1 sm:p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-blue-400 transition-colors"
+                    className="p-1 sm:p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-blue-400 transition-colors active:scale-[0.98]"
                   >
                     <Edit3 className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
                   </button>
                   <button
                     onClick={(e) => handleDelete(e, session.id)}
-                    className="p-1 sm:p-1.5 rounded-lg hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-colors"
+                    className="p-1 sm:p-1.5 rounded-lg hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-colors active:scale-[0.98]"
                   >
                     <Trash2 className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
                   </button>
@@ -253,7 +253,7 @@ export default function ChatSidebar({
             </div>
             <button
               onClick={() => window.location.href = '/settings'}
-              className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-colors"
+              className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-colors active:scale-[0.98]"
             >
               <Settings className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
             </button>
@@ -272,13 +272,13 @@ export default function ChatSidebar({
           <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
             <button
               onClick={() => window.location.href = '/subscription'}
-              className="py-1.5 sm:py-2 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg text-[10px] sm:text-xs font-semibold hover:from-violet-500 hover:to-indigo-500 transition-all"
+              className="py-1.5 sm:py-2 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg text-[10px] sm:text-xs font-semibold hover:from-violet-500 hover:to-indigo-500 transition-all active:scale-[0.98]"
             >
               Upgrade
             </button>
             <button
               onClick={() => window.location.href = '/'}
-              className="py-1.5 sm:py-2 bg-white/[0.05] rounded-lg text-[10px] sm:text-xs font-medium text-white/50 hover:bg-white/[0.1] transition-all flex items-center justify-center gap-1"
+              className="py-1.5 sm:py-2 bg-white/[0.05] rounded-lg text-[10px] sm:text-xs font-medium text-white/50 hover:bg-white/[0.1] transition-all flex items-center justify-center gap-1 active:scale-[0.98]"
             >
               <LogOut className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
               Exit

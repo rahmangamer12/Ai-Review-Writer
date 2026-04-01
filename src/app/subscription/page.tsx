@@ -229,7 +229,7 @@ export default function SubscriptionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-[100dvh] bg-background overflow-x-hidden">
       {/* Coming Soon Modal */}
       {showComingSoon && (
         <motion.div
@@ -258,13 +258,13 @@ export default function SubscriptionPage() {
             <div className="flex gap-3">
               <button
                 onClick={() => setShowComingSoon(false)}
-                className="flex-1 py-3 glass text-white rounded-xl font-medium hover:bg-white/10 transition-colors"
+                className="flex-1 py-3 glass text-white rounded-xl font-medium hover:bg-white/10 transition-colors active:scale-[0.98]"
               >
                 Close
               </button>
               <button
                 onClick={() => router.push('/contact')}
-                className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors"
+                className="flex-1 py-3 bg-primary text-primary-foreground rounded-xl font-medium hover:bg-primary/90 transition-colors active:scale-[0.98]"
               >
                 Notify Me
               </button>
@@ -371,7 +371,7 @@ export default function SubscriptionPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -5 }}
+                whileHover={undefined}
                 className={`relative rounded-2xl overflow-hidden flex-1 min-w-[280px] max-w-[360px] ${
                   plan.popular ? 'lg:scale-105 z-10' : ''
                 }`}

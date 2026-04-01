@@ -167,7 +167,7 @@ export default function ChatInput({
                   </div>
                   <button
                     onClick={() => removeFile(file.id)}
-                    className="p-1 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-colors"
+                    className="p-1 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-colors active:scale-[0.98]"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -187,7 +187,7 @@ export default function ChatInput({
             {/* File Upload Button */}
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="p-3 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl text-white/50 hover:text-white transition-colors"
+              className="p-3 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl text-white/50 hover:text-white transition-colors active:scale-[0.98]"
               title="Attach files"
             >
               <Paperclip className="w-5 h-5" />
@@ -218,7 +218,7 @@ export default function ChatInput({
             {/* Voice Button */}
             <button
               onClick={onVoice}
-              className={`p-3 rounded-xl transition-all ${
+              className={`p-3 rounded-xl transition-all active:scale-[0.98] ${
                 isVoiceActive 
                   ? 'bg-red-500 animate-pulse text-white' 
                   : 'bg-white/[0.03] hover:bg-white/[0.08] text-white/50 hover:text-white'
@@ -232,7 +232,7 @@ export default function ChatInput({
             <button
               onClick={() => onSend()}
               disabled={!canSend}
-              className={`p-3 rounded-xl transition-all ${
+              className={`p-3 rounded-xl transition-all active:scale-[0.98] ${
                 canSend
                   ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-violet-600/20'
                   : 'bg-white/[0.05] text-white/20 cursor-not-allowed'
@@ -251,7 +251,7 @@ export default function ChatInput({
             <div className="flex items-center gap-3 text-[11px] text-white/30">
               <button
                 onClick={onOpenModelSelector}
-                className="flex items-center gap-1.5 hover:text-white transition-colors"
+                className="flex items-center gap-1.5 hover:text-white transition-colors active:scale-[0.98]"
               >
                 <Wand2 className="w-3.5 h-3.5" />
                 <span>{activeModel?.name || 'Select Model'}</span>

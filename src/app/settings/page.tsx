@@ -142,7 +142,7 @@ export default function SettingsPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background p-6">
+      <div className="min-h-[100dvh] bg-background p-6 overflow-x-hidden">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
@@ -309,7 +309,7 @@ export default function SettingsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                   {PlatformIntegrationManager.getPlatforms().map((platform) => (
                     <motion.div 
-                      whileHover={{ scale: 1.02, y: -5 }}
+                      whileHover={undefined}
                       key={platform.id} 
                       className={`relative overflow-hidden p-6 rounded-3xl transition-all border-2 ${
                         platform.connected 

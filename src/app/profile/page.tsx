@@ -307,7 +307,7 @@ export default function ProfilePage() {
   // Loading state
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-background flex items-center justify-center overflow-x-hidden">
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -323,7 +323,7 @@ export default function ProfilePage() {
   // Not signed in state
   if (!user) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+      <div className="min-h-[100dvh] bg-background flex items-center justify-center p-6 overflow-x-hidden">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -365,7 +365,7 @@ export default function ProfilePage() {
   // Profile loading state
   if (loading || !profile) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-background flex items-center justify-center overflow-x-hidden">
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -400,7 +400,7 @@ export default function ProfilePage() {
 
   return (
     <PageTransition>
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-[100dvh] bg-background p-6 overflow-x-hidden">
       <div className="max-w-7xl mx-auto">
         {/* Profile Header */}
         <motion.div
@@ -513,11 +513,10 @@ export default function ProfilePage() {
                 {editing ? (
                   <>
                     <motion.button
-                      whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={handleSaveProfile}
                       disabled={saving}
-                      className="px-6 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+                      className="px-6 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors flex items-center gap-2 disabled:opacity-50 active:scale-[0.98]"
                     >
                       {saving ? (
                         <>
@@ -532,13 +531,12 @@ export default function ProfilePage() {
                       )}
                     </motion.button>
                     <motion.button
-                      whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => {
                         setEditing(false)
                         setEditedProfile(profile)
                       }}
-                      className="px-6 py-3 glass text-white rounded-lg font-medium hover:bg-white/10 transition-colors flex items-center gap-2"
+                      className="px-6 py-3 glass text-white rounded-lg font-medium hover:bg-white/10 transition-colors flex items-center gap-2 active:scale-[0.98]"
                     >
                       <X className="w-4 h-4" />
                       Cancel
@@ -547,19 +545,17 @@ export default function ProfilePage() {
                 ) : (
                   <>
                     <motion.button
-                      whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setEditing(true)}
-                      className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center gap-2"
+                      className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 active:scale-[0.98]"
                     >
                       <Edit2 className="w-4 h-4" />
                       Edit Profile
                     </motion.button>
                     <motion.button
-                      whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setShowUpgradeModal(true)}
-                      className="px-6 py-3 bg-linear-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:shadow-lg transition-all flex items-center gap-2"
+                      className="px-6 py-3 bg-linear-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:shadow-lg transition-all flex items-center gap-2 active:scale-[0.98]"
                     >
                       <Zap className="w-4 h-4" />
                       Upgrade Plan
@@ -587,10 +583,8 @@ export default function ProfilePage() {
           ].map((tab) => (
             <motion.button
               key={tab.id}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
               onClick={() => setActiveTab(tab.id as 'overview' | 'stats' | 'activity' | 'achievements' | 'settings' | string as unknown as 'overview' | 'stats' | 'activity' | 'achievements' | 'settings')}
-              className={`px-4 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 ${
+              className={`px-4 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 active:scale-[0.98] ${
                 activeTab === tab.id
                   ? 'bg-primary text-primary-foreground shadow-lg'
                   : 'glass text-white/70 hover:text-white hover:bg-white/10'
@@ -953,8 +947,7 @@ export default function ProfilePage() {
                     {(profile.achievements || []).filter(a => a.unlocked).slice(0, 3).map((achievement) => (
                       <motion.div
                         key={achievement.id}
-                        whileHover={{ scale: 1.02 }}
-                        className="p-4 glass rounded-lg border border-yellow-500/20 cursor-pointer"
+                        className="p-4 glass rounded-lg border border-yellow-500/20 cursor-pointer active:scale-[0.98]"
                       >
                         <div className="text-4xl mb-3">{achievement.icon}</div>
                         <h3 className="text-white font-semibold mb-1">{achievement.title}</h3>

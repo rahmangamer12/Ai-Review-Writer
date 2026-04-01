@@ -95,7 +95,7 @@ const sentimentConfig = {
 
 function ReviewsLoading() {
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+    <div className="min-h-[100dvh] bg-[#0a0a0f] flex items-center justify-center overflow-x-hidden">
       <div className="text-center">
         <div className="w-12 h-12 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin mx-auto mb-4" />
         <p className="text-gray-400">Loading reviews...</p>
@@ -424,7 +424,7 @@ function ReviewsContent() {
   if (!mounted) {
     // Render a simple loading state during hydration to prevent mismatches
     return (
-      <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-[#0a0a0f] text-white overflow-x-hidden flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500 mb-4"></div>
           <p className="text-gray-400">Loading reviews...</p>
@@ -434,7 +434,7 @@ function ReviewsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-[100dvh] bg-[#0a0a0f] text-white overflow-x-hidden">
       {/* Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
@@ -516,7 +516,7 @@ function ReviewsContent() {
         </div>
       </header>
 
-      <main className="relative z-10 w-full px-4 sm:px-6 lg:px-8 min-w-0">
+      <main className="relative z-10 w-full px-4 sm:px-6 lg:px-8 min-w-0 pb-[env(safe-area-inset-bottom)]">
         {/* Agentic Mode Banner */}
         {agenticMode && (
           <motion.div
