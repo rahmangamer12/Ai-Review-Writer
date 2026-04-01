@@ -39,7 +39,7 @@ const CodeBlock = memo(({ language, children }: { language: string; children: st
         </span>
         <button
           onClick={copy}
-          className="flex items-center gap-1.5 text-[10px] text-white/40 hover:text-white transition-colors font-medium"
+          className="flex items-center gap-1.5 text-[10px] text-white/40 hover:text-white transition-colors font-medium active:scale-[0.98]"
         >
           {copied ? (
             <>
@@ -333,7 +333,7 @@ export default function ChatMessages({
                     <span>Failed to send. </span>
                     <button
                       onClick={() => onRetry?.(msg.id)}
-                      className="text-violet-400 hover:text-violet-300 underline"
+                      className="text-violet-400 hover:text-violet-300 underline active:scale-[0.98]"
                     >
                       Retry
                     </button>
@@ -350,7 +350,7 @@ export default function ChatMessages({
                 >
                   <button
                     onClick={() => handleCopy(msg.content, msg.id)}
-                    className="p-2 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl text-white/40 hover:text-white transition-colors border border-white/5"
+                    className="p-2 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl text-white/40 hover:text-white transition-colors border border-white/5 active:scale-[0.98]"
                     title="Copy"
                   >
                     {showCopied === msg.id ? (
@@ -362,7 +362,7 @@ export default function ChatMessages({
                   
                   <button
                     onClick={() => isSpeaking ? onStopSpeaking?.() : onSpeak?.(msg.content)}
-                    className={`p-2 rounded-xl transition-colors border ${
+                    className={`p-2 rounded-xl transition-colors border active:scale-[0.98] ${
                       isSpeaking
                         ? 'bg-red-500/20 text-red-400 border-red-500/30'
                         : 'bg-white/[0.03] hover:bg-white/[0.08] text-white/40 hover:text-white border-white/5'
@@ -384,14 +384,14 @@ export default function ChatMessages({
                         handleCopy(msg.content, msg.id)
                       }
                     }}
-                    className="p-2 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl text-white/40 hover:text-white transition-colors border border-white/5"
+                    className="p-2 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl text-white/40 hover:text-white transition-colors border border-white/5 active:scale-[0.98]"
                     title="Share"
                   >
                     <Share2 className="w-4 h-4" />
                   </button>
 
                   <button
-                    className="p-2 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl text-white/40 hover:text-white transition-colors border border-white/5"
+                    className="p-2 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl text-white/40 hover:text-white transition-colors border border-white/5 active:scale-[0.98]"
                     title="More"
                   >
                     <MoreHorizontal className="w-4 h-4" />
@@ -408,7 +408,7 @@ export default function ChatMessages({
                 >
                   <button
                     onClick={() => handleCopy(msg.content, msg.id)}
-                    className="p-2 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl text-white/40 hover:text-white transition-colors border border-white/5"
+                    className="p-2 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl text-white/40 hover:text-white transition-colors border border-white/5 active:scale-[0.98]"
                     title="Copy"
                   >
                     {showCopied === msg.id ? (
@@ -422,7 +422,7 @@ export default function ChatMessages({
                     onClick={() => {
                       navigator.clipboard.writeText(msg.content)
                     }}
-                    className="p-2 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl text-white/40 hover:text-white transition-colors border border-white/5"
+                    className="p-2 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl text-white/40 hover:text-white transition-colors border border-white/5 active:scale-[0.98]"
                     title="Regenerate"
                   >
                     <RefreshCw className="w-4 h-4" />

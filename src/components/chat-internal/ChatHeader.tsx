@@ -70,7 +70,7 @@ export default function ChatHeader({
       <div className="flex items-center gap-3 sm:gap-4">
         <button
           onClick={() => setSidebarOpen(true)}
-          className="lg:hidden p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+          className="lg:hidden p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors active:scale-[0.98]"
         >
           <PanelLeft className="w-5 h-5" />
         </button>
@@ -92,7 +92,7 @@ export default function ChatHeader({
         {/* Model Selector Button */}
         <button
           onClick={onOpenModelSelector}
-          className="hidden sm:flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-all group"
+          className="hidden sm:flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-all group active:scale-[0.98]"
         >
           {selectedModel && (
             <span className={`${getBadgeColor(selectedModel.badgeColor).split(' ')[1]} group-hover:text-white transition-colors`}>
@@ -106,7 +106,7 @@ export default function ChatHeader({
         {/* Action Buttons */}
         <button
           onClick={onExport}
-          className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+          className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors active:scale-[0.98]"
           title="Export chat"
         >
           <Download className="w-5 h-5" />
@@ -114,7 +114,7 @@ export default function ChatHeader({
         
         <button
           onClick={onShare}
-          className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+          className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors active:scale-[0.98]"
           title="Share"
         >
           <Share2 className="w-5 h-5" />
@@ -122,7 +122,7 @@ export default function ChatHeader({
         
         <button
           onClick={onHelp}
-          className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+          className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors active:scale-[0.98]"
           title="Help"
         >
           <HelpCircle className="w-5 h-5" />
@@ -131,14 +131,14 @@ export default function ChatHeader({
         {/* Mobile New Chat */}
         <button
           onClick={onNewChat}
-          className="lg:hidden p-2.5 bg-violet-600 hover:bg-violet-500 rounded-xl transition-colors"
+          className="lg:hidden p-2.5 bg-violet-600 hover:bg-violet-500 rounded-xl transition-colors active:scale-[0.98]"
         >
           <Sparkles className="w-5 h-5" />
         </button>
 
         {/* More Menu */}
         <button
-          className="hidden md:block p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+          className="hidden md:block p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors active:scale-[0.98]"
         >
           <MoreVertical className="w-5 h-5" />
         </button>

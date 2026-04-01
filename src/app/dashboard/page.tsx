@@ -148,7 +148,7 @@ const ModernStatCard = ({ title, value, subtitle, icon: Icon, trend, trendValue,
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5 }}
-      whileHover={{ scale: 1.02, y: -4 }}
+      whileHover={undefined}
       className={`relative overflow-hidden rounded-xl sm:rounded-2xl border bg-gradient-to-br ${colorClasses[color]} p-4 transition-all duration-300 hover:shadow-2xl touch-enhanced`}
     >
       {/* Background glow */}
@@ -596,10 +596,10 @@ export default function Dashboard() {
           ].map((action, index) => (
             <motion.button
               key={action.title}
-              whileHover={{ scale: 1.02, y: -4 }}
+              whileHover={undefined}
               whileTap={{ scale: 0.98 }}
               onClick={action.action}
-              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-left transition-all hover:border-white/20 hover:bg-white/[0.04] hover:shadow-xl"
+              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-left transition-all hover:border-white/20 hover:bg-white/[0.04] hover:shadow-xl active:scale-[0.98]"
             >
               <div className={`inline-flex rounded-xl bg-${action.color}-500/20 p-3 mb-4`}>
                 <action.icon className={`h-6 w-6 text-${action.color}-400`} />
@@ -616,7 +616,7 @@ export default function Dashboard() {
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
         <div className="mb-4 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-white">Recent Reviews</h3>
-          <button onClick={() => setActiveTab('reviews')} className="flex items-center gap-1 text-sm text-purple-400 hover:text-purple-300">
+            <button onClick={() => setActiveTab('reviews')} className="flex items-center gap-1 text-sm text-purple-400 hover:text-purple-300 active:scale-[0.98]">
             View All <ChevronRight className="h-4 w-4" />
           </button>
         </div>
@@ -661,7 +661,7 @@ export default function Dashboard() {
           ) : (
             <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-12 text-center">
               <MessageSquare className="mx-auto mb-4 h-12 w-12 text-gray-600" />
-              <button onClick={() => setShowAIGenerator(true)} className="rounded-lg bg-purple-600 px-6 py-3 font-medium text-white hover:bg-purple-500">
+              <button onClick={() => setShowAIGenerator(true)} className="rounded-lg bg-purple-600 px-6 py-3 font-medium text-white hover:bg-purple-500 active:scale-[0.98]">
                 <Bot className="mr-2 inline h-4 w-4" />
                 Generate Test Reviews
               </button>
@@ -681,12 +681,12 @@ export default function Dashboard() {
           <p className="text-xs sm:text-sm text-gray-500">Manage and respond to your customer reviews</p>
         </div>
         <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
-          <button onClick={() => setShowAIGenerator(true)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-lg bg-purple-600/20 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-purple-400 hover:bg-purple-600/30 transition-all">
+          <button onClick={() => setShowAIGenerator(true)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-lg bg-purple-600/20 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-purple-400 hover:bg-purple-600/30 transition-all active:scale-[0.98]">
             <Bot className="h-4 w-4" />
             <span className="hidden sm:inline">AI Generator</span>
             <span className="sm:hidden">Generate</span>
           </button>
-          <button onClick={() => router.push('/reviews/add')} className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-lg bg-purple-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-purple-500 transition-all">
+          <button onClick={() => router.push('/reviews/add')} className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-lg bg-purple-600 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-white hover:bg-purple-500 transition-all active:scale-[0.98]">
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Add Review</span>
             <span className="sm:hidden">Add</span>
@@ -799,7 +799,7 @@ export default function Dashboard() {
             ))}
           </div>
           
-          <button onClick={() => fetchAnalytics()} disabled={refreshing} className="rounded-lg border border-white/10 bg-white/5 p-2 text-gray-400 hover:text-white">
+          <button onClick={() => fetchAnalytics()} disabled={refreshing} className="rounded-lg border border-white/10 bg-white/5 p-2 text-gray-400 hover:text-white active:scale-[0.98]">
             <RefreshCw className={`h-5 w-5 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
         </div>
@@ -910,9 +910,8 @@ export default function Dashboard() {
             <p className="text-xl text-gray-400 mb-10 max-w-xl mx-auto">Connect your business platforms to start collecting and responding to reviews with AutoReview AI.</p>
             
             <div className="flex flex-col flex-wrap sm:flex-row items-center justify-center gap-4">
-              <button 
-                onClick={() => router.push('/connect-platforms')}
-                className="group relative overflow-hidden rounded-xl bg-purple-600 px-8 py-4 font-semibold text-white transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)]"
+              <button onClick={() => router.push('/connect-platforms')}
+                className="group relative overflow-hidden rounded-xl bg-purple-600 px-8 py-4 font-semibold text-white transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] active:scale-[0.98]"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 transition-opacity group-hover:opacity-100" />
                 <span className="relative flex items-center gap-2">
@@ -1221,7 +1220,7 @@ export default function Dashboard() {
   if (!mounted) {
     // Render a simple loading state during hydration to prevent mismatches
     return (
-      <div className="min-h-screen bg-[#0a0a0f] text-white flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-[#0a0a0f] flex items-center justify-center overflow-x-hidden">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500 mb-4"></div>
           <p className="text-gray-400">Loading dashboard...</p>
@@ -1233,7 +1232,7 @@ export default function Dashboard() {
   // Offline banner
   if (isOffline) {
     return (
-      <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-[100dvh] bg-[#0a0a0f] text-white overflow-x-hidden">
         <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-600/90 text-white px-4 py-2 text-center text-sm font-medium">
           You are currently offline. Some features may not work properly.
         </div>
@@ -1249,7 +1248,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+      <div className="min-h-[100dvh] bg-[#0a0a0f] text-white overflow-x-hidden">
       {/* Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
@@ -1283,7 +1282,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <main className="relative z-10 w-full px-4 sm:px-6 lg:px-8 min-w-0">
+      <main className="relative z-10 w-full px-4 sm:px-6 lg:px-8 min-w-0 pb-[env(safe-area-inset-bottom)]">
         {/* Error Message */}
         <AnimatePresence>
           {error && (

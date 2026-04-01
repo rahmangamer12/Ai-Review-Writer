@@ -305,7 +305,7 @@ export default function ConnectPlatformsPage() {
   if (!isLoaded) {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="min-h-[100dvh] bg-background flex items-center justify-center overflow-x-hidden">
           <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       </PageTransition>
@@ -316,7 +316,7 @@ export default function ConnectPlatformsPage() {
   if (managedFormState.succeeded && setupMode === 'managed') {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="min-h-[100dvh] bg-background flex items-center justify-center p-6 overflow-x-hidden">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -336,10 +336,9 @@ export default function ConnectPlatformsPage() {
             </p>
             <div className="space-y-3">
               <motion.button
-                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => router.push('/dashboard')}
-                className="w-full px-6 py-3 bg-linear-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold"
+                className="w-full px-6 py-3 bg-linear-to-r from-emerald-500 to-emerald-600 text-white rounded-xl font-semibold active:scale-[0.98]"
               >
                 Go to Dashboard
               </motion.button>
@@ -354,7 +353,7 @@ export default function ConnectPlatformsPage() {
   if (videoFormState.succeeded && setupMode === 'video') {
     return (
       <PageTransition>
-        <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="min-h-[100dvh] bg-background flex items-center justify-center p-6 overflow-x-hidden">
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -374,10 +373,9 @@ export default function ConnectPlatformsPage() {
             </p>
             <div className="space-y-3">
               <motion.button
-                whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={() => router.push('/dashboard')}
-                className="w-full px-6 py-3 bg-linear-to-r from-purple-500 to-purple-600 text-white rounded-xl font-semibold"
+                className="w-full px-6 py-3 bg-linear-to-r from-purple-500 to-purple-600 text-white rounded-xl font-semibold active:scale-[0.98]"
               >
                 Go to Dashboard
               </motion.button>
@@ -390,7 +388,7 @@ export default function ConnectPlatformsPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-[100dvh] bg-background overflow-x-hidden">
         {/* Header */}
         <div className="bg-gradient-to-b from-primary/10 to-transparent">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -450,7 +448,7 @@ export default function ConnectPlatformsPage() {
               {setupOptions.map((option) => (
                 <motion.div
                   key={option.id}
-                  whileHover={{ y: -5, scale: 1.02 }}
+                  whileHover={undefined}
                   onClick={() => setSetupMode(option.id as 'self' | 'managed' | 'video')}
                   className={`glass-card border-2 ${
                     setupMode === option.id 
