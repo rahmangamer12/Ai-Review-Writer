@@ -1,2 +1,0 @@
-src/lib/platformIntegrations.ts(413,9): error TS2322: Type 'boolean' is not assignable to type '{ success: boolean; error?: string | undefined; }'.
-src/lib/platformIntegrations.ts(418,5): error TS2322: Type 'boolean' is not assignable to type '{ success: boolean; error?: string | undefined; }'.

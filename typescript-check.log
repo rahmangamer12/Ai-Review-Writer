@@ -1,6 +1,0 @@
-src/app/dashboard/page.tsx(881,123): error TS2339: Property 'value' does not exist on type '{ date: string; count: number; totalRating: number; }'.
-src/app/reviews/page.tsx(199,51): error TS18046: 'err' is of type 'unknown'.
-src/hooks/useNotifications.ts(137,9): error TS2322: Type '{}' is not assignable to type 'string'.
-src/hooks/useNotifications.ts(158,68): error TS2552: Cannot find name 'NotificationAction'. Did you mean 'NotificationState'?
-src/hooks/useNotifications.ts(169,14): error TS2552: Cannot find name 'NotificationAction'. Did you mean 'NotificationState'?
-src/lib/desiPersonas.ts(113,25): error TS18046: 'longcatAI' is of type 'unknown'.
