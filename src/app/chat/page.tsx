@@ -60,7 +60,19 @@ export default function ChatPage() {
   }
 
   if (!isSignedIn) {
-    return null
+    return (
+      <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-white mb-4">Please sign in to access chat</p>
+          <button 
+            onClick={() => router.push('/sign-in?redirect_url=/chat')}
+            className="px-4 py-2 bg-violet-600 text-white rounded-lg"
+          >
+            Sign In
+          </button>
+        </div>
+      </div>
+    )
   }
 
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -81,7 +93,7 @@ export default function ChatPage() {
 
   const fetchUserData = useCallback(async () => {
     try {
-      const res = await fetch('/api/user/me')
+      const res = await fetch('/api/user/me', { cache: 'no-store' })
       const text = await res.text()
       
       const isJson = text.trim().startsWith('{') || text.trim().startsWith('[')
@@ -97,14 +109,13 @@ export default function ChatPage() {
         setUserData(null)
       }
     } catch (err) { 
-      console.error('Failed to fetch user:', err) 
       setUserData(null)
     }
   }, [])
 
   const fetchSessions = useCallback(async () => {
     try {
-      const res = await fetch('/api/chat/sessions')
+      const res = await fetch('/api/chat/sessions', { cache: 'no-store' })
       const text = await res.text()
       
       const isJson = text.trim().startsWith('{') || text.trim().startsWith('[')

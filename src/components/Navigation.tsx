@@ -29,10 +29,12 @@ function UserProfile() {
     
     const fetchUserData = async () => {
       try {
-        const response = await fetch('/api/user/me')
+        const response = await fetch('/api/user/me', { 
+          cache: 'no-store'
+        })
         const text = await response.text()
         
-        // Check if response is NOT valid JSON (HTML redirect or error page)
+        // Check if response is NOT valid JSON
         const isJson = text.trim().startsWith('{') || text.trim().startsWith('[')
         
         if (!isJson) {
@@ -42,13 +44,11 @@ function UserProfile() {
         
         const data = JSON.parse(text)
         
-        if (data.error && (data.error.includes('Unauthorized') || data.error.includes('Internal'))) {
-          setUserData(null)
-        } else if (data.planType) {
+        if (data.planType) {
           setUserData({ plan: data.planType, aiCredits: data.aiCredits, promptCount: data.promptCount || 0 })
         }
       } catch (err) {
-        console.error('Failed to sync user credits:', err)
+        // Silently handle - don't show error
         setUserData(null)
       }
     }
