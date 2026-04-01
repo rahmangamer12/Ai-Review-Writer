@@ -56,10 +56,10 @@ export default function RootLayout({
         >
           <DynamicBackground />
           <ErrorBoundary>
-              <div className="flex flex-col lg:flex-row min-h-screen min-h-[100dvh] relative z-10 overflow-x-hidden" suppressHydrationWarning>
+              <div className="flex flex-col lg:flex-row min-h-[100dvh] relative z-10 overflow-x-hidden" suppressHydrationWarning>
                 <Navigation />
-                <main className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pt-[57px] lg:pt-8 pb-[calc(1rem+env(safe-area-inset-bottom))] min-w-0 lg:pl-64 xl:pl-72" suppressHydrationWarning>
-                  <div className="max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8" suppressHydrationWarning>
+                <main className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pt-[57px] lg:pt-0 pb-[calc(1rem+env(safe-area-inset-bottom))] min-w-0 lg:pl-64 xl:pl-72" suppressHydrationWarning>
+                  <div className="w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8" suppressHydrationWarning>
                     {children}
                   </div>
                 </main>
