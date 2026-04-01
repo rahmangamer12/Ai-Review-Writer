@@ -145,7 +145,7 @@ export default function ModelSelector({
               </div>
               <button
                 onClick={onClose}
-                className="p-2 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors"
+                className="p-2 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors active:scale-[0.98]"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -162,7 +162,7 @@ export default function ModelSelector({
                 className="w-full bg-white/[0.05] border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm placeholder:text-white/30 focus:border-violet-500/50 focus:outline-none focus:bg-white/[0.08] transition-all"
               />
               {search && (
-                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white">
+                <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white active:scale-[0.98]">
                   <X className="w-4 h-4" />
                 </button>
               )}
@@ -174,7 +174,7 @@ export default function ModelSelector({
                 <button
                   key={filter}
                   onClick={() => setActiveFilter(filter)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all active:scale-[0.98] ${
                     activeFilter === filter
                       ? 'bg-violet-600 text-white'
                       : 'bg-white/5 text-white/50 hover:bg-white/10 hover:text-white'

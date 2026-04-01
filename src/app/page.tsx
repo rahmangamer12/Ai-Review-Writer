@@ -127,14 +127,14 @@ export default function Home() {
 
   if (!isLoaded || !shouldRender) {
     return (
-      <div className="min-h-screen bg-[#050505] flex items-center justify-center relative" suppressHydrationWarning>
+      <div className="min-h-[100dvh] bg-[#050505] flex items-center justify-center relative overflow-x-hidden" suppressHydrationWarning>
         <div className="w-8 h-8 rounded-full border-2 border-neutral-800 border-t-neutral-300 animate-spin" suppressHydrationWarning />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#050505] font-sans selection:bg-neutral-800 selection:text-white">
+    <div className="min-h-[100dvh] bg-[#050505] font-sans selection:bg-neutral-800 selection:text-white overflow-x-hidden">
       {/* --- SCENE BACKGROUND (Subtle Mesh) --- */}
       <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute top-[-20%] left-[20%] w-[60vw] h-[60vw] bg-[radial-gradient(circle,rgba(255,255,255,0.03)_0%,transparent_70%)] rounded-full blur-[80px]" />
@@ -168,13 +168,13 @@ export default function Home() {
 
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full px-4 sm:px-0 mb-20">
                 <Link href="/sign-up" className="w-full sm:w-auto">
-                  <button className="w-full sm:w-auto px-6 py-3.5 bg-white text-black rounded-xl font-medium text-base hover:bg-neutral-200 transition-colors flex items-center justify-center gap-2 group">
+                  <button className="w-full sm:w-auto px-6 py-3.5 bg-white text-black rounded-xl font-medium text-base hover:bg-neutral-200 transition-colors flex items-center justify-center gap-2 group active:scale-[0.98]">
                     Start your 14-day free trial
                     <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
                   </button>
                 </Link>
                 <Link href="/contact" className="w-full sm:w-auto">
-                  <button className="w-full sm:w-auto px-6 py-3.5 bg-transparent text-white border border-neutral-800 rounded-xl font-medium text-base hover:bg-neutral-900 transition-colors flex items-center justify-center">
+                  <button className="w-full sm:w-auto px-6 py-3.5 bg-transparent text-white border border-neutral-800 rounded-xl font-medium text-base hover:bg-neutral-900 transition-colors flex items-center justify-center active:scale-[0.98]">
                     Contact Sales
                   </button>
                 </Link>
@@ -258,7 +258,7 @@ export default function Home() {
       </main>
 
       {/* --- FOOTER --- */}
-      <footer className="relative z-10 px-4 sm:px-6 py-12 border-t border-white/[0.05] bg-[#050505]">
+      <footer className="relative z-10 px-4 sm:px-6 py-12 border-t border-white/[0.05] bg-[#050505] pb-[env(safe-area-inset-bottom)]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
             <Wand2 className="w-4 h-4 text-neutral-500" />
