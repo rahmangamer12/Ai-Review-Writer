@@ -578,7 +578,7 @@ export default function Dashboard() {
   const renderOverview = () => (
     <>
       {/* Stats Grid - Perfectly responsive for all screens */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-5 xl:gap-6 mb-6 lg:mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <ModernStatCard title="Total Reviews" value={stats.totalReviews.toString()} subtitle="All time reviews" icon={MessageSquare} color="blue" delay={0} trend="up" trendValue="12" />
         <ModernStatCard title="Pending" value={stats.pendingReviews.toString()} subtitle="Need your attention" icon={Clock} color="amber" delay={0.1} trend="down" trendValue="5" />
         <ModernStatCard title="Response Rate" value={`${stats.responseRate}%`} subtitle={`${stats.repliedReviews} replied`} icon={CheckCircle} color="emerald" delay={0.2} trend="up" trendValue="8" />
@@ -588,7 +588,7 @@ export default function Dashboard() {
       {/* Quick Actions */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mb-8">
         <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
           {[
             { title: 'Add Reviews', description: 'Import customer reviews manually', icon: Plus, color: 'blue', action: () => router.push('/reviews/add') },
             { title: 'AI Review Generator', description: 'Generate test reviews with AI', icon: Bot, color: 'purple', action: () => setShowAIGenerator(true) },
@@ -599,7 +599,7 @@ export default function Dashboard() {
               whileHover={undefined}
               whileTap={{ scale: 0.98 }}
               onClick={action.action}
-              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] p-6 text-left transition-all hover:border-white/20 hover:bg-white/[0.04] hover:shadow-xl active:scale-[0.98]"
+              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-6 text-left transition-all hover:border-white/20 hover:bg-white/[0.04] hover:shadow-xl active:scale-[0.98]"
             >
               <div className={`inline-flex rounded-xl bg-${action.color}-500/20 p-3 mb-4`}>
                 <action.icon className={`h-6 w-6 text-${action.color}-400`} />
@@ -750,13 +750,13 @@ export default function Dashboard() {
       {/* Header with Controls */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-6 border-b border-white/5">
         <div>
-          <h2 className="text-3xl font-bold text-white flex items-center gap-3">
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white flex items-center gap-3">
             <div className="rounded-xl bg-purple-500/20 p-2">
               <BarChart3 className="h-6 w-6 text-purple-400" />
             </div>
             Analytics Dashboard
           </h2>
-          <p className="text-gray-500 mt-1 ml-12">
+            <p className="text-gray-500 mt-1 sm:ml-12">
             Deep insights into your review performance powered by AI
           </p>
         </div>
@@ -814,7 +814,7 @@ export default function Dashboard() {
             exit={{ opacity: 0, height: 0 }}
             className="overflow-hidden"
           >
-            <div className="rounded-2xl border border-purple-500/20 bg-purple-500/5 p-6 mb-6">
+            <div className="rounded-2xl border border-purple-500/20 bg-purple-500/5 p-4 sm:p-6 mb-6">
               <div className="flex items-center gap-3 mb-6">
                 <div className="rounded-xl bg-purple-500/20 p-2">
                   <Sparkles className="h-5 w-5 text-purple-400" />
@@ -856,7 +856,7 @@ export default function Dashboard() {
               </div>
               
               {/* AI Recommendations */}
-              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="mt-6 grid grid-cols-1 gap-4">
                 <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <CheckCircle className="h-4 w-4 text-emerald-400" />
@@ -923,7 +923,7 @@ export default function Dashboard() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             <ModernStatCard title="Total Reviews" value={stats.totalReviews.toString()} subtitle="All time reviews" icon={MessageSquare} color="blue" delay={0} trend="up" trendValue="12" />
             <ModernStatCard title="Avg Rating" value={stats.avgRating.toString()} subtitle="Out of 5.0 stars" icon={Star} color="amber" delay={0.1} trend="up" trendValue="5" />
             <ModernStatCard title="Response Rate" value={`${stats.responseRate}%`} subtitle={`${stats.repliedReviews} replied`} icon={CheckCircle} color="emerald" delay={0.2} trend="up" trendValue="8" />
@@ -937,7 +937,7 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="lg:col-span-2 rounded-2xl border border-white/5 bg-white/[0.02] p-6"
+          className="lg:col-span-2 rounded-2xl border border-white/5 bg-white/[0.02] p-4 sm:p-6"
         >
           <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -975,7 +975,7 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="rounded-2xl border border-white/5 bg-white/[0.02] p-6"
+          className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 sm:p-6"
         >
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-lg bg-indigo-500/20 p-2">
@@ -1002,7 +1002,7 @@ export default function Dashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
-          className="rounded-2xl border border-white/5 bg-white/[0.02] p-6"
+          className="rounded-2xl border border-white/5 bg-white/[0.02] p-4 sm:p-6"
         >
           <div className="mb-6 flex items-center gap-3">
             <div className="rounded-lg bg-emerald-500/20 p-2">
@@ -1160,7 +1160,7 @@ export default function Dashboard() {
       </motion.div>
 
       {/* Bottom Stats Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -1327,7 +1327,7 @@ export default function Dashboard() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-xs sm:max-w-md lg:max-w-3xl rounded-2xl border border-white/10 bg-[#0f0f14] p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto mobile-modal"
+              className="w-full max-w-sm sm:max-w-md rounded-2xl border border-white/10 bg-[#0f0f14] p-4 sm:p-6 shadow-2xl max-h-[90vh] overflow-y-auto mobile-modal"
             >
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">

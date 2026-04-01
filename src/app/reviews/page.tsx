@@ -636,7 +636,7 @@ function ReviewsContent() {
         {/* Filters Bar */}
         <div className="mb-6 space-y-4">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="relative flex-1 min-w-[200px] max-w-md">
+            <div className="relative flex-1 min-w-0 max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
@@ -786,7 +786,7 @@ function ReviewsContent() {
           </div>
         ) : (
           <>
-            <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 lg:gap-5' : 'space-y-4'}>
+            <div className={viewMode === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4' : 'space-y-4'}>
               <AnimatePresence mode="popLayout">
                 {reviews.map((review, index) => {
                   const authorName = review.reviewer_name || review.author_name || 'Anonymous'
@@ -935,7 +935,7 @@ function ReviewsContent() {
             </div>
 
             {totalPages > 1 && (
-              <div className="mt-8 flex items-center justify-between">
+              <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-3">
                 <p className="text-sm text-gray-500">
                   Showing {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} reviews
                 </p>
@@ -977,7 +977,7 @@ function ReviewsContent() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4"
             onClick={() => setShowReplyModal(false)}
           >
             <motion.div
@@ -985,7 +985,7 @@ function ReviewsContent() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-2xl rounded-2xl border border-white/10 bg-[#0f0f14] p-6 shadow-2xl"
+              className="w-full max-w-2xl rounded-t-3xl sm:rounded-2xl max-h-[90dvh] overflow-y-auto border border-white/10 bg-[#0f0f14] p-6 shadow-2xl"
             >
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">

@@ -291,7 +291,7 @@ export default function SubscriptionPage() {
               <span>Simple, transparent pricing</span>
             </motion.div>
             
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-4">
+            <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-white mb-4">
               Choose Your{' '}
               <span className="text-transparent bg-clip-text bg-linear-to-r from-primary to-purple-500">
                 Plan
@@ -317,7 +317,7 @@ export default function SubscriptionPage() {
             )}
 
             {/* Billing Toggle */}
-            <div className="inline-flex items-center gap-4 p-1.5 glass rounded-2xl">
+            <div className="inline-flex items-center gap-4 p-1.5 glass rounded-2xl w-full sm:w-auto">
               <button
                 onClick={() => setBillingCycle('monthly')}
                 className={`px-6 py-2.5 rounded-xl font-medium transition-all ${
@@ -372,7 +372,7 @@ export default function SubscriptionPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={undefined}
-                className={`relative rounded-2xl overflow-hidden flex-1 min-w-[280px] max-w-[360px] ${
+                className={`relative rounded-2xl overflow-hidden flex-1 min-w-[260px] max-w-[360px] ${
                   plan.popular ? 'lg:scale-105 z-10' : ''
                 }`}
               >
@@ -445,7 +445,7 @@ export default function SubscriptionPage() {
                     <button
                       onClick={() => handleSubscribe(plan.id)}
                       disabled={isLoading || isCurrent}
-                      className={`w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${
+                      className={`w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 min-h-[44px] text-sm ${
                         isCurrent
                           ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-default'
                           : plan.popular
@@ -514,7 +514,7 @@ export default function SubscriptionPage() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="mt-16 flex flex-wrap items-center justify-center gap-8 text-white/40"
+          className="mt-16 flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-white/40"
         >
           <div className="flex items-center gap-2">
             <Shield className="w-5 h-5" />

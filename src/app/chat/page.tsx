@@ -477,13 +477,13 @@ export default function ChatPage() {
           <div className="flex items-center gap-2 sm:gap-4">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 sm:p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+              className="lg:hidden p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
             >
               <PanelLeft className="w-5 h-5" />
             </button>
             
             <div className="flex items-center gap-2 sm:gap-3">
-              <h2 className="text-base sm:text-lg font-bold truncate max-w-[120px] sm:max-w-[200px] md:max-w-[300px]">
+              <h2 className="text-sm sm:text-base lg:text-lg font-bold truncate max-w-[140px] sm:max-w-[200px] md:max-w-[300px]">
                 {currentSession?.title || 'New Chat'}
               </h2>
               {currentSession?.isPinned && (
@@ -521,7 +521,7 @@ export default function ChatPage() {
             {/* Action Buttons */}
             <button
               onClick={exportHistory}
-              className="p-2 sm:p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+              className="p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
               title="Export chat"
             >
               <Download className="w-4 sm:w-5 h-4 sm:h-5" />
@@ -529,7 +529,7 @@ export default function ChatPage() {
             
             <button
               onClick={handleShare}
-              className="p-2 sm:p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+              className="p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
               title="Share"
             >
               <Share2 className="w-4 sm:w-5 h-4 sm:h-5" />
@@ -537,7 +537,7 @@ export default function ChatPage() {
             
             <button
               onClick={() => setShowHelp(true)}
-              className="p-2 sm:p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+              className="p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
               title="Help"
             >
               <HelpCircle className="w-4 sm:w-5 h-4 sm:h-5" />
@@ -545,7 +545,7 @@ export default function ChatPage() {
 
             <button
               onClick={() => setShowSettings(true)}
-              className="p-2 sm:p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+              className="p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
               title="Settings"
             >
               <Settings className="w-4 sm:w-5 h-4 sm:h-5" />
@@ -669,7 +669,7 @@ export default function ChatPage() {
                 </button>
               </div>
               <div className="space-y-4 text-sm text-white/60">
-                <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/5">
                   <h3 className="font-bold mb-3 text-white flex items-center gap-2">
                     <Brain className="w-4 h-4 text-violet-400" />
                     Keyboard Shortcuts
@@ -680,14 +680,14 @@ export default function ChatPage() {
                     <li className="flex justify-between"><span className="text-violet-400">Ctrl + K</span> <span>Quick search</span></li>
                   </ul>
                 </div>
-                <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/5">
                   <h3 className="font-bold mb-3 text-white flex items-center gap-2">
                     <Sparkles className="w-4 h-4 text-violet-400" />
                     Voice Commands
                   </h3>
                   <p className="text-xs">Click the microphone button and speak clearly. Use Chrome browser for best results.</p>
                 </div>
-                <div className="p-4 bg-white/5 rounded-xl border border-white/5">
+                <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/5">
                   <h3 className="font-bold mb-3 text-white flex items-center gap-2">
                     <Zap className="w-4 h-4 text-violet-400" />
                     Available Models

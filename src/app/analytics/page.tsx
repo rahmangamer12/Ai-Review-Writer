@@ -204,10 +204,10 @@ export default function AnalyticsPage() {
         <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-indigo-600/10 rounded-full blur-[150px] animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
 
-      <div className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16">
+      <div className="relative z-10 max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8 lg:py-16">
         
         {/* ── Header ───────────────────────────────────────────────────────── */}
-        <header className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-6 xl:gap-8 mb-16 sm:mb-24 relative">
+        <header className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-6 xl:gap-8 mb-8 sm:mb-16 lg:mb-24 relative">
           <div className="absolute -top-12 -left-12 w-64 h-64 bg-violet-600/10 rounded-full blur-[100px] pointer-events-none" />
           <div className="space-y-6 relative z-10">
             <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-4">
@@ -222,12 +222,12 @@ export default function AnalyticsPage() {
             </motion.div>
             <motion.h1 
               initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", damping: 20 }}
-              className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.9] sm:leading-none"
+              className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.9] sm:leading-none"
             >
               Enterprise <br className="hidden sm:block" />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-indigo-300 to-cyan-300 drop-shadow-[0_0_30px_rgba(139,92,246,0.3)]">Analytics</span>
             </motion.h1>
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-white/50 text-base sm:text-lg lg:text-xl max-w-2xl font-medium leading-relaxed">
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-white/50 text-sm sm:text-base lg:text-xl max-w-2xl font-medium leading-relaxed">
               Synthesizing cross-platform review data into <span className="text-white">actionable intelligence</span> through neural pattern recognition and temporal mapping.
             </motion.p>
           </div>
@@ -299,7 +299,7 @@ export default function AnalyticsPage() {
                     </div>
                   </div>
                   
-                  <div className="flex-1 min-h-[240px] flex items-end gap-1.5 sm:gap-3 px-2">
+                  <div className="flex-1 min-h-[200px] sm:min-h-[240px] flex items-end gap-0.5 sm:gap-3 px-2">
                     {timeSeriesData.slice(-Number(timeRange)).map((day, i) => {
                       const maxCount = Math.max(...timeSeriesData.map(d => d.count), 1)
                       const height = (day.count / maxCount) * 100
