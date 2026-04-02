@@ -454,40 +454,40 @@ export default function ProfilePage() {
               </div>
 
               {/* Profile Info */}
-              <div className="flex-1">
+              <div className="flex-1 min-w-0 w-full">
                 {editing ? (
                   <div className="space-y-3">
                     <input
                       type="text"
                       value={editedProfile.full_name ?? profile.full_name ?? ''}
                       onChange={(e) => setEditedProfile(prev => ({ ...prev, full_name: e.target.value }))}
-                      className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-2xl font-bold focus:outline-none focus:border-primary"
+                      className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-xl sm:text-2xl font-bold focus:outline-none focus:border-primary"
                       placeholder="Your Name"
                     />
                     <input
                       type="email"
                       value={profile.email}
                       disabled
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white/60 cursor-not-allowed"
+                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white/60 cursor-not-allowed text-sm break-all"
                     />
                     <textarea
                       value={editedProfile.bio ?? profile.bio}
                       onChange={(e) => setEditedProfile(prev => ({ ...prev, bio: e.target.value }))}
-                      className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-primary resize-none"
+                      className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-primary resize-none text-sm"
                       rows={2}
                       placeholder="Tell us about yourself..."
                     />
                   </div>
                 ) : (
-                  <>
-                    <h1 className="text-3xl font-bold text-white mb-2">{profile.full_name}</h1>
-                    <p className="text-white/70 mb-3">{profile.email}</p>
-                    <p className="text-white/80 text-sm mb-4">{profile.bio}</p>
+                  <div className="min-w-0">
+                    <h1 className="text-xl sm:text-3xl font-bold text-white mb-1 sm:mb-2 truncate">{profile.full_name}</h1>
+                    <p className="text-white/70 mb-2 sm:mb-3 text-sm sm:text-base break-all">{profile.email}</p>
+                    <p className="text-white/80 text-xs sm:text-sm mb-4 line-clamp-3 sm:line-clamp-none">{profile.bio}</p>
                     
-                    <div className="flex flex-wrap gap-3">
-                      <div className="flex items-center gap-2 px-3 py-1.5 glass rounded-lg">
-                        <span className="text-xl">{getPlanIcon(profile.plan)}</span>
-                        <span className={`font-semibold capitalize ${getPlanColor(profile.plan)}`}>
+                    <div className="flex flex-wrap gap-2 sm:gap-3">
+                      <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:px-3 sm:py-1.5 glass rounded-lg">
+                        <span className="text-base sm:text-xl">{getPlanIcon(profile.plan)}</span>
+                        <span className={`font-semibold capitalize text-[10px] sm:text-sm ${getPlanColor(profile.plan)}`}>
                           {profile.plan} Plan
                         </span>
                       </div>
