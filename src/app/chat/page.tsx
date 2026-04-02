@@ -449,8 +449,8 @@ export default function ChatPage() {
       />
 
       <main className="flex-1 flex flex-col min-w-0 w-full relative z-10">
-        {/* Mobile-First Native Header */}
-        <header className="shrink-0 h-[calc(64px+env(safe-area-inset-top))] pt-[env(safe-area-inset-top)] border-b border-white/5 flex items-center justify-between px-4 sm:px-6 bg-[#08080f]/80 backdrop-blur-2xl sticky top-0 z-40">
+        {/* Responsive Native Header */}
+        <header className="shrink-0 h-[64px] lg:h-[72px] pt-[env(safe-area-inset-top)] border-b border-white/5 flex items-center justify-between px-4 lg:px-8 bg-[#08080f]/80 backdrop-blur-2xl sticky top-0 z-40">
           <div className="flex items-center gap-3 min-w-0">
             <motion.button
               whileTap={{ scale: 0.9 }}
@@ -460,7 +460,7 @@ export default function ChatPage() {
               <PanelLeft className="w-5 h-5 text-white/70" />
             </motion.button>
             <div className="flex flex-col min-w-0">
-              <h2 className="text-base sm:text-lg font-bold truncate">
+              <h2 className="text-sm lg:text-lg font-bold truncate max-w-[120px] sm:max-w-[200px] lg:max-w-none">
                 {currentSession?.title || 'New Chat'}
               </h2>
               <div className="flex items-center gap-1.5">
@@ -470,7 +470,37 @@ export default function ChatPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 lg:gap-2">
+            {/* Desktop Actions */}
+            <div className="hidden md:flex items-center gap-2 mr-2 border-r border-white/10 pr-2">
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
+                onClick={exportHistory} 
+                className="p-2.5 bg-white/5 rounded-2xl flex items-center justify-center active:bg-white/10" 
+                title="Export"
+              >
+                <Download className="w-4 h-4 text-white/70" />
+              </motion.button>
+              
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
+                onClick={handleShare} 
+                className="p-2.5 bg-white/5 rounded-2xl flex items-center justify-center active:bg-white/10" 
+                title="Share"
+              >
+                <Share2 className="w-4 h-4 text-white/70" />
+              </motion.button>
+
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowHelp(true)} 
+                className="p-2.5 bg-white/5 rounded-2xl flex items-center justify-center active:bg-white/10" 
+                title="Help"
+              >
+                <HelpCircle className="w-4 h-4 text-white/70" />
+              </motion.button>
+            </div>
+
             {/* Model Badge */}
             <motion.button
               whileTap={{ scale: 0.95 }}
@@ -486,36 +516,6 @@ export default function ChatPage() {
               <ChevronDown className="w-3.5 h-3.5 text-white/30" />
             </motion.button>
 
-            {/* Desktop Actions */}
-            <div className="hidden md:flex items-center gap-2">
-              <motion.button 
-                whileTap={{ scale: 0.95 }}
-                onClick={exportHistory} 
-                className="p-2.5 bg-white/5 rounded-2xl flex items-center justify-center active:bg-white/10" 
-                title="Export"
-              >
-                <Download className="w-5 h-5 text-white/70" />
-              </motion.button>
-              
-              <motion.button 
-                whileTap={{ scale: 0.95 }}
-                onClick={handleShare} 
-                className="p-2.5 bg-white/5 rounded-2xl flex items-center justify-center active:bg-white/10" 
-                title="Share"
-              >
-                <Share2 className="w-5 h-5 text-white/70" />
-              </motion.button>
-
-              <motion.button 
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowHelp(true)} 
-                className="p-2.5 bg-white/5 rounded-2xl flex items-center justify-center active:bg-white/10" 
-                title="Help"
-              >
-                <HelpCircle className="w-5 h-5 text-white/70" />
-              </motion.button>
-            </div>
-
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowSettings(true)}
@@ -529,15 +529,15 @@ export default function ChatPage() {
               onClick={createNewSession}
               className="px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-2xl transition-all shadow-lg shadow-violet-600/20 flex items-center gap-2 active:scale-95 ml-1 hidden sm:flex"
             >
-              <Plus className="w-5 h-5" />
-              <span className="text-sm font-bold">New Chat</span>
+              <Plus className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-tight">New</span>
             </motion.button>
           </div>
         </header>
 
-        {/* Messages Area - Edge to Edge on Mobile */}
-        <div ref={chatContainerRef} className="flex-1 overflow-y-auto custom-scrollbar bg-transparent px-0 sm:px-4">
-          <div className="max-w-4xl mx-auto w-full">
+        {/* Messages Area */}
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto custom-scrollbar bg-transparent px-0 sm:px-4 lg:px-8">
+          <div className="max-w-4xl mx-auto w-full py-4 sm:py-8">
             <ChatMessages
               messages={messages}
               isLoading={isLoading}
@@ -550,9 +550,9 @@ export default function ChatPage() {
           </div>
         </div>
 
-        {/* Input Area - Native iOS Style */}
-        <div className="shrink-0 bg-[#08080f]/80 backdrop-blur-2xl border-t border-white/5 pb-[calc(12px+env(safe-area-inset-bottom))] pt-3 px-4 sm:px-6">
-          <div className="max-w-4xl mx-auto">
+        {/* Input Area */}
+        <div className="shrink-0 bg-[#08080f]/80 backdrop-blur-2xl border-t border-white/5 pb-[calc(16px+env(safe-area-inset-bottom))] lg:pb-8 pt-4 px-4 sm:px-6 lg:px-12">
+          <div className="max-w-4xl mx-auto w-full">
             <ChatInput
               input={input}
               setInput={setInput}
