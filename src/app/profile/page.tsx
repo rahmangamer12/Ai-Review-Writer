@@ -454,40 +454,40 @@ export default function ProfilePage() {
               </div>
 
               {/* Profile Info */}
-              <div className="flex-1 min-w-0 w-full">
+              <div className="flex-1">
                 {editing ? (
                   <div className="space-y-3">
                     <input
                       type="text"
                       value={editedProfile.full_name ?? profile.full_name ?? ''}
                       onChange={(e) => setEditedProfile(prev => ({ ...prev, full_name: e.target.value }))}
-                      className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-xl sm:text-2xl font-bold focus:outline-none focus:border-primary"
+                      className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white text-2xl font-bold focus:outline-none focus:border-primary"
                       placeholder="Your Name"
                     />
                     <input
                       type="email"
                       value={profile.email}
                       disabled
-                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white/60 cursor-not-allowed text-sm break-all"
+                      className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-white/60 cursor-not-allowed"
                     />
                     <textarea
                       value={editedProfile.bio ?? profile.bio}
                       onChange={(e) => setEditedProfile(prev => ({ ...prev, bio: e.target.value }))}
-                      className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-primary resize-none text-sm"
+                      className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg text-white focus:outline-none focus:border-primary resize-none"
                       rows={2}
                       placeholder="Tell us about yourself..."
                     />
                   </div>
                 ) : (
-                  <div className="min-w-0">
-                    <h1 className="text-xl sm:text-3xl font-bold text-white mb-1 sm:mb-2 truncate">{profile.full_name}</h1>
-                    <p className="text-white/70 mb-2 sm:mb-3 text-sm sm:text-base break-all">{profile.email}</p>
-                    <p className="text-white/80 text-xs sm:text-sm mb-4 line-clamp-3 sm:line-clamp-none">{profile.bio}</p>
+                  <>
+                    <h1 className="text-3xl font-bold text-white mb-2">{profile.full_name}</h1>
+                    <p className="text-white/70 mb-3">{profile.email}</p>
+                    <p className="text-white/80 text-sm mb-4">{profile.bio}</p>
                     
-                    <div className="flex flex-wrap gap-2 sm:gap-3">
-                      <div className="flex items-center gap-1.5 sm:gap-2 px-2.5 py-1 sm:px-3 sm:py-1.5 glass rounded-lg">
-                        <span className="text-base sm:text-xl">{getPlanIcon(profile.plan)}</span>
-                        <span className={`font-semibold capitalize text-[10px] sm:text-sm ${getPlanColor(profile.plan)}`}>
+                    <div className="flex flex-wrap gap-3">
+                      <div className="flex items-center gap-2 px-3 py-1.5 glass rounded-lg">
+                        <span className="text-xl">{getPlanIcon(profile.plan)}</span>
+                        <span className={`font-semibold capitalize ${getPlanColor(profile.plan)}`}>
                           {profile.plan} Plan
                         </span>
                       </div>
@@ -572,7 +572,7 @@ export default function ProfilePage() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex overflow-x-auto pb-4 gap-2 mb-6 hide-scrollbar snap-x"
+          className="flex flex-wrap gap-2 mb-6"
         >
           {[
             { id: 'overview', label: 'Overview', icon: <Users className="w-4 h-4" /> },
@@ -583,8 +583,8 @@ export default function ProfilePage() {
           ].map((tab) => (
             <motion.button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 min-h-[40px] whitespace-nowrap text-xs sm:text-sm active:scale-[0.98] snap-start ${
+              onClick={() => setActiveTab(tab.id as 'overview' | 'stats' | 'activity' | 'achievements' | 'settings' | string as unknown as 'overview' | 'stats' | 'activity' | 'achievements' | 'settings')}
+              className={`px-4 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 min-h-[44px] text-xs sm:text-sm active:scale-[0.98] ${
                 activeTab === tab.id
                   ? 'bg-primary text-primary-foreground shadow-lg'
                   : 'glass text-white/70 hover:text-white hover:bg-white/10'
@@ -609,23 +609,27 @@ export default function ProfilePage() {
             {activeTab === 'overview' && (
               <div className="space-y-6">
                 {/* Quick Stats Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.1 }}
-                    className="glass-card border border-cyan-500/20 rounded-xl p-4 sm:p-6 relative overflow-hidden"
+                    className="glass-card border border-cyan-500/20 rounded-xl p-6 relative overflow-hidden"
                   >
-                    <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-cyan-500/10 rounded-full blur-2xl" />
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-cyan-500/10 rounded-full blur-2xl" />
                     <div className="relative">
-                      <div className="flex items-center justify-between mb-2 sm:mb-3">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-cyan-500/20 rounded-lg sm:rounded-xl flex items-center justify-center">
-                          <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-cyan-400" />
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="w-12 h-12 bg-cyan-500/20 rounded-xl flex items-center justify-center">
+                          <MessageSquare className="w-6 h-6 text-cyan-400" />
                         </div>
-                        <span className="text-cyan-400 text-[10px] sm:text-sm font-medium uppercase">Total</span>
+                        <span className="text-cyan-400 text-sm font-medium">Total</span>
                       </div>
-                      <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{profile.stats.total_reviews}</p>
-                      <p className="text-white/40 text-[10px] sm:text-sm">Reviews Managed</p>
+                      <p className="text-3xl font-bold text-white mb-1">{profile.stats.total_reviews}</p>
+                      <p className="text-white/60 text-sm">Reviews Managed</p>
+                      <div className="mt-3 flex items-center gap-2 text-xs">
+                        <span className="text-emerald-400">+{profile.stats.reviews_this_month}</span>
+                        <span className="text-white/60">this month</span>
+                      </div>
                     </div>
                   </motion.div>
 
@@ -633,18 +637,30 @@ export default function ProfilePage() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.2 }}
-                    className="glass-card border border-yellow-500/20 rounded-xl p-4 sm:p-6 relative overflow-hidden"
+                    className="glass-card border border-yellow-500/20 rounded-xl p-6 relative overflow-hidden"
                   >
-                    <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-yellow-500/10 rounded-full blur-2xl" />
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-500/10 rounded-full blur-2xl" />
                     <div className="relative">
-                      <div className="flex items-center justify-between mb-2 sm:mb-3">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-yellow-500/20 rounded-lg sm:rounded-xl flex items-center justify-center">
-                          <Star className="w-5 h-5 sm:w-6 sm:h-6 text-yellow-400" />
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center">
+                          <Star className="w-6 h-6 text-yellow-400" />
                         </div>
-                        <span className="text-yellow-400 text-[10px] sm:text-sm font-medium uppercase">Average</span>
+                        <span className="text-yellow-400 text-sm font-medium">Average</span>
                       </div>
-                      <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{profile.stats.avg_rating.toFixed(1)}</p>
-                      <p className="text-white/40 text-[10px] sm:text-sm">Rating Score</p>
+                      <p className="text-3xl font-bold text-white mb-1">{profile.stats.avg_rating.toFixed(1)}</p>
+                      <p className="text-white/60 text-sm">Rating Score</p>
+                      <div className="mt-3 flex gap-1">
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-3 h-3 ${
+                              i < Math.floor(profile.stats.avg_rating)
+                                ? 'text-yellow-400 fill-yellow-400'
+                                : 'text-gray-600'
+                            }`}
+                          />
+                        ))}
+                      </div>
                     </div>
                   </motion.div>
 
@@ -652,18 +668,26 @@ export default function ProfilePage() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.3 }}
-                    className="glass-card border border-emerald-500/20 rounded-xl p-4 sm:p-6 relative overflow-hidden"
+                    className="glass-card border border-emerald-500/20 rounded-xl p-6 relative overflow-hidden"
                   >
-                    <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-emerald-500/10 rounded-full blur-2xl" />
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full blur-2xl" />
                     <div className="relative">
-                      <div className="flex items-center justify-between mb-2 sm:mb-3">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-emerald-500/20 rounded-lg sm:rounded-xl flex items-center justify-center">
-                          <ThumbsUp className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center">
+                          <ThumbsUp className="w-6 h-6 text-emerald-400" />
                         </div>
-                        <span className="text-emerald-400 text-[10px] sm:text-sm font-medium uppercase">Rate</span>
+                        <span className="text-emerald-400 text-sm font-medium">Rate</span>
                       </div>
-                      <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{profile.stats.response_rate.toFixed(0)}%</p>
-                      <p className="text-white/40 text-[10px] sm:text-sm">Response Rate</p>
+                      <p className="text-3xl font-bold text-white mb-1">{profile.stats.response_rate.toFixed(0)}%</p>
+                      <p className="text-white/60 text-sm">Response Rate</p>
+                      <div className="mt-3">
+                        <div className="w-full bg-white/10 rounded-full h-1.5">
+                          <div
+                            className="h-full bg-emerald-400 rounded-full"
+                            style={{ width: `${profile.stats.response_rate}%` }}
+                          />
+                        </div>
+                      </div>
                     </div>
                   </motion.div>
 
@@ -671,18 +695,22 @@ export default function ProfilePage() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.4 }}
-                    className="glass-card border border-purple-500/20 rounded-xl p-4 sm:p-6 relative overflow-hidden"
+                    className="glass-card border border-purple-500/20 rounded-xl p-6 relative overflow-hidden"
                   >
-                    <div className="absolute top-0 right-0 w-16 sm:w-20 h-16 sm:h-20 bg-purple-500/10 rounded-full blur-2xl" />
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/10 rounded-full blur-2xl" />
                     <div className="relative">
-                      <div className="flex items-center justify-between mb-2 sm:mb-3">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-500/20 rounded-lg sm:rounded-xl flex items-center justify-center">
-                          <Clock className="w-5 h-5 sm:w-6 sm:h-6 text-purple-400" />
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                          <Clock className="w-6 h-6 text-purple-400" />
                         </div>
-                        <span className="text-purple-400 text-[10px] sm:text-sm font-medium uppercase">Speed</span>
+                        <span className="text-purple-400 text-sm font-medium">Speed</span>
                       </div>
-                      <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{profile.stats.avg_response_time}m</p>
-                      <p className="text-white/40 text-[10px] sm:text-sm">Avg Resp. Time</p>
+                      <p className="text-3xl font-bold text-white mb-1">{profile.stats.avg_response_time}m</p>
+                      <p className="text-white/60 text-sm">Avg Response Time</p>
+                      <div className="mt-3 flex items-center gap-2 text-xs">
+                        <Zap className="w-3 h-3 text-purple-400" />
+                        <span className="text-purple-400">Fast responder</span>
+                      </div>
                     </div>
                   </motion.div>
                 </div>
@@ -1217,48 +1245,7 @@ export default function ProfilePage() {
 
                   <div className="space-y-6">
                     {/* Monthly Bar Chart */}
-                    <div className="grid grid-cols-2 xs:grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-4">
-                      {(() => {
-                        const now = new Date()
-                        const monthlyData: { month: string; reviews: number; avgRating: number; isCurrentMonth: boolean }[] = []
-
-                        // Generate last 6 months of data
-                        for (let i = 5; i >= 0; i--) {
-                          const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1)
-                          const monthName = monthDate.toLocaleDateString('en-US', { month: 'short' })
-                          
-                          monthlyData.push({
-                            month: monthName,
-                            reviews: Math.floor(Math.random() * 50),
-                            avgRating: 3.5 + Math.random() * 1.5,
-                            isCurrentMonth: i === 0
-                          })
-                        }
-
-                        return monthlyData.map((data, i) => (
-                          <div key={i} className="flex flex-col items-center">
-                            <div className="w-full bg-white/5 rounded-xl p-2 sm:p-4 border border-white/10 relative group hover:border-primary/30 transition-all">
-                              <p className="text-[10px] sm:text-xs text-white/40 mb-3 sm:mb-4 text-center">{data.month}{data.isCurrentMonth ? ' •' : ''}</p>
-                              <div className="h-20 sm:h-32 w-full flex items-end justify-center mb-3 sm:mb-4">
-                                <motion.div
-                                  initial={{ height: 0 }}
-                                  animate={{ height: `${(data.reviews / 50) * 100}%` }}
-                                  className={`w-full max-w-[12px] sm:max-w-[20px] rounded-full ${
-                                    data.isCurrentMonth 
-                                      ? 'bg-gradient-to-t from-primary to-cyan-400' 
-                                      : 'bg-white/20'
-                                  }`}
-                                />
-                              </div>
-                              <p className="text-lg sm:text-2xl font-bold text-white text-center">{data.reviews}</p>
-                              <p className={`text-[10px] sm:text-xs text-center ${data.isCurrentMonth ? 'text-primary' : 'text-emerald-400'}`}>
-                                {data.isCurrentMonth ? 'Start' : `${Math.floor(Math.random() * 20)}%`}
-                              </p>
-                            </div>
-                          </div>
-                        ))
-                      })()}
-                    </div>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 sm:gap-4">
                       {(() => {
                         const now = new Date()
                         const monthlyData: { month: string; reviews: number; avgRating: number; isCurrentMonth: boolean }[] = []
