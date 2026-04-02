@@ -214,25 +214,29 @@ export default function Navigation() {
 
   return (
     <>
-      {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 glass-card border-b border-white/10 px-4 py-2.5 flex items-center justify-between backdrop-blur-xl pt-[calc(0.5rem+env(safe-area-inset-top))]">
-        <Link href="/dashboard" className="flex items-center gap-2 min-h-[44px] px-1">
-          <motion.div
-            whileTap={{ scale: 0.95 }}
-            className="w-9 h-9 bg-gradient-to-br from-purple-600 to-pink-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/25"
-          >
-            <Sparkles className="w-4 h-4 text-white" />
-          </motion.div>
-          <h1 className="text-lg font-bold text-white">AutoReview</h1>
-        </Link>
-        <motion.button
-          whileTap={{ scale: 0.9 }}
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 transition-colors border border-white/10"
-          aria-label="Toggle menu"
-        >
-          {mobileMenuOpen ? <X className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-white" />}
-        </motion.button>
+      {/* Mobile Header - Native Minimal */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-2xl border-b border-white/5 px-4 h-[calc(57px+env(safe-area-inset-top))] flex items-end pb-3">
+        <div className="w-full flex items-center justify-between">
+          <Link href="/dashboard" className="flex items-center gap-2 min-h-[44px]">
+            <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/20">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            <h1 className="text-lg font-bold text-white tracking-tight">AutoReview</h1>
+          </Link>
+          <div className="flex items-center gap-2">
+            <SignedIn>
+              <UserButton afterSignOutUrl="/" appearance={{ elements: { userButtonAvatarBox: 'w-8 h-8' } }} />
+            </SignedIn>
+            <motion.button
+              whileTap={{ scale: 0.9 }}
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-white" />}
+            </motion.button>
+          </div>
+        </div>
       </div>
 
       {/* Mobile Menu Overlay */}
@@ -242,135 +246,93 @@ export default function Navigation() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="lg:hidden fixed inset-0 bg-black/80 backdrop-blur-sm z-40"
+            className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[60]"
             onClick={() => setMobileMenuOpen(false)}
             aria-hidden="true"
           />
         )}
       </AnimatePresence>
 
-      {/* Mobile Navigation Drawer */}
+      {/* Mobile Navigation Drawer - Slide from bottom (Native Feel) */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.nav
-            initial={{ x: '-100%' }}
-            animate={{ x: 0 }}
-            exit={{ x: '-100%' }}
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="lg:hidden fixed top-0 left-0 bottom-0 w-[85vw] max-w-[320px] glass-card border-r border-primary/20 p-4 flex flex-col z-50 overflow-y-auto overscroll-contain pt-[calc(3.5rem+env(safe-area-inset-top))] pb-[env(safe-area-inset-bottom)]"
+            className="lg:hidden fixed inset-x-0 bottom-0 max-h-[85vh] bg-[#0f0f14] rounded-t-[32px] border-t border-white/10 p-6 flex flex-col z-[70] overflow-y-auto overscroll-contain pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile Navigation Menu"
-            aria-hidden={!mobileMenuOpen}
-            suppressHydrationWarning
           >
-            {/* Navigation Items */}
+            <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-8 flex-shrink-0" />
+            
             <div className="space-y-2 flex-1">
               {navItems.map((item, index) => (
-                <motion.div
+                <Link
                   key={item.href}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.05 * (index + 1) }}
+                  href={item.href}
+                  className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all active:scale-[0.98] ${
+                    isActive(item.href)
+                      ? 'bg-purple-600/20 text-white border border-purple-500/30'
+                      : 'text-white/60 hover:text-white bg-white/5'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
                 >
-                  <Link
-                    href={item.href}
-                    className={`relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 group overflow-hidden min-h-[44px] ${isActive(item.href)
-                        ? 'bg-primary/20 text-white border border-primary/30'
-                        : 'text-white/70 hover:text-white hover:bg-white/10'
-                      }`}
-                    onClick={() => setMobileMenuOpen(false)} // Close menu on item click
-                  >
-                    {/* Background Gradient on Active */}
-                    {isActive(item.href) && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 0.1 }}
-                        className={`absolute inset-0 bg-gradient-to-r ${item.gradient}`}
-                      />
-                    )}
-
-                    {/* Active Indicator */}
-                    {isActive(item.href) && (
-                      <motion.div
-                        layoutId="activeIndicatorMobile"
-                        className={`absolute left-0 top-1/2 -translate-y-1/2 w-1 h-7 bg-gradient-to-b ${item.gradient} rounded-r-full`}
-                        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-                      />
-                    )}
-
-                    {/* Icon */}
-                    <item.icon className="w-5 h-5 relative z-10 text-white/80" />
-
-                    {/* Content */}
-                    <div className="flex-1 relative z-10">
-                      <p className="font-medium text-sm">{item.label}</p>
-                      <p className="text-[10px] opacity-60">{item.description}</p>
-                    </div>
-                  </Link>
-                </motion.div>
+                  <item.icon className={`w-5 h-5 ${isActive(item.href) ? 'text-purple-400' : ''}`} />
+                  <span className="font-semibold">{item.label}</span>
+                </Link>
               ))}
             </div>
 
-            {/* User Section */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="pt-4 border-t border-white/20 space-y-3 mt-4"
-            >
+            <div className="mt-8 pt-6 border-t border-white/10">
               <SignedOut>
-                <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-3">
                   <SignInButton mode="modal">
-                    <button className="w-full px-3 py-3 min-h-[44px] bg-white/10 hover:bg-white/20 text-white rounded-xl text-sm font-medium transition-all border border-white/20">
+                    <button className="px-4 py-4 rounded-2xl bg-white/5 text-white font-semibold border border-white/10 active:scale-95">
                       Sign In
                     </button>
                   </SignInButton>
                   <SignUpButton mode="modal">
-                    <button className="w-full px-3 py-3 min-h-[44px] bg-gradient-to-r from-primary to-accent text-white rounded-xl text-sm font-medium hover:opacity-90 transition-all shadow-lg">
-                      Sign Up Free
+                    <button className="px-4 py-4 rounded-2xl bg-purple-600 text-white font-semibold active:scale-95">
+                      Sign Up
                     </button>
                   </SignUpButton>
                 </div>
               </SignedOut>
-
               <SignedIn>
-                <div className="overflow-y-auto max-h-40">
-                  <UserProfile />
-                </div>
+                <UserProfile />
               </SignedIn>
-            </motion.div>
+            </div>
           </motion.nav>
         )}
       </AnimatePresence>
 
-      {/* Bottom Tab Bar - Mobile Only (Native App Feel) */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0a0a0f]/95 backdrop-blur-xl border-t border-white/10 pb-[env(safe-area-inset-bottom)]">
-        <div className="flex items-center justify-around py-1.5">
-          {[
-            { href: '/dashboard', icon: LayoutDashboard, label: 'Home' },
-            { href: '/reviews', icon: MessageSquare, label: 'Reviews' },
-            { href: '/chat', icon: Bot, label: 'Chat' },
-            { href: '/analytics', icon: BarChart3, label: 'Analytics' },
-            { href: '/profile', icon: User, label: 'Profile' },
-          ].map(item => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg min-w-0 transition-all active:scale-95 ${
-                isActive(item.href)
-                  ? 'text-purple-400'
-                  : 'text-white/40'
-              }`}
-            >
-              <item.icon className="w-5 h-5" />
-              <span className="text-[10px] truncate">{item.label}</span>
-              {isActive(item.href) && (
-                <div className="w-1 h-1 rounded-full bg-purple-400" />
-              )}
-            </Link>
-          ))}
-        </div>
+      {/* Bottom Tab Bar - iOS Native Execution */}
+      <div className="lg:hidden fixed bottom-0 w-full flex items-center justify-around bg-background/80 backdrop-blur-2xl border-t border-white/10 z-[999] pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] px-2">
+        {[
+          { href: '/dashboard', icon: LayoutDashboard, label: 'Home' },
+          { href: '/reviews', icon: MessageSquare, label: 'Reviews' },
+          { href: '/chat', icon: Bot, label: 'Chat' },
+          { href: '/analytics', icon: BarChart3, label: 'Analytics' },
+          { href: '/profile', icon: User, label: 'Profile' },
+        ].map(item => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={`flex flex-col items-center justify-center gap-1 w-16 h-12 transition-all active:scale-75 ${
+              isActive(item.href)
+                ? 'text-purple-500'
+                : 'text-white/40'
+            }`}
+          >
+            <item.icon className={`${isActive(item.href) ? 'w-6 h-6' : 'w-5 h-5 opacity-80'}`} />
+            <span className={`text-[10px] font-medium tracking-tight ${isActive(item.href) ? 'opacity-100' : 'opacity-60'}`}>
+              {item.label}
+            </span>
+          </Link>
+        ))}
       </div>
 
       {/* Desktop Navigation - Fixed sidebar */}

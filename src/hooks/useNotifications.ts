@@ -108,7 +108,7 @@ export function useNotifications() {
   }, [state.supported, registerServiceWorker])
 
   // Show notification
-  const showNotification = useCallback((options: ShowNotificationOptions): boolean => {
+  const showNotification = useCallback(async (options: ShowNotificationOptions): Promise<boolean> => {
     // Check if notifications are supported and permission is granted
     if (!state.supported) {
       console.warn('Cannot show notification: notifications not supported')
@@ -120,6 +120,33 @@ export function useNotifications() {
       return false
     }
 
+    // ALWAYS prefer Service Worker for mobile compatibility (iOS/Android)
+    if (state.serviceWorkerReady || 'serviceWorker' in navigator) {
+      try {
+        const registration = await navigator.serviceWorker.ready
+        if (registration) {
+          const notificationOptions: NotificationOptions & { actions?: NotificationAction[] } = {
+            body: options.body,
+            icon: options.icon || '/icon.png',
+            badge: options.badge || '/badge.png',
+            tag: options.tag || 'autoreview-notification',
+            requireInteraction: options.requireInteraction || false,
+            silent: options.silent || false,
+            data: options.data || { url: '/dashboard' },
+            actions: [
+              { action: 'open', title: 'Open App' },
+              { action: 'dismiss', title: 'Dismiss' }
+            ] as NotificationAction[]
+          }
+          await registration.showNotification(options.title, notificationOptions)
+          return true
+        }
+      } catch (swError) {
+        console.warn('Service Worker notification failed, falling back to legacy API:', swError)
+      }
+    }
+
+    // Fallback for desktop browsers that don't support/have SW ready
     try {
       const notificationOptions: NotificationOptions = {
         body: options.body,
@@ -133,12 +160,9 @@ export function useNotifications() {
 
       const notification = new Notification(options.title, notificationOptions)
 
-      // Handle notification click
       notification.onclick = () => {
         window.focus()
         notification.close()
-
-        // Navigate to the specified URL
         const url = typeof options.data?.url === 'string' ? options.data.url : '/dashboard'
         window.location.href = url
       }
@@ -148,7 +172,7 @@ export function useNotifications() {
       console.error('Error showing notification:', error)
       return false
     }
-  }, [state.supported, state.permission])
+  }, [state.supported, state.permission, state.serviceWorkerReady])
 
   // Show notification via service worker (for background notifications)
   const showNotificationViaSW = useCallback(async (options: ShowNotificationOptions): Promise<boolean> => {
