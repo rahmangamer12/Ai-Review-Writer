@@ -1282,7 +1282,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <main className="relative z-10 w-full px-4 sm:px-6 lg:px-8 min-w-0 pb-[env(safe-area-inset-bottom)]">
+      <main className="relative z-10 w-full px-0 md:px-6 lg:px-8 min-w-0">
         {/* Error Message */}
         <AnimatePresence>
           {error && (
@@ -1290,7 +1290,7 @@ export default function Dashboard() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="mb-6 rounded-xl border border-rose-500/20 bg-rose-500/10 p-4"
+              className="mx-4 mb-6 rounded-xl border border-rose-500/20 bg-rose-500/10 p-4"
             >
               <div className="flex items-center gap-3">
                 <AlertCircle className="h-5 w-5 text-rose-400" />
@@ -1301,10 +1301,12 @@ export default function Dashboard() {
           )}
         </AnimatePresence>
 
-        {/* Tab Content */}
-        {activeTab === 'overview' && renderOverview()}
-        {activeTab === 'reviews' && renderReviews()}
-        {activeTab === 'analytics' && renderAnalytics()}
+        <div className="px-4 md:px-0">
+          {/* Tab Content */}
+          {activeTab === 'overview' && renderOverview()}
+          {activeTab === 'reviews' && renderReviews()}
+          {activeTab === 'analytics' && renderAnalytics()}
+        </div>
       </main>
 
       {/* Click outside to close dropdowns */}
