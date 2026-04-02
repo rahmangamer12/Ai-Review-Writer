@@ -103,20 +103,32 @@ export default function ChatSidebar({
   const sidebarContent = (
     <motion.aside
       {...(isMobile ? {
-        initial: { x: -320, opacity: 0 },
-        animate: { x: 0, opacity: 1 },
-        exit: { x: -320, opacity: 0 },
-      } : {})}
-      transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+        initial: { y: '100%' },
+        animate: { y: 0 },
+        exit: { y: '100%' },
+        drag: "y",
+        dragConstraints: { top: 0, bottom: 0 },
+        dragElastic: { top: 0, bottom: 0.5 },
+        onDragEnd: (_, info) => {
+          if (info.offset.y > 100) setSidebarOpen(false)
+        }
+      } : {
+        initial: { x: -320 },
+        animate: { x: 0 },
+      })}
+      transition={{ type: 'spring', damping: 30, stiffness: 300 }}
       className={`
-        ${isMobile ? 'fixed inset-y-0 left-0 z-[400]' : 'relative flex-shrink-0'} 
-        w-[280px] sm:w-[300px] lg:w-[320px] xl:w-[340px] 
+        ${isMobile ? 'fixed inset-x-0 bottom-0 z-[400] rounded-t-[2.5rem] max-h-[85vh]' : 'relative flex-shrink-0'} 
+        w-full lg:w-[320px] xl:w-[340px] 
         h-full bg-gradient-to-b from-[#0a0a12] via-[#08080f] to-[#060609] 
-        border-r border-white/5 flex flex-col
-        transform transition-transform duration-300
-        ${isMobile && !sidebarOpen ? '-translate-x-full' : 'translate-x-0'}
+        border-r border-t border-white/5 flex flex-col overflow-hidden
       `}
     >
+      {/* Mobile Handle */}
+      {isMobile && (
+        <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mt-4 mb-2 flex-shrink-0" />
+      )}
+
       {/* Header */}
       <div className="p-3 sm:p-4 lg:p-5 border-b border-white/5">
         <div className="flex items-center justify-between mb-3 sm:mb-4">

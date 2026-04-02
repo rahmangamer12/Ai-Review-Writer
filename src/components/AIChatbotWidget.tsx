@@ -101,18 +101,6 @@ import { usePathname } from 'next/navigation'
 export default function AIChatbot() {
   const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
-  
-  // Responsive logic to hide ONLY on mobile chat page
-  const [isMobile, setIsMobile] = useState(false)
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
-  if (isMobile && pathname === '/chat') return null
-
   const [showTooltip, setShowTooltip] = useState(true)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -391,7 +379,7 @@ export default function AIChatbot() {
 
   return (
     <>
-      <div className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] right-4 sm:bottom-6 sm:right-6 z-50" suppressHydrationWarning>
+      <div className="fixed bottom-6 right-4 sm:bottom-6 sm:right-6 lg:bottom-10 lg:right-10 z-50" suppressHydrationWarning>
         <AnimatePresence>
           {showTooltip && !isOpen && (
             <motion.div
