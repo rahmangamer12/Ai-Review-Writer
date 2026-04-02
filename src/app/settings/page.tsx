@@ -3,7 +3,7 @@
 import { useState, useEffect, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageSquare, LayoutDashboard, Database, Shield, Zap, Globe, Link as LinkIcon, Bell, Bot, Settings as SettingsIcon, AlertCircle, CheckCircle2, RefreshCcw, ExternalLink } from 'lucide-react'
+import { MessageSquare, LayoutDashboard, Database, Shield, Zap, Globe, Link as LinkIcon, Bell, Bot, Settings as SettingsIcon, AlertCircle, CheckCircle2, RefreshCcw, ExternalLink, Save } from 'lucide-react'
 import { PlatformIntegrationManager } from '@/lib/platformIntegrations'
 import CreditManager from '@/components/CreditManager'
 import PageTransition from '@/components/transitions/PageTransition'
