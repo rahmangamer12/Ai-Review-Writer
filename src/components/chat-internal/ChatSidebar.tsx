@@ -102,12 +102,14 @@ export default function ChatSidebar({
 
   const sidebarContent = (
     <motion.aside
-      initial={{ x: -320, opacity: 0 }}
-      animate={{ x: 0, opacity: 1 }}
-      exit={{ x: -320, opacity: 0 }}
+      {...(isMobile ? {
+        initial: { x: -320, opacity: 0 },
+        animate: { x: 0, opacity: 1 },
+        exit: { x: -320, opacity: 0 },
+      } : {})}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       className={`
-        ${isMobile ? 'fixed inset-y-0 left-0 z-[400]' : 'relative'} 
+        ${isMobile ? 'fixed inset-y-0 left-0 z-[400]' : 'relative flex-shrink-0'} 
         w-[280px] sm:w-[300px] lg:w-[320px] xl:w-[340px] 
         h-full bg-gradient-to-b from-[#0a0a12] via-[#08080f] to-[#060609] 
         border-r border-white/5 flex flex-col
@@ -290,21 +292,27 @@ export default function ChatSidebar({
   )
 
   return (
-    <AnimatePresence>
-      {sidebarOpen && (
-        <>
-          {isMobile && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[350] bg-black/60 backdrop-blur-sm"
-              onClick={() => setSidebarOpen(false)}
-            />
+    <>
+      {/* Desktop sidebar - always visible */}
+      {!isMobile && sidebarContent}
+      
+      {/* Mobile sidebar - toggle with overlay */}
+      {isMobile && (
+        <AnimatePresence>
+          {sidebarOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 z-[350] bg-black/60 backdrop-blur-sm"
+                onClick={() => setSidebarOpen(false)}
+              />
+              {sidebarContent}
+            </>
           )}
-          {sidebarContent}
-        </>
+        </AnimatePresence>
       )}
-    </AnimatePresence>
+    </>
   )
 }
