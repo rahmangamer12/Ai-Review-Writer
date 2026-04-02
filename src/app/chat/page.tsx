@@ -471,7 +471,7 @@ export default function ChatPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Model Badge - Small on mobile */}
+            {/* Model Badge */}
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => setShowModelSelector(true)}
@@ -482,8 +482,39 @@ export default function ChatPage() {
                   {getModelIcon(activeModel.iconName)}
                 </span>
               )}
+              <span className="text-xs font-semibold hidden sm:inline">{activeModel?.shortName}</span>
               <ChevronDown className="w-3.5 h-3.5 text-white/30" />
             </motion.button>
+
+            {/* Desktop Actions */}
+            <div className="hidden md:flex items-center gap-2">
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
+                onClick={exportHistory} 
+                className="p-2.5 bg-white/5 rounded-2xl flex items-center justify-center active:bg-white/10" 
+                title="Export"
+              >
+                <Download className="w-5 h-5 text-white/70" />
+              </motion.button>
+              
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
+                onClick={handleShare} 
+                className="p-2.5 bg-white/5 rounded-2xl flex items-center justify-center active:bg-white/10" 
+                title="Share"
+              >
+                <Share2 className="w-5 h-5 text-white/70" />
+              </motion.button>
+
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowHelp(true)} 
+                className="p-2.5 bg-white/5 rounded-2xl flex items-center justify-center active:bg-white/10" 
+                title="Help"
+              >
+                <HelpCircle className="w-5 h-5 text-white/70" />
+              </motion.button>
+            </div>
 
             <motion.button
               whileTap={{ scale: 0.95 }}
@@ -491,6 +522,15 @@ export default function ChatPage() {
               className="p-2.5 bg-white/5 rounded-2xl flex items-center justify-center active:bg-white/10"
             >
               <Settings className="w-5 h-5 text-white/70" />
+            </motion.button>
+
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={createNewSession}
+              className="px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-2xl transition-all shadow-lg shadow-violet-600/20 flex items-center gap-2 active:scale-95 ml-1 hidden sm:flex"
+            >
+              <Plus className="w-5 h-5" />
+              <span className="text-sm font-bold">New Chat</span>
             </motion.button>
           </div>
         </header>
