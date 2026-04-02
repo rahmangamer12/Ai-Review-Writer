@@ -36,7 +36,7 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isVoiceActive, setIsVoiceActive] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(false) // Default to closed on hydration
   const [isMobile, setIsMobile] = useState(false)
   const [showModelSelector, setShowModelSelector] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
@@ -44,12 +44,24 @@ export default function ChatPage() {
   const [showMoreMenu, setShowMoreMenu] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [input, setInput] = useState('')
+  const [isMounted, setIsMounted] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
   const chatContainerRef = useRef<HTMLDivElement>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
   const moreMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    setIsMounted(true)
+    const saved = localStorage.getItem('chat-settings')
+    if (saved) {
+      try { setSettings(JSON.parse(saved)) } catch {}
+    }
+    const mobile = window.innerWidth < 1024
+    setIsMobile(mobile)
+    setSidebarOpen(!mobile)
+  }, [])
 
   const currentSession = useMemo(() => sessions.find(s => s.id === currentSessionId), [sessions, currentSessionId])
   const messages = useMemo(() => currentSession?.messages || [], [currentSession])
@@ -69,7 +81,7 @@ export default function ChatPage() {
   }, [isLoaded, isSignedIn, router])
 
   // Show loading while checking auth
-  if (!isLoaded) {
+  if (!isLoaded || !isMounted) {
     return (
       <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-violet-500 border-t-transparent rounded-full animate-spin" />
@@ -450,65 +462,72 @@ export default function ChatPage() {
       />
 
       <main className="flex-1 flex flex-col min-h-0 min-w-0 w-full relative z-10">
-        <header className="shrink-0 h-14 sm:h-16 border-b border-white/5 flex items-center justify-between px-3 sm:px-6 bg-[#08080f]/90 backdrop-blur-xl">
-          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+        <header className="shrink-0 h-16 lg:h-20 border-b border-white/5 flex items-center justify-between px-4 sm:px-6 lg:px-8 bg-[#08080f]/90 backdrop-blur-xl">
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl transition-colors lg:hidden flex items-center justify-center"
+              className="p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl transition-colors lg:hidden flex items-center justify-center active:scale-95"
             >
               <PanelLeft className="w-5 h-5 text-white/70" />
             </button>
-            <h2 className="text-sm sm:text-lg font-bold truncate max-w-[140px] sm:max-w-[300px]">
-              {currentSession?.title || 'New Chat'}
-            </h2>
+            <div className="flex flex-col min-w-0">
+              <h2 className="text-sm sm:text-lg font-bold truncate max-w-[140px] sm:max-w-[300px] lg:max-w-none">
+                {currentSession?.title || 'New Chat'}
+              </h2>
+              {currentSession && (
+                <p className="text-[10px] text-white/30 font-medium uppercase tracking-wider hidden sm:block">
+                  Session Node Active
+                </p>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {/* Model Selector - All screens */}
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            {/* Model Selector */}
             <button
               onClick={() => setShowModelSelector(true)}
-              className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-2 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-all min-h-[44px]"
+              className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-2 bg-white/5 hover:bg-white/10 rounded-2xl border border-white/10 transition-all min-h-[44px] active:scale-95 shadow-lg"
             >
               {activeModel && (
                 <span className={getBadgeColor(activeModel.badgeColor).split(' ')[1]}>
                   {getModelIcon(activeModel.iconName)}
                 </span>
               )}
-              <span className="text-xs font-semibold hidden sm:inline">{activeModel?.shortName}</span>
+              <span className="text-xs font-bold hidden md:inline tracking-tight">{activeModel?.shortName}</span>
               <ChevronDown className="w-3.5 h-3.5 text-white/30" />
             </button>
 
-            {/* Export - Desktop only */}
-            <button onClick={exportHistory} className="hidden lg:flex p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl transition-colors items-center justify-center" title="Export">
-              <Download className="w-4.5 h-4.5" />
-            </button>
-            
-            {/* Share - Desktop only */}
-            <button onClick={handleShare} className="hidden lg:flex p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl transition-colors items-center justify-center" title="Share">
-              <Share2 className="w-4.5 h-4.5" />
-            </button>
+            {/* Desktop Actions Group */}
+            <div className="hidden md:flex items-center gap-2 border-l border-white/10 pl-3">
+              <button onClick={exportHistory} className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors flex items-center justify-center active:scale-95" title="Export">
+                <Download className="w-5 h-5 text-white/60" />
+              </button>
+              
+              <button onClick={handleShare} className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors flex items-center justify-center active:scale-95" title="Share">
+                <Share2 className="w-5 h-5 text-white/60" />
+              </button>
 
-            {/* Help - Desktop only */}
-            <button onClick={() => setShowHelp(true)} className="hidden lg:flex p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl transition-colors items-center justify-center" title="Help">
-              <HelpCircle className="w-4.5 h-4.5" />
-            </button>
+              <button onClick={() => setShowHelp(true)} className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors flex items-center justify-center active:scale-95" title="Help">
+                <HelpCircle className="w-5 h-5 text-white/60" />
+              </button>
+            </div>
 
-            {/* Settings - All screens */}
+            {/* Settings */}
             <button
               onClick={() => setShowSettings(true)}
-              className="p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl transition-colors flex items-center justify-center"
+              className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors flex items-center justify-center active:scale-95"
               title="Settings"
             >
-              <Settings className="w-4.5 h-4.5" />
+              <Settings className="w-5 h-5 text-white/60" />
             </button>
 
-            {/* More Menu - Mobile only */}
-            <div className="lg:hidden relative" ref={moreMenuRef}>
+            {/* More Menu (Mobile Only) */}
+            <div className="md:hidden relative" ref={moreMenuRef}>
               <button
                 onClick={() => setShowMoreMenu(!showMoreMenu)}
-                className="p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl transition-colors flex items-center justify-center"
+                className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors flex items-center justify-center active:scale-95"
               >
-                <MoreHorizontal className="w-4.5 h-4.5" />
+                <MoreHorizontal className="w-5 h-5 text-white/60" />
               </button>
 
               <AnimatePresence>
@@ -517,29 +536,29 @@ export default function ChatPage() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute right-0 top-full mt-2 w-48 bg-[#0c0c18] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50"
+                    className="absolute right-0 top-full mt-2 w-48 bg-[#0c0c18] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50 backdrop-blur-2xl"
                   >
                     <div className="py-2">
                       <button
                         onClick={() => { exportHistory(); setShowMoreMenu(false); }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-left"
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors text-left"
                       >
                         <Download className="w-4 h-4 text-white/60" />
-                        <span className="text-sm text-white">Export Chat</span>
+                        <span className="text-sm font-medium">Export Chat</span>
                       </button>
                       <button
                         onClick={() => { handleShare(); setShowMoreMenu(false); }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-left"
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors text-left"
                       >
                         <Share2 className="w-4 h-4 text-white/60" />
-                        <span className="text-sm text-white">Share</span>
+                        <span className="text-sm font-medium">Share</span>
                       </button>
                       <button
                         onClick={() => { setShowHelp(true); setShowMoreMenu(false); }}
-                        className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-left"
+                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors text-left"
                       >
                         <HelpCircle className="w-4 h-4 text-white/60" />
-                        <span className="text-sm text-white">Help</span>
+                        <span className="text-sm font-medium">Help Guide</span>
                       </button>
                     </div>
                   </motion.div>
@@ -547,44 +566,50 @@ export default function ChatPage() {
               </AnimatePresence>
             </div>
 
-            {/* New Chat - All screens */}
+            {/* New Chat Button */}
             <button
               onClick={createNewSession}
-              className="px-2 sm:px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-xl transition-all shadow-lg shadow-violet-600/20 flex items-center gap-1.5 sm:gap-2 min-h-[44px]"
+              className="px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-2xl transition-all shadow-lg shadow-violet-600/20 flex items-center gap-2 active:scale-95 ml-1"
             >
-              <Plus className="w-4.5 h-4.5" />
-              <span className="hidden sm:inline text-sm font-semibold">New Chat</span>
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline text-xs font-black uppercase tracking-widest">New</span>
             </button>
           </div>
         </header>
 
         {/* Messages Area */}
-        <div ref={chatContainerRef} className="flex-1 overflow-y-auto custom-scrollbar">
-          <ChatMessages
-            messages={messages}
-            isLoading={isLoading}
-            onRetry={handleRetry}
-            onCopy={handleCopy}
-            onSpeak={speakMessage}
-            onStopSpeaking={stopSpeaking}
-            isSpeaking={isSpeaking}
-          />
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto custom-scrollbar bg-transparent px-4 sm:px-6 lg:px-12">
+          <div className="max-w-4xl mx-auto w-full py-6 sm:py-10">
+            <ChatMessages
+              messages={messages}
+              isLoading={isLoading}
+              onRetry={handleRetry}
+              onCopy={handleCopy}
+              onSpeak={speakMessage}
+              onStopSpeaking={stopSpeaking}
+              isSpeaking={isSpeaking}
+            />
+          </div>
         </div>
 
-        {/* Input Area */}
-        <ChatInput
-          input={input}
-          setInput={setInput}
-          onSend={handleSend}
-          onVoice={handleVoice}
-          isLoading={isLoading}
-          isVoiceActive={isVoiceActive}
-          activeModel={activeModel}
-          onOpenModelSelector={() => setShowModelSelector(true)}
-          fileInputRef={fileInputRef}
-          uploadedFiles={uploadedFiles}
-          setUploadedFiles={setUploadedFiles}
-        />
+        {/* Input Area Wrapper */}
+        <div className="shrink-0 w-full px-4 sm:px-6 lg:px-12 pb-6 lg:pb-10 bg-gradient-to-t from-[#030308] to-transparent">
+          <div className="max-w-4xl mx-auto w-full">
+            <ChatInput
+              input={input}
+              setInput={setInput}
+              onSend={handleSend}
+              onVoice={handleVoice}
+              isLoading={isLoading}
+              isVoiceActive={isVoiceActive}
+              activeModel={activeModel}
+              onOpenModelSelector={() => setShowModelSelector(true)}
+              fileInputRef={fileInputRef}
+              uploadedFiles={uploadedFiles}
+              setUploadedFiles={setUploadedFiles}
+            />
+          </div>
+        </div>
       </main>
 
       {/* Modals */}

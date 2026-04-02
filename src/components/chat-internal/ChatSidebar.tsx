@@ -133,32 +133,32 @@ export default function ChatSidebar({
       <div className="p-3 sm:p-4 lg:p-5 border-b border-white/5">
         <div className="flex items-center justify-between mb-3 sm:mb-4">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-9 sm:w-10 h-9 sm:h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg">
-              <Sparkles className="w-4 sm:w-5 h-4 sm:h-5" />
+            <div className="w-9 sm:w-10 h-9 sm:h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-600/25">
+              <Sparkles className="w-4 sm:w-5 h-4 sm:h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-sm sm:text-base font-bold">Sarah AI</h1>
+              <h1 className="text-sm sm:text-base font-black tracking-tight">Sarah Matrix</h1>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] sm:text-xs text-emerald-400">Online</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Node Active</span>
               </div>
             </div>
           </div>
           {isMobile && (
             <button
               onClick={() => setSidebarOpen(false)}
-              className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg active:scale-[0.98]"
+              className="p-1.5 sm:p-2 hover:bg-white/10 rounded-lg active:scale-90"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4 text-white/40" />
             </button>
           )}
         </div>
 
         <button
           onClick={createNewSession}
-          className="w-full py-2.5 sm:py-3 bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 rounded-xl text-xs sm:text-sm font-semibold transition-all active:scale-[0.98]"
+          className="w-full py-2.5 sm:py-3 bg-primary text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all active:scale-[0.98] shadow-lg shadow-primary/20"
         >
-          + New Chat
+          Initialize New Protocol
         </button>
 
         {/* Search */}
@@ -166,135 +166,105 @@ export default function ChatSidebar({
           <Search className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 sm:w-4 h-3.5 sm:h-4 text-white/30" />
           <input
             type="text"
-            placeholder="Search chats..."
+            placeholder="Scan memory logs..."
             value={localSearch}
             onChange={(e) => setLocalSearch(e.target.value)}
-            className="w-full bg-white/[0.03] border border-white/8 rounded-lg sm:rounded-xl pl-9 sm:pl-10 pr-3 py-2 sm:py-2.5 text-xs sm:text-sm placeholder:text-white/30 focus:border-violet-500/40 focus:outline-none"
+            className="w-full bg-white/[0.03] border border-white/8 rounded-lg sm:rounded-xl pl-9 sm:pl-10 pr-3 py-2 sm:py-2.5 text-xs sm:text-sm placeholder:text-white/30 focus:border-primary/40 focus:outline-none transition-all shadow-inner"
           />
-          {localSearch && (
-            <button
-              onClick={() => setLocalSearch('')}
-              className="absolute right-2.5 sm:left-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white active:scale-[0.98]"
-            >
-              <X className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-            </button>
-          )}
         </div>
       </div>
 
       {/* Sessions List */}
-      <div className="flex-1 overflow-y-auto px-2 sm:px-3 py-2 space-y-1">
+      <div className="flex-1 overflow-y-auto custom-scrollbar px-2 sm:px-3 py-2 space-y-1">
         {sortedSessions.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-center px-3">
-            <div className="w-12 sm:h-14 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-3">
-              <MessageSquare className="w-5 sm:w-6 h-5 sm:h-6 text-white/20" />
+          <div className="flex flex-col items-center justify-center py-12 text-center px-4">
+            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-4">
+              <MessageSquare className="w-5 h-5 text-white/10" />
             </div>
-            <p className="text-xs sm:text-sm text-white/40 font-medium">
-              {localSearch ? 'No results found' : 'No conversations yet'}
-            </p>
-            <p className="text-[10px] sm:text-xs text-white/25 mt-1">
-              {localSearch ? 'Try a different search' : 'Start a new chat'}
-            </p>
+            <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest leading-none">No Logs Found</p>
           </div>
         ) : (
-          <div className="space-y-1">
-            {sortedSessions.map((session) => (
-              <motion.div
-                key={session.id}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                onClick={() => handleSessionClick(session.id)}
-                className={`group relative p-2.5 sm:p-3 rounded-xl cursor-pointer transition-all border ${
-                  currentSessionId === session.id
-                    ? 'bg-violet-600/15 border-violet-500/40'
-                    : 'hover:bg-white/[0.03] border-transparent hover:border-white/5'
-                }`}
-              >
-                <div className="flex items-start gap-2 sm:gap-3">
-                  <div className={`mt-0.5 ${currentSessionId === session.id ? 'text-violet-400' : 'text-white/30'}`}>
-                    <MessageSquare className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      {session.isPinned && (
-                        <Pin className="w-2.5 sm:w-3 h-2.5 sm:h-3 text-amber-400 fill-amber-400 flex-shrink-0" />
-                      )}
-                      <p className="text-xs sm:text-sm font-medium truncate">{session.title}</p>
-                    </div>
-                    <p className="text-[10px] sm:text-xs text-white/40 mt-0.5">
-                      {formatRelativeDate(session.date)}
-                    </p>
-                  </div>
+          sortedSessions.map((session) => (
+            <motion.div
+              key={session.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              onClick={() => handleSessionClick(session.id)}
+              className={`group relative p-2.5 sm:p-3 rounded-xl cursor-pointer transition-all border ${
+                currentSessionId === session.id
+                  ? 'bg-primary/10 border-primary/30 shadow-lg shadow-primary/5'
+                  : 'hover:bg-white/[0.02] border-transparent hover:border-white/5'
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <div className={`mt-0.5 ${currentSessionId === session.id ? 'text-primary' : 'text-white/20'}`}>
+                  <MessageSquare className="w-3.5 h-3.5" />
                 </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    {session.isPinned && <Pin className="w-2.5 h-2.5 text-amber-400 fill-amber-400 shrink-0" />}
+                    <p className={`text-xs sm:text-sm font-bold truncate ${currentSessionId === session.id ? 'text-white' : 'text-white/60'}`}>{session.title}</p>
+                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-white/20 mt-0.5">{formatRelativeDate(session.date)}</p>
+                </div>
+              </div>
 
-                {/* Actions */}
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-0.5 sm:gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button
-                    onClick={(e) => handlePin(e, session.id)}
-                    className="p-1 sm:p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-amber-400 transition-colors active:scale-[0.98]"
-                  >
-                    <Pin className={`w-3 sm:w-3.5 h-3 sm:h-3.5 ${session.isPinned ? 'fill-current' : ''}`} />
-                  </button>
-                  <button
-                    onClick={(e) => handleEdit(e, session.id)}
-                    className="p-1 sm:p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-blue-400 transition-colors active:scale-[0.98]"
-                  >
-                    <Edit3 className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
-                  </button>
-                  <button
-                    onClick={(e) => handleDelete(e, session.id)}
-                    className="p-1 sm:p-1.5 rounded-lg hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-colors active:scale-[0.98]"
-                  >
-                    <Trash2 className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+              {/* Actions */}
+              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-0.5 opacity-0 group-hover:opacity-100 transition-all">
+                <button onClick={(e) => handlePin(e, session.id)} className="p-1.5 rounded-lg hover:bg-white/10 text-white/20 hover:text-amber-400 transition-colors">
+                  <Pin className={`w-3 h-3 ${session.isPinned ? 'fill-current' : ''}`} />
+                </button>
+                <button onClick={(e) => handleEdit(e, session.id)} className="p-1.5 rounded-lg hover:bg-white/10 text-white/20 hover:text-blue-400 transition-colors">
+                  <Edit3 className="w-3 h-3" />
+                </button>
+                <button onClick={(e) => handleDelete(e, session.id)} className="p-1.5 rounded-lg hover:bg-red-500/10 text-white/20 hover:text-red-400 transition-colors">
+                  <Trash2 className="w-3 h-3" />
+                </button>
+              </div>
+            </motion.div>
+          ))
         )}
       </div>
 
       {/* Profile Section */}
-      <div className="p-2 sm:p-3 lg:p-4 border-t border-white/5">
-        <div className="p-2.5 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl bg-white/[0.03] border border-white/8">
-          <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-            <div className="w-8 sm:w-9 lg:w-10 h-8 sm:h-9 lg:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-bold text-white text-sm">
+      <div className="p-2 sm:p-3 lg:p-4 border-t border-white/5 bg-black/20">
+        <div className="p-3 sm:p-4 rounded-[1.5rem] bg-white/[0.03] border border-white/5 shadow-inner">
+          <div className="flex items-center gap-2 sm:gap-3 mb-3">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-black text-white text-xs shadow-lg shadow-emerald-500/20">
               {userData?.name?.charAt(0) || 'U'}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs sm:text-sm font-semibold truncate">{userData?.name || 'User'}</p>
-              <p className="text-[10px] sm:text-xs text-white/40">{userData?.planType || 'Free'} Plan</p>
+              <p className="text-xs font-black truncate">{userData?.name || 'User'}</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-white/30">{userData?.planType || 'Free'} PROTOCOL</p>
             </div>
             <button
               onClick={() => window.location.href = '/settings'}
-              className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-colors active:scale-[0.98]"
+              className="p-1.5 rounded-lg hover:bg-white/10 text-white/30 hover:text-white transition-all active:scale-90"
             >
-              <Settings className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
+              <Settings className="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <div className="flex items-center justify-between mb-2 sm:mb-3">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <Sparkles className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-violet-400" />
-              <span className="text-[10px] sm:text-xs text-white/50">Credits</span>
+          <div className="flex items-center justify-between p-2.5 bg-white/5 rounded-xl mb-3">
+            <div className="flex items-center gap-1.5">
+              <Sparkles className="w-3 h-3 text-violet-400" />
+              <span className="text-[9px] font-black uppercase tracking-tighter text-white/40">Credits</span>
             </div>
-            <span className="text-sm sm:text-base font-bold text-violet-400">
-              {userData?.aiCredits ?? 0}
-            </span>
+            <span className="text-xs font-black text-violet-400 tracking-tight">{userData?.aiCredits ?? 0}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
             <button
               onClick={() => window.location.href = '/subscription'}
-              className="py-1.5 sm:py-2 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg text-[10px] sm:text-xs font-semibold hover:from-violet-500 hover:to-indigo-500 transition-all active:scale-[0.98]"
+              className="py-2 bg-primary text-white rounded-lg text-[9px] font-black uppercase tracking-widest active:scale-95 transition-all"
             >
               Upgrade
             </button>
             <button
               onClick={() => window.location.href = '/'}
-              className="py-1.5 sm:py-2 bg-white/[0.05] rounded-lg text-[10px] sm:text-xs font-medium text-white/50 hover:bg-white/[0.1] transition-all flex items-center justify-center gap-1 active:scale-[0.98]"
+              className="py-2 bg-white/5 text-white/40 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-1 hover:text-white transition-all"
             >
-              <LogOut className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
+              <LogOut className="w-3 h-3" />
               Exit
             </button>
           </div>
