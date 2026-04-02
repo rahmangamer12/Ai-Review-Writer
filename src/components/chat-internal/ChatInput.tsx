@@ -2,24 +2,21 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import {
-  Paperclip, Mic, MicOff, Loader2, ArrowUp, X, FileText,
-  Image, File, Upload, Wand2, Sparkles, Send, StopCircle
+import { 
+  Paperclip, Mic, StopCircle, Loader2, ArrowUp, X, FileText,
+  Image as ImageIcon, File, Upload, Sparkles, Wand2
 } from 'lucide-react'
+import { getModelIcon } from './models'
 import type { UploadedFile } from './types'
 
 interface ChatInputProps {
   input: string
-  setInput: (text: string) => void
-  onSend: (text?: string) => void
+  setInput: (val: string) => void
+  onSend: (override?: string) => void
   onVoice: () => void
   isLoading: boolean
   isVoiceActive: boolean
-  activeModel?: {
-    id: string
-    name: string
-    supportsVision: boolean
-  }
+  activeModel?: any
   onOpenModelSelector: () => void
   fileInputRef: React.RefObject<HTMLInputElement | null>
   uploadedFiles: UploadedFile[]
@@ -27,105 +24,59 @@ interface ChatInputProps {
   disabled?: boolean
 }
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
-
-const formatFileSize = (bytes: number) => {
-  if (bytes < 1024) return bytes + ' B'
-  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
-  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
-}
-
-const getFileIcon = (type: string) => {
-  if (type.startsWith('image/')) return <Image className="w-5 h-5" />
-  if (type.includes('pdf')) return <FileText className="w-5 h-5" />
-  return <File className="w-5 h-5" />
-}
-
 export default function ChatInput({
-  input,
-  setInput,
-  onSend,
-  onVoice,
-  isLoading,
-  isVoiceActive,
-  activeModel,
-  onOpenModelSelector,
-  fileInputRef,
-  uploadedFiles,
-  setUploadedFiles,
-  disabled
+  input, setInput, onSend, onVoice, isLoading, isVoiceActive,
+  activeModel, onOpenModelSelector, fileInputRef,
+  uploadedFiles, setUploadedFiles, disabled
 }: ChatInputProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [isFocused, setIsFocused] = useState(false)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  // Auto-resize textarea
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto'
-      textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 200) + 'px'
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`
     }
   }, [input])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !isLoading) {
       e.preventDefault()
-      if (input.trim() || uploadedFiles.length > 0) {
-        onSend()
-      }
+      onSend()
     }
   }
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files) return
-
-    const newFiles: UploadedFile[] = Array.from(files)
-      .filter(file => {
-        if (file.size > MAX_FILE_SIZE) {
-          console.warn(`File ${file.name} is too large (max 10MB)`)
-          return false
-        }
-        return true
-      })
-      .map(file => {
-        const fileInfo: UploadedFile = {
-          id: Math.random().toString(36).substring(2, 11),
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          file
-        }
-        
-        // Generate preview for images
-        if (file.type.startsWith('image/')) {
-          const reader = new FileReader()
-          reader.onload = () => {
-            setUploadedFiles(prev => 
-              prev.map(f => f.id === fileInfo.id ? { ...f, preview: reader.result as string } : f)
-            )
-          }
-          reader.readAsDataURL(file)
-        }
-        
-        return fileInfo
-      })
-
-    setUploadedFiles(prev => [...prev, ...newFiles])
-    
-    // Auto-switch to Omni model for file uploads
-    if (newFiles.length > 0 && activeModel && !activeModel.id.includes('Omni')) {
-      // Trigger model switch via parent - for now just log
-      console.log('Consider switching to Omni for file analysis')
-    }
-
-    // Reset input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = ''
-    }
-  }, [activeModel, fileInputRef, setUploadedFiles])
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    files.forEach(file => {
+      const id = Math.random().toString(36).slice(2)
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        setUploadedFiles(prev => [...prev, {
+          id, name: file.name, type: file.type, size: file.size,
+          preview: file.type.startsWith('image/') ? event.target?.result as string : undefined
+        }])
+      }
+      reader.readAsDataURL(file)
+    })
+  }
 
   const removeFile = (id: string) => {
     setUploadedFiles(prev => prev.filter(f => f.id !== id))
+  }
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) return <ImageIcon className="w-4 h-4" />
+    if (type.includes('pdf')) return <FileText className="w-4 h-4" />
+    return <File className="w-4 h-4" />
+  }
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 B'
+    const k = 1024
+    const sizes = ['B', 'KB', 'MB', 'GB']
+    const i = Math.floor(Math.log(bytes) / Math.log(k))
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
   }
 
   const canSend = (input.trim() || uploadedFiles.length > 0) && !isLoading && !disabled
@@ -151,11 +102,7 @@ export default function ChatInput({
                   className="flex items-center gap-1.5 px-2 py-1 bg-white/[0.05] rounded-lg border border-white/10 group hover:border-white/20 transition-colors"
                 >
                   {file.preview ? (
-                    <img 
-                      src={file.preview} 
-                      alt={file.name}
-                      className="w-6 h-6 sm:w-8 sm:h-8 rounded object-cover" 
-                    />
+                    <img src={file.preview} alt={file.name} className="w-6 h-6 sm:w-8 sm:h-8 rounded object-cover" />
                   ) : (
                     <div className="w-6 h-6 sm:w-8 sm:h-8 rounded bg-white/10 flex items-center justify-center text-white/60">
                       {getFileIcon(file.type)}
@@ -181,7 +128,6 @@ export default function ChatInput({
             : 'bg-[#0f0f1d] border-white/10 shadow-inner'
         } border rounded-2xl sm:rounded-3xl`}>
           <div className="flex items-end gap-1.5 p-1.5 sm:p-2.5">
-            {/* File Upload Button */}
             <button
               onClick={() => fileInputRef.current?.click()}
               className="p-2 sm:p-3 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl text-white/40 hover:text-white transition-all shrink-0 active:scale-90"
@@ -189,16 +135,8 @@ export default function ChatInput({
             >
               <Paperclip className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              className="hidden"
-              multiple
-              accept="image/*,.pdf,.doc,.docx,.txt,.csv,.json"
-            />
+            <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" multiple accept="image/*,.pdf,.doc,.docx,.txt,.csv,.json" />
 
-            {/* Text Input */}
             <textarea
               ref={textareaRef}
               value={input}
@@ -212,7 +150,6 @@ export default function ChatInput({
               disabled={disabled}
             />
 
-            {/* Voice Button */}
             <button
               onClick={onVoice}
               className={`p-2.5 sm:p-3 rounded-xl transition-all shrink-0 active:scale-90 ${
@@ -224,7 +161,6 @@ export default function ChatInput({
               {isVoiceActive ? <StopCircle className="w-4 h-4 sm:w-5 sm:h-5" /> : <Mic className="w-4 h-4 sm:w-5 sm:h-5" />}
             </button>
 
-            {/* Send Button */}
             <button
               onClick={() => onSend()}
               disabled={!canSend}
@@ -234,15 +170,10 @@ export default function ChatInput({
                   : 'bg-white/[0.05] text-white/10 cursor-not-allowed'
               }`}
             >
-              {isLoading ? (
-                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
-              ) : (
-                <ArrowUp className="w-4 h-4 sm:w-5 sm:h-5" />
-              )}
+              {isLoading ? <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" /> : <ArrowUp className="w-4 h-4 sm:w-5 sm:h-5" />}
             </button>
           </div>
 
-          {/* Bottom Indicators */}
           <div className="flex items-center justify-between px-4 py-2 border-t border-white/[0.03]">
             <button
               onClick={onOpenModelSelector}
@@ -261,4 +192,3 @@ export default function ChatInput({
     </div>
   )
 }
-
