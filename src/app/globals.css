@@ -318,20 +318,20 @@ button:active, a:active, [role="button"]:active, .touch-target:active {
 }
 
 /* ========================================
-   RESPONSIVE UTILITIES
+   RESPONSIVE UTILITIES (Native Refactor)
    ======================================== */
 
 .container-responsive {
   width: 100%;
-  padding-right: 1rem;
-  padding-left: 1rem;
+  padding-right: 0;
+  padding-left: 0;
   margin-right: auto;
   margin-left: auto;
 }
 
-@media (min-width: 640px) {
+@media (min-width: 768px) {
   .container-responsive {
-    max-width: 640px;
+    max-width: 720px;
     padding-right: 1.5rem;
     padding-left: 1.5rem;
   }
@@ -357,11 +357,23 @@ button:active, a:active, [role="button"]:active, .touch-target:active {
    RESPONSIVE TYPOGRAPHY
    ======================================== */
 
-.text-responsive-sm { font-size: clamp(0.8rem, 2.5vw, 1rem); }
-.text-responsive-base { font-size: clamp(1rem, 3vw, 1.25rem); }
-.text-responsive-lg { font-size: clamp(1.125rem, 3.5vw, 1.5rem); }
-.text-responsive-xl { font-size: clamp(1.25rem, 4vw, 1.75rem); }
-.text-responsive-2xl { font-size: clamp(1.5rem, 5vw, 2rem); }
+.text-responsive-sm { font-size: clamp(0.875rem, 2.5vw, 1rem); }
+.text-responsive-base { font-size: clamp(1rem, 3vw, 1.125rem); }
+.text-responsive-lg { font-size: clamp(1.125rem, 3.5vw, 1.25rem); }
+.text-responsive-xl { font-size: clamp(1.25rem, 4vw, 1.5rem); }
+.text-responsive-2xl { font-size: clamp(1.5rem, 5vw, 2.25rem); }
+
+/* Prevent iOS Auto-Zoom on Inputs */
+@media screen and (max-width: 767px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Native Tap Highlight Removal */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
 
 /* ========================================
    RESPONSIVE BUTTON

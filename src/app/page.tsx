@@ -144,8 +144,8 @@ export default function Home() {
 
       <main className="relative z-10">
         {/* --- HERO SECTION --- */}
-        <section className="px-4 sm:px-6 pt-40 pb-24 lg:pt-52 lg:pb-32 flex flex-col items-center justify-center min-h-[85vh]">
-          <div className="max-w-4xl mx-auto w-full text-center">
+        <section className="px-0 sm:px-6 pt-40 pb-24 lg:pt-52 lg:pb-32 flex flex-col items-center justify-center min-h-[85vh]">
+          <div className="max-w-4xl mx-auto w-full text-center px-4 md:px-0">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -194,8 +194,8 @@ export default function Home() {
         </section>
 
         {/* --- FEATURES GRID --- */}
-        <section className="px-4 sm:px-6 py-24 border-t border-white/[0.05] bg-[#050505]/50">
-          <div className="max-w-7xl mx-auto">
+        <section className="px-0 sm:px-6 py-24 border-t border-white/[0.05] bg-[#050505]/50">
+          <div className="max-w-7xl mx-auto px-4 md:px-0">
             <div className="mb-16">
               <h2 className="text-3xl lg:text-4xl font-medium text-white mb-4 tracking-tight">
                 Everything you need <br />
@@ -223,8 +223,8 @@ export default function Home() {
         </section>
 
         {/* --- TESTIMONIALS --- */}
-        <section className="px-4 sm:px-6 py-24 border-t border-white/[0.05]">
-          <div className="max-w-7xl mx-auto">
+        <section className="px-0 sm:px-6 py-24 border-t border-white/[0.05]">
+          <div className="max-w-7xl mx-auto px-4 md:px-0">
             <div className="mb-16">
               <h2 className="text-3xl lg:text-4xl font-medium text-white tracking-tight">
                 Trusted by modern teams.

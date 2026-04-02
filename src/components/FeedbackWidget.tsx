@@ -126,7 +126,7 @@ export default function FeedbackWidget() {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 left-4 sm:bottom-6 sm:left-6 z-40 lg:bottom-6 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center group"
+        className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] left-4 sm:bottom-6 sm:left-6 z-40 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center group"
         title="Give Feedback"
         suppressHydrationWarning
       >
