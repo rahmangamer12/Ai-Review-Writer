@@ -20,23 +20,8 @@ interface FeedbackData {
   pageUrl: string
 }
 
-import { usePathname } from 'next/navigation'
-
 export default function FeedbackWidget() {
-  const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
-  
-  // Only hide on mobile chat page to prevent clutter
-  const [isMobile, setIsMobile] = useState(false)
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-    return () => window.removeEventListener('resize', checkMobile)
-  }, [])
-
-  if (isMobile && pathname === '/chat') return null
-
   const [showExitIntent, setShowExitIntent] = useState(false)
   const [step, setStep] = useState<'rating' | 'details' | 'success'>('rating')
   const [rating, setRating] = useState(0)
@@ -141,7 +126,7 @@ export default function FeedbackWidget() {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-[calc(80px+env(safe-area-inset-bottom))] left-4 sm:bottom-6 sm:left-6 z-40 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center group"
+        className="fixed bottom-6 left-4 sm:bottom-6 sm:left-6 lg:bottom-10 lg:left-10 z-40 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center group"
         title="Give Feedback"
         suppressHydrationWarning
       >

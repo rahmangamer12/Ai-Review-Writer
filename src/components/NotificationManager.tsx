@@ -92,7 +92,7 @@ export default function NotificationManager({ className = '' }: NotificationMana
     return granted
   }, [requestPermission])
 
-  const handleTestNotification = useCallback(async () => {
+  const handleTestNotification = useCallback(() => {
     // Ensure notifications are granted before attempting to show
     if (!isGranted) {
       console.warn('Cannot send test notification: permission not granted')
@@ -101,7 +101,7 @@ export default function NotificationManager({ className = '' }: NotificationMana
 
     // Force create a new notification each time
     const timestamp = Date.now()
-    const success = await showNotification({
+    const success = showNotification({
       title: '🎉 Test Notification!',
       body: 'Notifications are working properly! You\'ll receive updates when new reviews arrive.',
       icon: '/icon.png',
