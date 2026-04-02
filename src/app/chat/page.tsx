@@ -425,35 +425,13 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-[calc(100dvh-57px-4rem-env(safe-area-inset-bottom))] lg:h-screen w-full bg-[#030308] text-white overflow-hidden relative">
-      {/* Background Effects - Full screen */}
+    <div className="flex h-[calc(100dvh-57px)] lg:h-[100dvh] w-full bg-[#030308] text-white overflow-hidden relative">
+      {/* Background Effects */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-violet-600/8 rounded-full blur-[100px] sm:blur-[150px]" />
         <div className="absolute bottom-0 right-1/4 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-purple-600/8 rounded-full blur-[100px] sm:blur-[150px]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] sm:w-[800px] h-[400px] sm:h-[800px] bg-indigo-600/5 rounded-full blur-[150px] sm:blur-[200px]" />
       </div>
 
-      {/* Notifications */}
-      <div className="fixed top-4 right-4 z-[500] flex flex-col gap-2">
-        <AnimatePresence>
-          {notifications.map(n => (
-            <motion.div
-              key={n.id}
-              initial={{ x: 100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 100, opacity: 0 }}
-              className={`px-4 py-3 rounded-xl border backdrop-blur-xl flex items-center gap-2 shadow-lg ${
-                n.type === 'error' ? 'bg-red-500/20 border-red-500/30 text-red-400' : 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
-              }`}
-            >
-              {n.type === 'error' ? <X className="w-4 h-4" /> : <Check className="w-4 h-4" />}
-              <span className="text-sm font-medium">{n.text}</span>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </div>
-
-      {/* Sidebar */}
       <ChatSidebar
         sessions={sessions}
         currentSessionId={currentSessionId}
@@ -470,85 +448,68 @@ export default function ChatPage() {
         setSidebarOpen={setSidebarOpen}
       />
 
-      {/* Main Content - Full width on mobile */}
       <main className="flex-1 flex flex-col min-h-0 min-w-0 w-full relative z-10">
-        {/* Header */}
-        <header className="shrink-0 h-14 border-b border-white/5 flex items-center justify-between px-3 sm:px-5 bg-[#08080f]/90 backdrop-blur-xl">
+        <header className="shrink-0 h-14 sm:h-16 border-b border-white/5 flex items-center justify-between px-3 sm:px-6 bg-[#08080f]/90 backdrop-blur-xl">
           <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors shrink-0"
+              className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors lg:hidden"
             >
-              <PanelLeft className="w-5 h-5" />
+              <PanelLeft className="w-5 h-5 text-white/70" />
             </button>
-            
-            <div className="flex items-center gap-2 min-w-0">
-              <h2 className="text-sm sm:text-base font-bold truncate">
-                {currentSession?.title || 'New Chat'}
-              </h2>
-              {currentSession?.isPinned && (
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] font-medium rounded-full shrink-0">
-                  <Zap className="w-3 h-3" /> Pinned
-                </span>
-              )}
-            </div>
+            <h2 className="text-sm sm:text-lg font-bold truncate">
+              {currentSession?.title || 'New Chat'}
+            </h2>
           </div>
 
-          {/* Right Section */}
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {/* Model Selector Button */}
-            <button
-              onClick={() => setShowModelSelector(true)}
-              className="hidden sm:flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-2 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-all"
-            >
-              {activeModel && (
-                <span className={`${getBadgeColor(activeModel.badgeColor).split(' ')[1]} transition-colors`}>
-                  {getModelIcon(activeModel.iconName)}
-                </span>
-              )}
-              <span className="text-xs font-semibold hidden xs:inline">{activeModel?.shortName || 'Model'}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-white/30" />
-            </button>
+          <div className="flex items-center gap-1.5 sm:gap-3">
+            {/* Desktop Buttons */}
+            <div className="hidden sm:flex items-center gap-2">
+              <button
+                onClick={() => setShowModelSelector(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-white/5 hover:bg-white/10 rounded-xl border border-white/5 transition-all"
+              >
+                {activeModel && (
+                  <span className={getBadgeColor(activeModel.badgeColor).split(' ')[1]}>
+                    {getModelIcon(activeModel.iconName)}
+                  </span>
+                )}
+                <span className="text-xs font-semibold">{activeModel?.shortName}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-white/30" />
+              </button>
 
-            {/* Mobile Model Button */}
-            <button
-              onClick={() => setShowModelSelector(true)}
-              className="sm:hidden p-2 bg-white/5 hover:bg-white/10 rounded-xl"
-            >
-              <Sparkles className="w-5 h-5 text-violet-400" />
-            </button>
+              <button onClick={exportHistory} className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors" title="Export">
+                <Download className="w-4.5 h-4.5" />
+              </button>
+              
+              <button onClick={handleShare} className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors" title="Share">
+                <Share2 className="w-4.5 h-4.5" />
+              </button>
+            </div>
 
-            {/* Action Buttons */}
-            <button
-              onClick={exportHistory}
-              className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors hidden xs:block"
-              title="Export chat"
-            >
-              <Download className="w-4 h-4" />
-            </button>
-            
-            <button
-              onClick={handleShare}
-              className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors hidden xs:block"
-              title="Share"
-            >
-              <Share2 className="w-4 h-4" />
-            </button>
-            
+            {/* Mobile Actions */}
+            <div className="flex sm:hidden items-center gap-1">
+              <button onClick={() => setShowModelSelector(true)} className="p-2 bg-white/5 rounded-lg text-violet-400">
+                <Sparkles className="w-5 h-5" />
+              </button>
+              <button onClick={() => setShowSettings(true)} className="p-2 bg-white/5 rounded-lg">
+                <Settings className="w-5 h-5" />
+              </button>
+            </div>
+
             <button
               onClick={() => setShowSettings(true)}
-              className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
-              title="Settings"
+              className="hidden sm:flex p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
             >
-              <Settings className="w-4 h-4" />
+              <Settings className="w-4.5 h-4.5" />
             </button>
 
-            {/* Mobile New Chat */}
             <button
               onClick={createNewSession}
-              className="lg:hidden p-2 bg-violet-600 hover:bg-violet-500 rounded-xl transition-colors"
+              className="p-2 sm:px-4 sm:py-2 bg-violet-600 hover:bg-violet-500 rounded-xl transition-all shadow-lg shadow-violet-600/20 flex items-center gap-2"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-4.5 h-4.5" />
+              <span className="hidden sm:inline text-sm font-semibold">New Chat</span>
             </button>
           </div>
         </header>
