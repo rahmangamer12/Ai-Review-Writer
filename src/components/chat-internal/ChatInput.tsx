@@ -131,7 +131,7 @@ export default function ChatInput({
   const canSend = (input.trim() || uploadedFiles.length > 0) && !isLoading && !disabled
 
   return (
-    <div className="shrink-0 p-4 sm:p-6 bg-gradient-to-t from-[#030308] via-[#030308] to-transparent">
+    <div className="shrink-0 p-2 sm:p-4 lg:p-6 bg-gradient-to-t from-[#030308] via-[#030308] to-transparent">
       <div className="max-w-3xl mx-auto">
         {/* Uploaded Files */}
         <AnimatePresence>
@@ -140,7 +140,7 @@ export default function ChatInput({
               initial={{ opacity: 0, y: 10, height: 0 }}
               animate={{ opacity: 1, y: 0, height: 'auto' }}
               exit={{ opacity: 0, y: 10, height: 0 }}
-              className="flex flex-wrap gap-2 mb-3"
+              className="flex flex-wrap gap-1.5 mb-2 sm:mb-3"
             >
               {uploadedFiles.map(file => (
                 <motion.div
@@ -148,28 +148,28 @@ export default function ChatInput({
                   initial={{ scale: 0.8, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.8, opacity: 0 }}
-                  className="flex items-center gap-2 px-3 py-2 bg-white/[0.05] rounded-xl border border-white/10 group hover:border-white/20 transition-colors"
+                  className="flex items-center gap-1.5 px-2 py-1.5 bg-white/[0.05] rounded-lg border border-white/10 group hover:border-white/20 transition-colors"
                 >
                   {file.preview ? (
                     <img 
                       src={file.preview} 
                       alt={file.name}
-                      className="w-8 h-8 rounded-lg object-cover" 
+                      className="w-6 h-6 sm:w-8 sm:h-8 rounded object-cover" 
                     />
                   ) : (
-                    <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center text-white/60">
+                    <div className="w-6 h-6 sm:w-8 sm:h-8 rounded bg-white/10 flex items-center justify-center text-white/60">
                       {getFileIcon(file.type)}
                     </div>
                   )}
-                  <div className="flex flex-col">
-                    <span className="text-xs font-medium truncate max-w-[100px]">{file.name}</span>
-                    <span className="text-[10px] text-white/40">{formatFileSize(file.size)}</span>
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-[10px] sm:text-xs font-medium truncate max-w-[80px] sm:max-w-[100px]">{file.name}</span>
+                    <span className="text-[8px] sm:text-[10px] text-white/40">{formatFileSize(file.size)}</span>
                   </div>
                   <button
                     onClick={() => removeFile(file.id)}
-                    className="p-1 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-colors active:scale-[0.98]"
+                    className="p-1 rounded hover:bg-white/10 text-white/40 hover:text-white transition-colors"
                   >
-                    <X className="w-3.5 h-3.5" />
+                    <X className="w-3 h-3" />
                   </button>
                 </motion.div>
               ))}
@@ -182,15 +182,15 @@ export default function ChatInput({
           isFocused 
             ? 'bg-[#0f0f1d] border-violet-500/30 shadow-lg shadow-violet-600/10' 
             : 'bg-[#0f0f1d] border-white/10'
-        } border rounded-2xl`}>
-          <div className="flex items-end gap-2 p-2">
+        } border rounded-xl sm:rounded-2xl`}>
+          <div className="flex items-end gap-1 sm:gap-2 p-1.5 sm:p-2">
             {/* File Upload Button */}
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="p-3 bg-white/[0.03] hover:bg-white/[0.08] rounded-xl text-white/50 hover:text-white transition-colors active:scale-[0.98]"
+              className="p-2 sm:p-3 bg-white/[0.03] hover:bg-white/[0.08] rounded-lg sm:rounded-xl text-white/50 hover:text-white transition-colors shrink-0"
               title="Attach files"
             >
-              <Paperclip className="w-5 h-5" />
+              <Paperclip className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <input
               type="file"
@@ -210,7 +210,7 @@ export default function ChatInput({
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               placeholder="Type your message..."
-              className="flex-1 bg-transparent resize-none py-3 min-h-[48px] max-h-[200px] text-[15px] placeholder:text-white/30 focus:outline-none"
+              className="flex-1 bg-transparent resize-none py-2 sm:py-3 min-h-[40px] max-h-[150px] sm:max-h-[200px] text-sm sm:text-[15px] placeholder:text-white/30 focus:outline-none"
               rows={1}
               disabled={disabled}
             />
@@ -218,50 +218,50 @@ export default function ChatInput({
             {/* Voice Button */}
             <button
               onClick={onVoice}
-              className={`p-3 rounded-xl transition-all active:scale-[0.98] ${
+              className={`p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all shrink-0 ${
                 isVoiceActive 
                   ? 'bg-red-500 animate-pulse text-white' 
                   : 'bg-white/[0.03] hover:bg-white/[0.08] text-white/50 hover:text-white'
               }`}
               title={isVoiceActive ? 'Stop recording' : 'Voice input'}
             >
-              {isVoiceActive ? <StopCircle className="w-5 h-5" /> : <Mic className="w-5 h-5" />}
+              {isVoiceActive ? <StopCircle className="w-4 h-4 sm:w-5 sm:h-5" /> : <Mic className="w-4 h-4 sm:w-5 sm:h-5" />}
             </button>
 
             {/* Send Button */}
             <button
               onClick={() => onSend()}
               disabled={!canSend}
-              className={`p-3 rounded-xl transition-all active:scale-[0.98] ${
+              className={`p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all shrink-0 ${
                 canSend
                   ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-lg shadow-violet-600/20'
                   : 'bg-white/[0.05] text-white/20 cursor-not-allowed'
               }`}
             >
               {isLoading ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
               ) : (
-                <ArrowUp className="w-5 h-5" />
+                <ArrowUp className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
             </button>
           </div>
 
           {/* Bottom Bar */}
-          <div className="flex items-center justify-between px-3 py-2 border-t border-white/[0.05]">
-            <div className="flex items-center gap-3 text-[11px] text-white/30">
+          <div className="flex items-center justify-between px-2 sm:px-3 py-1.5 sm:py-2 border-t border-white/[0.05]">
+            <div className="flex items-center gap-2 sm:gap-3 text-[10px] text-white/30">
               <button
                 onClick={onOpenModelSelector}
-                className="flex items-center gap-1.5 hover:text-white transition-colors active:scale-[0.98]"
+                className="flex items-center gap-1 hover:text-white transition-colors"
               >
-                <Wand2 className="w-3.5 h-3.5" />
-                <span>{activeModel?.name || 'Select Model'}</span>
+                <Wand2 className="w-3 h-3" />
+                <span className="truncate max-w-[80px] sm:max-w-none">{activeModel?.name || 'Select Model'}</span>
               </button>
-              <span>•</span>
-              <span>Enter to send • Shift+Enter for new line</span>
+              <span className="hidden xs:inline">•</span>
+              <span className="hidden xs:inline">Enter to send</span>
             </div>
             <div className="flex items-center gap-1">
-              <Sparkles className="w-3 h-3 text-violet-400" />
-              <span className="text-[10px] text-violet-400 font-medium">AI Powered</span>
+              <Sparkles className="w-2.5 h-2.5 text-violet-400" />
+              <span className="text-[9px] text-violet-400 font-medium">AI Powered</span>
             </div>
           </div>
         </div>
@@ -269,3 +269,4 @@ export default function ChatInput({
     </div>
   )
 }
+

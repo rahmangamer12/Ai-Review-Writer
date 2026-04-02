@@ -247,7 +247,7 @@ export default function ChatMessages({
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6 py-6">
+    <div className="w-full max-w-4xl mx-auto space-y-4 sm:space-y-6 py-4 sm:py-6 px-2 sm:px-4">
       <AnimatePresence>
         {messages.map((msg, idx) => (
           <motion.div
@@ -255,32 +255,32 @@ export default function ChatMessages({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: idx * 0.05 }}
-            className={`flex gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+            className={`flex gap-2 sm:gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
           >
             {/* Avatar */}
-            <div className={`shrink-0 w-11 h-11 rounded-[18px] flex items-center justify-center text-sm font-bold border shadow-lg ${
+            <div className={`shrink-0 w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-[18px] flex items-center justify-center text-xs sm:text-sm font-bold border shadow-lg ${
               msg.role === 'user'
                 ? 'bg-gradient-to-br from-slate-700 to-slate-800 border-white/10 text-white'
                 : 'bg-gradient-to-br from-violet-600 via-indigo-600 to-fuchsia-600 border-white/10 text-white shadow-violet-600/20'
             }`}>
               {msg.role === 'user' ? (
-                <User className="w-5 h-5" />
+                <User className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : (
-                <Bot className="w-5 h-5" />
+                <Bot className="w-4 h-4 sm:w-5 sm:h-5" />
               )}
             </div>
 
             {/* Message Content */}
-            <div className={`flex-1 max-w-[85%] ${msg.role === 'user' ? 'items-end flex flex-col' : ''}`}>
+            <div className={`flex-1 min-w-0 max-w-[90%] sm:max-w-[85%] ${msg.role === 'user' ? 'items-end flex flex-col' : ''}`}>
               {/* Meta */}
-              <div className={`flex items-center gap-3 text-[11px] font-medium mb-2 ${
+              <div className={`flex items-center gap-2 sm:gap-3 text-[10px] sm:text-[11px] font-medium mb-1.5 ${
                 msg.role === 'user' ? 'flex-row-reverse text-white/40' : 'text-violet-400/60'
               }`}>
-                <span className="flex items-center gap-1.5">
+                <span className="flex items-center gap-1">
                   {msg.role === 'user' ? (
-                    <Smartphone className="w-3 h-3" />
+                    <Smartphone className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                   ) : (
-                    <Ghost className="w-3 h-3" />
+                    <Ghost className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                   )}
                   {msg.role === 'user' ? 'You' : 'Sarah AI'}
                 </span>
@@ -288,8 +288,8 @@ export default function ChatMessages({
                 <span className="text-white/30">{formatTime(msg.timestamp)}</span>
                 {msg.model && msg.role === 'assistant' && (
                   <>
-                    <span className="text-white/20">•</span>
-                    <span className="px-1.5 py-0.5 bg-violet-500/20 text-violet-400 rounded text-[10px]">
+                    <span className="text-white/20 hidden xs:inline">•</span>
+                    <span className="hidden xs:inline px-1.5 py-0.5 bg-violet-500/20 text-violet-400 rounded text-[9px]">
                       {msg.model}
                     </span>
                   </>
@@ -297,18 +297,18 @@ export default function ChatMessages({
               </div>
 
               {/* Message Bubble */}
-              <div className={`relative p-5 rounded-[24px] border shadow-xl transition-all ${
+              <div className={`relative p-3 sm:p-5 rounded-2xl sm:rounded-[24px] border shadow-xl transition-all ${
                 msg.role === 'user'
                   ? 'bg-gradient-to-br from-violet-600/20 to-indigo-600/20 border-violet-500/20 rounded-tr-md'
                   : 'bg-gradient-to-br from-white/[0.04] to-white/[0.02] border-white/8 rounded-tl-md'
               }`}>
-                <div className="prose prose-invert max-w-none prose-sm">
+                <div className="prose prose-invert max-w-none prose-xs sm:prose-sm overflow-x-hidden">
                   {msg.role === 'assistant' && msg.content ? (
                     <ReactMarkdown components={MarkdownComponents}>
                       {msg.content}
                     </ReactMarkdown>
                   ) : (
-                    <p className="text-[15px] leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+                    <p className="text-sm sm:text-[15px] leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>
                   )}
                 </div>
 

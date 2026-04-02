@@ -182,55 +182,55 @@ export default function LocationPermission({
         <div className="absolute -right-20 -top-20 w-40 h-40 bg-[#00D4FF]/10 rounded-full blur-3xl" />
         <div className="absolute -left-20 -bottom-20 w-40 h-40 bg-[#00D4FF]/5 rounded-full blur-3xl" />
         
-        <div className="relative z-10 p-6">
+        <div className="relative z-10 p-4 sm:p-6">
           {/* Header */}
-          <div className="flex items-start gap-4 mb-6">
+          <div className="flex items-start gap-3 sm:gap-4 mb-4 sm:mb-6">
             <motion.div 
-              className={`w-14 h-14 rounded-2xl ${status.bgColor} flex items-center justify-center shrink-0`}
+              className={`w-10 h-10 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl ${status.bgColor} flex items-center justify-center shrink-0`}
               animate={permission === 'granted' ? { scale: [1, 1.1, 1] } : {}}
               transition={{ duration: 0.5 }}
             >
               {permission === 'granted' ? (
-                <Globe className="w-7 h-7 text-emerald-400" />
+                <Globe className="w-5 h-5 sm:w-7 sm:h-7 text-emerald-400" />
               ) : (
-                <MapPin className={`w-7 h-7 ${status.iconColor}`} />
+                <MapPin className={`w-5 h-5 sm:w-7 sm:h-7 ${status.iconColor}`} />
               )}
             </motion.div>
-            <div className="flex-1">
-              <h3 className="text-xl font-bold text-white mb-1">
+            <div className="flex-1 min-w-0">
+              <h3 className="text-base sm:text-xl font-bold text-white mb-0.5 sm:mb-1 truncate">
                 {permission === 'granted' ? 'Location Enabled' : title}
               </h3>
-              <p className={`text-sm ${status.statusColor} flex items-center gap-1.5`}>
-                <span className={`w-2 h-2 rounded-full ${status.bgColor.replace('/20', '')}`} />
+              <p className={`text-[10px] sm:text-sm ${status.statusColor} flex items-center gap-1.5`}>
+                <span className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full ${status.bgColor.replace('/20', '')}`} />
                 {status.statusText}
               </p>
             </div>
           </div>
 
           {/* Content */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {/* Granted State - Show Location */}
             {permission === 'granted' && address && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl"
+                className="p-3 sm:p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl"
               >
-                <div className="flex items-center gap-2 text-emerald-400 text-sm mb-2">
-                  <Navigation className="w-4 h-4" />
+                <div className="flex items-center gap-2 text-emerald-400 text-[10px] sm:text-sm mb-1.5 sm:mb-2">
+                  <Navigation className="w-3.5 h-3.5 sm:w-4 h-4" />
                   <span className="font-medium">Current Location</span>
                 </div>
-                <p className="text-white text-lg font-semibold">
+                <p className="text-white text-base sm:text-lg font-semibold break-words">
                   {getLocationDisplay()}
                 </p>
                 {address.region && (
-                  <p className="text-white/50 text-sm mt-1">
+                  <p className="text-white/50 text-[10px] sm:text-sm mt-0.5 sm:mt-1">
                     {address.region}
                     {address.postalCode && ` • ${address.postalCode}`}
                   </p>
                 )}
                 {location.accuracy && (
-                  <p className="text-emerald-400/60 text-xs mt-2">
+                  <p className="text-emerald-400/60 text-[9px] sm:text-xs mt-1.5 sm:mt-2">
                     Accuracy: ±{Math.round(location.accuracy)}m
                   </p>
                 )}
@@ -242,16 +242,16 @@ export default function LocationPermission({
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl"
+                className="p-3 sm:p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl"
               >
-                <div className="flex items-center gap-2 text-emerald-400 text-sm mb-2">
-                  <Navigation className="w-4 h-4" />
+                <div className="flex items-center gap-2 text-emerald-400 text-[10px] sm:text-sm mb-1.5 sm:mb-2">
+                  <Navigation className="w-3.5 h-3.5 sm:w-4 h-4" />
                   <span className="font-medium">Location Detected</span>
                 </div>
-                <p className="text-white text-lg font-semibold">
+                <p className="text-white text-base sm:text-lg font-semibold">
                   {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
                 </p>
-                <p className="text-white/50 text-xs mt-1">
+                <p className="text-white/50 text-[10px] sm:text-xs mt-0.5 sm:mt-1">
                   Coordinates detected successfully
                 </p>
               </motion.div>
@@ -262,15 +262,15 @@ export default function LocationPermission({
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl"
+                className="p-3 sm:p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl"
               >
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                <div className="flex items-start gap-2 sm:gap-3">
+                  <AlertCircle className="w-4 h-4 sm:w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-white font-medium text-sm mb-1">
+                    <p className="text-white font-medium text-xs sm:text-sm mb-0.5 sm:mb-1">
                       Location access blocked
                     </p>
-                    <p className="text-white/60 text-sm">
+                    <p className="text-white/60 text-[10px] sm:text-sm">
                       Please enable location permission in your browser settings to use this feature.
                     </p>
                   </div>
@@ -281,17 +281,17 @@ export default function LocationPermission({
             {/* Prompt State - Show Benefits */}
             {permission === 'prompt' && (
               <div className="space-y-3">
-                <p className="text-white/70 text-sm leading-relaxed">
+                <p className="text-white/70 text-xs sm:text-sm leading-relaxed">
                   {description}
                 </p>
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="flex items-center gap-2 text-white/60 text-xs p-2 bg-white/5 rounded-lg">
-                    <Locate className="w-3.5 h-3.5 text-[#00D4FF]" />
-                    <span>Local insights</span>
+                  <div className="flex items-center gap-2 text-white/60 text-[10px] sm:text-xs p-2 bg-white/5 rounded-lg">
+                    <Locate className="w-3 h-3 sm:w-3.5 h-3.5 text-[#00D4FF]" />
+                    <span className="truncate">Local insights</span>
                   </div>
-                  <div className="flex items-center gap-2 text-white/60 text-xs p-2 bg-white/5 rounded-lg">
-                    <MapPin className="w-3.5 h-3.5 text-[#00D4FF]" />
-                    <span>Nearby reviews</span>
+                  <div className="flex items-center gap-2 text-white/60 text-[10px] sm:text-xs p-2 bg-white/5 rounded-lg">
+                    <MapPin className="w-3 h-3 sm:w-3.5 h-3.5 text-[#00D4FF]" />
+                    <span className="truncate">Nearby reviews</span>
                   </div>
                 </div>
               </div>
