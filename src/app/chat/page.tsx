@@ -425,9 +425,9 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-[100dvh] w-screen bg-[#030308] text-white overflow-hidden">
+    <div className="flex h-[calc(100dvh-57px-4rem-env(safe-area-inset-bottom))] lg:h-screen w-full bg-[#030308] text-white overflow-hidden relative">
       {/* Background Effects - Full screen */}
-      <div className="fixed inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-1/4 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-violet-600/8 rounded-full blur-[100px] sm:blur-[150px]" />
         <div className="absolute bottom-0 right-1/4 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-purple-600/8 rounded-full blur-[100px] sm:blur-[150px]" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] sm:w-[800px] h-[400px] sm:h-[800px] bg-indigo-600/5 rounded-full blur-[150px] sm:blur-[200px]" />
@@ -471,23 +471,23 @@ export default function ChatPage() {
       />
 
       {/* Main Content - Full width on mobile */}
-      <main className="flex-1 flex flex-col h-full min-w-0 w-full sm:w-auto relative z-10">
+      <main className="flex-1 flex flex-col min-h-0 min-w-0 w-full relative z-10">
         {/* Header */}
-        <header className="shrink-0 h-14 sm:h-16 border-b border-white/5 flex items-center justify-between px-3 sm:px-5 bg-[#08080f]/90 backdrop-blur-xl">
-          <div className="flex items-center gap-2 sm:gap-4">
+        <header className="shrink-0 h-14 border-b border-white/5 flex items-center justify-between px-3 sm:px-5 bg-[#08080f]/90 backdrop-blur-xl">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="lg:hidden p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+              className="lg:hidden p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors shrink-0"
             >
               <PanelLeft className="w-5 h-5" />
             </button>
             
-            <div className="flex items-center gap-2 sm:gap-3">
-              <h2 className="text-sm sm:text-base lg:text-lg font-bold truncate max-w-[140px] sm:max-w-[200px] md:max-w-[300px]">
+            <div className="flex items-center gap-2 min-w-0">
+              <h2 className="text-sm sm:text-base font-bold truncate">
                 {currentSession?.title || 'New Chat'}
               </h2>
               {currentSession?.isPinned && (
-                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] font-medium rounded-full">
+                <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 bg-amber-500/20 text-amber-400 text-[10px] font-medium rounded-full shrink-0">
                   <Zap className="w-3 h-3" /> Pinned
                 </span>
               )}
@@ -495,7 +495,7 @@ export default function ChatPage() {
           </div>
 
           {/* Right Section */}
-          <div className="flex items-center gap-1 sm:gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {/* Model Selector Button */}
             <button
               onClick={() => setShowModelSelector(true)}
@@ -506,14 +506,14 @@ export default function ChatPage() {
                   {getModelIcon(activeModel.iconName)}
                 </span>
               )}
-              <span className="text-xs sm:text-sm font-semibold hidden xs:inline">{activeModel?.shortName || 'Model'}</span>
-              <ChevronDown className="w-3.5 sm:w-4 h-3.5 sm:h-4 text-white/30" />
+              <span className="text-xs font-semibold hidden xs:inline">{activeModel?.shortName || 'Model'}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-white/30" />
             </button>
 
             {/* Mobile Model Button */}
             <button
               onClick={() => setShowModelSelector(true)}
-              className="sm:hidden p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl"
+              className="sm:hidden p-2 bg-white/5 hover:bg-white/10 rounded-xl"
             >
               <Sparkles className="w-5 h-5 text-violet-400" />
             </button>
@@ -521,73 +521,34 @@ export default function ChatPage() {
             {/* Action Buttons */}
             <button
               onClick={exportHistory}
-              className="p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+              className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors hidden xs:block"
               title="Export chat"
             >
-              <Download className="w-4 sm:w-5 h-4 sm:h-5" />
+              <Download className="w-4 h-4" />
             </button>
             
             <button
               onClick={handleShare}
-              className="p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+              className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors hidden xs:block"
               title="Share"
             >
-              <Share2 className="w-4 sm:w-5 h-4 sm:h-5" />
+              <Share2 className="w-4 h-4" />
             </button>
             
             <button
-              onClick={() => setShowHelp(true)}
-              className="p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
-              title="Help"
-            >
-              <HelpCircle className="w-4 sm:w-5 h-4 sm:h-5" />
-            </button>
-
-            <button
               onClick={() => setShowSettings(true)}
-              className="p-2.5 min-h-[44px] min-w-[44px] bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+              className="p-2 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
               title="Settings"
             >
-              <Settings className="w-4 sm:w-5 h-4 sm:h-5" />
+              <Settings className="w-4 h-4" />
             </button>
-
-            {/* More Menu */}
-            <div className="relative hidden md:block" ref={moreMenuRef}>
-              <button
-                onClick={() => setShowMoreMenu(!showMoreMenu)}
-                className="p-2.5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
-              >
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
-              
-              <AnimatePresence>
-                {showMoreMenu && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                    className="absolute right-0 top-full mt-2 w-48 bg-[#0f0f1d] border border-white/10 rounded-xl shadow-xl shadow-black/30 overflow-hidden z-[550]"
-                  >
-                    <button onClick={createNewSession} className="w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors flex items-center gap-3">
-                      <Plus className="w-4 h-4" /> New Chat
-                    </button>
-                    <button onClick={() => { setShowSettings(true); setShowMoreMenu(false) }} className="w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors flex items-center gap-3">
-                      <Settings className="w-4 h-4" /> Settings
-                    </button>
-                    <button onClick={() => { setShowHelp(true); setShowMoreMenu(false) }} className="w-full px-4 py-3 text-left text-sm hover:bg-white/5 transition-colors flex items-center gap-3">
-                      <HelpCircle className="w-4 h-4" /> Help
-                    </button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
 
             {/* Mobile New Chat */}
             <button
               onClick={createNewSession}
-              className="lg:hidden p-2 sm:p-2.5 bg-violet-600 hover:bg-violet-500 rounded-xl transition-colors"
+              className="lg:hidden p-2 bg-violet-600 hover:bg-violet-500 rounded-xl transition-colors"
             >
-              <Plus className="w-4 sm:w-5 h-4 sm:h-5" />
+              <Plus className="w-4 h-4" />
             </button>
           </div>
         </header>

@@ -448,13 +448,13 @@ function ReviewsContent() {
             <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
               <button
                 onClick={() => router.push('/dashboard')}
-                className="rounded-lg p-1.5 sm:p-2 text-gray-400 hover:bg-white/5 hover:text-white transition-colors flex-shrink-0"
+                className="rounded-lg p-1 text-gray-400 hover:bg-white/5 hover:text-white transition-colors flex-shrink-0"
               >
                 <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
               </button>
               <div className="flex-1 min-w-0">
-                <h1 className="text-sm sm:text-lg font-bold text-white truncate">Reviews Management</h1>
-                <p className="text-[10px] sm:text-xs text-gray-500 hidden sm:block">{totalCount} total reviews</p>
+                <h1 className="text-xs sm:text-lg font-bold text-white truncate">Reviews Manager</h1>
+                <p className="text-[9px] sm:text-xs text-gray-500 hidden xs:block">{totalCount} total</p>
               </div>
             </div>
 
@@ -462,7 +462,7 @@ function ReviewsContent() {
               {/* Agentic Mode Toggle - Mobile icon only */}
               <button
                 onClick={() => setAgenticMode(!agenticMode)}
-                className={`flex items-center gap-2 rounded-lg border px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium transition-colors ${
+                className={`flex items-center gap-1.5 rounded-lg border px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-sm font-medium transition-colors ${
                   agenticMode 
                     ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400' 
                     : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
@@ -471,16 +471,7 @@ function ReviewsContent() {
                 suppressHydrationWarning
               >
                 <Brain className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="hidden md:inline">Agentic</span>
-              </button>
-
-              <button
-                onClick={() => setViewMode(viewMode === 'list' ? 'grid' : 'list')}
-                className="hidden sm:flex rounded-lg border border-white/10 bg-white/5 p-1.5 sm:p-2 text-gray-400 hover:text-white transition-colors"
-                title="Toggle View"
-                suppressHydrationWarning
-              >
-                {viewMode === 'list' ? <LayoutGrid className="h-4 w-4 sm:h-5 sm:w-5" /> : <List className="h-4 w-4 sm:h-5 sm:w-5" />}
+                <span className="hidden sm:inline">Agent</span>
               </button>
 
               <button
@@ -490,26 +481,16 @@ function ReviewsContent() {
                 title="Refresh"
                 suppressHydrationWarning
               >
-                <RefreshCw className={`h-4 w-4 sm:h-5 sm:w-5 ${loading ? 'animate-spin' : ''}`} />
-              </button>
-
-              <button
-                onClick={() => setShowAIGenerator(true)}
-                className="hidden lg:flex items-center gap-2 rounded-lg bg-purple-600/20 px-3 py-2 text-sm font-medium text-purple-400 hover:bg-purple-600/30 transition-colors"
-                suppressHydrationWarning
-              >
-                <Bot className="h-4 w-4" />
-                AI Generator
+                <RefreshCw className={`h-3.5 w-3.5 sm:h-5 sm:w-5 ${loading ? 'animate-spin' : ''}`} />
               </button>
 
               <button
                 onClick={() => router.push('/reviews/add')}
-                className="flex items-center gap-1.5 sm:gap-2 rounded-lg bg-purple-600 px-2 py-1.5 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium text-white hover:bg-purple-500 transition-colors"
+                className="flex items-center gap-1 sm:gap-2 rounded-lg bg-purple-600 px-2 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-sm font-medium text-white hover:bg-purple-500 transition-colors"
                 suppressHydrationWarning
               >
                 <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Add Review</span>
-                <span className="sm:hidden">Add</span>
+                <span>Add</span>
               </button>
             </div>
           </div>

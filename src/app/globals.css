@@ -11,6 +11,22 @@ html {
   -webkit-overflow-scrolling: touch;
   width: 100%;
   min-width: 100%;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 body {

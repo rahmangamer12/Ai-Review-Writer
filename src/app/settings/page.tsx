@@ -151,39 +151,41 @@ export default function SettingsPage() {
           </motion.div>
 
           {/* Tabs */}
-          <div className="flex flex-wrap gap-4 mb-8">
-            <TabButton tab="general" label="General" icon="⚙️" activeTab={activeTab} onClick={setActiveTab} />
-            <TabButton tab="credits" label="Credits" icon="💎" activeTab={activeTab} onClick={setActiveTab} />
-            <TabButton tab="notifications" label="Notifications" icon="🔔" activeTab={activeTab} onClick={setActiveTab} />
-            <TabButton tab="ai" label="AI Settings" icon="🤖" activeTab={activeTab} onClick={setActiveTab} />
-            <TabButton tab="integrations" label="Integrations" icon="🔌" activeTab={activeTab} onClick={setActiveTab} />
-            <TabButton tab="advanced" label="Advanced" icon="🔧" activeTab={activeTab} onClick={setActiveTab} />
+          <div className="flex overflow-x-auto pb-4 gap-2 sm:gap-4 mb-4 sm:mb-8 hide-scrollbar snap-x">
+            <div className="flex gap-2 sm:gap-4 snap-start">
+              <TabButton tab="general" label="General" icon="⚙️" activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="credits" label="Credits" icon="💎" activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="notifications" label="Notifications" icon="🔔" activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="ai" label="AI Settings" icon="🤖" activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="integrations" label="Integrations" icon="🔌" activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="advanced" label="Advanced" icon="🔧" activeTab={activeTab} onClick={setActiveTab} />
+            </div>
           </div>
 
           {/* Settings Content */}
-          <div className="glass-card border-2 border-primary/20 rounded-2xl p-8 shadow-xl">
+          <div className="glass-card border-2 border-primary/20 rounded-2xl p-4 sm:p-8 shadow-xl">
             {activeTab === 'general' && (
-              <div className="space-y-8">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="glass-card border-2 border-white/10 rounded-2xl p-6">
-                    <h3 className="text-xl font-semibold text-white mb-4">Business Information</h3>
+              <div className="space-y-6 sm:space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
+                  <div className="glass-card border-2 border-white/10 rounded-2xl p-4 sm:p-6">
+                    <h3 className="text-lg sm:text-xl font-semibold text-white mb-4">Business Information</h3>
                     <div className="space-y-4">
                       <div>
-                        <label className="block text-white mb-2 font-medium">Business Name</label>
+                        <label className="block text-white mb-2 text-sm font-medium">Business Name</label>
                         <input
                           type="text"
                           value={settings.businessName}
                           onChange={(e) => setSettings({ ...settings, businessName: e.target.value })}
-                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:border-primary transition-colors"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:border-primary transition-colors"
                           placeholder="e.g. The Stove Club"
                         />
                       </div>
                       <div>
-                        <label className="block text-white mb-2 font-medium">Business Type</label>
+                        <label className="block text-white mb-2 text-sm font-medium">Business Type</label>
                         <select
                           value={settings.businessType}
                           onChange={(e) => setSettings({ ...settings, businessType: e.target.value })}
-                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:border-primary transition-colors"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:border-primary transition-colors"
                         >
                           <option value="Restaurant">Restaurant</option>
                           <option value="E-commerce">E-commerce</option>
@@ -196,25 +198,27 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  <div className="glass-card border-2 border-white/10 rounded-2xl p-6">
-                    <h3 className="text-xl font-semibold text-white mb-4">AI Context</h3>
+                  <div className="glass-card border-2 border-white/10 rounded-2xl p-4 sm:p-6">
+                    <h3 className="text-lg sm:text-xl font-semibold text-white mb-4">AI Context</h3>
                     <div>
-                      <label className="block text-white mb-2 font-medium">Auto-Reply Template</label>
+                      <label className="block text-white mb-2 text-sm font-medium">Auto-Reply Template</label>
                       <textarea
                         value={settings.responseTemplate}
                         onChange={(e) => setSettings({ ...settings, responseTemplate: e.target.value })}
                         rows={4}
-                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:border-primary transition-colors"
+                        className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:border-primary transition-colors"
                         placeholder="Default message for reviews..."
                       />
-                      <p className="text-xs text-white/40 mt-2">This is the fallback message used if AI generation is disabled.</p>
+                      <p className="text-[10px] sm:text-xs text-white/40 mt-2">This is the fallback message used if AI generation is disabled.</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="glass-card border-2 border-white/10 rounded-2xl p-6">
-                  <h3 className="text-xl font-semibold text-white mb-4">Location Settings</h3>
-                  <LocationPermission />
+                <div className="glass-card border-2 border-white/10 rounded-2xl p-4 sm:p-6 overflow-hidden">
+                  <h3 className="text-lg sm:text-xl font-semibold text-white mb-4">Location Settings</h3>
+                  <div className="overflow-x-hidden">
+                    <LocationPermission />
+                  </div>
                 </div>
               </div>
             )}
