@@ -27,6 +27,9 @@ export default function FeedbackWidget() {
   const [rating, setRating] = useState(0)
   const [hoverRating, setHoverRating] = useState(0)
   const [submitting, setSubmitting] = useState(false)
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [formData, setFormData] = useState<FeedbackData>({
     rating: 0,
     category: 'general',
@@ -35,6 +38,57 @@ export default function FeedbackWidget() {
     pageUrl: ''
   })
   const hydrated = useHydrated()
+
+  // Load saved position
+  useEffect(() => {
+    if (!hydrated) return
+    const saved = localStorage.getItem('feedback-widget-position')
+    if (saved) {
+      setPosition(JSON.parse(saved))
+    }
+  }, [hydrated])
+
+  // Handle drag
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true)
+    setDragStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    })
+  }
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return
+    const newX = e.clientX - dragStart.x
+    const newY = e.clientY - dragStart.y
+
+    // Keep within viewport bounds
+    const maxX = window.innerWidth - 56
+    const maxY = window.innerHeight - 56
+
+    setPosition({
+      x: Math.max(0, Math.min(newX, maxX)),
+      y: Math.max(0, Math.min(newY, maxY))
+    })
+  }
+
+  const handleMouseUp = () => {
+    if (isDragging) {
+      setIsDragging(false)
+      localStorage.setItem('feedback-widget-position', JSON.stringify(position))
+    }
+  }
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove)
+        window.removeEventListener('mouseup', handleMouseUp)
+      }
+    }
+  }, [isDragging, dragStart, position])
 
   // Exit Intent - Show when user tries to leave
   useEffect(() => {
@@ -119,26 +173,37 @@ export default function FeedbackWidget() {
 
   return (
     <>
-      {/* Standard Floating Feedback Button - LEFT SIDE */}
+      {/* Draggable Floating Feedback Button */}
       <motion.button
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        whileHover={{ scale: 1.1 }}
+        whileHover={{ scale: isDragging ? 1 : 1.1 }}
         whileTap={{ scale: 0.95 }}
-        onClick={() => setIsOpen(true)}
-        className="fixed bottom-6 left-4 sm:bottom-6 sm:left-6 lg:bottom-10 lg:left-10 z-40 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center group"
-        title="Give Feedback"
+        onMouseDown={handleMouseDown}
+        onClick={(e) => {
+          if (!isDragging) setIsOpen(true)
+        }}
+        style={{
+          left: position.x || 16,
+          top: position.y || undefined,
+          bottom: position.y ? undefined : 24,
+          cursor: isDragging ? 'grabbing' : 'grab'
+        }}
+        className="fixed z-40 w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center group"
+        title="Give Feedback (Drag to move)"
         suppressHydrationWarning
       >
-        <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6" suppressHydrationWarning />
-        
+        <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 pointer-events-none" suppressHydrationWarning />
+
         {/* Tooltip */}
-        <div 
-          className="absolute left-full ml-2 sm:ml-3 px-2 py-1 sm:px-3 sm:py-1.5 bg-white/10 backdrop-blur-sm rounded-lg text-white text-xs sm:text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block"
-          suppressHydrationWarning
-        >
-          Give Feedback
-        </div>
+        {!isDragging && (
+          <div
+            className="absolute left-full ml-2 sm:ml-3 px-2 py-1 sm:px-3 sm:py-1.5 bg-white/10 backdrop-blur-sm rounded-lg text-white text-xs sm:text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block"
+            suppressHydrationWarning
+          >
+            Give Feedback
+          </div>
+        )}
       </motion.button>
 
       {/* Exit Intent Modal */}

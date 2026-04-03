@@ -574,21 +574,21 @@ function ReviewsContent() {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-6 rounded-xl border border-purple-500/20 bg-purple-500/10 p-4"
+          className="mb-4 sm:mb-6 rounded-xl border border-purple-500/20 bg-purple-500/10 p-3 sm:p-4"
         >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Lightbulb className="h-5 w-5 text-purple-400" />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Lightbulb className="h-4 w-4 sm:h-5 sm:w-5 text-purple-400 shrink-0" />
               <div>
-                <p className="text-sm font-medium text-purple-400">AI Insights Available</p>
-                <p className="text-xs text-purple-400/70">Get AI-powered analysis of your reviews</p>
+                <p className="text-xs sm:text-sm font-medium text-purple-400">AI Insights Available</p>
+                <p className="text-[10px] sm:text-xs text-purple-400/70">Get AI-powered analysis</p>
               </div>
             </div>
             <button
               onClick={generateAIInsights}
-              className="flex items-center gap-2 rounded-lg bg-purple-600/20 px-4 py-2 text-sm font-medium text-purple-400 hover:bg-purple-600/30 transition-colors"
+              className="flex items-center gap-2 rounded-lg bg-purple-600/20 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-purple-400 hover:bg-purple-600/30 transition-colors w-full sm:w-auto justify-center"
             >
-              <Sparkles className="h-4 w-4" />
+              <Sparkles className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               Generate Insights
             </button>
           </div>

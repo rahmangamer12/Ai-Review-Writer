@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useSyncExternalStore } from 'react'
+import { useState, useEffect, useSyncExternalStore, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
@@ -139,6 +139,10 @@ export default function ConnectPlatformsPage() {
   
   // Setup mode selection
   const [setupMode, setSetupMode] = useState<'self' | 'managed' | 'video'>('self')
+
+  // Refs for auto-scroll
+  const managedFormRef = useRef<HTMLDivElement>(null)
+  const videoFormRef = useRef<HTMLDivElement>(null)
   
   // Self setup states
   const [platforms, setPlatforms] = useState<PlatformConfig[]>([])
@@ -449,9 +453,23 @@ export default function ConnectPlatformsPage() {
                 <motion.div
                   key={option.id}
                   whileHover={undefined}
-                  onClick={() => setSetupMode(option.id as 'self' | 'managed' | 'video')}
+                  onClick={() => {
+                    setSetupMode(option.id as 'self' | 'managed' | 'video')
+                    // Auto-scroll to form after state update with slightly more delay for DOM stability
+                    setTimeout(() => {
+                      if (option.id === 'managed' && managedFormRef.current) {
+                        const yOffset = -100; // Leave some space at the top
+                        const y = managedFormRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                        window.scrollTo({top: y, behavior: 'smooth'});
+                      } else if (option.id === 'video' && videoFormRef.current) {
+                        const yOffset = -100;
+                        const y = videoFormRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                        window.scrollTo({top: y, behavior: 'smooth'});
+                      }
+                    }, 150)
+                  }}
                   className={`glass-card border-2 ${
-                    setupMode === option.id 
+                    setupMode === option.id
                       ? getSetupOptionColor(option.color)
                       : 'border-white/10 hover:border-white/20'
                   } rounded-2xl p-6 cursor-pointer transition-all relative overflow-hidden group`}
@@ -836,6 +854,7 @@ export default function ConnectPlatformsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 className="max-w-4xl mx-auto"
+                ref={managedFormRef}
               >
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Left: Form */}
@@ -1057,6 +1076,7 @@ export default function ConnectPlatformsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
                 className="max-w-4xl mx-auto"
+                ref={videoFormRef}
               >
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                   {/* Left: Form */}

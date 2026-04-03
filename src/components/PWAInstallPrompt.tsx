@@ -25,19 +25,23 @@ export default function PWAInstallPrompt() {
 
     // Don't show if already installed
     if (isInStandalone) return
-    
-    // Check if dismissed, but allow for manual trigger
-    // Removed auto-dismiss check to allow re-showing
+
+    // Check if dismissed recently (within 7 days)
+    const dismissedTime = localStorage.getItem('pwa-install-dismissed-time')
+    if (dismissedTime) {
+      const daysSinceDismissed = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60 * 24)
+      if (daysSinceDismissed < 7) return
+    }
 
     // Listen for the beforeinstallprompt event
     const handler = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
-      
-      // Show prompt after 2 seconds (reduced from 5)
+
+      // Show prompt after 3 seconds
       setTimeout(() => {
         setShowPrompt(true)
-      }, 2000)
+      }, 3000)
     }
 
     window.addEventListener('beforeinstallprompt', handler)
@@ -46,7 +50,7 @@ export default function PWAInstallPrompt() {
     if (iOS && !isInStandalone) {
       setTimeout(() => {
         setShowPrompt(true)
-      }, 2000)
+      }, 3000)
     }
 
     return () => {
@@ -77,6 +81,7 @@ export default function PWAInstallPrompt() {
   const handleDismiss = () => {
     setShowPrompt(false)
     localStorage.setItem('pwa-install-dismissed', 'true')
+    localStorage.setItem('pwa-install-dismissed-time', Date.now().toString())
   }
 
   if (!showPrompt || isStandalone) return null

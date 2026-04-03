@@ -16,13 +16,26 @@ export function useServiceWorker() {
       try {
         const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
         setRegistration(reg)
-        
+
+        // Check for updates every 60 seconds
+        setInterval(() => {
+          reg.update()
+        }, 60000)
+
         reg.addEventListener('updatefound', () => {
           const newWorker = reg.installing
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                setUpdateAvailable(true)
+                // Only show update notification if there's actually a new version
+                const lastUpdateCheck = localStorage.getItem('last-sw-update')
+                const currentTime = Date.now()
+
+                if (!lastUpdateCheck || (currentTime - parseInt(lastUpdateCheck)) > 3600000) {
+                  // Show update only if last check was more than 1 hour ago
+                  setUpdateAvailable(true)
+                  localStorage.setItem('last-sw-update', currentTime.toString())
+                }
               }
             })
           }
@@ -47,7 +60,10 @@ export function useServiceWorker() {
     }
   }, [])
 
-  const dismissUpdate = () => setUpdateAvailable(false)
+  const dismissUpdate = () => {
+    setUpdateAvailable(false)
+    localStorage.setItem('update-dismissed', Date.now().toString())
+  }
 
   const updateServiceWorker = () => {
     if (registration?.waiting) {

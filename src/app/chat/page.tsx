@@ -738,7 +738,7 @@ export default function ChatPage() {
         </header>
 
         {/* Messages Area */}
-        <div ref={chatContainerRef} className="flex-1 overflow-y-auto custom-scrollbar bg-transparent px-3 sm:px-4 lg:px-8 w-full scroll-smooth">
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto custom-scrollbar bg-transparent px-3 sm:px-4 lg:px-8 w-full scroll-smooth pb-[180px] sm:pb-[160px] lg:pb-[140px]">
           <div className="max-w-4xl mx-auto w-full py-3 sm:py-4 lg:py-8">
             <ChatMessages
               messages={messages}
@@ -756,7 +756,7 @@ export default function ChatPage() {
         </div>
 
         {/* Input Area */}
-        <div className="shrink-0 bg-gradient-to-t from-[#030308] via-[#030308] to-transparent pb-[calc(12px+env(safe-area-inset-bottom))] sm:pb-[calc(16px+env(safe-area-inset-bottom))] lg:pb-8 pt-3 sm:pt-4 px-3 sm:px-4 lg:px-8 w-full">
+        <div className="shrink-0 fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#030308] via-[#030308] to-transparent pb-[calc(12px+env(safe-area-inset-bottom))] sm:pb-[calc(16px+env(safe-area-inset-bottom))] lg:pb-8 pt-3 sm:pt-4 px-3 sm:px-4 lg:px-8 w-full z-30">
           <div className="max-w-4xl mx-auto w-full">
             <ChatInput
               input={input}
