@@ -246,7 +246,7 @@ export default function Navigation() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[60]"
+            className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-md z-[1000]"
             onClick={() => setMobileMenuOpen(false)}
             aria-hidden="true"
           />
@@ -261,7 +261,7 @@ export default function Navigation() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="lg:hidden fixed inset-x-0 bottom-0 max-h-[85vh] bg-[#0f0f14] rounded-t-[32px] border-t border-white/10 p-6 flex flex-col z-[70] overflow-y-auto overscroll-contain pb-[calc(1.5rem+env(safe-area-inset-bottom))]"
+            className="lg:hidden fixed inset-x-0 bottom-0 max-h-[90vh] bg-[#0f0f14] rounded-t-[32px] border-t border-white/10 p-6 flex flex-col z-[1001] overflow-y-auto overscroll-contain pb-[calc(2.5rem+env(safe-area-inset-bottom))]"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile Navigation Menu"
