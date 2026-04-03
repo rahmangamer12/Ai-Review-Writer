@@ -16,9 +16,9 @@ import ModelSelector from '@/components/chat-internal/ModelSelector'
 import SettingsModal from '@/components/chat-internal/SettingsModal'
 
 import {
-  PanelLeft, Plus, Sparkles, Download, Share2, HelpCircle, 
+  PanelLeft, Plus, Sparkles, Download, Share2, HelpCircle,
   MoreHorizontal, Settings, ChevronDown, Wand2, X, Check,
-  Zap, Brain
+  Zap, Brain, Upload
 } from 'lucide-react'
 
 export default function ChatPage() {
@@ -45,6 +45,7 @@ export default function ChatPage() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [input, setInput] = useState('')
   const [isMounted, setIsMounted] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
 
   useEffect(() => {
     setIsMounted(true)
@@ -55,6 +56,7 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const recognitionRef = useRef<any>(null)
   const moreMenuRef = useRef<HTMLDivElement>(null)
+  const dropZoneRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setIsMounted(true)
@@ -141,6 +143,122 @@ export default function ChatPage() {
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+K or Cmd+K - Quick search
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault()
+        setSidebarOpen(true)
+        setTimeout(() => {
+          const searchInput = document.querySelector('input[placeholder="Search chats..."]') as HTMLInputElement
+          searchInput?.focus()
+        }, 100)
+      }
+
+      // Ctrl+N or Cmd+N - New chat
+      if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+        e.preventDefault()
+        createNewSession()
+      }
+
+      // Escape - Close modals
+      if (e.key === 'Escape') {
+        setShowModelSelector(false)
+        setShowSettings(false)
+        setShowHelp(false)
+        setShowMoreMenu(false)
+        if (isMobile) setSidebarOpen(false)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [isMobile])
+
+  // Drag and drop file upload
+  useEffect(() => {
+    const handleDragEnter = (e: DragEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      if (e.dataTransfer?.types.includes('Files')) {
+        setIsDragging(true)
+      }
+    }
+
+    const handleDragOver = (e: DragEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+
+    const handleDragLeave = (e: DragEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      if (e.target === dropZoneRef.current) {
+        setIsDragging(false)
+      }
+    }
+
+    const handleDrop = (e: DragEvent) => {
+      e.preventDefault()
+      e.stopPropagation()
+      setIsDragging(false)
+
+      const files = e.dataTransfer?.files
+      if (files && files.length > 0) {
+        const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
+        const newFiles: UploadedFile[] = Array.from(files)
+          .filter(file => {
+            if (file.size > MAX_FILE_SIZE) {
+              addNotification(`File ${file.name} is too large (max 10MB)`, 'error')
+              return false
+            }
+            return true
+          })
+          .map(file => {
+            const fileInfo: UploadedFile = {
+              id: Math.random().toString(36).substring(2, 11),
+              name: file.name,
+              size: file.size,
+              type: file.type,
+              file
+            }
+
+            // Generate preview for images
+            if (file.type.startsWith('image/')) {
+              const reader = new FileReader()
+              reader.onload = () => {
+                setUploadedFiles(prev =>
+                  prev.map(f => f.id === fileInfo.id ? { ...f, preview: reader.result as string } : f)
+                )
+              }
+              reader.readAsDataURL(file)
+            }
+
+            return fileInfo
+          })
+
+        setUploadedFiles(prev => [...prev, ...newFiles])
+        addNotification(`${newFiles.length} file(s) uploaded!`, 'success')
+      }
+    }
+
+    const dropZone = dropZoneRef.current
+    if (dropZone) {
+      dropZone.addEventListener('dragenter', handleDragEnter)
+      dropZone.addEventListener('dragover', handleDragOver)
+      dropZone.addEventListener('dragleave', handleDragLeave)
+      dropZone.addEventListener('drop', handleDrop)
+
+      return () => {
+        dropZone.removeEventListener('dragenter', handleDragEnter)
+        dropZone.removeEventListener('dragover', handleDragOver)
+        dropZone.removeEventListener('dragleave', handleDragLeave)
+        dropZone.removeEventListener('drop', handleDrop)
+      }
+    }
+  }, [addNotification])
 
   useEffect(() => {
     fetchUserData()
@@ -438,12 +556,37 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-[100dvh] w-full bg-[#030308] text-white overflow-hidden relative">
+    <div className="flex h-[100dvh] w-full bg-[#030308] text-white overflow-hidden relative" ref={dropZoneRef}>
       {/* Background Effects */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-0 left-1/4 w-[300px] h-[300px] bg-violet-600/10 rounded-full blur-[100px]" />
         <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-purple-600/10 rounded-full blur-[100px]" />
       </div>
+
+      {/* Drag & Drop Overlay */}
+      <AnimatePresence>
+        {isDragging && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[999] bg-violet-600/20 backdrop-blur-sm flex items-center justify-center pointer-events-none"
+          >
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              className="bg-[#0a0a14] border-2 border-dashed border-violet-500 rounded-3xl p-12 text-center"
+            >
+              <div className="w-20 h-20 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
+                <Upload className="w-10 h-10 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold mb-2">Drop files here</h3>
+              <p className="text-white/60">Upload images, PDFs, and documents</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <ChatSidebar
         sessions={sessions}
@@ -595,7 +738,7 @@ export default function ChatPage() {
         </header>
 
         {/* Messages Area */}
-        <div ref={chatContainerRef} className="flex-1 overflow-y-auto custom-scrollbar bg-transparent px-3 sm:px-4 lg:px-8 w-full">
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto custom-scrollbar bg-transparent px-3 sm:px-4 lg:px-8 w-full scroll-smooth">
           <div className="max-w-4xl mx-auto w-full py-3 sm:py-4 lg:py-8">
             <ChatMessages
               messages={messages}
@@ -605,6 +748,9 @@ export default function ChatPage() {
               onSpeak={speakMessage}
               onStopSpeaking={stopSpeaking}
               isSpeaking={isSpeaking}
+              onReaction={(messageId, reaction) => {
+                addNotification(`Message ${reaction === 'like' ? 'liked' : 'disliked'}!`, 'success')
+              }}
             />
           </div>
         </div>
@@ -669,8 +815,8 @@ export default function ChatPage() {
                   </div>
                   <h2 className="text-xl font-black">Sarah AI Help</h2>
                 </div>
-                <button 
-                  onClick={() => setShowHelp(false)} 
+                <button
+                  onClick={() => setShowHelp(false)}
                   className="p-2 hover:bg-white/10 rounded-xl transition-colors"
                 >
                   <X className="w-5 h-5" />
@@ -685,8 +831,17 @@ export default function ChatPage() {
                   <ul className="space-y-2 text-xs">
                     <li className="flex justify-between"><span className="text-violet-400">Enter</span> <span>Send message</span></li>
                     <li className="flex justify-between"><span className="text-violet-400">Shift + Enter</span> <span>New line</span></li>
-                    <li className="flex justify-between"><span className="text-violet-400">Ctrl + K</span> <span>Quick search</span></li>
+                    <li className="flex justify-between"><span className="text-violet-400">Ctrl/Cmd + K</span> <span>Quick search</span></li>
+                    <li className="flex justify-between"><span className="text-violet-400">Ctrl/Cmd + N</span> <span>New chat</span></li>
+                    <li className="flex justify-between"><span className="text-violet-400">Escape</span> <span>Close modals</span></li>
                   </ul>
+                </div>
+                <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/5">
+                  <h3 className="font-bold mb-3 text-white flex items-center gap-2">
+                    <Upload className="w-4 h-4 text-violet-400" />
+                    File Upload
+                  </h3>
+                  <p className="text-xs">Drag & drop files anywhere or click the paperclip icon. Supports images, PDFs, and documents up to 10MB.</p>
                 </div>
                 <div className="p-3 sm:p-4 bg-white/5 rounded-xl border border-white/5">
                   <h3 className="font-bold mb-3 text-white flex items-center gap-2">
