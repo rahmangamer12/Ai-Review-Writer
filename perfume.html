@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Perfume Paradise | Luxury Perfume Store</title>
+  <style>
+    :root {
+      --bg: #070b14;
+      --panel: #10172a;
+      --panel-2: #18223d;
+      --muted: #a8b4d0;
+      --text: #f4f7ff;
+      --accent: #9f7aea;
+      --accent-strong: #7c5dd8;
+      --success: #4ade80;
+      --danger: #fb7185;
+      --border: rgba(255, 255, 255, 0.1);
+      --shadow: 0 20px 45px rgba(5, 10, 30, 0.45);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: "Inter", "Segoe UI", Arial, sans-serif;
+      background: radial-gradient(circle at top right, #1d2148 0%, #0a1020 45%, var(--bg) 100%);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.45;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    .container {
+      width: min(1200px, 92vw);
+      margin: 0 auto;
+    }
+
+    .announce {
+      text-align: center;
+      padding: 0.6rem 1rem;
+      background: linear-gradient(90deg, #5b44b6, #7c5dd8);
+      font-size: 0.92rem;
+      letter-spacing: 0.02em;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(10px);
+      background: rgba(7, 11, 20, 0.82);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .topbar-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem 0;
+    }
+
+    .brand {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+    }
+
+    .brand span {
+      color: #d3c3ff;
+    }
+
+    .menu {
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .menu a:hover {
+      color: #e6ddff;
+    }
+
+    .cart-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      border: 1px solid rgba(159, 122, 234, 0.45);
+      background: rgba(159, 122, 234, 0.12);
+      color: #efe8ff;
+      border-radius: 999px;
+      padding: 0.45rem 0.85rem;
+      font-weight: 700;
+    }
+
+    .hero {
+      padding: 4.2rem 0 2.5rem;
+    }
+
+    .hero-card {
+      border: 1px solid var(--border);
+      background: linear-gradient(140deg, rgba(159, 122, 234, 0.18), rgba(27, 36, 63, 0.85));
+      border-radius: 24px;
+      box-shadow: var(--shadow);
+      padding: clamp(1.4rem, 4vw, 2.8rem);
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 1.6rem;
+      align-items: center;
+    }
+
+    .hero h1 {
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      line-height: 1.15;
+      margin-bottom: 0.9rem;
+    }
+
+    .hero p {
+      color: #d5def6;
+      margin-bottom: 1.4rem;
+      max-width: 56ch;
+    }
+
+    .hero-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.9rem;
+      margin-top: 1rem;
+    }
+
+    .hero-stat {
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 0.7rem 0.85rem;
+      border-radius: 12px;
+      min-width: 115px;
+      background: rgba(10, 16, 32, 0.42);
+    }
+
+    .hero-stat strong {
+      display: block;
+      font-size: 1rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .hero-stat span {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .hero-preview {
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 18px;
+      padding: 1.2rem;
+      background: linear-gradient(150deg, rgba(12, 20, 38, 0.65), rgba(26, 34, 59, 0.85));
+    }
+
+    .hero-preview h2 {
+      font-size: 0.95rem;
+      color: #bfccec;
+      margin-bottom: 0.9rem;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    .preview-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    .preview-item {
+      border-radius: 12px;
+      padding: 0.8rem;
+      min-height: 100px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      color: #f8f6ff;
+      font-weight: 600;
+      font-size: 0.92rem;
+    }
+
+    .preview-item small {
+      opacity: 0.8;
+      font-weight: 500;
+      font-size: 0.75rem;
+      margin-top: 0.3rem;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr;
+      gap: 0.85rem;
+      margin: 1.8rem 0;
+    }
+
+    .control {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .control label {
+      color: #d0daef;
+      font-size: 0.88rem;
+    }
+
+    input,
+    select,
+    button,
+    textarea {
+      font: inherit;
+    }
+
+    .control input,
+    .control select,
+    .checkout-form input,
+    .checkout-form select {
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(16, 23, 42, 0.9);
+      color: var(--text);
+      padding: 0.7rem 0.75rem;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .control input:focus,
+    .control select:focus,
+    .checkout-form input:focus,
+    .checkout-form select:focus {
+      border-color: rgba(196, 176, 255, 0.85);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(310px, 1fr);
+      gap: 1.2rem;
+      align-items: flex-start;
+      margin-bottom: 2.5rem;
+    }
+
+    .products-wrap {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: rgba(10, 15, 29, 0.72);
+      padding: 1rem;
+      box-shadow: var(--shadow);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 0.9rem;
+      padding-inline: 0.2rem;
+    }
+
+    .section-header h2 {
+      font-size: 1.1rem;
+      letter-spacing: 0.01em;
+    }
+
+    .section-header p {
+      color: var(--muted);
+      font-size: 0.87rem;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 0.85rem;
+    }
+
+    .product-card {
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      overflow: hidden;
+      background: rgba(22, 30, 52, 0.75);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      min-height: 100%;
+    }
+
+    .product-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 28px rgba(8, 12, 26, 0.35);
+    }
+
+    .product-visual {
+      min-height: 130px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 0.9rem;
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      color: #f7f4ff;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .product-body {
+      padding: 0.9rem;
+      display: grid;
+      gap: 0.65rem;
+      flex: 1;
+    }
+
+    .product-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.6rem;
+    }
+
+    .product-head h3 {
+      font-size: 0.98rem;
+      line-height: 1.25;
+    }
+
+    .tag {
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      color: #dbe5ff;
+      font-size: 0.73rem;
+      padding: 0.2rem 0.55rem;
+      white-space: nowrap;
+    }
+
+    .product-body p {
+      color: #c2cee9;
+      font-size: 0.86rem;
+      min-height: 2.4rem;
+    }
+
+    .product-meta {
+      color: #a8b4d0;
+      font-size: 0.8rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 0.55rem;
+    }
+
+    .product-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+      margin-top: auto;
+    }
+
+    .price {
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      color: #f8fbff;
+      font-size: 1rem;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 0.55rem 0.75rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      opacity: 0.96;
+    }
+
+    .btn-primary {
+      background: linear-gradient(90deg, var(--accent), var(--accent-strong));
+      color: #fff;
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: #d8cbfb;
+      border: 1px solid rgba(216, 203, 251, 0.6);
+    }
+
+    .empty-products {
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      padding: 1.1rem;
+      border-radius: 12px;
+      color: #cad3eb;
+      text-align: center;
+      grid-column: 1 / -1;
+    }
+
+    .cart {
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: rgba(10, 16, 32, 0.84);
+      box-shadow: var(--shadow);
+      padding: 1rem;
+      position: sticky;
+      top: 82px;
+    }
+
+    .cart-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 0.7rem;
+    }
+
+    .cart-head h2 {
+      font-size: 1.05rem;
+    }
+
+    .cart-head p {
+      color: var(--muted);
+      font-size: 0.84rem;
+    }
+
+    .cart-list {
+      list-style: none;
+      display: grid;
+      gap: 0.7rem;
+      max-height: 330px;
+      overflow: auto;
+      padding-right: 0.2rem;
+      margin-bottom: 1rem;
+    }
+
+    .cart-item,
+    .cart-empty {
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 12px;
+      padding: 0.65rem;
+      background: rgba(23, 30, 55, 0.7);
+    }
+
+    .cart-empty {
+      color: #cfd8ec;
+      text-align: center;
+    }
+
+    .cart-item-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin-bottom: 0.55rem;
+    }
+
+    .cart-item h3 {
+      font-size: 0.88rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .cart-item small {
+      color: #b7c4e1;
+      font-size: 0.74rem;
+    }
+
+    .cart-item strong {
+      font-size: 0.86rem;
+      color: #f5f7ff;
+    }
+
+    .qty-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .qty-controls {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(10, 15, 28, 0.8);
+    }
+
+    .qty-btn {
+      border: 0;
+      color: #e7dbff;
+      background: transparent;
+      width: 26px;
+      height: 26px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .qty-value {
+      min-width: 24px;
+      text-align: center;
+      font-size: 0.82rem;
+      color: #e9f0ff;
+    }
+
+    .remove-btn {
+      border: 0;
+      background: transparent;
+      color: #fda4af;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .summary {
+      border-top: 1px solid rgba(255, 255, 255, 0.14);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 0.8rem 0;
+      display: grid;
+      gap: 0.45rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      color: #d6e0f7;
+      font-size: 0.9rem;
+    }
+
+    .summary-row.total {
+      font-size: 1.02rem;
+      font-weight: 800;
+      color: #fff;
+      margin-top: 0.1rem;
+    }
+
+    .checkout-form {
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .checkout-form h3 {
+      font-size: 0.95rem;
+      margin-bottom: 0.2rem;
+    }
+
+    .checkout-form label {
+      font-size: 0.8rem;
+      color: #c4d2ee;
+      display: grid;
+      gap: 0.22rem;
+    }
+
+    .checkout-form button {
+      margin-top: 0.35rem;
+      width: 100%;
+    }
+
+    .checkout-form button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .checkout-message {
+      min-height: 1.1rem;
+      font-size: 0.8rem;
+    }
+
+    .checkout-message.success {
+      color: var(--success);
+    }
+
+    .checkout-message.error {
+      color: var(--danger);
+    }
+
+    .features {
+      margin: 1.5rem 0 2.4rem;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    .feature {
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 14px;
+      background: rgba(15, 22, 41, 0.74);
+      padding: 0.9rem;
+    }
+
+    .feature h3 {
+      font-size: 0.95rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .feature p {
+      font-size: 0.82rem;
+      color: #b8c5e1;
+    }
+
+    .newsletter {
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(122, 93, 216, 0.2), rgba(17, 24, 45, 0.86));
+      padding: 1.2rem;
+      margin-bottom: 2rem;
+    }
+
+    .newsletter h2 {
+      font-size: 1.1rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .newsletter p {
+      color: #d2dcf3;
+      margin-bottom: 0.8rem;
+      font-size: 0.9rem;
+    }
+
+    .newsletter-form {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.55rem;
+    }
+
+    .newsletter-form input {
+      border-radius: 10px;
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: rgba(15, 23, 42, 0.88);
+      color: #fff;
+      padding: 0.68rem 0.72rem;
+      outline: none;
+    }
+
+    .newsletter-message {
+      margin-top: 0.5rem;
+      min-height: 1rem;
+      font-size: 0.82rem;
+      color: #c8f8d9;
+    }
+
+    footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.11);
+      padding: 1.3rem 0 2.2rem;
+      color: #a8b4d0;
+    }
+
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1.6fr repeat(3, 1fr);
+      gap: 1rem;
+      font-size: 0.88rem;
+    }
+
+    .footer-grid h3 {
+      color: #eef3ff;
+      margin-bottom: 0.45rem;
+      font-size: 0.92rem;
+    }
+
+    .footer-grid ul {
+      list-style: none;
+      display: grid;
+      gap: 0.4rem;
+    }
+
+    .footer-note {
+      margin-top: 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 0.8rem;
+      font-size: 0.82rem;
+    }
+
+    @media (max-width: 1080px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .cart {
+        position: static;
+      }
+
+      .features {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 860px) {
+      .hero-card {
+        grid-template-columns: 1fr;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .menu {
+        display: none;
+      }
+
+      .footer-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .preview-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .product-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .newsletter-form {
+        grid-template-columns: 1fr;
+      }
+
+      .features,
+      .footer-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="announce">Free shipping on orders above $150 • Secure checkout • 30-day return</div>
+
+  <header class="topbar">
+    <div class="container topbar-inner">
+      <a class="brand" href="#top">Perfume<span>Paradise</span></a>
+      <nav class="menu" aria-label="Main navigation">
+        <a href="#shop">Shop</a>
+        <a href="#offers">Offers</a>
+        <a href="#benefits">Benefits</a>
+        <a href="#newsletter">Newsletter</a>
+      </nav>
+      <a class="cart-pill" href="#cart" aria-label="Open cart">
+        Cart
+        <span id="cartCount">0</span>
+      </a>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="hero container">
+      <div class="hero-card">
+        <div>
+          <h1>Luxury perfumes for every mood and moment.</h1>
+          <p>
+            Explore curated fragrances from floral elegance to deep woody blends. Build your cart,
+            choose your delivery details, and place your order in one smooth shopping flow.
+          </p>
+          <a class="btn btn-primary" href="#shop">Start Shopping</a>
+          <div class="hero-stats" id="offers">
+            <div class="hero-stat">
+              <strong>120+</strong>
+              <span>Curated perfumes</span>
+            </div>
+            <div class="hero-stat">
+              <strong>24h</strong>
+              <span>Fast dispatch</span>
+            </div>
+            <div class="hero-stat">
+              <strong>4.9/5</strong>
+              <span>Verified buyers</span>
+            </div>
+          </div>
+        </div>
+        <aside class="hero-preview" aria-label="Trending selections">
+          <h2>Trending Right Now</h2>
+          <div class="preview-grid">
+            <div class="preview-item" style="background: linear-gradient(140deg, #e47194, #ad5ecb);">
+              Rose Velvet
+              <small>Floral Signature</small>
+            </div>
+            <div class="preview-item" style="background: linear-gradient(140deg, #68a4ff, #3f6fd5);">
+              Ocean Mist
+              <small>Fresh Citrus</small>
+            </div>
+            <div class="preview-item" style="background: linear-gradient(140deg, #f09e62, #de6b53);">
+              Amber Dusk
+              <small>Warm Oriental</small>
+            </div>
+            <div class="preview-item" style="background: linear-gradient(140deg, #76a66c, #486e54);">
+              Cedar Noir
+              <small>Woody Elegance</small>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="container" id="shop">
+      <div class="controls" aria-label="Filter and sorting controls">
+        <div class="control">
+          <label for="searchInput">Search perfume</label>
+          <input id="searchInput" type="search" placeholder="Try: rose, oud, fresh" />
+        </div>
+        <div class="control">
+          <label for="categoryFilter">Category</label>
+          <select id="categoryFilter">
+            <option value="all">All categories</option>
+            <option value="floral">Floral</option>
+            <option value="woody">Woody</option>
+            <option value="fresh">Fresh</option>
+            <option value="oriental">Oriental</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="sortFilter">Sort by</label>
+          <select id="sortFilter">
+            <option value="featured">Featured</option>
+            <option value="price-low">Price: Low to high</option>
+            <option value="price-high">Price: High to low</option>
+            <option value="name">Name: A to Z</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="layout">
+        <section class="products-wrap" aria-label="Product listing">
+          <div class="section-header">
+            <h2>Perfume Collection</h2>
+            <p id="resultsText">0 products found</p>
+          </div>
+          <div class="product-grid" id="productGrid"></div>
+        </section>
+
+        <aside class="cart" id="cart" aria-label="Shopping cart and checkout">
+          <div class="cart-head">
+            <h2>Your Cart</h2>
+            <p id="cartItemsCount">0 items</p>
+          </div>
+          <ul class="cart-list" id="cartItems"></ul>
+
+          <div class="summary">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span id="subtotalValue">$0.00</span>
+            </div>
+            <div class="summary-row">
+              <span>Shipping</span>
+              <span id="shippingValue">$0.00</span>
+            </div>
+            <div class="summary-row">
+              <span>Tax (7%)</span>
+              <span id="taxValue">$0.00</span>
+            </div>
+            <div class="summary-row total">
+              <span>Total</span>
+              <span id="totalValue">$0.00</span>
+            </div>
+          </div>
+
+          <form class="checkout-form" id="checkoutForm">
+            <h3>Checkout Details</h3>
+            <label for="fullName">
+              Full Name
+              <input id="fullName" name="fullName" type="text" required />
+            </label>
+            <label for="email">
+              Email
+              <input id="email" name="email" type="email" required />
+            </label>
+            <label for="address">
+              Shipping Address
+              <input id="address" name="address" type="text" required />
+            </label>
+            <label for="city">
+              City
+              <input id="city" name="city" type="text" required />
+            </label>
+            <label for="paymentMethod">
+              Payment Method
+              <select id="paymentMethod" name="paymentMethod" required>
+                <option value="">Select a method</option>
+                <option value="card">Credit/Debit Card</option>
+                <option value="cod">Cash on Delivery</option>
+                <option value="wallet">Digital Wallet</option>
+              </select>
+            </label>
+            <button class="btn btn-primary" id="checkoutButton" type="submit" disabled>Place Order</button>
+            <p class="checkout-message" id="checkoutMessage"></p>
+          </form>
+        </aside>
+      </div>
+    </section>
+
+    <section class="container features" id="benefits" aria-label="Store benefits">
+      <article class="feature">
+        <h3>Authentic Products</h3>
+        <p>Every fragrance is sourced from trusted distributors with verified batch quality.</p>
+      </article>
+      <article class="feature">
+        <h3>Long Lasting Scents</h3>
+        <p>Choose eau de parfum and extrait options designed to stay fresh all day.</p>
+      </article>
+      <article class="feature">
+        <h3>Flexible Payments</h3>
+        <p>Pay securely with card, wallet, or cash on delivery in selected locations.</p>
+      </article>
+      <article class="feature">
+        <h3>Easy Returns</h3>
+        <p>Not satisfied? Use our 30-day return policy for a hassle-free exchange.</p>
+      </article>
+    </section>
+
+    <section class="container newsletter" id="newsletter" aria-label="Newsletter subscription">
+      <h2>Get perfume deals and new arrivals first.</h2>
+      <p>Join our newsletter for exclusive discounts, launch alerts, and personalized scent picks.</p>
+      <form class="newsletter-form" id="newsletterForm">
+        <input id="newsletterEmail" type="email" placeholder="Enter your email" required />
+        <button class="btn btn-outline" type="submit">Subscribe</button>
+      </form>
+      <p class="newsletter-message" id="newsletterMessage"></p>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <h3>Perfume Paradise</h3>
+          <p>
+            Your complete online perfume store with premium fragrances, secure checkout,
+            and fast delivery experience.
+          </p>
+        </div>
+        <div>
+          <h3>Shop</h3>
+          <ul>
+            <li><a href="#shop">All Perfumes</a></li>
+            <li><a href="#offers">Trending</a></li>
+            <li><a href="#benefits">Why us</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Support</h3>
+          <ul>
+            <li><a href="#">Shipping Policy</a></li>
+            <li><a href="#">Returns</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>Legal</h3>
+          <ul>
+            <li><a href="#">Privacy</a></li>
+            <li><a href="#">Terms</a></li>
+            <li><a href="#">Cookie Policy</a></li>
+          </ul>
+        </div>
+      </div>
+      <p class="footer-note">© 2026 Perfume Paradise. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    const products = [
+      { id: 1, name: "Rose Velvet", price: 59, category: "floral", size: "50ml", notes: "Rose • Vanilla • Musk", description: "A soft floral blend with creamy vanilla finish.", colors: ["#e97fa6", "#aa60c8"] },
+      { id: 2, name: "Ocean Mist", price: 52, category: "fresh", size: "60ml", notes: "Citrus • Marine • Amber", description: "Clean sea breeze profile with sparkling citrus top.", colors: ["#69b3ff", "#3f73d8"] },
+      { id: 3, name: "Cedar Noir", price: 68, category: "woody", size: "100ml", notes: "Cedar • Vetiver • Leather", description: "A bold woody signature with smoky character.", colors: ["#7fa97a", "#46684f"] },
+      { id: 4, name: "Amber Dusk", price: 75, category: "oriental", size: "80ml", notes: "Amber • Saffron • Tonka", description: "Warm oriental depth perfect for evening wear.", colors: ["#f2ad6d", "#d66c4e"] },
+      { id: 5, name: "Jasmine Bloom", price: 64, category: "floral", size: "50ml", notes: "Jasmine • Pear • White Musk", description: "Bright jasmine petals balanced with soft fruit.", colors: ["#d992d8", "#8f5ecc"] },
+      { id: 6, name: "Citrus Pulse", price: 48, category: "fresh", size: "75ml", notes: "Lemon • Neroli • Patchouli", description: "Energetic daytime scent with clean woody base.", colors: ["#f6ca73", "#f18a52"] },
+      { id: 7, name: "Velvet Oud", price: 92, category: "oriental", size: "90ml", notes: "Oud • Rose • Incense", description: "Rich oud with elegant floral and smoky layers.", colors: ["#9f7aea", "#5a3f8d"] },
+      { id: 8, name: "Sandal Aura", price: 71, category: "woody", size: "100ml", notes: "Sandalwood • Cardamom • Iris", description: "Smooth sandalwood profile with refined spice.", colors: ["#bfa57f", "#846543"] },
+      { id: 9, name: "Lily Whisper", price: 54, category: "floral", size: "45ml", notes: "Lily • Apple • Amber", description: "Light floral freshness with subtle warm finish.", colors: ["#f4a7c0", "#d6668d"] },
+      { id: 10, name: "Aqua Breeze", price: 57, category: "fresh", size: "70ml", notes: "Mint • Bergamot • Cedar", description: "Refreshing scent with cool mint and crisp woods.", colors: ["#7cc9da", "#397b9d"] },
+      { id: 11, name: "Spice Crown", price: 84, category: "oriental", size: "100ml", notes: "Cinnamon • Amber • Labdanum", description: "Spiced oriental fragrance with royal warmth.", colors: ["#dc9468", "#8e4d38"] },
+      { id: 12, name: "Forest Veil", price: 66, category: "woody", size: "85ml", notes: "Pine • Moss • Musk", description: "Earthy green woods crafted for all-season wear.", colors: ["#6ba57f", "#2f5f46"] }
+    ];
+
+    const state = {
+      search: "",
+      category: "all",
+      sort: "featured",
+      cart: JSON.parse(localStorage.getItem("perfume-cart") || "[]")
+    };
+
+    const refs = {
+      searchInput: document.getElementById("searchInput"),
+      categoryFilter: document.getElementById("categoryFilter"),
+      sortFilter: document.getElementById("sortFilter"),
+      productGrid: document.getElementById("productGrid"),
+      resultsText: document.getElementById("resultsText"),
+      cartCount: document.getElementById("cartCount"),
+      cartItemsCount: document.getElementById("cartItemsCount"),
+      cartItems: document.getElementById("cartItems"),
+      subtotalValue: document.getElementById("subtotalValue"),
+      shippingValue: document.getElementById("shippingValue"),
+      taxValue: document.getElementById("taxValue"),
+      totalValue: document.getElementById("totalValue"),
+      checkoutForm: document.getElementById("checkoutForm"),
+      checkoutButton: document.getElementById("checkoutButton"),
+      checkoutMessage: document.getElementById("checkoutMessage"),
+      newsletterForm: document.getElementById("newsletterForm"),
+      newsletterMessage: document.getElementById("newsletterMessage")
+    };
+
+    const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
+
+    function formatPrice(value) {
+      return money.format(value);
+    }
+
+    function saveCart() {
+      localStorage.setItem("perfume-cart", JSON.stringify(state.cart));
+    }
+
+    function getProduct(productId) {
+      return products.find((item) => item.id === productId);
+    }
+
+    function getFilteredProducts() {
+      let list = [...products];
+
+      if (state.search) {
+        const keyword = state.search.toLowerCase();
+        list = list.filter((item) => {
+          return (
+            item.name.toLowerCase().includes(keyword) ||
+            item.description.toLowerCase().includes(keyword) ||
+            item.notes.toLowerCase().includes(keyword)
+          );
+        });
+      }
+
+      if (state.category !== "all") {
+        list = list.filter((item) => item.category === state.category);
+      }
+
+      switch (state.sort) {
+        case "price-low":
+          list.sort((a, b) => a.price - b.price);
+          break;
+        case "price-high":
+          list.sort((a, b) => b.price - a.price);
+          break;
+        case "name":
+          list.sort((a, b) => a.name.localeCompare(b.name));
+          break;
+        default:
+          list.sort((a, b) => a.id - b.id);
+      }
+
+      return list;
+    }
+
+    function renderProducts() {
+      const list = getFilteredProducts();
+      refs.resultsText.textContent = `${list.length} products found`;
+
+      if (!list.length) {
+        refs.productGrid.innerHTML = `<p class="empty-products">No perfumes match your search. Try another keyword or category.</p>`;
+        return;
+      }
+
+      refs.productGrid.innerHTML = list
+        .map((item) => {
+          return `
+            <article class="product-card">
+              <div class="product-visual" style="background: linear-gradient(140deg, ${item.colors[0]}, ${item.colors[1]});">
+                ${item.category}
+                <span>${item.size}</span>
+              </div>
+              <div class="product-body">
+                <div class="product-head">
+                  <h3>${item.name}</h3>
+                  <span class="tag">${item.category}</span>
+                </div>
+                <p>${item.description}</p>
+                <div class="product-meta">
+                  <span>${item.notes}</span>
+                </div>
+                <div class="product-actions">
+                  <span class="price">${formatPrice(item.price)}</span>
+                  <button class="btn btn-primary" data-action="add" data-id="${item.id}" type="button">Add to cart</button>
+                </div>
+              </div>
+            </article>
+          `;
+        })
+        .join("");
+    }
+
+    function addToCart(productId) {
+      const existing = state.cart.find((item) => item.id === productId);
+      if (existing) {
+        existing.qty += 1;
+      } else {
+        state.cart.push({ id: productId, qty: 1 });
+      }
+
+      saveCart();
+      renderCart();
+    }
+
+    function updateQuantity(productId, delta) {
+      const item = state.cart.find((entry) => entry.id === productId);
+      if (!item) return;
+
+      item.qty += delta;
+      if (item.qty <= 0) {
+        state.cart = state.cart.filter((entry) => entry.id !== productId);
+      }
+
+      saveCart();
+      renderCart();
+    }
+
+    function removeFromCart(productId) {
+      state.cart = state.cart.filter((entry) => entry.id !== productId);
+      saveCart();
+      renderCart();
+    }
+
+    function getTotals() {
+      const subtotal = state.cart.reduce((sum, entry) => {
+        const product = getProduct(entry.id);
+        return sum + (product ? product.price * entry.qty : 0);
+      }, 0);
+
+      const shipping = subtotal === 0 ? 0 : subtotal >= 150 ? 0 : 12;
+      const tax = subtotal * 0.07;
+      const total = subtotal + shipping + tax;
+
+      return { subtotal, shipping, tax, total };
+    }
+
+    function renderCart() {
+      const totalUnits = state.cart.reduce((sum, item) => sum + item.qty, 0);
+      refs.cartCount.textContent = totalUnits;
+      refs.cartItemsCount.textContent = `${totalUnits} item${totalUnits === 1 ? "" : "s"}`;
+
+      if (!state.cart.length) {
+        refs.cartItems.innerHTML = `<li class="cart-empty">Your cart is empty. Add perfumes to continue checkout.</li>`;
+      } else {
+        refs.cartItems.innerHTML = state.cart
+          .map((entry) => {
+            const product = getProduct(entry.id);
+            if (!product) return "";
+
+            const lineTotal = product.price * entry.qty;
+
+            return `
+              <li class="cart-item">
+                <div class="cart-item-top">
+                  <div>
+                    <h3>${product.name}</h3>
+                    <small>${product.size} • ${product.notes}</small>
+                  </div>
+                  <strong>${formatPrice(lineTotal)}</strong>
+                </div>
+                <div class="qty-row">
+                  <div class="qty-controls">
+                    <button class="qty-btn" data-action="dec" data-id="${product.id}" type="button" aria-label="Decrease quantity">−</button>
+                    <span class="qty-value">${entry.qty}</span>
+                    <button class="qty-btn" data-action="inc" data-id="${product.id}" type="button" aria-label="Increase quantity">+</button>
+                  </div>
+                  <button class="remove-btn" data-action="remove" data-id="${product.id}" type="button">Remove</button>
+                </div>
+              </li>
+            `;
+          })
+          .join("");
+      }
+
+      const totals = getTotals();
+      refs.subtotalValue.textContent = formatPrice(totals.subtotal);
+      refs.shippingValue.textContent = totals.shipping === 0 ? "Free" : formatPrice(totals.shipping);
+      refs.taxValue.textContent = formatPrice(totals.tax);
+      refs.totalValue.textContent = formatPrice(totals.total);
+
+      refs.checkoutButton.disabled = state.cart.length === 0;
+    }
+
+    function handleCheckout(event) {
+      event.preventDefault();
+
+      if (!state.cart.length) {
+        refs.checkoutMessage.className = "checkout-message error";
+        refs.checkoutMessage.textContent = "Your cart is empty.";
+        return;
+      }
+
+      const formData = new FormData(refs.checkoutForm);
+      const fullName = String(formData.get("fullName") || "").trim();
+      const paymentMethod = String(formData.get("paymentMethod") || "").trim();
+
+      if (!fullName || !paymentMethod) {
+        refs.checkoutMessage.className = "checkout-message error";
+        refs.checkoutMessage.textContent = "Please complete all checkout fields.";
+        return;
+      }
+
+      const orderId = `PP-${Date.now().toString().slice(-7)}`;
+      const totals = getTotals();
+
+      refs.checkoutMessage.className = "checkout-message success";
+      refs.checkoutMessage.textContent = `Order ${orderId} placed successfully. Total charged: ${formatPrice(totals.total)}.`;
+
+      state.cart = [];
+      saveCart();
+      renderCart();
+      refs.checkoutForm.reset();
+    }
+
+    function handleNewsletter(event) {
+      event.preventDefault();
+      refs.newsletterMessage.textContent = "Subscribed successfully. You will receive upcoming perfume deals by email.";
+      refs.newsletterForm.reset();
+    }
+
+    refs.searchInput.addEventListener("input", (event) => {
+      state.search = event.target.value.trim();
+      renderProducts();
+    });
+
+    refs.categoryFilter.addEventListener("change", (event) => {
+      state.category = event.target.value;
+      renderProducts();
+    });
+
+    refs.sortFilter.addEventListener("change", (event) => {
+      state.sort = event.target.value;
+      renderProducts();
+    });
+
+    refs.productGrid.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-action='add']");
+      if (!button) return;
+
+      const productId = Number(button.dataset.id);
+      if (!Number.isFinite(productId)) return;
+
+      addToCart(productId);
+    });
+
+    refs.cartItems.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-action]");
+      if (!button) return;
+
+      const productId = Number(button.dataset.id);
+      if (!Number.isFinite(productId)) return;
+
+      const action = button.dataset.action;
+      if (action === "inc") updateQuantity(productId, 1);
+      if (action === "dec") updateQuantity(productId, -1);
+      if (action === "remove") removeFromCart(productId);
+    });
+
+    refs.checkoutForm.addEventListener("submit", handleCheckout);
+    refs.newsletterForm.addEventListener("submit", handleNewsletter);
+
+    renderProducts();
+    renderCart();
+  </script>
+</body>
+</html>
