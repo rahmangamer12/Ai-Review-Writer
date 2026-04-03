@@ -106,17 +106,71 @@ export default function AIChatbot() {
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  
+
   const [selectedModel, setSelectedModel] = useState('LongCat-Flash-Chat')
   const [showModelDropdown, setShowModelDropdown] = useState(false)
-  
+
   const [hasStarted, setHasStarted] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [isEnabled, setIsEnabled] = useState(true)
-  
+
+  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+
+  // Load saved position
+  useEffect(() => {
+    const saved = localStorage.getItem('ai-chatbot-position')
+    if (saved) {
+      setPosition(JSON.parse(saved))
+    }
+  }, [])
+
+  // Handle drag
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true)
+    setDragStart({
+      x: e.clientX - position.x,
+      y: e.clientY - position.y
+    })
+  }
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return
+    const newX = e.clientX - dragStart.x
+    const newY = e.clientY - dragStart.y
+
+    // Keep within viewport bounds
+    const maxX = window.innerWidth - 56
+    const maxY = window.innerHeight - 56
+
+    setPosition({
+      x: Math.max(0, Math.min(newX, maxX)),
+      y: Math.max(0, Math.min(newY, maxY))
+    })
+  }
+
+  const handleMouseUp = () => {
+    if (isDragging) {
+      setIsDragging(false)
+      localStorage.setItem('ai-chatbot-position', JSON.stringify(position))
+    }
+  }
+
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove)
+      window.addEventListener('mouseup', handleMouseUp)
+      return () => {
+        window.removeEventListener('mousemove', handleMouseMove)
+        window.removeEventListener('mouseup', handleMouseUp)
+      }
+    }
+  }, [isDragging, dragStart, position])
 
   // Auto-hide tooltip
   useEffect(() => {
@@ -379,7 +433,16 @@ export default function AIChatbot() {
 
   return (
     <>
-      <div className="fixed bottom-6 right-4 sm:bottom-6 sm:right-6 lg:bottom-10 lg:right-10 z-50" suppressHydrationWarning>
+      <div
+        className="fixed z-50"
+        style={{
+          left: position.x || undefined,
+          right: position.x ? undefined : 16,
+          top: position.y || undefined,
+          bottom: position.y ? undefined : 24,
+        }}
+        suppressHydrationWarning
+      >
         <AnimatePresence>
           {showTooltip && !isOpen && (
             <motion.div
@@ -399,14 +462,17 @@ export default function AIChatbot() {
         </AnimatePresence>
 
         <motion.button
-          whileHover={{ scale: 1.05 }}
+          whileHover={{ scale: isDragging ? 1 : 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => setIsOpen(true)}
-          className={`${isOpen ? 'hidden' : 'flex'} items-center gap-2 bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 rounded-full shadow-lg hover:shadow-xl transition-all touch-manipulation`}
+          onMouseDown={handleMouseDown}
+          onClick={(e) => {
+            if (!isDragging) setIsOpen(true)
+          }}
+          className={`${isOpen ? 'hidden' : 'flex'} items-center gap-2 bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 rounded-full shadow-lg hover:shadow-xl transition-all touch-manipulation ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           suppressHydrationWarning
         >
-          <span className="font-semibold text-xs sm:text-sm md:text-base" suppressHydrationWarning>Ask Sarah</span>
-          <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-white/20 rounded-full flex items-center justify-center text-lg sm:text-xl md:text-2xl backdrop-blur-sm" suppressHydrationWarning>
+          <span className="font-semibold text-xs sm:text-sm md:text-base pointer-events-none" suppressHydrationWarning>Ask Sarah</span>
+          <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-white/20 rounded-full flex items-center justify-center text-lg sm:text-xl md:text-2xl backdrop-blur-sm pointer-events-none" suppressHydrationWarning>
             {SARAH_PROFILE.avatar}
           </div>
         </motion.button>
