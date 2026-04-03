@@ -61,11 +61,12 @@ export default function ChatSidebar({
   setSidebarOpen
 }: ChatSidebarProps) {
   const [localSearch, setLocalSearch] = useState('')
-  
+  const [lastScrollY, setLastScrollY] = useState(0)
+
   const filteredSessions = useMemo(() => {
     const query = localSearch || searchQuery
     if (!query) return sessions
-    return sessions.filter(s => 
+    return sessions.filter(s =>
       s.title.toLowerCase().includes(query.toLowerCase())
     )
   }, [sessions, searchQuery, localSearch])
@@ -77,6 +78,22 @@ export default function ChatSidebar({
       return new Date(b.date).getTime() - new Date(a.date).getTime()
     })
   }, [filteredSessions])
+
+  // Close sidebar on scroll down (mobile only)
+  React.useEffect(() => {
+    if (!isMobile || !sidebarOpen) return
+
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        setSidebarOpen(false)
+      }
+      setLastScrollY(currentScrollY)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [isMobile, sidebarOpen, lastScrollY, setSidebarOpen])
 
   const handleSessionClick = (id: string) => {
     setCurrentSessionId(id)
@@ -171,7 +188,7 @@ export default function ChatSidebar({
       </div>
 
       {/* Sessions List */}
-      <div className="flex-1 overflow-y-auto px-2 sm:px-3 py-2 space-y-1">
+      <div className="flex-1 overflow-y-auto px-2 sm:px-3 py-2 space-y-1 pb-[120px]">
         {sortedSessions.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 sm:py-12 text-center px-3">
             <div className="w-12 sm:h-14 h-12 rounded-2xl bg-white/5 flex items-center justify-center mb-3">
@@ -243,7 +260,7 @@ export default function ChatSidebar({
       </div>
 
       {/* Profile Section */}
-      <div className="p-2 sm:p-3 lg:p-4 border-t border-white/5">
+      <div className="p-2 sm:p-3 lg:p-4 border-t border-white/5 bg-[#0a0a12]">
         <div className="p-2.5 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl bg-white/[0.03] border border-white/8">
           <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
             <div className="w-8 sm:w-9 lg:w-10 h-8 sm:h-9 lg:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-bold text-white text-sm">
