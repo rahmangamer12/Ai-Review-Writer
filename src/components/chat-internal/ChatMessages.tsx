@@ -20,6 +20,7 @@ interface ChatMessagesProps {
   onSpeak?: (text: string) => void
   onStopSpeaking?: () => void
   isSpeaking: boolean
+  onReaction?: (messageId: string, reaction: 'like' | 'dislike') => void
 }
 
 const CodeBlock = memo(({ language, children }: { language: string; children: string }) => {
@@ -175,10 +176,12 @@ export default function ChatMessages({
   onCopy,
   onSpeak,
   onStopSpeaking,
-  isSpeaking
+  isSpeaking,
+  onReaction
 }: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [showCopied, setShowCopied] = useState<string | null>(null)
+  const [reactions, setReactions] = useState<Record<string, 'like' | 'dislike' | null>>({})
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -191,20 +194,30 @@ export default function ChatMessages({
     onCopy?.(text)
   }
 
+  const handleReaction = (messageId: string, reaction: 'like' | 'dislike') => {
+    const currentReaction = reactions[messageId]
+    const newReaction = currentReaction === reaction ? null : reaction
+    setReactions(prev => ({ ...prev, [messageId]: newReaction }))
+    if (newReaction) {
+      onReaction?.(messageId, newReaction)
+    }
+  }
+
   if (messages.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-full min-h-[50vh] sm:min-h-[60vh] text-center px-3 sm:px-4 lg:px-6">
         <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
+          initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-2xl sm:rounded-3xl lg:rounded-[36px] bg-gradient-to-br from-violet-600 via-indigo-600 to-fuchsia-600 flex items-center justify-center mb-4 sm:mb-5 lg:mb-6 shadow-2xl shadow-violet-600/20"
+          transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
+          className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-2xl sm:rounded-3xl lg:rounded-[36px] bg-gradient-to-br from-violet-600 via-indigo-600 to-fuchsia-600 flex items-center justify-center mb-4 sm:mb-5 lg:mb-6 shadow-2xl shadow-violet-600/20 will-change-transform"
         >
           <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-white" />
         </motion.div>
         <motion.h2
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
           className="text-xl sm:text-2xl lg:text-3xl font-black mb-1.5 sm:mb-2 bg-gradient-to-r from-white to-white/60 bg-clip-text text-transparent"
         >
           Sarah AI
@@ -212,7 +225,7 @@ export default function ChatMessages({
         <motion.p
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.2 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
           className="text-white/40 text-sm sm:text-base mb-6 sm:mb-8"
         >
           Welcome! How can I help you today?
@@ -220,9 +233,9 @@ export default function ChatMessages({
 
         {/* Quick Actions */}
         <motion.div
-          initial={{ y: 10, opacity: 0 }}
+          initial={{ y: 20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          transition={{ delay: 0.3 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
           className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 max-w-full sm:max-w-lg w-full"
         >
           {[
@@ -233,13 +246,18 @@ export default function ChatMessages({
             { icon: '🔒', text: 'Security', color: 'from-red-500 to-rose-500' },
             { icon: '💬', text: 'Auto-Reply', color: 'from-pink-500 to-rose-500' }
           ].map((item, i) => (
-            <button
+            <motion.button
               key={i}
-              className={`p-3 sm:p-4 bg-gradient-to-br ${item.color} bg-opacity-10 hover:bg-opacity-20 rounded-xl sm:rounded-2xl text-left transition-all hover:scale-[1.02] active:scale-[0.98] border border-white/10 hover:border-white/20`}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.5 + i * 0.05, duration: 0.3 }}
+              whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+              whileTap={{ scale: 0.98 }}
+              className={`p-3 sm:p-4 bg-gradient-to-br ${item.color} bg-opacity-10 hover:bg-opacity-20 rounded-xl sm:rounded-2xl text-left transition-all border border-white/10 hover:border-white/20 will-change-transform`}
             >
               <span className="text-xl sm:text-2xl block mb-0.5 sm:mb-1">{item.icon}</span>
               <span className="text-xs sm:text-sm font-medium text-white/90 line-clamp-1">{item.text}</span>
-            </button>
+            </motion.button>
           ))}
         </motion.div>
       </div>
@@ -254,8 +272,8 @@ export default function ChatMessages({
             key={msg.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: idx * 0.05 }}
-            className={`flex gap-2 sm:gap-3 lg:gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''} w-full`}
+            transition={{ duration: 0.3, delay: idx * 0.05, ease: [0.4, 0, 0.2, 1] }}
+            className={`flex gap-2 sm:gap-3 lg:gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''} w-full will-change-transform`}
           >
             {/* Avatar */}
             <div className={`shrink-0 w-7 h-7 sm:w-9 sm:h-9 lg:w-11 lg:h-11 rounded-lg sm:rounded-xl lg:rounded-[18px] flex items-center justify-center text-xs sm:text-sm font-bold border shadow-lg ${
@@ -297,7 +315,7 @@ export default function ChatMessages({
               </div>
 
               {/* Message Bubble */}
-              <div className={`relative p-2.5 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl lg:rounded-[24px] border shadow-xl transition-all w-full ${
+              <div className={`relative p-2.5 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl lg:rounded-[24px] border shadow-xl transition-all duration-300 w-full ${
                 msg.role === 'user'
                   ? 'bg-gradient-to-br from-violet-600/20 to-indigo-600/20 border-violet-500/20 rounded-tr-md'
                   : 'bg-gradient-to-br from-white/[0.04] to-white/[0.02] border-white/8 rounded-tl-md'
@@ -344,8 +362,9 @@ export default function ChatMessages({
               {/* Action Buttons */}
               {msg.role === 'assistant' && !msg.isTyping && (
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: 0.1 }}
                   className="flex items-center gap-1 sm:gap-1.5 mt-2 sm:mt-3 flex-wrap"
                 >
                   <button
@@ -376,6 +395,31 @@ export default function ChatMessages({
                     )}
                   </button>
 
+                  {/* Reaction Buttons */}
+                  <button
+                    onClick={() => handleReaction(msg.id, 'like')}
+                    className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all border active:scale-[0.98] ${
+                      reactions[msg.id] === 'like'
+                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                        : 'bg-white/[0.03] hover:bg-white/[0.08] text-white/40 hover:text-emerald-400 border-white/5'
+                    }`}
+                    title="Like"
+                  >
+                    <ThumbsUp className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${reactions[msg.id] === 'like' ? 'fill-current' : ''}`} />
+                  </button>
+
+                  <button
+                    onClick={() => handleReaction(msg.id, 'dislike')}
+                    className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all border active:scale-[0.98] ${
+                      reactions[msg.id] === 'dislike'
+                        ? 'bg-red-500/20 text-red-400 border-red-500/30'
+                        : 'bg-white/[0.03] hover:bg-white/[0.08] text-white/40 hover:text-red-400 border-white/5'
+                    }`}
+                    title="Dislike"
+                  >
+                    <ThumbsDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${reactions[msg.id] === 'dislike' ? 'fill-current' : ''}`} />
+                  </button>
+
                   <button
                     onClick={() => {
                       if (navigator.share) {
@@ -402,8 +446,9 @@ export default function ChatMessages({
               {/* User Message Actions */}
               {msg.role === 'user' && (
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.2, delay: 0.1 }}
                   className="flex items-center gap-1 sm:gap-1.5 mt-2 sm:mt-3 justify-end flex-wrap"
                 >
                   <button
