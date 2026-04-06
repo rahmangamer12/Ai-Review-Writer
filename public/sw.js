@@ -1,11 +1,14 @@
 // AutoReview AI - Main Service Worker (PWA)
-// Version: 1.0.1 - Fixed POST caching issue
+// Version: 1.0.2 - Fixed for all devices (iOS, Android, Desktop)
 
-const CACHE_NAME = 'autoreview-ai-v1.0.1';
-const RUNTIME_CACHE = 'autoreview-runtime-v1.0.1';
-const IMAGE_CACHE = 'autoreview-images-v1.0.1';
+const CACHE_NAME = 'autoreview-ai-v1.0.2';
+const RUNTIME_CACHE = 'autoreview-runtime-v1.0.2';
+const IMAGE_CACHE = 'autoreview-images-v1.0.2';
 
-// Files to cache immediately on install
+const CACHE_VERSION = '1.0.2';
+
+console.log('[SW] AutoReview AI Service Worker v' + CACHE_VERSION + ' loading...');
+
 const PRECACHE_ASSETS = [
   '/',
   '/dashboard',
@@ -13,45 +16,38 @@ const PRECACHE_ASSETS = [
   '/analytics',
   '/settings',
   '/offline',
-  '/globals.css',
-  '/file.svg',
-  '/globe.svg',
-  '/next.svg',
-  '/vercel.svg',
-  '/window.svg'
+  '/manifest.json',
 ];
 
-// Install event - cache critical assets
 self.addEventListener('install', (event) => {
-  console.log('[SW] Installing service worker...');
+  console.log('[SW] Installing service worker v' + CACHE_VERSION + '...');
   
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('[SW] Precaching assets');
-        return cache.addAll(PRECACHE_ASSETS);
+        console.log('[SW] Precaching assets...');
+        return cache.addAll(PRECACHE_ASSETS).catch((err) => {
+          console.warn('[SW] Some precache failed:', err);
+        });
       })
       .then(() => {
-        console.log('[SW] Skip waiting');
+        console.log('[SW] Installation complete, skipping wait');
         return self.skipWaiting();
-      })
-      .catch((error) => {
-        console.error('[SW] Precaching failed:', error);
       })
   );
 });
 
-// Activate event - clean old caches
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating service worker...');
+  console.log('[SW] Activating service worker v' + CACHE_VERSION + '...');
   
   event.waitUntil(
     caches.keys()
       .then((cacheNames) => {
+        console.log('[SW] Current caches:', cacheNames);
+        
         return Promise.all(
           cacheNames
             .filter((cacheName) => {
-              // Delete old caches
               return cacheName.startsWith('autoreview-') && 
                      cacheName !== CACHE_NAME && 
                      cacheName !== RUNTIME_CACHE &&
@@ -70,60 +66,54 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch event - network first, fallback to cache
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+  
+  const requestOrigin = self.location ? self.location.origin : 'unknown';
+  const urlOrigin = url.origin;
 
-  // Skip cross-origin requests
-  if (url.origin !== location.origin) {
+  if (urlOrigin !== requestOrigin && urlOrigin !== 'null') {
     return;
   }
 
-  // API calls - just forward to network, don't intercept
-  // This fixes the "Network unavailable" error issue
   if (url.pathname.startsWith('/api/')) {
-    return; // Let browser handle it normally
+    return;
   }
 
-  // Handle images separately with longer cache
   if (request.destination === 'image') {
     event.respondWith(
       caches.open(IMAGE_CACHE)
-        .then((cache) => {
-          return cache.match(request)
-            .then((cachedResponse) => {
-              if (cachedResponse) {
-                return cachedResponse;
+        .then((cache) => cache.match(request))
+        .then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          
+          return fetch(request)
+            .then((response) => {
+              if (response.ok) {
+                const responseClone = response.clone();
+                caches.open(IMAGE_CACHE)
+                  .then((cache) => cache.put(request, responseClone));
               }
-
-              return fetch(request)
-                .then((response) => {
-                  // Cache successful image responses
-                  if (response.ok) {
-                    cache.put(request, response.clone());
-                  }
-                  return response;
-                })
-                .catch(() => {
-                  // Return placeholder image if offline
-                  return new Response(
-                    '<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg"><rect fill="#0a0a0f" width="400" height="300"/><text fill="#6366f1" x="50%" y="50%" text-anchor="middle" dy=".3em">Image Offline</text></svg>',
-                    { headers: { 'Content-Type': 'image/svg+xml' } }
-                  );
-                });
+              return response;
+            })
+            .catch(() => {
+              return new Response(
+                '<svg width="400" height="300" xmlns="http://www.w3.org/2000/svg"><rect fill="#0a0a0f" width="400" height="300"/><text fill="#6366f1" x="50%" y="50%" text-anchor="middle" dy=".3em">Image Offline</text></svg>',
+                { headers: { 'Content-Type': 'image/svg+xml' } }
+              );
             });
         })
     );
     return;
   }
 
-  // Network-first strategy for HTML pages
   if (request.mode === 'navigate' || request.destination === 'document') {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Cache the page for offline access
           if (response.ok) {
             const responseClone = response.clone();
             caches.open(RUNTIME_CACHE)
@@ -132,13 +122,11 @@ self.addEventListener('fetch', (event) => {
           return response;
         })
         .catch(() => {
-          // If network fails, try cache
           return caches.match(request)
             .then((cachedResponse) => {
               if (cachedResponse) {
                 return cachedResponse;
               }
-              // If not in cache, show offline page
               return caches.match('/offline');
             });
         })
@@ -146,18 +134,12 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first strategy for other assets (CSS, JS, fonts)
-  // Skip caching POST requests
   if (request.method !== 'GET') {
     event.respondWith(fetch(request));
     return;
   }
 
-  // Skip manifest.json and sw.js from caching
-  if (url.pathname === '/manifest.json' || url.pathname === '/sw.js') {
-    event.respondWith(
-      fetch(request).catch(() => new Response('{}', { status: 404, headers: { 'Content-Type': 'application/json' } }))
-    );
+  if (url.pathname === '/sw.js' || url.pathname === '/manifest.json') {
     return;
   }
 
@@ -170,7 +152,6 @@ self.addEventListener('fetch', (event) => {
 
         return fetch(request)
           .then((response) => {
-            // Cache successful GET responses only
             if (response.ok && request.method === 'GET') {
               const responseClone = response.clone();
               caches.open(RUNTIME_CACHE)
@@ -179,7 +160,6 @@ self.addEventListener('fetch', (event) => {
             return response;
           })
           .catch(() => {
-            // Return error response
             return new Response('Network error', {
               status: 408,
               headers: { 'Content-Type': 'text/plain' }
@@ -189,19 +169,14 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Background sync for offline actions
 self.addEventListener('sync', (event) => {
   console.log('[SW] Background sync:', event.tag);
   
   if (event.tag === 'sync-reviews') {
-    event.waitUntil(
-      // Sync pending review actions
-      syncPendingReviews()
-    );
+    event.waitUntil(syncPendingReviews());
   }
 });
 
-// Push notification handler
 self.addEventListener('push', (event) => {
   console.log('[SW] Push notification received');
   
@@ -210,7 +185,8 @@ self.addEventListener('push', (event) => {
     body: 'You have a new notification',
     icon: '/icons/icon-192x192.png',
     badge: '/icons/icon-96x96.png',
-    tag: 'autoreview-notification'
+    tag: 'autoreview-notification',
+    data: { url: '/dashboard' }
   };
 
   if (event.data) {
@@ -218,7 +194,7 @@ self.addEventListener('push', (event) => {
       const data = event.data.json();
       notificationData = { ...notificationData, ...data };
     } catch (e) {
-      notificationData.body = event.data.text();
+      notificationData.body = event.data.text() || notificationData.body;
     }
   }
 
@@ -229,29 +205,35 @@ self.addEventListener('push', (event) => {
       badge: notificationData.badge,
       tag: notificationData.tag,
       requireInteraction: false,
-      vibrate: [200, 100, 200]
+      vibrate: [200, 100, 200],
+      data: notificationData.data
     })
   );
 });
 
-// Notification click handler
 self.addEventListener('notificationclick', (event) => {
   console.log('[SW] Notification clicked');
   
   event.notification.close();
 
+  const urlToOpen = event.notification.data?.url || '/dashboard';
+
   event.waitUntil(
-    clients.openWindow(event.notification.data?.url || '/dashboard')
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        for (const client of clientList) {
+          if (client.url === urlToOpen && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        return clients.openWindow(urlToOpen);
+      })
   );
 });
 
-// Helper function for background sync
 async function syncPendingReviews() {
   try {
-    // Get pending actions from IndexedDB (implement as needed)
     console.log('[SW] Syncing pending reviews...');
-    
-    // Make API calls to sync data
     const response = await fetch('/api/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' }
@@ -264,19 +246,18 @@ async function syncPendingReviews() {
     }
   } catch (error) {
     console.error('[SW] Sync error:', error);
-    throw error; // Retry sync later
+    throw error;
   }
 }
 
-// Message handler (for communication with pages)
 self.addEventListener('message', (event) => {
   console.log('[SW] Message received:', event.data);
 
-  if (event.data.type === 'SKIP_WAITING') {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
   }
 
-  if (event.data.type === 'CLEAR_CACHE') {
+  if (event.data && event.data.type === 'CLEAR_CACHE') {
     event.waitUntil(
       caches.keys().then((cacheNames) => {
         return Promise.all(
@@ -285,6 +266,10 @@ self.addEventListener('message', (event) => {
       })
     );
   }
+
+  if (event.data && event.data.type === 'GET_VERSION') {
+    event.ports[0].postMessage({ version: CACHE_VERSION });
+  }
 });
 
-console.log('[SW] AutoReview AI Service Worker loaded - v1.0.0');
+console.log('[SW] AutoReview AI Service Worker loaded - v' + CACHE_VERSION);
