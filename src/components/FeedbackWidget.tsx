@@ -3,6 +3,7 @@
 import { useState, useEffect, useSyncExternalStore } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageSquare, X, Star, Send, CheckCircle, ThumbsUp } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 
 function useHydrated() {
   const [hydrated, setHydrated] = useState(false)
@@ -21,6 +22,7 @@ interface FeedbackData {
 }
 
 export default function FeedbackWidget() {
+  const pathname = usePathname()
   const [isOpen, setIsOpen] = useState(false)
   const [showExitIntent, setShowExitIntent] = useState(false)
   const [step, setStep] = useState<'rating' | 'details' | 'success'>('rating')
@@ -170,6 +172,8 @@ export default function FeedbackWidget() {
   const getFeedbackCount = () => {
     return hydrated ? getStoredFeedbacks().length : 0
   }
+
+  if (pathname?.startsWith('/chat')) return null
 
   return (
     <>
