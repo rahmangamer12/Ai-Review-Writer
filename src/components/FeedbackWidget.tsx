@@ -46,23 +46,49 @@ export default function FeedbackWidget() {
     if (!hydrated) return
     const saved = localStorage.getItem('feedback-widget-position')
     if (saved) {
-      setPosition(JSON.parse(saved))
+      try {
+        const parsed = JSON.parse(saved)
+        if (typeof window !== 'undefined') {
+          const safeX = Math.min(Math.max(16, parsed.x), window.innerWidth - 80)
+          const safeY = Math.min(Math.max(16, parsed.y), window.innerHeight - 80)
+          setPosition({ x: safeX, y: safeY })
+        }
+      } catch (e) {
+        console.error(e)
+      }
     }
+
+    const handleResize = () => {
+      setPosition(prev => {
+        if (prev.x === 0 && prev.y === 0) return prev
+        return {
+          x: Math.min(Math.max(16, prev.x), window.innerWidth - 80),
+          y: Math.min(Math.max(16, prev.y), window.innerHeight - 80)
+        }
+      })
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
   }, [hydrated])
 
   // Use framer-motion drag instead of manual listeners
   const handleDragEnd = (e: any, info: any) => {
     // Only save position if dragging happened
     if (Math.abs(info.offset.x) > 5 || Math.abs(info.offset.y) > 5) {
-      localStorage.setItem('feedback-widget-position', JSON.stringify({
-        x: info.point.x,
-        y: info.point.y
-      }))
+      let finalX = info.point.x;
+      let finalY = info.point.y;
+      if (typeof window !== 'undefined') {
+        finalX = Math.min(Math.max(16, finalX), window.innerWidth - 80);
+        finalY = Math.min(Math.max(16, finalY), window.innerHeight - 80);
+      }
+      const newPos = { x: finalX, y: finalY }
+      localStorage.setItem('feedback-widget-position', JSON.stringify(newPos))
+      setPosition(newPos)
+    
       // Prevent opening on click after drag
       setTimeout(() => setIsDragging(false), 100)
     }
   }
-
   const handleDragStart = () => {
     setIsDragging(true)
   }
