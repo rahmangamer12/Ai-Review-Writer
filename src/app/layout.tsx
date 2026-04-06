@@ -11,6 +11,7 @@ import AIChatbot from "@/components/AIChatbotWidget";
 import HydrationSuppressor from "@/components/HydrationSuppressor";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import PWAUpdateNotification from "@/components/PWAUpdateNotification";
+import PWAPurge from "@/components/PWAPurge";
 
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ClerkProvider } from '@clerk/nextjs'
@@ -80,6 +81,9 @@ export default function RootLayout({
 
           {/* PWA Update & Offline Notifications (outside scroll container) */}
           <PWAUpdateNotification />
+
+          {/* Nuclear Reset - Kills old service workers and caches */}
+          <PWAPurge />
 
           {/* Hydration Suppression Script - Using Next.js Script component to avoid warnings */}
           <Script
