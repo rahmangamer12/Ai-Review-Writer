@@ -11,7 +11,7 @@ import AIChatbot from "@/components/AIChatbotWidget";
 import HydrationSuppressor from "@/components/HydrationSuppressor";
 import PWAInstallPrompt from "@/components/PWAInstallPrompt";
 import PWAUpdateNotification from "@/components/PWAUpdateNotification";
-import ServiceWorkerRegistrar from "@/components/ServiceWorkerRegistrar";
+
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ClerkProvider } from '@clerk/nextjs'
 
