@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { X, Download, Smartphone } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { X, Download, Smartphone, Tablet, Monitor } from 'lucide-react'
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>
@@ -12,68 +12,92 @@ export default function PWAInstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
   const [showPrompt, setShowPrompt] = useState(false)
   const [isIOS, setIsIOS] = useState(false)
+  const [isAndroid, setIsAndroid] = useState(false)
   const [isStandalone, setIsStandalone] = useState(false)
+  const [deviceType, setDeviceType] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
 
   useEffect(() => {
-    // Check if running in standalone mode
-    const isInStandalone = window.matchMedia('(display-mode: standalone)').matches
-    setIsStandalone(isInStandalone)
+    const checkDevice = () => {
+      const ua = navigator.userAgent.toLowerCase()
+      const isIPad = /ipad/.test(ua)
+      const isIPhone = /iphone|ipod/.test(ua)
+      const isIOS = isIPad || isIPhone
+      const isAndroid = /android/.test(ua) && !/windows/.test(ua)
+      
+      setIsIOS(isIOS)
+      setIsAndroid(isAndroid)
 
-    // Check if iOS
-    const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent)
-    setIsIOS(iOS)
+      const width = window.innerWidth
+      if (width < 768) {
+        setDeviceType('mobile')
+      } else if (width < 1024) {
+        setDeviceType('tablet')
+      } else {
+        setDeviceType('desktop')
+      }
 
-    // Don't show if already installed
-    if (isInStandalone) return
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+        (window.navigator as any).standalone === true ||
+        window.matchMedia('(display-mode: fullscreen)').matches
+      
+      setIsStandalone(isStandalone)
+      
+      return { isIOS, isAndroid, isStandalone }
+    }
 
-    // Check if dismissed recently (within 7 days)
+    const { isIOS: isIosDev, isAndroid: isAndroidDev, isStandalone: isStandaloneDev } = checkDevice()
+
+    if (isStandaloneDev) return
+
     const dismissedTime = localStorage.getItem('pwa-install-dismissed-time')
     if (dismissedTime) {
       const daysSinceDismissed = (Date.now() - parseInt(dismissedTime)) / (1000 * 60 * 60 * 24)
       if (daysSinceDismissed < 7) return
     }
 
-    // Listen for the beforeinstallprompt event
-    const handler = (e: Event) => {
+    const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
-
-      // Show prompt after 3 seconds
+      
       setTimeout(() => {
-        setShowPrompt(true)
+        if (!localStorage.getItem('pwa-install-dismissed-time')) {
+          setShowPrompt(true)
+        }
       }, 3000)
     }
 
-    window.addEventListener('beforeinstallprompt', handler)
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
 
-    // Listen for appinstalled
     window.addEventListener('appinstalled', () => {
       setIsStandalone(true)
       setShowPrompt(false)
       setDeferredPrompt(null)
+      localStorage.removeItem('pwa-install-dismissed-time')
     })
 
-    // For iOS, show install prompt if not standalone
-    if (iOS && !isInStandalone) {
+    if ((isIosDev || isAndroidDev) && !isStandaloneDev) {
       setTimeout(() => {
-        setShowPrompt(true)
-      }, 3000)
+        if (!localStorage.getItem('pwa-install-dismissed-time')) {
+          setShowPrompt(true)
+        }
+      }, 5000)
     }
 
+    const handleResize = () => checkDevice()
+    window.addEventListener('resize', handleResize)
+
     return () => {
-      window.removeEventListener('beforeinstallprompt', handler)
-      window.removeEventListener('appinstalled', () => {})
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      window.removeEventListener('resize', handleResize)
     }
   }, [])
 
-  const handleInstallClick = async () => {
+  const handleInstallClick = useCallback(async () => {
     if (!deferredPrompt && !isIOS) return
 
     if (deferredPrompt) {
-      // Show the install prompt
       deferredPrompt.prompt()
 
-      // Wait for the user to respond
       const { outcome } = await deferredPrompt.userChoice
       
       if (outcome === 'accepted') {
@@ -84,20 +108,59 @@ export default function PWAInstallPrompt() {
     }
 
     setShowPrompt(false)
-  }
+  }, [deferredPrompt, isIOS])
 
-  const handleDismiss = () => {
+  const handleDismiss = useCallback(() => {
     setShowPrompt(false)
     localStorage.setItem('pwa-install-dismissed', 'true')
     localStorage.setItem('pwa-install-dismissed-time', Date.now().toString())
+  }, [])
+
+  const getDeviceIcon = () => {
+    if (isIOS) return <Smartphone className="w-6 h-6" />
+    if (isAndroid) return <Smartphone className="w-6 h-6" />
+    if (deviceType === 'tablet') return <Tablet className="w-6 h-6" />
+    return <Monitor className="w-6 h-6" />
+  }
+
+  const getInstallInstructions = () => {
+    if (isIOS) {
+      return {
+        title: 'Install on iPhone/iPad',
+        steps: [
+          { icon: '1', text: 'Tap the Share button below' },
+          { icon: '2', text: 'Scroll down and tap "Add to Home Screen"' },
+          { icon: '3', text: 'Tap "Add" to confirm' }
+        ]
+      }
+    }
+    if (isAndroid) {
+      return {
+        title: 'Install on Android',
+        steps: [
+          { icon: '1', text: 'Tap the menu (three dots)' },
+          { icon: '2', text: 'Select "Add to Home Screen"' },
+          { icon: '3', text: 'Tap "Install"' }
+        ]
+      }
+    }
+    return {
+      title: 'Install as App',
+      steps: [
+        { icon: '1', text: 'Click the install button below' },
+        { icon: '2', text: 'Follow the browser prompt' },
+        { icon: '3', text: 'App will be added to your desktop' }
+      ]
+    }
   }
 
   if (!showPrompt || isStandalone) return null
 
+  const instructions = getInstallInstructions()
+
   return (
     <div className="fixed bottom-20 left-4 right-4 md:left-auto md:right-8 md:w-96 z-50 animate-in slide-in-from-bottom-5">
       <div className="bg-gradient-to-br from-purple-600/95 to-blue-600/95 backdrop-blur-lg rounded-2xl shadow-2xl border border-white/20 p-6">
-        {/* Close Button */}
         <button
           onClick={handleDismiss}
           className="absolute top-3 right-3 text-white/70 hover:text-white transition-colors"
@@ -106,10 +169,9 @@ export default function PWAInstallPrompt() {
           <X className="w-5 h-5" />
         </button>
 
-        {/* Icon */}
         <div className="flex items-start gap-4 mb-4">
           <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
-            <Smartphone className="w-6 h-6 text-white" />
+            {getDeviceIcon()}
           </div>
           <div>
             <h3 className="text-white font-bold text-lg mb-1">
@@ -117,44 +179,44 @@ export default function PWAInstallPrompt() {
             </h3>
             <p className="text-white/90 text-sm leading-relaxed">
               {isIOS 
-                ? "Apne home screen par add karein for quick access!"
-                : "App ki tarah use karein - faster aur offline bhi kaam karta hai!"}
+                ? "Home screen par add karein for quick access!"
+                : isAndroid
+                ? "App jaise install karein - offline bhi kaam karega!"
+                : "Desktop par app ki tarah use karein!"}
             </p>
           </div>
         </div>
 
-        {/* Benefits */}
         <div className="mb-4 space-y-2">
           <div className="flex items-center gap-2 text-white/90 text-sm">
             <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-            <span>⚡ Lightning fast access</span>
+            <span>{isIOS || isAndroid ? '⚡ Tez access' : '⚡ Lightning fast'}</span>
           </div>
           <div className="flex items-center gap-2 text-white/90 text-sm">
             <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-            <span>📱 Works offline</span>
+            <span>{isIOS || isAndroid ? '📱 Offline kaam karega' : '📱 Works offline'}</span>
           </div>
           <div className="flex items-center gap-2 text-white/90 text-sm">
             <div className="w-1.5 h-1.5 bg-white rounded-full"></div>
-            <span>🔔 Push notifications</span>
+            <span>🔔 Notifications</span>
           </div>
         </div>
 
-        {/* Action Buttons */}
-        {isIOS ? (
+        {isIOS || isAndroid ? (
           <div className="space-y-3">
             <div className="bg-white/10 rounded-lg p-3 text-white/90 text-sm">
-              <p className="mb-2 font-medium">Installation Steps:</p>
+              <p className="mb-2 font-medium">{instructions.title}</p>
               <ol className="list-decimal list-inside space-y-1 text-xs">
-                <li>Tap the <strong>Share</strong> button ⬆️</li>
-                <li>Scroll down aur tap <strong>"Add to Home Screen"</strong></li>
-                <li>Tap <strong>"Add"</strong> to confirm</li>
+                {instructions.steps.map((step) => (
+                  <li key={step.icon}>{step.text}</li>
+                ))}
               </ol>
             </div>
             <button
               onClick={handleDismiss}
               className="w-full bg-white text-purple-600 font-semibold py-2.5 px-4 rounded-lg hover:bg-white/90 transition-colors"
             >
-              Got it!
+              Samajh gaya!
             </button>
           </div>
         ) : (
@@ -163,7 +225,7 @@ export default function PWAInstallPrompt() {
               onClick={handleDismiss}
               className="flex-1 bg-white/10 text-white font-medium py-2.5 px-4 rounded-lg hover:bg-white/20 transition-colors"
             >
-              Later
+              Baad mein
             </button>
             <button
               onClick={handleInstallClick}

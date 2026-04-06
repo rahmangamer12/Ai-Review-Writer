@@ -42,14 +42,34 @@ export default function RootLayout({
           <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes, viewport-fit=cover" />
           {/* PWA Meta Tags */}
           <link rel="manifest" href="/manifest.json" />
-          <meta name="theme-color" content="#8b5cf6" />
-          <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+          <meta name="theme-color" content="#6366f1" />
+          <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-96x96.png" />
+          <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-72x72.png" />
+          
+          {/* iOS PWA Meta Tags - Fixed for all devices */}
+          <link rel="apple-touch-icon" sizes="72x72" href="/icons/icon-72x72.png" />
+          <link rel="apple-touch-icon" sizes="96x96" href="/icons/icon-96x96.png" />
+          <link rel="apple-touch-icon" sizes="128x128" href="/icons/icon-128x128.png" />
+          <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.png" />
+          <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+          <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png" />
+          <link rel="apple-touch-icon" sizes="384x384" href="/icons/icon-384x384.png" />
+          <link rel="apple-touch-icon" sizes="512x512" href="/icons/icon-512x512.png" />
+          
           <meta name="apple-mobile-web-app-capable" content="yes" />
           <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
           <meta name="apple-mobile-web-app-title" content="AutoReview AI" />
           
-          {/* Service Worker Registration moved to Client Component */}
-          {/* Moved to PWAUpdateNotification component to avoid hydration issues */}
+          {/* Additional PWA meta tags for better device support */}
+          <meta name="mobile-web-app-capable" content="yes" />
+          <meta name="application-name" content="AutoReview AI" />
+          <meta name="msapplication-TileColor" content="#6366f1" />
+          <meta name="msapplication-tap-highlight" content="no" />
+          <meta name="full-screen" content="yes" />
+          
+          {/* Preconnect for performance */}
+          <link rel="preconnect" href="https://fonts.googleapis.com" />
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         </head>
         <body
           className={cn(geistSans.variable, geistMono.variable, "antialiased bg-background text-foreground overflow-x-hidden max-w-[100vw]")}
