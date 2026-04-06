@@ -167,14 +167,18 @@ export default function FeedbackWidget() {
         onClick={(e) => {
           if (!isDragging) setIsOpen(true)
         }}
-        style={{
-          left: position.x || 16,
-          top: position.y || undefined,
-          bottom: position.y ? undefined : `calc(${isChatPage ? 240 : 140}px + env(safe-area-inset-bottom))`,
+        style={position.x !== 0 || position.y !== 0 ? {
+          left: position.x,
+          top: position.y,
+          cursor: isDragging ? 'grabbing' : 'grab',
+          touchAction: 'none'
+        } : {
           cursor: isDragging ? 'grabbing' : 'grab',
           touchAction: 'none'
         }}
-        className="fixed z-[35] w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center group"
+        className={`fixed z-[35] w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center group ${
+          position.x === 0 && position.y === 0 ? `left-4 lg:left-8 ${isChatPage ? 'bottom-[240px]' : 'bottom-[140px] lg:bottom-8'}` : ''
+        }`}
         title="Give Feedback (Drag to move)"
         suppressHydrationWarning
       >

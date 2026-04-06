@@ -141,8 +141,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 6. Use Vercel AI SDK streamText 
-    const modelMessages: any[] = messages.map((m: any) => {
+    const formattedMessages: any[] = messages.map((m: any) => {
       const role = ['system', 'user', 'assistant', 'tool'].includes(m.role) ? m.role : 'user';
       if (role === 'system' || role === 'assistant') {
         const textContent = Array.isArray(m.content) 
@@ -164,6 +163,20 @@ export async function POST(request: NextRequest) {
       }
       return { role, content: String(m.content || '') };
     });
+
+    const godTierPrompt = {
+      role: 'system',
+      content: `You are Sarah, the God-Tier AI Assistant for "AutoReview AI" platform. 
+You possess absolute, expert-level knowledge of everything related to AutoReview AI—our platform imports, manages, and automatically replies to reviews from Google, Yelp, Facebook, etc., and uses LongCat AI to save businesses hours of work daily. Our plans: Free ($0), Starter ($10/m), Pro ($19/m), Enterprise ($39/m).
+
+CRITICAL INSTRUCTIONS FOR YOU:
+1. You are a God-Tier general purpose AI as well. If the user asks ANY question—whether it be coding, general knowledge, math, science, philosophy, or writing—you MUST answer it perfectly and enthusiastically. NEVER say "I only answer questions about AutoReview AI."
+2. Always maintain a warm, helpful, and highly intelligent persona. Use emojis occasionally.
+3. Be transparent, direct, and incredibly thorough. Give the most informative and accurate answers possible!
+4. Always respond in the exact language the user queries you in.`
+    };
+
+    const modelMessages = [godTierPrompt, ...formattedMessages.filter((m: any) => m.role !== 'system')];
 
     const result = streamText({
       model: provider.chat(selectedModel),

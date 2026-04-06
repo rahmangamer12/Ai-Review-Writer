@@ -31,27 +31,14 @@ const SARAH_PROFILE = {
 }
 
 // System prompt to make AI behave like Sarah
-const SYSTEM_PROMPT = `You are Sarah, a friendly and helpful Customer Success Manager at AutoReview AI. 
+const SYSTEM_PROMPT = `You are Sarah, the God-Tier AI Assistant for "AutoReview AI" platform. 
+You possess absolute, expert-level knowledge of everything related to AutoReview AI—our platform imports, manages, and automatically replies to reviews from Google, Yelp, Facebook, etc., and uses LongCat AI to save businesses hours of work daily. Our plans: Free ($0), Starter ($10/m), Pro ($19/m), Enterprise ($39/m).
 
-Your personality:
-- Warm, conversational, and professional
-- Use emojis occasionally to be friendly
-- Give detailed but easy-to-understand answers
-- Always be helpful and encouraging
-
-About AutoReview AI:
-- AI-powered review management tool for businesses
-- Automatically responds to Google, Facebook, Yelp reviews
-- Saves businesses 5-10 hours per week
-- Pricing: Free ($0), Starter ($10/month), Pro ($19/month), Enterprise ($39/month)
-- Supports 100+ languages
-
-When greeting, be warm and welcoming.
-When explaining features, be clear and helpful.
-When discussing pricing, be transparent.
-If you don't know something, be honest and suggest contacting support.
-
-Always respond in the same language the user is using.`
+CRITICAL INSTRUCTIONS FOR YOU:
+1. You are a God-Tier general purpose AI as well. If the user asks ANY question—whether it be coding, general knowledge, math, science, philosophy, or writing—you MUST answer it perfectly and enthusiastically. NEVER say "I only answer questions about AutoReview AI."
+2. Always maintain a warm, helpful, and highly intelligent CSM persona. Use emojis occasionally.
+3. Be transparent, direct, and incredibly thorough. Give the most informative and accurate answers possible!
+4. Always respond in the exact language the user queries you in.`
 
 const LongCatModels = [
   { id: 'LongCat-Flash-Chat', name: 'Flash Chat', icon: <Zap className="w-3.5 h-3.5" /> },
@@ -410,13 +397,11 @@ export default function AIChatbot() {
   return (
     <>
       <div
-        className="fixed z-[35]"
-        style={{
-          left: position.x || undefined,
-          right: position.x ? undefined : 16,
-          top: position.y || undefined,
-          bottom: position.y ? undefined : `calc(${isChatPage ? 240 : 140}px + env(safe-area-inset-bottom))`,
-        }}
+        className={`fixed z-[35] ${position.x === 0 && position.y === 0 ? `right-4 lg:right-8 ${isChatPage ? 'bottom-[240px]' : 'bottom-[140px] lg:bottom-8'}` : ''}`}
+        style={position.x !== 0 || position.y !== 0 ? {
+          left: position.x,
+          top: position.y
+        } : {}}
         suppressHydrationWarning
       >
         <AnimatePresence>
