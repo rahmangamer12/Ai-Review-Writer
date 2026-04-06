@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect, useSyncExternalStore } from 'react'
 import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useUser, useClerk } from '@clerk/nextjs'
-import { Menu, X, Sparkles, LayoutDashboard, MessageSquare, BarChart3, Plug2, User, Settings, FileText, Puzzle, LogOut, Bot } from 'lucide-react'
+import { Menu, X, Sparkles, LayoutDashboard, MessageSquare, BarChart3, Plug2, User, Settings, FileText, Puzzle, LogOut, Bot, Download } from 'lucide-react'
 
 function useHydrated() {
   const [hydrated, setHydrated] = useState(false)
@@ -138,6 +138,28 @@ export default function Navigation() {
 
   // Reset menu on route change with key-based remount
   const menuKey = `${pathname}-${mobileMenuOpen}`
+
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+  
+  // PWA install handler
+  useEffect(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault()
+      setDeferredPrompt(e)
+    })
+  }, [])
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) {
+      alert("App is already installed or your browser doesn't support installation.")
+      return
+    }
+    deferredPrompt.prompt()
+    const { outcome } = await deferredPrompt.userChoice
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null)
+    }
+  }
 
   const navItems = [
     {
@@ -444,16 +466,27 @@ export default function Navigation() {
           {/* Auth Buttons */}
           <SignedOut>
             <div className="space-y-2">
-              <SignInButton mode="modal">
-                <button className="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-all border border-white/20 text-sm hover:shadow-md active:scale-[0.98]">
-                  Sign In
-                </button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <button className="w-full px-4 py-2 bg-gradient-to-r from-primary to-accent text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-lg text-sm hover:shadow-xl active:scale-[0.98]">
-                  Sign Up Free
-                </button>
-              </SignUpButton>
+              <button
+                onClick={handleInstallClick}
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 text-emerald-400 font-semibold hover:bg-emerald-500/20 transition-all font-sans mb-2"
+              >
+                <div className="flex items-center gap-3">
+                  <Download className="w-5 h-5" />
+                  <span>Install App</span>
+                </div>
+              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <SignInButton mode="modal">
+                  <button className="w-full py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-sm font-semibold transition-colors font-sans">
+                    Log in
+                  </button>
+                </SignInButton>
+                <SignUpButton mode="modal">
+                  <button className="w-full py-2.5 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-sm font-semibold transition-all shadow-lg active:scale-[0.98] font-sans">
+                    Sign up
+                  </button>
+                </SignUpButton>
+              </div>
             </div>
           </SignedOut>
 

@@ -135,7 +135,7 @@ function SidebarComponent({ isOpen, onClose, onCreateSession, onDeleteSession, o
         )}
       </div>
 
-      <div className="p-4 sm:p-6 mt-auto">
+      <div className={`p-4 sm:p-6 mt-auto shrink-0 overflow-y-auto max-h-[50vh] ${isMobile ? 'pb-[calc(4.5rem+env(safe-area-inset-bottom))]' : ''}`}>
         <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 space-y-4">
           <div className="flex gap-3 items-center">
             <div className="w-10 sm:w-12 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 p-0.5">

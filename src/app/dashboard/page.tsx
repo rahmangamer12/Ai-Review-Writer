@@ -576,9 +576,9 @@ export default function Dashboard() {
 
   // RENDER OVERVIEW TAB
   const renderOverview = () => (
-    <>
+    <div className="pt-2 sm:pt-4">
       {/* Stats Grid - Perfectly responsive for all screens */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <ModernStatCard title="Total Reviews" value={stats.totalReviews.toString()} subtitle="All time reviews" icon={MessageSquare} color="blue" delay={0} trend="up" trendValue="12" />
         <ModernStatCard title="Pending" value={stats.pendingReviews.toString()} subtitle="Need your attention" icon={Clock} color="amber" delay={0.1} trend="down" trendValue="5" />
         <ModernStatCard title="Response Rate" value={`${stats.responseRate}%`} subtitle={`${stats.repliedReviews} replied`} icon={CheckCircle} color="emerald" delay={0.2} trend="up" trendValue="8" />
@@ -669,7 +669,7 @@ export default function Dashboard() {
           )}
         </div>
       </motion.div>
-    </>
+    </div>
   )
 
   // RENDER REVIEWS TAB

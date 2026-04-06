@@ -289,7 +289,7 @@ export default function ChatSidebar({
       </div>
 
       {/* Profile Section */}
-      <div className={`p-2 sm:p-3 lg:p-4 border-t border-white/5 bg-[#0a0a12] shrink-0 ${isMobile ? 'pb-[calc(1.5rem+env(safe-area-inset-bottom))]' : ''}`}>
+      <div className={`p-2 sm:p-3 lg:p-4 border-t border-white/5 bg-[#0a0a12] shrink-0 overflow-y-auto max-h-[50vh] ${isMobile ? 'pb-[calc(3.5rem+env(safe-area-inset-bottom))]' : ''}`}>
         <div className="p-2.5 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl bg-white/[0.03] border border-white/8">
           <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
             <div className="w-8 sm:w-9 lg:w-10 h-8 sm:h-9 lg:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-bold text-white text-sm">
