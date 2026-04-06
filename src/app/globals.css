@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* ========================================
-   NATIVE APP FOUNDATION
+   NATIVE APP FOUNDATION - MOBILE FIRST
    ======================================== */
 
 /* Prevent iOS bounce effect & horizontal scroll */
@@ -11,22 +11,11 @@ html {
   -webkit-overflow-scrolling: touch;
   width: 100%;
   min-width: 100%;
+  max-width: 100vw;
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
-}
-
-body {
-  -webkit-tap-highlight-color: transparent;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-}
-
-input, textarea {
-  -webkit-user-select: text;
-  user-select: text;
+  position: fixed;
+  height: 100%;
 }
 
 body {
@@ -38,7 +27,11 @@ body {
   user-select: none;
   width: 100%;
   min-width: 100%;
+  max-width: 100vw;
   position: relative;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* Allow text selection in content areas */
@@ -47,7 +40,7 @@ input, textarea, [contenteditable], .select-text {
   user-select: text;
 }
 
-/* Safe Area Insets for Notch/Dynamic Island */
+/* Safe Area Insets for Notch/Dynamic Island/Home Indicator */
 :root {
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -68,20 +61,37 @@ input, textarea, [contenteditable], .select-text {
 }
 
 /* ========================================
-   NATIVE TOUCH FEEDBACK
-   Replace hover with active states
+   NATIVE TOUCH FEEDBACK - iOS/Android Style
+   Replace hover with active states on mobile
    ======================================== */
 
 button, a, [role="button"], .touch-target {
   min-height: 44px;
   min-width: 44px;
   -webkit-tap-highlight-color: transparent;
-  transition: transform 0.1s ease, opacity 0.1s ease;
+  transition: transform 0.15s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
 }
 
-button:active, a:active, [role="button"]:active, .touch-target:active {
-  transform: scale(0.97);
-  opacity: 0.85;
+/* Mobile-only active states */
+@media (max-width: 767px) {
+  button:active, a:active, [role="button"]:active, .touch-target:active {
+    transform: scale(0.98);
+    opacity: 0.8;
+  }
+}
+
+/* Desktop hover states */
+@media (min-width: 1024px) and (hover: hover) {
+  button:hover, a:hover, [role="button"]:hover, .touch-target:hover {
+    transform: translateY(-1px);
+    opacity: 0.9;
+  }
+
+  button:active, a:active, [role="button"]:active, .touch-target:active {
+    transform: translateY(0);
+    opacity: 0.95;
+  }
 }
 
 /* ========================================
@@ -123,7 +133,7 @@ button:active, a:active, [role="button"]:active, .touch-target:active {
 }
 
 /* ========================================
-   BOTTOM SHEET (mobile modals)
+   BOTTOM SHEET (mobile modals) - Native iOS/Android
    ======================================== */
 
 .bottom-sheet {
@@ -131,16 +141,61 @@ button:active, a:active, [role="button"]:active, .touch-target:active {
   bottom: 0;
   left: 0;
   right: 0;
+  max-height: 90vh;
   border-radius: 32px 32px 0 0;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+  padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  padding-top: 1.5rem;
   transform: translateY(100%);
   transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1);
   will-change: transform;
   z-index: 50;
+  background: #0f0f14;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .bottom-sheet.open {
   transform: translateY(0);
+}
+
+/* Bottom sheet handle */
+.bottom-sheet::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+}
+
+/* Desktop: Convert to centered modal */
+@media (min-width: 1024px) {
+  .bottom-sheet {
+    bottom: auto;
+    top: 50%;
+    left: 50%;
+    right: auto;
+    transform: translate(-50%, -50%) scale(0.95);
+    max-width: 600px;
+    max-height: 80vh;
+    border-radius: 24px;
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .bottom-sheet.open {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+
+  .bottom-sheet::before {
+    display: none;
+  }
 }
 
 /* ========================================
@@ -367,44 +422,80 @@ html {
 }
 
 /* ========================================
-   CARD HOVER (desktop only)
+   CARD INTERACTIONS - Responsive
    ======================================== */
 
-@media (hover: hover) {
+/* Mobile: Active state only */
+@media (max-width: 767px) {
+  .card-hover:active {
+    transform: scale(0.98);
+    opacity: 0.9;
+  }
+}
+
+/* Desktop: Hover + Active */
+@media (min-width: 1024px) and (hover: hover) {
+  .card-hover {
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
   .card-hover:hover {
     transform: translateY(-4px);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
   }
+
+  .card-hover:active {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  }
 }
 
 /* ========================================
-   PROFESSIONAL BUTTON STYLES
+   PROFESSIONAL BUTTON STYLES - Responsive
    ======================================== */
 
 .btn-primary {
   @apply bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold px-6 py-3 rounded-xl;
   @apply transition-all duration-200 ease-out;
+  @apply min-h-[44px] min-w-[44px];
 }
 
-@media (hover: hover) {
+@media (max-width: 767px) {
+  .btn-primary:active {
+    @apply scale-[0.98] opacity-90;
+  }
+}
+
+@media (min-width: 1024px) and (hover: hover) {
   .btn-primary:hover {
-    @apply shadow-lg shadow-purple-500/25;
+    @apply shadow-lg shadow-purple-500/25 -translate-y-0.5;
+  }
+
+  .btn-primary:active {
+    @apply translate-y-0;
   }
 }
 
 .btn-secondary {
   @apply bg-white/10 text-white font-medium px-6 py-3 rounded-xl border border-white/20;
   @apply transition-all duration-200 ease-out;
+  @apply min-h-[44px] min-w-[44px];
 }
 
-@media (hover: hover) {
+@media (max-width: 767px) {
+  .btn-secondary:active {
+    @apply scale-[0.98] opacity-90;
+  }
+}
+
+@media (min-width: 1024px) and (hover: hover) {
   .btn-secondary:hover {
     @apply bg-white/20 border-white/30;
   }
 }
 
 /* ========================================
-   PROFESSIONAL INPUT STYLES
+   PROFESSIONAL INPUT STYLES - Native Feel
    ======================================== */
 
 .input-professional {
@@ -412,6 +503,14 @@ html {
   @apply focus:outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20;
   @apply transition-all duration-200;
   @apply placeholder:text-white/40;
+  @apply min-h-[44px];
+}
+
+/* Prevent iOS zoom on focus */
+@media (max-width: 767px) {
+  .input-professional {
+    font-size: 16px !important;
+  }
 }
 
 /* ========================================
@@ -426,6 +525,7 @@ html {
   margin-left: auto;
 }
 
+/* Tablet/Foldable - Split-pane layouts */
 @media (min-width: 768px) {
   .container-responsive {
     max-width: 720px;
@@ -434,14 +534,43 @@ html {
   }
 }
 
+/* Desktop - Dense, powerful layouts */
 @media (min-width: 1024px) {
   .container-responsive {
     max-width: 1200px;
     padding-right: 2rem;
     padding-left: 2rem;
   }
+
+  /* Custom Desktop Scrollbar - Ultra Thin */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.3);
+    border-radius: 10px;
+    transition: background 0.2s;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.5);
+  }
+
+  /* Keyboard Focus Rings - Desktop Only */
+  *:focus-visible {
+    outline: 2px solid rgba(139, 92, 246, 0.6);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
 }
 
+/* Ultra-wide Desktop */
 @media (min-width: 1600px) {
   .container-responsive {
     max-width: 1600px;
@@ -451,25 +580,43 @@ html {
 }
 
 /* ========================================
-   RESPONSIVE TYPOGRAPHY
+   RESPONSIVE TYPOGRAPHY - Fluid & Mathematical
+   Perfect scaling from iPhone SE to Foldables
    ======================================== */
 
-.text-responsive-sm { font-size: clamp(0.875rem, 2.5vw, 1rem); }
-.text-responsive-base { font-size: clamp(1rem, 3vw, 1.125rem); }
-.text-responsive-lg { font-size: clamp(1.125rem, 3.5vw, 1.25rem); }
-.text-responsive-xl { font-size: clamp(1.25rem, 4vw, 1.5rem); }
-.text-responsive-2xl { font-size: clamp(1.5rem, 5vw, 2.25rem); }
+.text-responsive-xs { font-size: clamp(0.75rem, 2vw + 0.5rem, 0.875rem); }
+.text-responsive-sm { font-size: clamp(0.875rem, 2.5vw + 0.5rem, 1rem); }
+.text-responsive-base { font-size: clamp(1rem, 3vw + 0.5rem, 1.125rem); }
+.text-responsive-lg { font-size: clamp(1.125rem, 3.5vw + 0.5rem, 1.25rem); }
+.text-responsive-xl { font-size: clamp(1.25rem, 4vw + 0.5rem, 1.5rem); }
+.text-responsive-2xl { font-size: clamp(1.5rem, 5vw + 0.5rem, 2.25rem); }
+.text-responsive-3xl { font-size: clamp(2rem, 6vw + 0.5rem, 3rem); }
+.text-responsive-4xl { font-size: clamp(2.5rem, 7vw + 0.5rem, 4rem); }
 
-/* Prevent iOS Auto-Zoom on Inputs */
+/* Prevent iOS Auto-Zoom on Inputs - CRITICAL for native feel */
 @media screen and (max-width: 767px) {
-  input, select, textarea {
+  input, select, textarea, button {
+    font-size: 16px !important;
+    min-height: 44px;
+  }
+
+  input:focus, select:focus, textarea:focus {
     font-size: 16px !important;
   }
 }
 
-/* Native Tap Highlight Removal */
+/* Native Tap Highlight Removal - Universal */
 * {
   -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Prevent text selection on UI elements (mobile) */
+@media (max-width: 767px) {
+  button, a, [role="button"], label, .no-select {
+    -webkit-user-select: none;
+    user-select: none;
+  }
 }
 
 /* ========================================
@@ -532,12 +679,22 @@ html {
   color-scheme: dark;
 }
 
-/* Ensure full width background on all devices */
+/* Ensure full width background on all devices - NO GAPS */
 html, body, #__next {
   width: 100%;
   min-width: 100%;
+  max-width: 100vw;
 }
 
 body {
   background: #0a0a0f;
+}
+
+/* Force all containers to respect viewport width */
+* {
+  box-sizing: border-box;
+}
+
+*::before, *::after {
+  box-sizing: border-box;
 }

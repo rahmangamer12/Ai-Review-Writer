@@ -214,10 +214,10 @@ export default function Navigation() {
 
   return (
     <>
-      {/* Mobile Header - Native Minimal */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-2xl border-b border-white/5 px-4 h-[calc(57px+env(safe-area-inset-top))] flex items-end pb-3">
+      {/* Mobile Header - Native Minimal - EDGE TO EDGE */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-2xl border-b border-white/5 px-4 h-[calc(57px+env(safe-area-inset-top))] flex items-end pb-3 max-w-[100vw]">
         <div className="w-full flex items-center justify-between">
-          <Link href="/dashboard" className="flex items-center gap-2 min-h-[44px]">
+          <Link href="/dashboard" className="flex items-center gap-2 min-h-[44px] active:scale-95 transition-transform">
             <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/20">
               <Sparkles className="w-4 h-4 text-white" />
             </div>
@@ -230,7 +230,7 @@ export default function Navigation() {
             <motion.button
               whileTap={{ scale: 0.9 }}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10"
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 border border-white/10 active:bg-white/10 transition-colors"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="w-5 h-5 text-white" /> : <Menu className="w-5 h-5 text-white" />}
@@ -253,34 +253,34 @@ export default function Navigation() {
         )}
       </AnimatePresence>
 
-      {/* Mobile Navigation Drawer - Slide from bottom (Native Feel) */}
+      {/* Mobile Navigation Drawer - Native Bottom Sheet */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.nav
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-            className="lg:hidden fixed inset-x-0 bottom-0 max-h-[90vh] bg-[#0f0f14] rounded-t-[32px] border-t border-white/10 p-6 flex flex-col z-[1001] overflow-y-auto overscroll-contain pb-[calc(2.5rem+env(safe-area-inset-bottom))]"
+            transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            className="lg:hidden fixed inset-x-0 bottom-0 max-h-[90vh] bg-[#0f0f14] rounded-t-[32px] border-t border-white/10 p-6 flex flex-col z-[1001] overflow-y-auto overscroll-contain pb-[calc(2.5rem+env(safe-area-inset-bottom))] shadow-2xl max-w-[100vw]"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile Navigation Menu"
           >
-            <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-8 flex-shrink-0" />
+            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-8 flex-shrink-0" />
             
             <div className="space-y-2 flex-1">
               {navItems.map((item, index) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all active:scale-[0.98] ${
+                  className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all active:scale-[0.97] min-h-[56px] ${
                     isActive(item.href)
                       ? 'bg-purple-600/20 text-white border border-purple-500/30'
                       : 'text-white/60 hover:text-white bg-white/5'
                   }`}
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <item.icon className={`w-5 h-5 ${isActive(item.href) ? 'text-purple-400' : ''}`} />
+                  <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive(item.href) ? 'text-purple-400' : ''}`} />
                   <span className="font-semibold">{item.label}</span>
                 </Link>
               ))}
@@ -290,12 +290,12 @@ export default function Navigation() {
               <SignedOut>
                 <div className="grid grid-cols-2 gap-3">
                   <SignInButton mode="modal">
-                    <button className="px-4 py-4 rounded-2xl bg-white/5 text-white font-semibold border border-white/10 active:scale-95">
+                    <button className="px-4 py-4 rounded-2xl bg-white/5 text-white font-semibold border border-white/10 active:scale-95 transition-transform min-h-[48px]">
                       Sign In
                     </button>
                   </SignInButton>
                   <SignUpButton mode="modal">
-                    <button className="px-4 py-4 rounded-2xl bg-purple-600 text-white font-semibold active:scale-95">
+                    <button className="px-4 py-4 rounded-2xl bg-purple-600 text-white font-semibold active:scale-95 transition-transform min-h-[48px]">
                       Sign Up
                     </button>
                   </SignUpButton>
@@ -309,8 +309,8 @@ export default function Navigation() {
         )}
       </AnimatePresence>
 
-      {/* Bottom Tab Bar - iOS Native Execution */}
-      <div className="lg:hidden fixed bottom-0 w-full flex items-center justify-around bg-background/80 backdrop-blur-2xl border-t border-white/10 z-[999] pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] px-2">
+      {/* Bottom Tab Bar - iOS/Android Native Style - EDGE TO EDGE */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 w-full flex items-center justify-around bg-background/95 backdrop-blur-2xl border-t border-white/10 z-[999] pt-3 pb-[calc(12px+env(safe-area-inset-bottom))] px-2 max-w-[100vw]">
         {[
           { href: '/dashboard', icon: LayoutDashboard, label: 'Home' },
           { href: '/reviews', icon: MessageSquare, label: 'Reviews' },
@@ -321,23 +321,23 @@ export default function Navigation() {
           <Link
             key={item.href}
             href={item.href}
-            className={`flex flex-col items-center justify-center gap-1 w-16 h-12 transition-all active:scale-75 ${
+            className={`flex flex-col items-center justify-center gap-1 w-16 h-12 transition-all active:scale-[0.85] ${
               isActive(item.href)
                 ? 'text-purple-500'
                 : 'text-white/40'
             }`}
           >
-            <item.icon className={`${isActive(item.href) ? 'w-6 h-6' : 'w-5 h-5 opacity-80'}`} />
-            <span className={`text-[10px] font-medium tracking-tight ${isActive(item.href) ? 'opacity-100' : 'opacity-60'}`}>
+            <item.icon className={`transition-all ${isActive(item.href) ? 'w-6 h-6' : 'w-5 h-5 opacity-80'}`} />
+            <span className={`text-[10px] font-medium tracking-tight transition-opacity ${isActive(item.href) ? 'opacity-100' : 'opacity-60'}`}>
               {item.label}
             </span>
           </Link>
         ))}
       </div>
 
-      {/* Desktop Navigation - Fixed sidebar */}
+      {/* Desktop Navigation - Fixed sidebar with enhanced hover states */}
       <nav
-        className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 xl:w-72 bg-[#0a0a0f]/95 backdrop-blur-xl border-r border-white/10 p-3 lg:p-4 xl:p-5 flex-col z-40 shadow-2xl"
+        className="hidden lg:flex fixed left-0 top-0 bottom-0 w-64 xl:w-72 bg-[#0a0a0f]/95 backdrop-blur-xl border-r border-white/10 p-3 lg:p-4 xl:p-5 flex-col z-40 shadow-2xl custom-scrollbar overflow-y-auto"
         style={{
           background: 'linear-gradient(180deg, rgba(10, 10, 15, 0.98) 0%, rgba(15, 15, 25, 0.95) 100%)',
         }}
@@ -348,10 +348,10 @@ export default function Navigation() {
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.2 }}
-          className="mb-8"
+          className="mb-8 flex-shrink-0"
         >
           <Link href="/dashboard" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform duration-300">
               AI
             </div>
             <div>
@@ -362,7 +362,7 @@ export default function Navigation() {
         </motion.div>
 
         {/* Navigation Items */}
-        <div className="space-y-1.5 lg:space-y-2 flex-1 overflow-y-auto pr-2">
+        <div className="space-y-1.5 lg:space-y-2 flex-1 overflow-y-auto pr-2 custom-scrollbar">
           {navItems.map((item, index) => (
             <motion.div
               key={item.href}
@@ -376,7 +376,7 @@ export default function Navigation() {
                 href={item.href}
                 className={`relative flex items-center gap-3 px-3 lg:px-4 py-2.5 lg:py-3 rounded-xl transition-all duration-300 group overflow-hidden ${isActive(item.href)
                     ? 'bg-gradient-to-r from-primary/30 to-primary/20 text-white border border-primary/40 shadow-lg shadow-primary/20'
-                    : 'text-white/70 hover:text-white hover:bg-white/10 hover:border hover:border-white/20'
+                    : 'text-white/70 hover:text-white hover:bg-white/10 hover:border hover:border-white/20 hover:shadow-md'
                   }`}
                 style={{
                   backdropFilter: 'blur(10px)',
@@ -401,7 +401,7 @@ export default function Navigation() {
                 )}
 
                 {/* Icon */}
-                <span className="group-hover:scale-110 transition-transform relative z-10">
+                <span className="group-hover:scale-110 transition-transform duration-300 relative z-10">
                   {item.icon && <item.icon className="w-5 h-5 lg:w-6 lg:h-6 text-white/80" />}
                 </span>
 
@@ -437,12 +437,12 @@ export default function Navigation() {
           <SignedOut>
             <div className="space-y-2">
               <SignInButton mode="modal">
-                <button className="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-all border border-white/20 text-sm">
+                <button className="w-full px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl font-medium transition-all border border-white/20 text-sm hover:shadow-md active:scale-[0.98]">
                   Sign In
                 </button>
               </SignInButton>
               <SignUpButton mode="modal">
-                <button className="w-full px-4 py-2 bg-gradient-to-r from-primary to-accent text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-lg text-sm">
+                <button className="w-full px-4 py-2 bg-gradient-to-r from-primary to-accent text-white rounded-xl font-medium hover:opacity-90 transition-all shadow-lg text-sm hover:shadow-xl active:scale-[0.98]">
                   Sign Up Free
                 </button>
               </SignUpButton>
