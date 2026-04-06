@@ -140,15 +140,37 @@ export default function Navigation() {
   const menuKey = `${pathname}-${mobileMenuOpen}`
 
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+  const [isInstalled, setIsInstalled] = useState(false)
   const [showInstallModal, setShowInstallModal] = useState(false)
   const [installInstructions, setInstallInstructions] = useState<{title: string, desc: string, icon: any} | null>(null)
   
   // PWA install handler
   useEffect(() => {
-    window.addEventListener('beforeinstallprompt', (e) => {
+    // Check if running in standalone mode (already installed)
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
+    if (isStandalone) {
+      setIsInstalled(true);
+    }
+
+    const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault()
       setDeferredPrompt(e)
-    })
+      setIsInstalled(false)
+    };
+
+    const handleAppInstalled = () => {
+      setIsInstalled(true)
+      setDeferredPrompt(null)
+      setShowInstallModal(false)
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+    window.addEventListener('appinstalled', handleAppInstalled)
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+      window.removeEventListener('appinstalled', handleAppInstalled)
+    }
   }, [])
 
   const handleInstallClick = async () => {
@@ -344,17 +366,19 @@ export default function Navigation() {
               </div>
 
               <div className="mt-6 pt-6 border-t border-white/10 space-y-4">
-                {/* Install App Button - Always accessible here */}
-                <button
-                  onClick={handleInstallClick}
-                  className="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-400 font-bold hover:bg-emerald-500/30 transition-all active:scale-[0.98] shadow-lg shadow-emerald-900/20"
-                >
-                  <div className="flex items-center gap-3">
-                    <Download className="w-6 h-6" />
-                    <span className="text-base">Install App</span>
-                  </div>
-                  <div className="text-[10px] bg-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">PWA</div>
-                </button>
+                {/* Install App Button - Always accessible here if not yet installed */}
+                {!isInstalled && (
+                  <button
+                    onClick={handleInstallClick}
+                    className="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-400 font-bold hover:bg-emerald-500/30 transition-all active:scale-[0.98] shadow-lg shadow-emerald-900/20"
+                  >
+                    <div className="flex items-center gap-3">
+                      <Download className="w-6 h-6" />
+                      <span className="text-base">Install App</span>
+                    </div>
+                    <div className="text-[10px] bg-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">PWA</div>
+                  </button>
+                )}
 
                 <SignedOut>
                   <div className="grid grid-cols-2 gap-3">
