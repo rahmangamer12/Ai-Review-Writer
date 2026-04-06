@@ -466,15 +466,6 @@ export default function Navigation() {
           {/* Auth Buttons */}
           <SignedOut>
             <div className="space-y-2">
-              <button
-                onClick={handleInstallClick}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 text-emerald-400 font-semibold hover:bg-emerald-500/20 transition-all font-sans mb-2"
-              >
-                <div className="flex items-center gap-3">
-                  <Download className="w-5 h-5" />
-                  <span>Install App</span>
-                </div>
-              </button>
               <div className="grid grid-cols-2 gap-2">
                 <SignInButton mode="modal">
                   <button className="w-full py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-sm font-semibold transition-colors font-sans">
@@ -489,7 +480,19 @@ export default function Navigation() {
               </div>
             </div>
           </SignedOut>
+          
+          {/* PWA Install Button (Always visible) */}
+          <button
+            onClick={handleInstallClick}
+            className="w-full flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 text-emerald-400 font-semibold hover:bg-emerald-500/20 transition-all font-sans my-4"
+          >
+            <div className="flex items-center gap-3">
+              <Download className="w-5 h-5" />
+              <span>Install App</span>
+            </div>
+          </button>
 
+          {/* User Profile */}
           <SignedIn>
             <div className="w-full">
               <UserProfile />
