@@ -117,6 +117,7 @@ export default function ChatPage() {
       if (Array.isArray(data)) {
         const hydrated = data.map((s: any) => ({
           ...s,
+          date: s.date || s.createdAt || new Date().toISOString(),
           messages: s.messages.map((m: any) => ({ ...m, timestamp: new Date(m.createdAt || m.timestamp) }))
         }))
         setSessions(hydrated)
@@ -210,7 +211,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-[100dvh] w-full bg-[#030308] text-white overflow-hidden relative">
+    <div className="flex h-full min-h-[calc(100dvh-130px)] lg:min-h-0 lg:h-[100dvh] w-full bg-[#030308] text-white overflow-hidden relative">
       <ChatSidebar
         sessions={sessions}
         currentSessionId={currentSessionId}
@@ -311,8 +312,8 @@ export default function ChatPage() {
           </div>
         </div>
 
-        <div className="shrink-0 fixed bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-[#030308] via-[#030308]/95 to-transparent pb-[calc(12px+env(safe-area-inset-bottom))] lg:pb-8 pt-4 px-4 lg:px-12 lg:ml-64 xl:ml-72">
-          <div className="max-w-4xl mx-auto w-full flex flex-col gap-3">
+        <div className="shrink-0 fixed bottom-0 left-0 right-0 z-[29] bg-gradient-to-t from-[#030308] via-[#030308]/95 to-transparent pb-[calc(84px+env(safe-area-inset-bottom))] lg:pb-8 pt-4 px-4 lg:px-12 lg:ml-[calc(16rem+320px)] xl:ml-[calc(18rem+340px)] pointer-events-none">
+          <div className="max-w-4xl mx-auto w-full flex flex-col gap-3 pointer-events-auto">
             <div className="lg:hidden flex items-center justify-between px-2">
                <button onClick={() => setSidebarOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-white/40 active:scale-95 backdrop-blur-md">
                  <PanelLeft className="w-3 h-3" /> Logs
