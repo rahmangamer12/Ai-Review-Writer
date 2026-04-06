@@ -130,47 +130,22 @@ export default function AIChatbot() {
     }
   }, [])
 
-  // Handle drag
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Use framer-motion drag
+  const handleDragEnd = (e: any, info: any) => {
+    if (Math.abs(info.offset.x) > 5 || Math.abs(info.offset.y) > 5) {
+      localStorage.setItem('ai-chatbot-position', JSON.stringify({
+        x: info.point.x,
+        y: info.point.y
+      }))
+      setTimeout(() => setIsDragging(false), 100)
+    }
+  }
+
+  const handleDragStart = () => {
     setIsDragging(true)
-    setDragStart({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y
-    })
   }
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging) return
-    const newX = e.clientX - dragStart.x
-    const newY = e.clientY - dragStart.y
-
-    // Keep within viewport bounds
-    const maxX = window.innerWidth - 56
-    const maxY = window.innerHeight - 56
-
-    setPosition({
-      x: Math.max(0, Math.min(newX, maxX)),
-      y: Math.max(0, Math.min(newY, maxY))
-    })
-  }
-
-  const handleMouseUp = () => {
-    if (isDragging) {
-      setIsDragging(false)
-      localStorage.setItem('ai-chatbot-position', JSON.stringify(position))
-    }
-  }
-
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove)
-      window.addEventListener('mouseup', handleMouseUp)
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove)
-        window.removeEventListener('mouseup', handleMouseUp)
-      }
-    }
-  }, [isDragging, dragStart, position])
+  // Remove manual drag listeners
 
   // Auto-hide tooltip
   useEffect(() => {
@@ -465,10 +440,14 @@ export default function AIChatbot() {
         <motion.button
           whileHover={{ scale: isDragging ? 1 : 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onMouseDown={handleMouseDown}
+          drag
+          dragMomentum={false}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
           onClick={(e) => {
             if (!isDragging) setIsOpen(true)
           }}
+          style={{ touchAction: 'none' }}
           className={`${isOpen ? 'hidden' : 'flex'} items-center gap-2 bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 rounded-full shadow-lg hover:shadow-xl transition-all touch-manipulation ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
           suppressHydrationWarning
         >

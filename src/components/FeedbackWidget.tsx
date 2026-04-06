@@ -50,47 +50,24 @@ export default function FeedbackWidget() {
     }
   }, [hydrated])
 
-  // Handle drag
-  const handleMouseDown = (e: React.MouseEvent) => {
+  // Use framer-motion drag instead of manual listeners
+  const handleDragEnd = (e: any, info: any) => {
+    // Only save position if dragging happened
+    if (Math.abs(info.offset.x) > 5 || Math.abs(info.offset.y) > 5) {
+      localStorage.setItem('feedback-widget-position', JSON.stringify({
+        x: info.point.x,
+        y: info.point.y
+      }))
+      // Prevent opening on click after drag
+      setTimeout(() => setIsDragging(false), 100)
+    }
+  }
+
+  const handleDragStart = () => {
     setIsDragging(true)
-    setDragStart({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y
-    })
   }
 
-  const handleMouseMove = (e: MouseEvent) => {
-    if (!isDragging) return
-    const newX = e.clientX - dragStart.x
-    const newY = e.clientY - dragStart.y
-
-    // Keep within viewport bounds
-    const maxX = window.innerWidth - 56
-    const maxY = window.innerHeight - 56
-
-    setPosition({
-      x: Math.max(0, Math.min(newX, maxX)),
-      y: Math.max(0, Math.min(newY, maxY))
-    })
-  }
-
-  const handleMouseUp = () => {
-    if (isDragging) {
-      setIsDragging(false)
-      localStorage.setItem('feedback-widget-position', JSON.stringify(position))
-    }
-  }
-
-  useEffect(() => {
-    if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove)
-      window.addEventListener('mouseup', handleMouseUp)
-      return () => {
-        window.removeEventListener('mousemove', handleMouseMove)
-        window.removeEventListener('mouseup', handleMouseUp)
-      }
-    }
-  }, [isDragging, dragStart, position])
+  // Remove the old manual touch listeners
 
   // Exit Intent - Show when user tries to leave
   useEffect(() => {
@@ -183,7 +160,10 @@ export default function FeedbackWidget() {
         animate={{ scale: 1 }}
         whileHover={{ scale: isDragging ? 1 : 1.1 }}
         whileTap={{ scale: 0.95 }}
-        onMouseDown={handleMouseDown}
+        drag
+        dragMomentum={false}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
         onClick={(e) => {
           if (!isDragging) setIsOpen(true)
         }}
@@ -191,7 +171,8 @@ export default function FeedbackWidget() {
           left: position.x || 16,
           top: position.y || undefined,
           bottom: position.y ? undefined : `calc(${isChatPage ? 240 : 140}px + env(safe-area-inset-bottom))`,
-          cursor: isDragging ? 'grabbing' : 'grab'
+          cursor: isDragging ? 'grabbing' : 'grab',
+          touchAction: 'none'
         }}
         className="fixed z-[35] w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center group"
         title="Give Feedback (Drag to move)"

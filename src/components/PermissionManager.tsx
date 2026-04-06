@@ -165,7 +165,14 @@ export default function PermissionManager() {
         return false
       }
 
-      const permission = await Notification.requestPermission()
+      let permission: NotificationPermission;
+      try {
+        permission = await Notification.requestPermission()
+      } catch (e) {
+        permission = await new Promise((resolve) => {
+          Notification.requestPermission(resolve);
+        });
+      }
       setPermissions(prev => ({ ...prev, notification: permission as 'granted' | 'denied' | 'prompt' }))
       
       if (permission === 'granted') {
