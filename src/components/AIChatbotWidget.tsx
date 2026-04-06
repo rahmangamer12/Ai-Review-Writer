@@ -429,9 +429,7 @@ export default function AIChatbot() {
     { text: 'Which platforms work?', icon: '🌐' }
   ]
 
-  const activeModel = LongCatModels.find(m => m.id === selectedModel)
-
-  if (pathname?.startsWith('/chat')) return null
+  const isChatPage = pathname?.startsWith('/chat')
 
   return (
     <>
@@ -441,7 +439,7 @@ export default function AIChatbot() {
           left: position.x || undefined,
           right: position.x ? undefined : 16,
           top: position.y || undefined,
-          bottom: position.y ? undefined : 'calc(140px + env(safe-area-inset-bottom))',
+          bottom: position.y ? undefined : `calc(${isChatPage ? 240 : 140}px + env(safe-area-inset-bottom))`,
         }}
         suppressHydrationWarning
       >
