@@ -429,6 +429,7 @@ export default function AIChatbot() {
     { text: 'Which platforms work?', icon: '🌐' }
   ]
 
+  const activeModel = LongCatModels.find(m => m.id === selectedModel)
   const isChatPage = pathname?.startsWith('/chat')
 
   return (
