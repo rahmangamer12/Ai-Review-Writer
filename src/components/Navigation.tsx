@@ -3,9 +3,10 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useEffect, useSyncExternalStore } from 'react'
+import { useState, useEffect } from 'react'
 import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useUser, useClerk } from '@clerk/nextjs'
 import { Menu, X, Sparkles, LayoutDashboard, MessageSquare, BarChart3, Plug2, User, Settings, FileText, Puzzle, LogOut, Bot, Download } from 'lucide-react'
+import { usePWAInstall } from '@/hooks/usePWAInstall'
 
 function useHydrated() {
   const [hydrated, setHydrated] = useState(false)
@@ -120,7 +121,6 @@ function UserProfile() {
 
 export default function Navigation() {
   const pathname = usePathname()
-  const [isHovered, setIsHovered] = useState<string | null>(null)
   const hydrated = useHydrated()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
@@ -136,72 +136,40 @@ export default function Navigation() {
     }
   }, [mobileMenuOpen])
 
+  const [isHovered, setIsHovered] = useState<string | null>(null)
+  const { canInstall, isInstalled, promptInstall, deferredPrompt: currentPrompt } = usePWAInstall();
+  const [showInstallModal, setShowInstallModal] = useState(false)
+  const [installInstructions, setInstallInstructions] = useState<{title: string, desc: string, icon: any} | null>(null)
+
   // Reset menu on route change with key-based remount
   const menuKey = `${pathname}-${mobileMenuOpen}`
 
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
-  const [isInstalled, setIsInstalled] = useState(false)
-  const [showInstallModal, setShowInstallModal] = useState(false)
-  const [installInstructions, setInstallInstructions] = useState<{title: string, desc: string, icon: any} | null>(null)
-  
-  // PWA install handler
-  useEffect(() => {
-    // Check if running in standalone mode (already installed)
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-    if (isStandalone) {
-      setIsInstalled(true);
-    }
-
-    const handleBeforeInstallPrompt = (e: any) => {
-      e.preventDefault()
-      setDeferredPrompt(e)
-      setIsInstalled(false)
-    };
-
-    const handleAppInstalled = () => {
-      setIsInstalled(true)
-      setDeferredPrompt(null)
-      setShowInstallModal(false)
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-    window.addEventListener('appinstalled', handleAppInstalled)
-
-    return () => {
-      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
-      window.removeEventListener('appinstalled', handleAppInstalled)
-    }
-  }, [])
-
   const handleInstallClick = async () => {
-    if (!deferredPrompt) {
-      if (typeof window !== 'undefined') {
-        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-        if (isIOS) {
-          setInstallInstructions({
-            title: 'Install on iOS',
-            desc: "1. Tap the Share button at the bottom of Safari.\n2. Scroll and tap 'Add to Home Screen'.\n3. Tap 'Add' to confirm.",
-            icon: '🍏'
-          })
-        } else {
-          setInstallInstructions({
-            title: 'Install App',
-            desc: "If the 'Install' icon isn't in your address bar:\n1. Open your browser menu (⋮ or ⋯).\n2. Select 'Install App' or 'Add to Home Screen'.\n\n💡 Tip: If you previously installed it, check chrome://apps to delete old versions first.",
-            icon: '💻'
-          })
-        }
-        setShowInstallModal(true)
+    if (canInstall && currentPrompt) {
+      const installed = await promptInstall();
+      if (installed) {
+        setShowInstallModal(false);
       }
-      return
+      return;
     }
-    try {
-      await deferredPrompt.prompt()
-      const { outcome } = await deferredPrompt.userChoice
-      if (outcome === 'accepted') {
-        setDeferredPrompt(null)
+
+    // If native prompt not available, show manual instructions
+    if (typeof window !== 'undefined') {
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+      if (isIOS) {
+        setInstallInstructions({
+          title: 'Install on iOS',
+          desc: "1. Tap the Share button at the bottom of Safari.\n2. Scroll and tap 'Add to Home Screen'.\n3. Tap 'Add' to confirm.",
+          icon: '🍏'
+        })
+      } else {
+        setInstallInstructions({
+          title: 'Install App',
+          desc: "If the 'Install' icon isn't in your address bar:\n1. Open your browser menu (⋮ or ⋯).\n2. Select 'Install App' or 'Add to Home Screen'.\n\n💡 Tip: Use a 'Nuclear Reset' by visiting from a Private/Incognito window if it still doesn't appear.",
+          icon: '💻'
+        })
       }
-    } catch (err) {
-      console.log('Installation error', err)
+      setShowInstallModal(true)
     }
   }
 
