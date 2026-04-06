@@ -434,7 +434,7 @@ export default function AIChatbot() {
   return (
     <>
       <div
-        className="fixed z-50"
+        className="fixed z-[45]"
         style={{
           left: position.x || undefined,
           right: position.x ? undefined : 16,
@@ -486,14 +486,14 @@ export default function AIChatbot() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsOpen(false)}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[44]"
             />
 
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="fixed inset-0 sm:inset-auto sm:bottom-3 sm:right-3 md:bottom-4 md:right-4 lg:bottom-6 lg:right-6 w-full h-full sm:w-[90vw] sm:max-w-[400px] md:max-w-[440px] lg:max-w-[480px] sm:h-auto sm:max-h-[85vh] md:max-h-[650px] lg:max-h-[700px] z-50 flex flex-col"
+              className="fixed inset-0 sm:inset-auto sm:bottom-3 sm:right-3 md:bottom-4 md:right-4 lg:bottom-6 lg:right-6 w-full h-full sm:w-[90vw] sm:max-w-[400px] md:max-w-[440px] lg:max-w-[480px] sm:h-auto sm:max-h-[85vh] md:max-h-[650px] lg:max-h-[700px] z-[45] flex flex-col"
             >
               <div className="bg-white dark:bg-gray-900 rounded-none sm:rounded-2xl lg:rounded-3xl shadow-2xl overflow-hidden flex flex-col h-full min-h-0 border-0 sm:border border-gray-200 dark:border-white/10">
                 

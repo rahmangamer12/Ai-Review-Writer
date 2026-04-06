@@ -434,7 +434,7 @@ function ReviewsContent() {
   }
 
   return (
-    <div className="min-h-[100dvh] text-white overflow-x-hidden w-full">
+    <div className="min-h-[100dvh] text-white overflow-x-hidden w-full pt-0">
       {/* Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
@@ -442,7 +442,7 @@ function ReviewsContent() {
       </div>
 
       {/* Header */}
-      <header className="sticky top-[57px] lg:top-0 z-40 border-b border-white/5 bg-[#0a0a0f]/80 backdrop-blur-xl" suppressHydrationWarning>
+      <header className="sticky top-0 lg:top-0 z-40 border-b border-white/5 bg-[#0a0a0f]/80 backdrop-blur-xl" suppressHydrationWarning>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 sm:h-16 items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
@@ -644,12 +644,13 @@ function ReviewsContent() {
                 const [sortBy, sortOrder] = e.target.value.split('-')
                 setFilters({ ...filters, sortBy: sortBy as any, sortOrder: sortOrder as any })
               }}
-              className="rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-purple-500 focus:outline-none"
+              className="rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-purple-500 focus:outline-none appearance-none cursor-pointer"
+              style={{ color: 'white' }}
             >
-              <option value="created_at-desc">Newest First</option>
-              <option value="created_at-asc">Oldest First</option>
-              <option value="rating-desc">Highest Rated</option>
-              <option value="rating-asc">Lowest Rated</option>
+              <option value="created_at-desc" style={{ backgroundColor: '#1a1a1f', color: 'white' }}>Newest First</option>
+              <option value="created_at-asc" style={{ backgroundColor: '#1a1a1f', color: 'white' }}>Oldest First</option>
+              <option value="rating-desc" style={{ backgroundColor: '#1a1a1f', color: 'white' }}>Highest Rating</option>
+              <option value="rating-asc" style={{ backgroundColor: '#1a1a1f', color: 'white' }}>Lowest Rating</option>
             </select>
           </div>
 
@@ -665,21 +666,23 @@ function ReviewsContent() {
                   value={filters.status}
                   onChange={(e) => setFilters({ ...filters, status: e.target.value as any })}
                   className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-purple-500 focus:outline-none"
+                  style={{ color: 'white' }}
                 >
-                  <option value="all">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="approved">Approved</option>
-                  <option value="rejected">Rejected</option>
+                  <option value="all" style={{ backgroundColor: '#1a1a1f', color: 'white' }}>All Status</option>
+                  <option value="pending" style={{ backgroundColor: '#1a1a1f', color: 'white' }}>Pending</option>
+                  <option value="approved" style={{ backgroundColor: '#1a1a1f', color: 'white' }}>Approved</option>
+                  <option value="rejected" style={{ backgroundColor: '#1a1a1f', color: 'white' }}>Rejected</option>
                 </select>
 
                 <select
                   value={filters.platform}
                   onChange={(e) => setFilters({ ...filters, platform: e.target.value })}
                   className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-purple-500 focus:outline-none"
+                  style={{ color: 'white' }}
                 >
-                  <option value="all">All Platforms</option>
+                  <option value="all" style={{ backgroundColor: '#1a1a1f', color: 'white' }}>All Platforms</option>
                   {platforms.map((p) => (
-                    <option key={p} value={p} className="capitalize">{p}</option>
+                    <option key={p} value={p} className="capitalize" style={{ backgroundColor: '#1a1a1f', color: 'white' }}>{p}</option>
                   ))}
                 </select>
 
@@ -687,11 +690,12 @@ function ReviewsContent() {
                   value={filters.sentiment}
                   onChange={(e) => setFilters({ ...filters, sentiment: e.target.value as any })}
                   className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-purple-500 focus:outline-none"
+                  style={{ color: 'white' }}
                 >
-                  <option value="all">All Sentiments</option>
-                  <option value="positive">Positive</option>
-                  <option value="neutral">Neutral</option>
-                  <option value="negative">Negative</option>
+                  <option value="all" style={{ backgroundColor: '#1a1a1f', color: 'white' }}>All Sentiments</option>
+                  <option value="positive" style={{ backgroundColor: '#1a1a1f', color: 'white' }}>Positive</option>
+                  <option value="neutral" style={{ backgroundColor: '#1a1a1f', color: 'white' }}>Neutral</option>
+                  <option value="negative" style={{ backgroundColor: '#1a1a1f', color: 'white' }}>Negative</option>
                 </select>
 
                 <button
