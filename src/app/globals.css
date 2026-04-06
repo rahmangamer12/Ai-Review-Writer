@@ -14,8 +14,14 @@ html {
   max-width: 100vw;
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%;
-  position: fixed;
-  height: 100%;
+}
+
+/* Mobile only: fixed positioning */
+@media (max-width: 1023px) {
+  html {
+    position: fixed;
+    height: 100%;
+  }
 }
 
 body {
@@ -536,6 +542,18 @@ html {
 
 /* Desktop - Dense, powerful layouts */
 @media (min-width: 1024px) {
+  html {
+    position: static;
+    height: auto;
+    overflow-y: auto;
+  }
+
+  body {
+    overflow-y: auto;
+    position: static;
+    height: auto;
+  }
+
   .container-responsive {
     max-width: 1200px;
     padding-right: 2rem;

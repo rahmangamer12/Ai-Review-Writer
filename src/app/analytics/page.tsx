@@ -201,9 +201,9 @@ export default function AnalyticsPage() {
       </div>
 
       <div className="relative z-10 max-w-[1600px] mx-auto px-0 md:px-6 lg:px-8 py-0 md:py-8 lg:py-16">
-        
+
         {/* ── Mobile Back Header ────────────────────────────────────────── */}
-        <div className="md:hidden sticky top-[57px] z-[40] bg-[#030308]/80 backdrop-blur-xl border-b border-white/5 p-4 flex items-center justify-between">
+        <div className="md:hidden sticky top-0 z-[40] bg-[#030308]/80 backdrop-blur-xl border-b border-white/5 p-4 flex items-center justify-between">
           <button onClick={() => router.push('/dashboard')} className="min-h-[44px] min-w-[44px] flex items-center justify-center bg-white/5 rounded-xl border border-white/10 active:scale-95 transition-all">
             <ChevronLeft className="w-5 h-5 text-white" />
           </button>
