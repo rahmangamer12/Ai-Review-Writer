@@ -16,16 +16,9 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
-/* Mobile only: fixed positioning */
-@media (max-width: 1023px) {
-  html {
-    position: fixed;
-    height: 100%;
-  }
-}
-
 body {
   overflow-x: hidden;
+  overflow-y: auto;
   overscroll-behavior-y: none;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;

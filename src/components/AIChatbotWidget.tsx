@@ -434,12 +434,12 @@ export default function AIChatbot() {
   return (
     <>
       <div
-        className="fixed z-[45]"
+        className="fixed z-[35]"
         style={{
           left: position.x || undefined,
           right: position.x ? undefined : 16,
           top: position.y || undefined,
-          bottom: position.y ? undefined : 24,
+          bottom: position.y ? undefined : 'calc(88px + env(safe-area-inset-bottom))',
         }}
         suppressHydrationWarning
       >
