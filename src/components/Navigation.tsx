@@ -158,13 +158,13 @@ export default function Navigation() {
         if (isIOS) {
           setInstallInstructions({
             title: 'Install on iOS',
-            desc: "1. Tap the Share button at the bottom of Safari.\n2. Scroll and tap 'Add to Home Screen'.",
+            desc: "1. Tap the Share button at the bottom of Safari.\n2. Scroll and tap 'Add to Home Screen'.\n3. Tap 'Add' to confirm.",
             icon: '🍏'
           })
         } else {
           setInstallInstructions({
             title: 'Install App',
-            desc: "Look for the Install icon (⬇️ or 💻) in your browser's URL address bar, or open your browser menu and select 'Install App'.",
+            desc: "If the 'Install' icon isn't in your address bar:\n1. Open your browser menu (⋮ or ⋯).\n2. Select 'Install App' or 'Add to Home Screen'.\n\n💡 Tip: If you previously installed it, check chrome://apps to delete old versions first.",
             icon: '💻'
           })
         }
@@ -313,61 +313,69 @@ export default function Navigation() {
                 setMobileMenuOpen(false)
               }
             }}
-            className="lg:hidden fixed inset-x-0 bottom-0 max-h-[85dvh] bg-[#0f0f14] rounded-t-[32px] border-t border-white/10 p-6 flex flex-col z-[1001] overflow-y-auto overscroll-contain pb-[calc(7rem+env(safe-area-inset-bottom))] shadow-2xl max-w-[100vw]"
+            className="lg:hidden fixed inset-x-0 bottom-0 max-h-[85dvh] bg-[#0f0f14] rounded-t-[32px] border-t border-white/10 flex flex-col z-[1001] shadow-2xl max-w-[100vw] overflow-hidden"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile Navigation Menu"
           >
-            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-8 flex-shrink-0 cursor-grab active:cursor-grabbing" />
-            
-            <div className="space-y-2 flex-1">
-              {navItems.map((item, index) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all active:scale-[0.97] min-h-[56px] ${
-                    isActive(item.href)
-                      ? 'bg-purple-600/20 text-white border border-purple-500/30'
-                      : 'text-white/60 hover:text-white bg-white/5'
-                  }`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive(item.href) ? 'text-purple-400' : ''}`} />
-                  <span className="font-semibold">{item.label}</span>
-                </Link>
-              ))}
+            {/* Native Drag Handle - Fixed at top of drawer */}
+            <div className="w-full pt-4 pb-2 bg-[#0f0f14] rounded-t-[32px] flex-shrink-0 cursor-grab active:cursor-grabbing">
+              <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto" />
             </div>
+            
+            {/* Scrollable Area - Content goes here */}
+            <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-[calc(10rem+env(safe-area-inset-bottom))] custom-scrollbar">
+              <div className="space-y-2 py-4">
+                {navItems.map((item, index) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`flex items-center gap-4 px-4 py-4 rounded-2xl transition-all active:scale-[0.97] min-h-[56px] ${
+                      isActive(item.href)
+                        ? 'bg-purple-600/20 text-white border border-purple-500/30'
+                        : 'text-white/60 hover:text-white bg-white/5'
+                    }`}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive(item.href) ? 'text-purple-400' : ''}`} />
+                    <span className="font-semibold">{item.label}</span>
+                  </Link>
+                ))}
+              </div>
 
-            <div className="mt-8 pt-6 border-t border-white/10 space-y-4 shrink-0">
-              <button
-                onClick={handleInstallClick}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 text-emerald-400 font-semibold hover:bg-emerald-500/20 transition-all font-sans"
-              >
-                <div className="flex items-center gap-3">
-                  <Download className="w-5 h-5" />
-                  <span>Install App</span>
-                </div>
-              </button>
+              <div className="mt-6 pt-6 border-t border-white/10 space-y-4">
+                {/* Install App Button - Always accessible here */}
+                <button
+                  onClick={handleInstallClick}
+                  className="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-400 font-bold hover:bg-emerald-500/30 transition-all active:scale-[0.98] shadow-lg shadow-emerald-900/20"
+                >
+                  <div className="flex items-center gap-3">
+                    <Download className="w-6 h-6" />
+                    <span className="text-base">Install App</span>
+                  </div>
+                  <div className="text-[10px] bg-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">PWA</div>
+                </button>
 
-              <SignedOut>
-                <div className="grid grid-cols-2 gap-3">
-                  <SignInButton mode="modal">
-                    <button className="px-4 py-4 rounded-2xl bg-white/5 text-white font-semibold border border-white/10 active:scale-95 transition-transform min-h-[48px]">
-                      Sign In
-                    </button>
-                  </SignInButton>
-                  <SignUpButton mode="modal">
-                    <button className="px-4 py-4 rounded-2xl bg-purple-600 text-white font-semibold active:scale-95 transition-transform min-h-[48px]">
-                      Sign Up
-                    </button>
-                  </SignUpButton>
-                </div>
-              </SignedOut>
-              <SignedIn>
-                <div className="pb-6">
-                  <UserProfile />
-                </div>
-              </SignedIn>
+                <SignedOut>
+                  <div className="grid grid-cols-2 gap-3">
+                    <SignInButton mode="modal">
+                      <button className="px-4 py-4 rounded-2xl bg-white/5 text-white font-semibold border border-white/10 active:scale-95 transition-transform min-h-[48px]">
+                        Sign In
+                      </button>
+                    </SignInButton>
+                    <SignUpButton mode="modal">
+                      <button className="px-4 py-4 rounded-2xl bg-purple-600 text-white font-semibold active:scale-95 transition-transform min-h-[48px]">
+                        Sign Up
+                      </button>
+                    </SignUpButton>
+                  </div>
+                </SignedOut>
+                <SignedIn>
+                  <div className="w-full">
+                    <UserProfile />
+                  </div>
+                </SignedIn>
+              </div>
             </div>
           </motion.nav>
         )}
