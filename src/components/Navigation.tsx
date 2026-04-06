@@ -151,13 +151,24 @@ export default function Navigation() {
 
   const handleInstallClick = async () => {
     if (!deferredPrompt) {
-      alert("App is already installed or your browser doesn't support installation.")
+      if (typeof window !== 'undefined') {
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+        if (isIOS) {
+          alert("To install on iOS: Tap the Share button at the bottom of Safari, then tap 'Add to Home Screen'.");
+        } else {
+          alert("To install: Look for the Install icon (⬇️ or 💻) in your browser's URL address bar, or check your browser menu for 'Install App'.");
+        }
+      }
       return
     }
-    deferredPrompt.prompt()
-    const { outcome } = await deferredPrompt.userChoice
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null)
+    try {
+      await deferredPrompt.prompt()
+      const { outcome } = await deferredPrompt.userChoice
+      if (outcome === 'accepted') {
+        setDeferredPrompt(null)
+      }
+    } catch (err) {
+      console.log('Installation error', err)
     }
   }
 
@@ -317,17 +328,15 @@ export default function Navigation() {
             </div>
 
             <div className="mt-8 pt-6 border-t border-white/10 space-y-4 shrink-0">
-              {deferredPrompt && (
-                <button
-                  onClick={handleInstallClick}
-                  className="w-full flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 text-emerald-400 font-semibold hover:bg-emerald-500/20 transition-all font-sans"
-                >
-                  <div className="flex items-center gap-3">
-                    <Download className="w-5 h-5" />
-                    <span>Install App</span>
-                  </div>
-                </button>
-              )}
+              <button
+                onClick={handleInstallClick}
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 text-emerald-400 font-semibold hover:bg-emerald-500/20 transition-all font-sans"
+              >
+                <div className="flex items-center gap-3">
+                  <Download className="w-5 h-5" />
+                  <span>Install App</span>
+                </div>
+              </button>
 
               <SignedOut>
                 <div className="grid grid-cols-2 gap-3">
@@ -496,17 +505,15 @@ export default function Navigation() {
           </SignedOut>
           
           {/* PWA Install Button (Always visible) */}
-          {deferredPrompt && (
-            <button
-              onClick={handleInstallClick}
-              className="w-full flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 text-emerald-400 font-semibold hover:bg-emerald-500/20 transition-all font-sans my-4"
-            >
-              <div className="flex items-center gap-3">
-                <Download className="w-5 h-5" />
-                <span>Install App</span>
-              </div>
-            </button>
-          )}
+          <button
+            onClick={handleInstallClick}
+            className="w-full flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 text-emerald-400 font-semibold hover:bg-emerald-500/20 transition-all font-sans my-4"
+          >
+            <div className="flex items-center gap-3">
+              <Download className="w-5 h-5" />
+              <span>Install App</span>
+            </div>
+          </button>
 
           {/* User Profile */}
           <SignedIn>
