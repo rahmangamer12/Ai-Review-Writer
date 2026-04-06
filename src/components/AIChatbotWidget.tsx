@@ -431,6 +431,8 @@ export default function AIChatbot() {
 
   const activeModel = LongCatModels.find(m => m.id === selectedModel)
 
+  if (pathname?.startsWith('/chat')) return null
+
   return (
     <>
       <div

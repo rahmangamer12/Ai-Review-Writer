@@ -211,7 +211,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-full min-h-[calc(100dvh-130px)] lg:min-h-0 lg:h-[100dvh] w-full bg-[#030308] text-white overflow-hidden relative">
+    <div className="flex h-[calc(100dvh-129px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] lg:h-[100dvh] w-full bg-[#030308] text-white overflow-hidden relative">
       <ChatSidebar
         sessions={sessions}
         currentSessionId={currentSessionId}

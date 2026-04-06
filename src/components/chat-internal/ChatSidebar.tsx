@@ -129,9 +129,9 @@ export default function ChatSidebar({
       } : {})}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       className={`
-        ${isMobile ? 'fixed inset-y-0 left-0 z-[1001]' : 'relative flex-shrink-0'}
+        ${isMobile ? 'fixed inset-y-0 left-0 z-[1001] h-[100dvh]' : 'relative flex-shrink-0 h-full'}
         w-[280px] sm:w-[300px] lg:w-[320px] xl:w-[340px]
-        h-full bg-gradient-to-b from-[#0a0a12] via-[#08080f] to-[#060609]
+        bg-gradient-to-b from-[#0a0a12] via-[#08080f] to-[#060609]
         border-r border-white/5 flex flex-col
         transform transition-transform duration-300
         ${isMobile && !sidebarOpen ? '-translate-x-full' : 'translate-x-0'}
@@ -289,7 +289,7 @@ export default function ChatSidebar({
       </div>
 
       {/* Profile Section */}
-      <div className="p-2 sm:p-3 lg:p-4 border-t border-white/5 bg-[#0a0a12]">
+      <div className={`p-2 sm:p-3 lg:p-4 border-t border-white/5 bg-[#0a0a12] shrink-0 ${isMobile ? 'pb-[calc(1.5rem+env(safe-area-inset-bottom))]' : ''}`}>
         <div className="p-2.5 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl bg-white/[0.03] border border-white/8">
           <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
             <div className="w-8 sm:w-9 lg:w-10 h-8 sm:h-9 lg:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center font-bold text-white text-sm">
