@@ -140,6 +140,8 @@ export default function Navigation() {
   const menuKey = `${pathname}-${mobileMenuOpen}`
 
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null)
+  const [showInstallModal, setShowInstallModal] = useState(false)
+  const [installInstructions, setInstallInstructions] = useState<{title: string, desc: string, icon: any} | null>(null)
   
   // PWA install handler
   useEffect(() => {
@@ -154,10 +156,19 @@ export default function Navigation() {
       if (typeof window !== 'undefined') {
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
         if (isIOS) {
-          alert("To install on iOS: Tap the Share button at the bottom of Safari, then tap 'Add to Home Screen'.");
+          setInstallInstructions({
+            title: 'Install on iOS',
+            desc: "1. Tap the Share button at the bottom of Safari.\n2. Scroll and tap 'Add to Home Screen'.",
+            icon: '🍏'
+          })
         } else {
-          alert("To install: Look for the Install icon (⬇️ or 💻) in your browser's URL address bar, or check your browser menu for 'Install App'.");
+          setInstallInstructions({
+            title: 'Install App',
+            desc: "Look for the Install icon (⬇️ or 💻) in your browser's URL address bar, or open your browser menu and select 'Install App'.",
+            icon: '💻'
+          })
         }
+        setShowInstallModal(true)
       }
       return
     }
@@ -302,7 +313,7 @@ export default function Navigation() {
                 setMobileMenuOpen(false)
               }
             }}
-            className="lg:hidden fixed inset-x-0 bottom-0 max-h-[85vh] bg-[#0f0f14] rounded-t-[32px] border-t border-white/10 p-6 flex flex-col z-[1001] overflow-y-auto overscroll-contain pb-[calc(5rem+env(safe-area-inset-bottom))] shadow-2xl max-w-[100vw]"
+            className="lg:hidden fixed inset-x-0 bottom-0 max-h-[85dvh] bg-[#0f0f14] rounded-t-[32px] border-t border-white/10 p-6 flex flex-col z-[1001] overflow-y-auto overscroll-contain pb-[calc(7rem+env(safe-area-inset-bottom))] shadow-2xl max-w-[100vw]"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile Navigation Menu"
@@ -523,6 +534,53 @@ export default function Navigation() {
           </SignedIn>
         </motion.div>
       </nav>
+
+      {/* Modern Install Modal */}
+      <AnimatePresence>
+        {showInstallModal && installInstructions && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowInstallModal(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="relative w-full max-w-sm bg-[#0f0f14] border border-white/10 rounded-3xl p-6 shadow-2xl overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
+              
+              <div className="flex justify-between items-start mb-6">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-2xl border border-emerald-500/30">
+                  {installInstructions.icon}
+                </div>
+                <button
+                  onClick={() => setShowInstallModal(false)}
+                  className="p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <h2 className="text-xl font-bold text-white mb-2">{installInstructions.title}</h2>
+              <div className="text-sm text-white/70 space-y-3 whitespace-pre-line mb-6">
+                {installInstructions.desc}
+              </div>
+
+              <button
+                onClick={() => setShowInstallModal(false)}
+                className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold hover:opacity-90 transition-opacity active:scale-[0.98]"
+              >
+                Got it
+              </button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </>
   )
 }

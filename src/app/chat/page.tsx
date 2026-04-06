@@ -151,10 +151,30 @@ export default function ChatPage() {
         headers: { 'Content-Type': 'application/json', 'x-session-id': sId },
         body: JSON.stringify({ messages: [...messages, userMsg], model: selectedModel })
       })
-      const data = await res.json()
-      setSessions(prev => prev.map(s => s.id === sId ? { ...s, messages: s.messages.map(m => m.id === aiId ? { ...m, content: data.content, isTyping: false } : m) } : s))
+
+      if (!res.ok) throw new Error('API Error')
+
+      const reader = res.body?.getReader()
+      if (!reader) throw new Error('Response body is null')
+
+      const decoder = new TextDecoder()
+      let accumulatedContent = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+
+        const chunk = decoder.decode(value, { stream: true })
+        accumulatedContent += chunk
+
+        setSessions(prev => prev.map(s => s.id === sId ? { ...s, messages: s.messages.map(m => m.id === aiId ? { ...m, content: accumulatedContent } : m) } : s))
+      }
+
+      setSessions(prev => prev.map(s => s.id === sId ? { ...s, messages: s.messages.map(m => m.id === aiId ? { ...m, isTyping: false } : m) } : s))
+
     } catch {
       addNotification('Error sending message', 'error')
+      setSessions(prev => prev.map(s => s.id === sId ? { ...s, messages: s.messages.map(m => m.id === aiId ? { ...m, content: 'Failed to connect. Please try again.', isTyping: false } : m) } : s))
     } finally {
       setIsLoading(false)
     }
