@@ -101,64 +101,9 @@ export default function AIChatbot() {
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [isEnabled, setIsEnabled] = useState(true)
 
-  const [position, setPosition] = useState({ x: 0, y: 0 })
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
-
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
-
-  // Load saved position
-  useEffect(() => {
-    const saved = localStorage.getItem('ai-chatbot-position')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        if (typeof window !== 'undefined') {
-          const safeX = Math.min(Math.max(16, parsed.x), window.innerWidth - 180) // 180px width for sidebar
-          const safeY = Math.min(Math.max(16, parsed.y), window.innerHeight - 80)
-          setPosition({ x: safeX, y: safeY })
-        }
-      } catch (e) {
-        console.error(e)
-      }
-    }
-
-    const handleResize = () => {
-      setPosition(prev => {
-        if (prev.x === 0 && prev.y === 0) return prev
-        return {
-          x: Math.min(Math.max(16, prev.x), window.innerWidth - 180),
-          y: Math.min(Math.max(16, prev.y), window.innerHeight - 80)
-        }
-      })
-    }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
-
-  // Use framer-motion drag
-  const handleDragEnd = (e: any, info: any) => {
-    if (Math.abs(info.offset.x) > 5 || Math.abs(info.offset.y) > 5) {
-      let finalX = info.point.x;
-      let finalY = info.point.y;
-      if (typeof window !== 'undefined') {
-        finalX = Math.min(Math.max(16, finalX), window.innerWidth - 180);
-        finalY = Math.min(Math.max(16, finalY), window.innerHeight - 80);
-      }
-      const newPos = { x: finalX, y: finalY };
-      localStorage.setItem('ai-chatbot-position', JSON.stringify(newPos))
-      setPosition(newPos)
-      setTimeout(() => setIsDragging(false), 100)
-    }
-  }
-
-  const handleDragStart = () => {
-    setIsDragging(true)
-  }
-
-  // Remove manual drag listeners
 
   // Auto-hide tooltip
   useEffect(() => {
@@ -423,11 +368,7 @@ export default function AIChatbot() {
   return (
     <>
       <div
-        className={`fixed z-[35] ${position.x === 0 && position.y === 0 ? `right-4 lg:right-8 ${isChatPage ? 'bottom-[240px]' : 'bottom-[140px] lg:bottom-8'}` : ''}`}
-        style={position.x !== 0 || position.y !== 0 ? {
-          left: position.x,
-          top: position.y
-        } : {}}
+        className={`fixed z-[35] right-4 lg:right-8 ${isChatPage ? 'bottom-[120px] lg:bottom-8' : 'bottom-20 lg:bottom-8'}`}
         suppressHydrationWarning
       >
         <AnimatePresence>
@@ -449,17 +390,12 @@ export default function AIChatbot() {
         </AnimatePresence>
 
         <motion.button
-          whileHover={{ scale: isDragging ? 1 : 1.05 }}
+          whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          drag
-          dragMomentum={false}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
           onClick={(e) => {
-            if (!isDragging) setIsOpen(true)
+            setIsOpen(true)
           }}
-          style={{ touchAction: 'none' }}
-          className={`${isOpen ? 'hidden' : 'flex'} items-center gap-2 bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 rounded-full shadow-lg hover:shadow-xl transition-all touch-manipulation ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+          className={`${isOpen ? 'hidden' : 'flex'} items-center gap-2 bg-gradient-to-r from-violet-600 via-purple-600 to-indigo-600 text-white px-3 py-2 sm:px-4 sm:py-2.5 md:px-5 md:py-3 rounded-full shadow-lg hover:shadow-xl transition-all touch-manipulation cursor-pointer`}
           suppressHydrationWarning
         >
           <span className="font-semibold text-xs sm:text-sm md:text-base pointer-events-none" suppressHydrationWarning>Ask Sarah</span>

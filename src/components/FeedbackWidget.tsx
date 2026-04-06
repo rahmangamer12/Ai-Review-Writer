@@ -29,9 +29,6 @@ export default function FeedbackWidget() {
   const [rating, setRating] = useState(0)
   const [hoverRating, setHoverRating] = useState(0)
   const [submitting, setSubmitting] = useState(false)
-  const [position, setPosition] = useState({ x: 0, y: 0 })
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [formData, setFormData] = useState<FeedbackData>({
     rating: 0,
     category: 'general',
@@ -40,60 +37,6 @@ export default function FeedbackWidget() {
     pageUrl: ''
   })
   const hydrated = useHydrated()
-
-  // Load saved position
-  useEffect(() => {
-    if (!hydrated) return
-    const saved = localStorage.getItem('feedback-widget-position')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        if (typeof window !== 'undefined') {
-          const safeX = Math.min(Math.max(16, parsed.x), window.innerWidth - 80)
-          const safeY = Math.min(Math.max(16, parsed.y), window.innerHeight - 80)
-          setPosition({ x: safeX, y: safeY })
-        }
-      } catch (e) {
-        console.error(e)
-      }
-    }
-
-    const handleResize = () => {
-      setPosition(prev => {
-        if (prev.x === 0 && prev.y === 0) return prev
-        return {
-          x: Math.min(Math.max(16, prev.x), window.innerWidth - 80),
-          y: Math.min(Math.max(16, prev.y), window.innerHeight - 80)
-        }
-      })
-    }
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [hydrated])
-
-  // Use framer-motion drag instead of manual listeners
-  const handleDragEnd = (e: any, info: any) => {
-    // Only save position if dragging happened
-    if (Math.abs(info.offset.x) > 5 || Math.abs(info.offset.y) > 5) {
-      let finalX = info.point.x;
-      let finalY = info.point.y;
-      if (typeof window !== 'undefined') {
-        finalX = Math.min(Math.max(16, finalX), window.innerWidth - 80);
-        finalY = Math.min(Math.max(16, finalY), window.innerHeight - 80);
-      }
-      const newPos = { x: finalX, y: finalY }
-      localStorage.setItem('feedback-widget-position', JSON.stringify(newPos))
-      setPosition(newPos)
-    
-      // Prevent opening on click after drag
-      setTimeout(() => setIsDragging(false), 100)
-    }
-  }
-  const handleDragStart = () => {
-    setIsDragging(true)
-  }
-
-  // Remove the old manual touch listeners
 
   // Exit Intent - Show when user tries to leave
   useEffect(() => {
@@ -180,45 +123,28 @@ export default function FeedbackWidget() {
 
   return (
     <>
-      {/* Draggable Floating Feedback Button */}
+      {/* Fixed Floating Feedback Button */}
       <motion.button
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        whileHover={{ scale: isDragging ? 1 : 1.1 }}
+        whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.95 }}
-        drag
-        dragMomentum={false}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
         onClick={(e) => {
-          if (!isDragging) setIsOpen(true)
+          setIsOpen(true)
         }}
-        style={position.x !== 0 || position.y !== 0 ? {
-          left: position.x,
-          top: position.y,
-          cursor: isDragging ? 'grabbing' : 'grab',
-          touchAction: 'none'
-        } : {
-          cursor: isDragging ? 'grabbing' : 'grab',
-          touchAction: 'none'
-        }}
-        className={`fixed z-[35] w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center group ${
-          position.x === 0 && position.y === 0 ? `left-4 lg:left-8 ${isChatPage ? 'bottom-[240px]' : 'bottom-[140px] lg:bottom-8'}` : ''
-        }`}
-        title="Give Feedback (Drag to move)"
+        className={`fixed z-[35] w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center group left-4 lg:left-8 ${isChatPage ? 'bottom-[120px] lg:bottom-8' : 'bottom-20 lg:bottom-8'}`}
+        title="Give Feedback"
         suppressHydrationWarning
       >
         <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 pointer-events-none" suppressHydrationWarning />
 
         {/* Tooltip */}
-        {!isDragging && (
-          <div
-            className="absolute left-full ml-2 sm:ml-3 px-2 py-1 sm:px-3 sm:py-1.5 bg-white/10 backdrop-blur-sm rounded-lg text-white text-xs sm:text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block"
-            suppressHydrationWarning
-          >
-            Give Feedback
-          </div>
-        )}
+        <div
+          className="absolute left-full ml-2 sm:ml-3 px-2 py-1 sm:px-3 sm:py-1.5 bg-white/10 backdrop-blur-sm rounded-lg text-white text-xs sm:text-sm whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none hidden sm:block"
+          suppressHydrationWarning
+        >
+          Give Feedback
+        </div>
       </motion.button>
 
       {/* Exit Intent Modal */}
