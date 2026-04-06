@@ -186,7 +186,7 @@ export default function FeedbackWidget() {
         style={{
           left: position.x || 16,
           top: position.y || undefined,
-          bottom: position.y ? undefined : 'calc(88px + env(safe-area-inset-bottom))',
+          bottom: position.y ? undefined : 'calc(140px + env(safe-area-inset-bottom))',
           cursor: isDragging ? 'grabbing' : 'grab'
         }}
         className="fixed z-[35] w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-full shadow-lg hover:shadow-xl transition-shadow flex items-center justify-center group"

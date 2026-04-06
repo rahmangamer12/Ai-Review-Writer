@@ -120,7 +120,7 @@ export default function ModelSelector({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[600] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
+        className="fixed inset-0 z-[1003] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md"
         onClick={onClose}
       >
         <motion.div

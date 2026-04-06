@@ -24,11 +24,13 @@ interface ChatSidebarProps {
   setSidebarOpen: (open: boolean) => void
 }
 
-const formatRelativeDate = (dateInput: string | Date) => {
+const formatRelativeDate = (dateInput?: string | Date | null) => {
+  if (!dateInput) return 'Just now'
+  
   const date = new Date(dateInput)
   const now = new Date()
   
-  if (isNaN(date.getTime())) return 'Unknown'
+  if (isNaN(date.getTime())) return 'Just now'
   
   const diffMs = now.getTime() - date.getTime()
   const diffMins = Math.floor(diffMs / 60000)
@@ -62,6 +64,7 @@ export default function ChatSidebar({
 }: ChatSidebarProps) {
   const [localSearch, setLocalSearch] = useState('')
   const [lastScrollY, setLastScrollY] = useState(0)
+  const [activeMenuId, setActiveMenuId] = useState<string | null>(null)
 
   const filteredSessions = useMemo(() => {
     const query = localSearch || searchQuery
@@ -126,7 +129,7 @@ export default function ChatSidebar({
       } : {})}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       className={`
-        ${isMobile ? 'fixed inset-y-0 left-0 z-[90]' : 'relative flex-shrink-0'}
+        ${isMobile ? 'fixed inset-y-0 left-0 z-[1001]' : 'relative flex-shrink-0'}
         w-[280px] sm:w-[300px] lg:w-[320px] xl:w-[340px]
         h-full bg-gradient-to-b from-[#0a0a12] via-[#08080f] to-[#060609]
         border-r border-white/5 flex flex-col
@@ -232,27 +235,53 @@ export default function ChatSidebar({
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-0.5 sm:gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                {/* Actions (Desktop Hover & Mobile State) */}
+                <div 
+                  className={`absolute right-2 top-1/2 -translate-y-1/2 flex items-center bg-[#0a0a12]/90 backdrop-blur-md rounded-lg p-0.5
+                    ${isMobile ? 'gap-2' : 'gap-0.5 sm:gap-1 opacity-0 group-hover:opacity-100 transition-opacity'}
+                    ${isMobile && activeMenuId !== session.id ? 'hidden' : ''}
+                  `}
+                >
                   <button
-                    onClick={(e) => handlePin(e, session.id)}
+                    onClick={(e) => { e.stopPropagation(); handlePin(e, session.id); if (isMobile) setActiveMenuId(null); }}
                     className="p-1 sm:p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-amber-400 transition-colors active:scale-[0.98]"
                   >
                     <Pin className={`w-3 sm:w-3.5 h-3 sm:h-3.5 ${session.isPinned ? 'fill-current' : ''}`} />
                   </button>
                   <button
-                    onClick={(e) => handleEdit(e, session.id)}
+                    onClick={(e) => { e.stopPropagation(); handleEdit(e, session.id); if (isMobile) setActiveMenuId(null); }}
                     className="p-1 sm:p-1.5 rounded-lg hover:bg-white/10 text-white/40 hover:text-blue-400 transition-colors active:scale-[0.98]"
                   >
                     <Edit3 className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
                   </button>
                   <button
-                    onClick={(e) => handleDelete(e, session.id)}
+                    onClick={(e) => { e.stopPropagation(); handleDelete(e, session.id); if (isMobile) setActiveMenuId(null); }}
                     className="p-1 sm:p-1.5 rounded-lg hover:bg-red-500/20 text-white/40 hover:text-red-400 transition-colors active:scale-[0.98]"
                   >
                     <Trash2 className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
                   </button>
+                  {isMobile && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setActiveMenuId(null); }}
+                      className="p-1 ml-1 rounded-lg bg-white/10 text-white/80"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
                 </div>
+
+                {isMobile && activeMenuId !== session.id && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setActiveMenuId(session.id); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-white/30 hover:text-white"
+                  >
+                    <div className="flex flex-col gap-0.5">
+                      <span className="w-1 h-1 bg-current rounded-full" />
+                      <span className="w-1 h-1 bg-current rounded-full" />
+                      <span className="w-1 h-1 bg-current rounded-full" />
+                    </div>
+                  </button>
+                )}
               </motion.div>
             ))}
           </div>
@@ -322,7 +351,7 @@ export default function ChatSidebar({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[350] bg-black/60 backdrop-blur-sm"
+                className="fixed inset-0 z-[1000] bg-black/60 backdrop-blur-sm"
                 onClick={() => setSidebarOpen(false)}
               />
               {sidebarContent}

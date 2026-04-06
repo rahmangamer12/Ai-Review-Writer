@@ -261,12 +261,20 @@ export default function Navigation() {
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={{ top: 0, bottom: 0.5 }}
+            onDragEnd={(e, info) => {
+              if (info.offset.y > 100 || info.velocity.y > 500) {
+                setMobileMenuOpen(false)
+              }
+            }}
             className="lg:hidden fixed inset-x-0 bottom-0 max-h-[90vh] bg-[#0f0f14] rounded-t-[32px] border-t border-white/10 p-6 flex flex-col z-[1001] overflow-y-auto overscroll-contain pb-[calc(2.5rem+env(safe-area-inset-bottom))] shadow-2xl max-w-[100vw]"
             role="dialog"
             aria-modal="true"
             aria-label="Mobile Navigation Menu"
           >
-            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-8 flex-shrink-0" />
+            <div className="w-12 h-1.5 bg-white/20 rounded-full mx-auto mb-8 flex-shrink-0 cursor-grab active:cursor-grabbing" />
             
             <div className="space-y-2 flex-1">
               {navItems.map((item, index) => (

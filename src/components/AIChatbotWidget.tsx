@@ -439,7 +439,7 @@ export default function AIChatbot() {
           left: position.x || undefined,
           right: position.x ? undefined : 16,
           top: position.y || undefined,
-          bottom: position.y ? undefined : 'calc(88px + env(safe-area-inset-bottom))',
+          bottom: position.y ? undefined : 'calc(140px + env(safe-area-inset-bottom))',
         }}
         suppressHydrationWarning
       >
