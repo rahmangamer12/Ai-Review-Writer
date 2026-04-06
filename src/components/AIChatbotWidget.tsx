@@ -113,17 +113,43 @@ export default function AIChatbot() {
   useEffect(() => {
     const saved = localStorage.getItem('ai-chatbot-position')
     if (saved) {
-      setPosition(JSON.parse(saved))
+      try {
+        const parsed = JSON.parse(saved)
+        if (typeof window !== 'undefined') {
+          const safeX = Math.min(Math.max(16, parsed.x), window.innerWidth - 180) // 180px width for sidebar
+          const safeY = Math.min(Math.max(16, parsed.y), window.innerHeight - 80)
+          setPosition({ x: safeX, y: safeY })
+        }
+      } catch (e) {
+        console.error(e)
+      }
     }
+
+    const handleResize = () => {
+      setPosition(prev => {
+        if (prev.x === 0 && prev.y === 0) return prev
+        return {
+          x: Math.min(Math.max(16, prev.x), window.innerWidth - 180),
+          y: Math.min(Math.max(16, prev.y), window.innerHeight - 80)
+        }
+      })
+    }
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
   }, [])
 
   // Use framer-motion drag
   const handleDragEnd = (e: any, info: any) => {
     if (Math.abs(info.offset.x) > 5 || Math.abs(info.offset.y) > 5) {
-      localStorage.setItem('ai-chatbot-position', JSON.stringify({
-        x: info.point.x,
-        y: info.point.y
-      }))
+      let finalX = info.point.x;
+      let finalY = info.point.y;
+      if (typeof window !== 'undefined') {
+        finalX = Math.min(Math.max(16, finalX), window.innerWidth - 180);
+        finalY = Math.min(Math.max(16, finalY), window.innerHeight - 80);
+      }
+      const newPos = { x: finalX, y: finalY };
+      localStorage.setItem('ai-chatbot-position', JSON.stringify(newPos))
+      setPosition(newPos)
       setTimeout(() => setIsDragging(false), 100)
     }
   }
