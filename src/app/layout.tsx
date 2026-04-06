@@ -51,15 +51,15 @@ export default function RootLayout({
           {/* Moved to PWAUpdateNotification component to avoid hydration issues */}
         </head>
         <body
-          className={cn(geistSans.variable, geistMono.variable, "antialiased bg-background text-foreground overflow-x-hidden")}
+          className={cn(geistSans.variable, geistMono.variable, "antialiased bg-background text-foreground overflow-x-hidden max-w-[100vw]")}
           suppressHydrationWarning
         >
           <DynamicBackground />
           <ErrorBoundary>
-            <div className="flex flex-col lg:flex-row min-h-[100dvh] relative z-10" suppressHydrationWarning>
+            <div className="flex flex-col lg:flex-row min-h-[100dvh] max-w-[100vw] relative z-10" suppressHydrationWarning>
               <Navigation />
-              <main className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pt-[calc(57px+env(safe-area-inset-top))] lg:pt-0 pb-[calc(72px+env(safe-area-inset-bottom))] lg:pb-0 min-w-0 lg:pl-64 xl:pl-72" suppressHydrationWarning>
-                <div className="w-full min-h-full px-0 md:px-6 lg:px-8" suppressHydrationWarning>
+              <main className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pt-[calc(57px+env(safe-area-inset-top))] lg:pt-0 pb-[calc(72px+env(safe-area-inset-bottom))] lg:pb-0 min-w-0 max-w-full lg:pl-64 xl:pl-72" suppressHydrationWarning>
+                <div className="w-full min-h-full px-0 md:px-6 lg:px-8 max-w-full" suppressHydrationWarning>
                   {children}
                 </div>
               </main>
