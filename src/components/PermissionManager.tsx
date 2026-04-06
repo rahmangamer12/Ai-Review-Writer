@@ -94,6 +94,11 @@ export default function PermissionManager() {
     }
   }, [])
 
+  useEffect(() => {
+    checkPermissions()
+    loadSavedLocation()
+  }, [checkPermissions, loadSavedLocation])
+
   const requestLocation = async (): Promise<boolean> => {
     setIsRequesting(true)
     
