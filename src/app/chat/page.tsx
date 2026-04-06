@@ -311,7 +311,7 @@ export default function ChatPage() {
           </div>
         </div>
 
-        <div className="shrink-0 fixed bottom-0 left-0 right-0 lg:left-64 xl:left-72 z-30 bg-gradient-to-t from-[#030308] via-[#030308]/95 to-transparent pb-[calc(12px+env(safe-area-inset-bottom))] lg:pb-8 pt-4 px-4 lg:px-12">
+        <div className="shrink-0 fixed bottom-0 left-0 right-0 z-30 bg-gradient-to-t from-[#030308] via-[#030308]/95 to-transparent pb-[calc(12px+env(safe-area-inset-bottom))] lg:pb-8 pt-4 px-4 lg:px-12 lg:ml-64 xl:ml-72">
           <div className="max-w-4xl mx-auto w-full flex flex-col gap-3">
             <div className="lg:hidden flex items-center justify-between px-2">
                <button onClick={() => setSidebarOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-white/40 active:scale-95 backdrop-blur-md">

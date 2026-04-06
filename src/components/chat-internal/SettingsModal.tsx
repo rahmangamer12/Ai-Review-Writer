@@ -60,7 +60,7 @@ export default function SettingsModal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md lg:hidden"
+            className="fixed inset-0 z-[90] bg-black/90 backdrop-blur-md"
             onClick={onClose}
           />
           <motion.div
@@ -68,10 +68,10 @@ export default function SettingsModal({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: '100%' }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="fixed inset-x-0 bottom-0 z-[101] lg:inset-0 lg:flex lg:items-center lg:justify-center pointer-events-none"
+            className="fixed inset-x-0 bottom-0 z-[91] lg:inset-0 lg:flex lg:items-center lg:justify-center pointer-events-none"
           >
             <motion.div
-              className="w-full lg:max-w-md bg-[#0c0c18] border-t lg:border border-white/10 rounded-t-3xl lg:rounded-3xl overflow-hidden flex flex-col shadow-2xl pointer-events-auto max-h-[85dvh] lg:max-h-[85dvh]"
+              className="w-full lg:max-w-md bg-[#0c0c18] border-t lg:border border-white/10 rounded-t-3xl lg:rounded-3xl overflow-hidden flex flex-col shadow-2xl pointer-events-auto max-h-[80dvh] lg:max-h-[85dvh]"
               onClick={e => e.stopPropagation()}
             >
               {/* Drag Handle (mobile) */}

@@ -126,7 +126,7 @@ export default function ChatSidebar({
       } : {})}
       transition={{ type: 'spring', damping: 25, stiffness: 300 }}
       className={`
-        ${isMobile ? 'fixed inset-y-0 left-0 z-[100]' : 'relative flex-shrink-0'}
+        ${isMobile ? 'fixed inset-y-0 left-0 z-[90]' : 'relative flex-shrink-0'}
         w-[280px] sm:w-[300px] lg:w-[320px] xl:w-[340px]
         h-full bg-gradient-to-b from-[#0a0a12] via-[#08080f] to-[#060609]
         border-r border-white/5 flex flex-col
