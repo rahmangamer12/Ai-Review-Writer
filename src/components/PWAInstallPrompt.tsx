@@ -46,6 +46,13 @@ export default function PWAInstallPrompt() {
 
     window.addEventListener('beforeinstallprompt', handler)
 
+    // Listen for appinstalled
+    window.addEventListener('appinstalled', () => {
+      setIsStandalone(true)
+      setShowPrompt(false)
+      setDeferredPrompt(null)
+    })
+
     // For iOS, show install prompt if not standalone
     if (iOS && !isInStandalone) {
       setTimeout(() => {
@@ -55,6 +62,7 @@ export default function PWAInstallPrompt() {
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler)
+      window.removeEventListener('appinstalled', () => {})
     }
   }, [])
 

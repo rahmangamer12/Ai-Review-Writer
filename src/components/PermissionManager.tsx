@@ -12,7 +12,8 @@ import {
   XCircle,
   Settings,
   Shield,
-  Info
+  Info,
+  Smartphone
 } from 'lucide-react'
 
 interface PermissionState {
@@ -37,6 +38,8 @@ export default function PermissionManager() {
   const [showLocationModal, setShowLocationModal] = useState(false)
   const [showNotificationModal, setShowNotificationModal] = useState(false)
   const [isRequesting, setIsRequesting] = useState(false)
+  const [isIOS, setIsIOS] = useState(false)
+  const [isStandalone, setIsStandalone] = useState(false)
 
   const checkPermissions = useCallback(async () => {
     // Check location permission
@@ -97,6 +100,13 @@ export default function PermissionManager() {
   useEffect(() => {
     checkPermissions()
     loadSavedLocation()
+    
+    // Check for iOS and standalone mode
+    if (typeof window !== 'undefined') {
+      const iOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+      setIsIOS(iOS)
+      setIsStandalone(window.matchMedia('(display-mode: standalone)').matches)
+    }
   }, [checkPermissions, loadSavedLocation])
 
   const requestLocation = async (): Promise<boolean> => {
@@ -166,6 +176,12 @@ export default function PermissionManager() {
     try {
       if (!('Notification' in window)) {
         setPermissions(prev => ({ ...prev, notification: 'denied' }))
+        setIsRequesting(false)
+        return false
+      }
+
+      // Pillar 3: iOS 16.4+ Compliance Rule
+      if (isIOS && !isStandalone) {
         setIsRequesting(false)
         return false
       }
@@ -383,6 +399,12 @@ export default function PermissionManager() {
             {permissions.notification === 'denied' && (
               <XCircle className="w-5 h-5 text-red-400" />
             )}
+            {isIOS && !isStandalone && (
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-500/10 rounded-lg border border-amber-500/20 animate-pulse">
+                <Smartphone className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">Install Required</span>
+              </div>
+            )}
           </div>
 
           <div className="mb-4 space-y-2">
@@ -409,11 +431,11 @@ export default function PermissionManager() {
                   requestNotificationPermission()
                 }
               }}
-              disabled={isRequesting || permissions.notification === 'denied'}
+              disabled={isRequesting || permissions.notification === 'denied' || (isIOS && !isStandalone)}
               className={`flex-1 py-2.5 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
                 permissions.notification === 'granted'
                   ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
-                  : permissions.notification === 'denied'
+                  : permissions.notification === 'denied' || (isIOS && !isStandalone)
                   ? 'bg-gray-500/20 text-gray-400 cursor-not-allowed'
                   : 'bg-primary text-primary-foreground hover:bg-primary/90'
               }`}
@@ -427,6 +449,11 @@ export default function PermissionManager() {
                 <>
                   <Bell className="w-4 h-4" />
                   Test Notification
+                </>
+              ) : isIOS && !isStandalone ? (
+                <>
+                  <Smartphone className="w-4 h-4" />
+                  Install App First
                 </>
               ) : permissions.notification === 'denied' ? (
                 <>
