@@ -7,10 +7,12 @@ const isPublicRoute = createRouteMatcher([
   '/sign-in(.*)',
   '/sign-up(.*)',
   '/api/webhooks(.*)',
-  '/api/manifest',
   '/manifest.json',
   '/sw.js',
+  '/icons/(.*)',
   '/favicon.ico',
+  '/noise.svg',
+  '/api/health(.*)',
 ])
 
 // Define protected routes
@@ -43,8 +45,9 @@ export default clerkMiddleware(async (auth, req) => {
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and static files
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
+    // Skip Next.js internals and all static files
+    // EXPLICITLY excluding json and webmanifest to allow PWA to work
+    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest|json)).*)',
     // Always run for API routes
     '/(api|trpc)(.*)',
   ],
