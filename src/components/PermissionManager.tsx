@@ -197,15 +197,18 @@ export default function PermissionManager() {
       setPermissions(prev => ({ ...prev, notification: permission as 'granted' | 'denied' | 'prompt' }))
       
       if (permission === 'granted') {
-        // Show a welcome notification
-        showNotification(
-          '🎉 Notifications Enabled!',
-          'You\'ll now receive updates about new reviews and AI responses.',
-          '/icon.png'
-        )
-        
         // Register service worker for background notifications
-        await registerServiceWorker()
+        const registration = await registerServiceWorker()
+        
+        // Show a welcome notification using the service worker (Reliable on Mobile)
+        if (registration) {
+          registration.showNotification('🎉 Notifications Enabled!', {
+            body: 'You\'ll now receive updates about new reviews and AI responses.',
+            icon: '/icon.png',
+            badge: '/badge.png',
+            tag: 'welcome-notification'
+          })
+        }
       }
       
       setIsRequesting(false)
@@ -218,20 +221,24 @@ export default function PermissionManager() {
     }
   }
 
-  const registerServiceWorker = async () => {
+  const registerServiceWorker = async (): Promise<ServiceWorkerRegistration | null> => {
     if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.register('/notification-sw.js')
         console.log('Service Worker registered:', registration)
+        return registration
       } catch (error) {
         console.error('Service Worker registration failed:', error)
+        return null
       }
     }
+    return null
   }
 
-  const showNotification = (title: string, body: string, icon: string = '/icon.png') => {
-    if (typeof window !== 'undefined' && permissions.notification === 'granted' && 'Notification' in window) {
-      new Notification(title, {
+  const showNotification = async (title: string, body: string, icon: string = '/icon.png') => {
+    if (typeof window !== 'undefined' && permissions.notification === 'granted' && 'serviceWorker' in navigator) {
+      const registration = await navigator.serviceWorker.ready
+      registration.showNotification(title, {
         body,
         icon,
         badge: '/badge.png',

@@ -10,7 +10,7 @@ import FeedbackWidget from "@/components/FeedbackWidget";
 import AIChatbot from "@/components/AIChatbotWidget";
 import HydrationSuppressor from "@/components/HydrationSuppressor";
 import PWAUpdateNotification from "@/components/PWAUpdateNotification";
-
+import PWAInstallBanner from "@/components/PWAInstallBanner";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ClerkProvider } from '@clerk/nextjs'
 
@@ -25,6 +25,11 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+export const metadata: Metadata = {
+  title: "AutoReview AI - Review Management",
+  description: "AI-powered review management platform for businesses",
+};
 
 export default function RootLayout({
   children,
@@ -42,10 +47,9 @@ export default function RootLayout({
           <link rel="manifest" href="/manifest.json" />
           <meta name="theme-color" content="#6366f1" />
           <link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-96x96.png" />
-          <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-72x72.png" />
+          <link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-96x96.png" />
           
           {/* iOS PWA Meta Tags - Fixed for all devices */}
-          <link rel="apple-touch-icon" sizes="72x72" href="/icons/icon-72x72.png" />
           <link rel="apple-touch-icon" sizes="96x96" href="/icons/icon-96x96.png" />
           <link rel="apple-touch-icon" sizes="128x128" href="/icons/icon-128x128.png" />
           <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.png" />
@@ -96,6 +100,9 @@ export default function RootLayout({
 
           {/* PWA Update & Offline Notifications */}
           <PWAUpdateNotification />
+
+          {/* PWA Smart Install Banner for Mobile */}
+          <PWAInstallBanner />
 
           {/* Hydration Suppression Script - Using Next.js Script component to avoid warnings */}
           <Script
