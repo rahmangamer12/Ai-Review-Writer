@@ -140,45 +140,70 @@ export default function Navigation() {
   const { canInstall, isInstalled, promptInstall, deferredPrompt: currentPrompt } = usePWAInstall();
   const [showInstallModal, setShowInstallModal] = useState(false)
   const [installInstructions, setInstallInstructions] = useState<{title: string, desc: string, icon: any} | null>(null)
+  const [isInstalling, setIsInstalling] = useState(false)
 
-  // Reset menu on route change with key-based remount
   const menuKey = `${pathname}-${mobileMenuOpen}`
 
   const handleInstallClick = async () => {
-    // If already installed, show success message
+    if (isInstalling) return
+    setIsInstalling(true)
+
     if (isInstalled) {
       alert('App already installed! Check your home screen.')
+      setIsInstalling(false)
       return
     }
 
-    // Try native prompt first (works on Android/Desktop Chrome)
+    const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
+    const isAndroid = typeof window !== 'undefined' && /android/i.test(navigator.userAgent)
+    const isMacSafari = typeof window !== 'undefined' && /macintosh/i.test(navigator.userAgent) && /safari/i.test(navigator.userAgent) && !/chrome/i.test(navigator.userAgent)
+    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768
+
     if (canInstall && currentPrompt) {
-      const installed = await promptInstall();
-      if (installed) {
-        setShowInstallModal(false);
+      try {
+        await currentPrompt.prompt()
+        const { outcome } = await currentPrompt.userChoice
+        if (outcome === 'accepted') {
+          console.log('App installed successfully!')
+        }
+      } catch (e) {
+        console.log('Install prompt error:', e)
       }
-      return;
+      setIsInstalling(false)
+      return
     }
 
-    // For iOS - show clean inline instructions in modal
-    if (typeof window !== 'undefined') {
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-      if (isIOS) {
-        setInstallInstructions({
-          title: 'Install on iPhone/iPad',
-          desc: "1. Tap Share button below\n2. Tap 'Add to Home Screen'\n3. Tap 'Add' to confirm",
-          icon: '📱'
-        })
-      } else {
-        // Android or other - try browser menu
-        setInstallInstructions({
-          title: 'Install App',
-          desc: "Tap the menu (⋮) in your browser and select 'Add to Home Screen' or 'Install'",
-          icon: '📲'
-        })
-      }
+    if (isIOS) {
+      setInstallInstructions({
+        title: 'Install on iPhone/iPad',
+        desc: "1. Tap the Share button below ↓\n\n2. Scroll down and tap 'Add to Home Screen'\n\n3. Tap 'Add' to confirm",
+        icon: '📱'
+      })
+      setShowInstallModal(true)
+    } else if (isAndroid) {
+      setInstallInstructions({
+        title: 'Install on Android',
+        desc: "1. Tap the menu (⋮) in top right\n\n2. Tap 'Add to Home Screen' or 'Install App'\n\n3. Tap 'Install' to confirm",
+        icon: '📲'
+      })
+      setShowInstallModal(true)
+    } else if (isMacSafari) {
+      setInstallInstructions({
+        title: 'Install on Mac Safari',
+        desc: "1. Click the Share button in toolbar ↑\n\n2. Click 'Add to Dock'\n\n3. App will appear in your Dock",
+        icon: '🍎'
+      })
+      setShowInstallModal(true)
+    } else if (isDesktop) {
+      setInstallInstructions({
+        title: 'Install on Desktop',
+        desc: "1. Click the install icon in address bar (if available)\n\nOR\n\n2. Click the menu (⋮) and select 'Install AutoReview AI'\n\n3. App will be installed",
+        icon: '💻'
+      })
       setShowInstallModal(true)
     }
+
+    setIsInstalling(false)
   }
 
   const navItems = [
@@ -345,9 +370,12 @@ export default function Navigation() {
                 {/* Install App Button - Always visible until installed */}
                 <button
                   onClick={handleInstallClick}
+                  disabled={isInstalling}
                   className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all active:scale-[0.98] shadow-lg ${
                     isInstalled 
                       ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                      : isInstalling
+                      ? 'bg-emerald-500/30 border-emerald-500/40 text-emerald-300 cursor-wait'
                       : 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-emerald-500/30 text-emerald-400 font-bold hover:bg-emerald-500/30 shadow-emerald-900/20'
                   }`}
                 >
@@ -356,11 +384,18 @@ export default function Navigation() {
                       <div className="w-6 h-6 bg-emerald-500/20 rounded-full flex items-center justify-center">
                         <Sparkles className="w-4 h-4" />
                       </div>
+                    ) : isInstalling ? (
+                      <div className="w-6 h-6 animate-spin">
+                        <svg className="w-6 h-6 animate-spin" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      </div>
                     ) : (
                       <Download className="w-6 h-6" />
                     )}
                     <span className="text-base">
-                      {isInstalled ? 'App Installed ✓' : 'Install App'}
+                      {isInstalled ? 'App Installed ✓' : isInstalling ? 'Installing...' : 'Install App'}
                     </span>
                   </div>
                   <div className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${isInstalled ? 'bg-emerald-500/20' : 'bg-emerald-500/20'}`}>
@@ -538,9 +573,12 @@ export default function Navigation() {
           {/* PWA Install Button (Always visible in sidebar) */}
           <button
             onClick={handleInstallClick}
+            disabled={isInstalling}
             className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all font-sans my-4 ${
               isInstalled
                 ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                : isInstalling
+                ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-300 cursor-wait'
                 : 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/20 text-emerald-400 font-semibold hover:bg-emerald-500/20'
             }`}
           >
@@ -549,6 +587,16 @@ export default function Navigation() {
                 <>
                   <Sparkles className="w-5 h-5" />
                   <span>App Installed ✓</span>
+                </>
+              ) : isInstalling ? (
+                <>
+                  <div className="w-5 h-5 animate-spin">
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  </div>
+                  <span>Installing...</span>
                 </>
               ) : (
                 <>
