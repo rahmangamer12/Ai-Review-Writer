@@ -90,20 +90,14 @@ export default function RootLayout({
           {/* Hydration Suppressor for browser extension attributes */}
           <HydrationSuppressor />
 
-          {/* AI Customer Support Chatbot - Floating Widget (outside scroll container) */}
+          {/* AI Customer Support Chatbot - Floating Widget */}
           <AIChatbot />
 
-          {/* Feedback Widget - LEFT SIDE (outside scroll container) */}
+          {/* Feedback Widget */}
           <FeedbackWidget />
 
-          {/* PWA Install Prompt (outside scroll container) */}
-          <PWAInstallPrompt />
-
-          {/* PWA Update & Offline Notifications (outside scroll container) */}
+          {/* PWA Update & Offline Notifications */}
           <PWAUpdateNotification />
-
-          {/* Nuclear Reset - Kills old service workers and caches */}
-          <PWAPurge />
 
           {/* Hydration Suppression Script - Using Next.js Script component to avoid warnings */}
           <Script
