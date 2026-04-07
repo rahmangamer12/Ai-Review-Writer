@@ -1,7 +1,7 @@
 {
   "name": "AutoReview AI - Review Management",
   "short_name": "AutoReview",
-  "description": "AI-powered review management platform for businesses",
+  "description": "AI-powered review management platform for businesses - Install as app for offline access and push notifications",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0a0f",
@@ -72,20 +72,6 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/icons/screenshot-desktop.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide"
-    },
-    {
-      "src": "/icons/screenshot-mobile.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow"
     }
   ],
   "shortcuts": [

@@ -137,16 +137,19 @@ export default function Navigation() {
   }, [mobileMenuOpen])
 
   const [isHovered, setIsHovered] = useState<string | null>(null)
-  const { canInstall, isInstalled, promptInstall, deferredPrompt: currentPrompt } = usePWAInstall();
+  const { canInstall, isInstalled, isChecking, triggerInstall, deferredPrompt: currentPrompt } = usePWAInstall();
   const [showInstallModal, setShowInstallModal] = useState(false)
   const [installInstructions, setInstallInstructions] = useState<{title: string, desc: string, icon: any} | null>(null)
   const [isInstalling, setIsInstalling] = useState(false)
+  const [installStarted, setInstallStarted] = useState(false)
 
   const menuKey = `${pathname}-${mobileMenuOpen}`
 
   const handleInstallClick = async () => {
-    if (isInstalling) return
+    if (isInstalling || installStarted) return
+    
     setIsInstalling(true)
+    setInstallStarted(true)
 
     if (isInstalled) {
       alert('App already installed! Check your home screen.')
@@ -154,17 +157,15 @@ export default function Navigation() {
       return
     }
 
-    const isIOS = typeof window !== 'undefined' && /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
-    const isAndroid = typeof window !== 'undefined' && /android/i.test(navigator.userAgent)
-    const isMacSafari = typeof window !== 'undefined' && /macintosh/i.test(navigator.userAgent) && /safari/i.test(navigator.userAgent) && !/chrome/i.test(navigator.userAgent)
-    const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768
+    console.log('Install clicked - canInstall:', canInstall, 'hasPrompt:', !!currentPrompt)
 
     if (canInstall && currentPrompt) {
       try {
         await currentPrompt.prompt()
         const { outcome } = await currentPrompt.userChoice
+        console.log('Install outcome:', outcome)
         if (outcome === 'accepted') {
-          console.log('App installed successfully!')
+          console.log('App installed!')
         }
       } catch (e) {
         console.log('Install prompt error:', e)
@@ -173,7 +174,18 @@ export default function Navigation() {
       return
     }
 
-    if (isIOS) {
+    if (typeof window === 'undefined') {
+      setIsInstalling(false)
+      return
+    }
+
+    const ua = navigator.userAgent.toLowerCase()
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream
+    const isAndroid = /android/.test(ua) && !/windows/.test(ua)
+    const isMacSafari = /macintosh/.test(ua) && /safari/.test(ua) && !/chrome/.test(ua) && !/crios/.test(ua)
+    const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(ua)
+    
+    if (isIOS || (isMobile && !isAndroid)) {
       setInstallInstructions({
         title: 'Install on iPhone/iPad',
         desc: "1. Tap the Share button below ↓\n\n2. Scroll down and tap 'Add to Home Screen'\n\n3. Tap 'Add' to confirm",
@@ -183,7 +195,7 @@ export default function Navigation() {
     } else if (isAndroid) {
       setInstallInstructions({
         title: 'Install on Android',
-        desc: "1. Tap the menu (⋮) in top right\n\n2. Tap 'Add to Home Screen' or 'Install App'\n\n3. Tap 'Install' to confirm",
+        desc: "1. Tap the menu (⋮) in top right corner\n\n2. Tap 'Add to Home Screen' or 'Install'\n\n3. Tap 'Install' to confirm",
         icon: '📲'
       })
       setShowInstallModal(true)
@@ -194,10 +206,10 @@ export default function Navigation() {
         icon: '🍎'
       })
       setShowInstallModal(true)
-    } else if (isDesktop) {
+    } else {
       setInstallInstructions({
-        title: 'Install on Desktop',
-        desc: "1. Click the install icon in address bar (if available)\n\nOR\n\n2. Click the menu (⋮) and select 'Install AutoReview AI'\n\n3. App will be installed",
+        title: 'Install App',
+        desc: "Click the install icon in your address bar, OR click the menu (⋮) and select 'Install'",
         icon: '💻'
       })
       setShowInstallModal(true)

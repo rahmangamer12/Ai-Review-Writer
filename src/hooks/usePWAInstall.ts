@@ -2,88 +2,108 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-/**
- * usePWAInstall Hook
- * 
- * Bulletproof event catcher for PWA installation prompts.
- * Handles the beforeinstallprompt event and provides a consistent interface
- * for triggering the install dialog.
- */
 export const usePWAInstall = () => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
   const [canInstall, setCanInstall] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
 
   useEffect(() => {
-    // 1. Check if already installed via display-mode
+    if (typeof window === 'undefined') return;
+
     const checkStandalone = () => {
       const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
-        || (window.navigator as any).standalone === true; // iOS Safari
+        || (window.navigator as any).standalone === true
+        || window.matchMedia('(display-mode: fullscreen)').matches
+        || window.matchMedia('(display-mode: minimal-ui)').matches;
       
       if (isStandalone) {
         setIsInstalled(true);
+        setCanInstall(false);
       }
+      setIsChecking(false);
     };
 
     checkStandalone();
 
-    // 2. Listen for beforeinstallprompt
     const handleBeforeInstallPrompt = (e: any) => {
-      // Prevent browser from showing the native prompt automatically
       e.preventDefault();
-      // Stash the event so it can be triggered later
       setDeferredPrompt(e);
       setCanInstall(true);
       setIsInstalled(false);
-      console.log('✅ PWA: beforeinstallprompt caught');
+      console.log('PWA: Install prompt available');
     };
 
-    // 3. Listen for appinstalled (Native event when install finishes)
     const handleAppInstalled = () => {
       setIsInstalled(true);
       setCanInstall(false);
       setDeferredPrompt(null);
-      console.log('✅ PWA: App successfully installed');
+      console.log('PWA: App installed');
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
     window.addEventListener('appinstalled', handleAppInstalled);
 
+    const timeout = setTimeout(() => {
+      if (!deferredPrompt && !isInstalled) {
+        setCanInstall(false);
+        setIsChecking(false);
+      }
+    }, 3000);
+
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
+      clearTimeout(timeout);
     };
   }, []);
 
   const promptInstall = useCallback(async () => {
-    if (!deferredPrompt) {
-      console.warn('⚠️ PWA: No install prompt available');
-      return false;
+    if (deferredPrompt) {
+      try {
+        await deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        
+        if (outcome === 'accepted') {
+          setDeferredPrompt(null);
+          setCanInstall(false);
+          return true;
+        }
+      } catch (error) {
+        console.error('PWA install error:', error);
+      }
+    }
+    return false;
+  }, [deferredPrompt]);
+
+  const triggerInstall = useCallback(async () => {
+    if (isInstalled) {
+      return { success: false, reason: 'already_installed' };
     }
 
-    try {
-      // Show the install prompt
-      await deferredPrompt.prompt();
-      // Wait for the user to respond to the prompt
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log(`👤 PWA: User choice was ${outcome}`);
-      
-      if (outcome === 'accepted') {
-        setDeferredPrompt(null);
-        setCanInstall(false);
-        return true;
+    if (deferredPrompt) {
+      try {
+        await deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        
+        if (outcome === 'accepted') {
+          return { success: true, reason: 'installed' };
+        }
+        return { success: false, reason: 'dismissed' };
+      } catch (error) {
+        return { success: false, reason: 'error' };
       }
-      return false;
-    } catch (error) {
-      console.error('❌ PWA: Install error', error);
-      return false;
     }
-  }, [deferredPrompt]);
+
+    return { success: false, reason: 'no_prompt' };
+  }, [deferredPrompt, isInstalled]);
 
   return {
     canInstall,
     isInstalled,
+    isChecking,
     promptInstall,
+    triggerInstall,
     deferredPrompt
   };
 };
