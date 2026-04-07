@@ -145,6 +145,13 @@ export default function Navigation() {
   const menuKey = `${pathname}-${mobileMenuOpen}`
 
   const handleInstallClick = async () => {
+    // If already installed, show success message
+    if (isInstalled) {
+      alert('App already installed! Check your home screen.')
+      return
+    }
+
+    // Try native prompt first (works on Android/Desktop Chrome)
     if (canInstall && currentPrompt) {
       const installed = await promptInstall();
       if (installed) {
@@ -153,20 +160,21 @@ export default function Navigation() {
       return;
     }
 
-    // If native prompt not available, show manual instructions
+    // For iOS - show clean inline instructions in modal
     if (typeof window !== 'undefined') {
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
       if (isIOS) {
         setInstallInstructions({
-          title: 'Install on iOS',
-          desc: "1. Tap the Share button at the bottom of Safari.\n2. Scroll and tap 'Add to Home Screen'.\n3. Tap 'Add' to confirm.",
-          icon: '🍏'
+          title: 'Install on iPhone/iPad',
+          desc: "1. Tap Share button below\n2. Tap 'Add to Home Screen'\n3. Tap 'Add' to confirm",
+          icon: '📱'
         })
       } else {
+        // Android or other - try browser menu
         setInstallInstructions({
           title: 'Install App',
-          desc: "If the 'Install' icon isn't in your address bar:\n1. Open your browser menu (⋮ or ⋯).\n2. Select 'Install App' or 'Add to Home Screen'.\n\n💡 Tip: Use a 'Nuclear Reset' by visiting from a Private/Incognito window if it still doesn't appear.",
-          icon: '💻'
+          desc: "Tap the menu (⋮) in your browser and select 'Add to Home Screen' or 'Install'",
+          icon: '📲'
         })
       }
       setShowInstallModal(true)
@@ -334,19 +342,31 @@ export default function Navigation() {
               </div>
 
               <div className="mt-6 pt-6 border-t border-white/10 space-y-4">
-                {/* Install App Button - Always accessible here if not yet installed */}
-                {!isInstalled && (
-                  <button
-                    onClick={handleInstallClick}
-                    className="w-full flex items-center justify-between p-4 rounded-2xl bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-400 font-bold hover:bg-emerald-500/30 transition-all active:scale-[0.98] shadow-lg shadow-emerald-900/20"
-                  >
-                    <div className="flex items-center gap-3">
+                {/* Install App Button - Always visible until installed */}
+                <button
+                  onClick={handleInstallClick}
+                  className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all active:scale-[0.98] shadow-lg ${
+                    isInstalled 
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+                      : 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border-emerald-500/30 text-emerald-400 font-bold hover:bg-emerald-500/30 shadow-emerald-900/20'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    {isInstalled ? (
+                      <div className="w-6 h-6 bg-emerald-500/20 rounded-full flex items-center justify-center">
+                        <Sparkles className="w-4 h-4" />
+                      </div>
+                    ) : (
                       <Download className="w-6 h-6" />
-                      <span className="text-base">Install App</span>
-                    </div>
-                    <div className="text-[10px] bg-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">PWA</div>
-                  </button>
-                )}
+                    )}
+                    <span className="text-base">
+                      {isInstalled ? 'App Installed ✓' : 'Install App'}
+                    </span>
+                  </div>
+                  <div className={`text-[10px] px-2 py-0.5 rounded-full uppercase tracking-wider ${isInstalled ? 'bg-emerald-500/20' : 'bg-emerald-500/20'}`}>
+                    PWA
+                  </div>
+                </button>
 
                 <SignedOut>
                   <div className="grid grid-cols-2 gap-3">
@@ -515,14 +535,30 @@ export default function Navigation() {
             </div>
           </SignedOut>
           
-          {/* PWA Install Button (Always visible) */}
+          {/* PWA Install Button (Always visible in sidebar) */}
           <button
             onClick={handleInstallClick}
-            className="w-full flex items-center justify-between p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 text-emerald-400 font-semibold hover:bg-emerald-500/20 transition-all font-sans my-4"
+            className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all font-sans my-4 ${
+              isInstalled
+                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400'
+                : 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border-emerald-500/20 text-emerald-400 font-semibold hover:bg-emerald-500/20'
+            }`}
           >
             <div className="flex items-center gap-3">
-              <Download className="w-5 h-5" />
-              <span>Install App</span>
+              {isInstalled ? (
+                <>
+                  <Sparkles className="w-5 h-5" />
+                  <span>App Installed ✓</span>
+                </>
+              ) : (
+                <>
+                  <Download className="w-5 h-5" />
+                  <span>Install App</span>
+                </>
+              )}
+            </div>
+            <div className="text-[10px] bg-emerald-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider">
+              PWA
             </div>
           </button>
 
@@ -535,7 +571,7 @@ export default function Navigation() {
         </motion.div>
       </nav>
 
-      {/* Modern Install Modal */}
+      {/* Install Modal - Clean UI */}
       <AnimatePresence>
         {showInstallModal && installInstructions && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
@@ -555,7 +591,7 @@ export default function Navigation() {
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
               
               <div className="flex justify-between items-start mb-6">
-                <div className="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-2xl border border-emerald-500/30">
+                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-teal-500/20 flex items-center justify-center text-3xl border border-emerald-500/30">
                   {installInstructions.icon}
                 </div>
                 <button
@@ -566,8 +602,8 @@ export default function Navigation() {
                 </button>
               </div>
 
-              <h2 className="text-xl font-bold text-white mb-2">{installInstructions.title}</h2>
-              <div className="text-sm text-white/70 space-y-3 whitespace-pre-line mb-6">
+              <h2 className="text-xl font-bold text-white mb-3">{installInstructions.title}</h2>
+              <div className="text-sm text-white/70 space-y-3 whitespace-pre-line mb-6 bg-white/5 rounded-xl p-4">
                 {installInstructions.desc}
               </div>
 
@@ -575,7 +611,7 @@ export default function Navigation() {
                 onClick={() => setShowInstallModal(false)}
                 className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold hover:opacity-90 transition-opacity active:scale-[0.98]"
               >
-                Got it
+                Got it ✓
               </button>
             </motion.div>
           </div>
