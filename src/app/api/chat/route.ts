@@ -3,6 +3,8 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import prisma from '@/lib/db';
 import { createOpenAI } from '@ai-sdk/openai';
 import { streamText } from 'ai';
+import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit';
+import { z } from 'zod';
 
 export const dynamic = 'force-dynamic'
 
@@ -21,10 +23,15 @@ const ALLOWED_MODELS = [
   'LongCat-Flash-Omni-2603',
 ];
 
-// Rate limiting map (simple in-memory implementation)
-const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT = 20; // requests per minute
-const RATE_LIMIT_WINDOW = 60000; // 1 minute
+// Input validation schema
+const chatRequestSchema = z.object({
+  messages: z.array(z.object({
+    role: z.enum(['system', 'user', 'assistant', 'tool']),
+    content: z.union([z.string(), z.array(z.any())])
+  })).min(1),
+  model: z.enum(ALLOWED_MODELS as [string, ...string[]]).default('LongCat-Flash-Chat'),
+  temperature: z.number().min(0).max(2).default(0.7)
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -39,11 +46,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Skip rate limiting for now to avoid issues
+    // Rate limiting - 20 chat requests per minute
+    const rateLimitResult = await rateLimit(userId, RATE_LIMITS.AI_ANALYSIS)
 
-    // Model Validation
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: rateLimitResult.message,
+          retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
+        },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult)
+        }
+      )
+    }
+
+    // Validate input
     const body = await request.json();
-    
+    const validated = chatRequestSchema.parse(body);
+
+    const { messages, model: selectedModel, temperature } = validated;
     // 2. Fetch User & Verify Credits
     let userDb = await (prisma.user as any).findUnique({
       where: { id: userId },
@@ -71,26 +94,11 @@ export async function POST(request: NextRequest) {
 
     if (!userDb || userDb.aiCredits <= 0) {
       return NextResponse.json(
-        { 
+        {
           error: 'Insufficient AI credits or user not found. Please upgrade your plan to continue chatting.',
           creditsRemaining: 0
         },
         { status: 402 }
-      );
-    }
-
-    // 3. Request Parameters
-    const { messages, model: selectedModel = 'LongCat-Flash-Chat', temperature = 0.7 } = body;
-
-    if (!messages || !Array.isArray(messages) || messages.length === 0) {
-      return NextResponse.json({ error: 'Messages array is required' }, { status: 400 });
-    }
-
-    // Model Validation
-    if (!ALLOWED_MODELS.includes(selectedModel)) {
-      return NextResponse.json(
-        { error: 'Invalid model selected. Please choose from allowed models.' },
-        { status: 400 }
       );
     }
 
@@ -226,11 +234,20 @@ CRITICAL INSTRUCTIONS FOR YOU:
 
   } catch (error: any) {
     console.error('[Chat API Error]:', error);
-    
+
+    // Handle validation errors
+    if (error && error.name === 'ZodError') {
+      return NextResponse.json({
+        error: 'Invalid input',
+        details: error.issues || [],
+        success: false
+      }, { status: 400 });
+    }
+
     return NextResponse.json({
       error: error?.message || 'Unknown error',
       success: false
-    }, { status: 200 });
+    }, { status: 500 });
   }
 }
 

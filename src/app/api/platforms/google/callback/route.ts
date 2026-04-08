@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabase } from '@/lib/supabase';
+import { validateRedirect } from '@/lib/oauthSecurity';
 
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
     const userId = session.userId;
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
@@ -14,6 +15,20 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const code = searchParams.get('code');
     const error = searchParams.get('error');
+    const state = searchParams.get('state');
+    const redirect = searchParams.get('redirect');
+
+    // Validate redirect URL to prevent open redirect attacks
+    const safeRedirect = validateRedirect(redirect)
+
+    // Validate state parameter (should match userId for basic CSRF protection)
+    if (state !== userId) {
+      console.error('[Google OAuth] State mismatch - possible CSRF attack')
+      return new NextResponse(
+        `<script>window.opener.postMessage({type: 'GOOGLE_AUTH_ERROR', error: 'Invalid state parameter'}, '*'); window.close();</script>`,
+        { headers: { 'Content-Type': 'text/html' } }
+      );
+    }
 
     if (error) {
       return new NextResponse(
@@ -75,7 +90,8 @@ export async function GET(request: NextRequest) {
       `<script>
         window.opener.postMessage({
           type: 'GOOGLE_AUTH_SUCCESS',
-          message: 'Google connected successfully'
+          message: 'Google connected successfully',
+          redirect: '${safeRedirect}'
         }, '*');
         window.close();
       </script>`,

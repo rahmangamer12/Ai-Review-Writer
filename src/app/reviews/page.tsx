@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth, useUser } from '@clerk/nextjs'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  MessageSquare, Star, Search, Filter, Plus, ArrowLeft, 
+import {
+  MessageSquare, Star, Search, Filter, Plus, ArrowLeft,
   CheckCircle, XCircle, Clock, Sparkles, Trash2, Edit3,
   ChevronLeft, ChevronRight, RefreshCw, Send, X, ThumbsUp,
   ThumbsDown, AlertCircle, Bot, Wand2, Brain, Play, Pause,
@@ -14,6 +14,7 @@ import {
   BarChart3, PieChart, Activity, FilterX, Download, Upload,
   Copy, Check, FileText, Lightbulb, Target, Crown, Users
 } from 'lucide-react'
+import EnhancedErrorBoundary from '@/components/EnhancedErrorBoundary'
 
 interface Review {
   id: string
@@ -163,7 +164,7 @@ function ReviewsContent() {
   })
   const [showFilters, setShowFilters] = useState(false)
 
-  const fetchReviews = useCallback(async (page = currentPage) => {
+  const fetchReviews = useCallback(async (page = currentPage, signal?: AbortSignal) => {
     if (!userId) return
 
     setLoading(true)
@@ -181,7 +182,11 @@ function ReviewsContent() {
       if (filters.sentiment !== 'all') params.append('sentiment', filters.sentiment)
       if (filters.search) params.append('search', filters.search)
 
-      const response = await fetch(`/api/reviews/list?${params}`)
+      const response = await fetch(`/api/reviews/list?${params}`, { signal })
+
+      // Check if request was aborted
+      if (signal?.aborted) return
+
       const data = await response.json()
 
       if (!response.ok) {
@@ -194,8 +199,12 @@ function ReviewsContent() {
       setTotalCount(data.totalCount || 0)
       setCurrentPage(data.currentPage || page)
     } catch (err: unknown) {
+      // Ignore abort errors
+      if (err instanceof Error && err.name === 'AbortError') {
+        return
+      }
+
       console.error('Reviews fetch error:', err)
-      // Provide user-friendly error message
       const errorMessage = err instanceof Error ? err.message : 'Please check your connection and environment variables.'
       setError('Unable to load reviews data. ' + errorMessage)
 
@@ -215,12 +224,21 @@ function ReviewsContent() {
     }
   }, [userId, filters.status, filters.platform, filters.sentiment, filters.sortBy, filters.sortOrder])
 
+  // Debounced search with AbortController to prevent race conditions
   useEffect(() => {
+    const controller = new AbortController()
+
     const timer = setTimeout(() => {
-      if (userId) fetchReviews(1)
+      if (userId) {
+        fetchReviews(1, controller.signal)
+      }
     }, 500)
-    return () => clearTimeout(timer)
-  }, [filters.search])
+
+    return () => {
+      clearTimeout(timer)
+      controller.abort() // Cancel pending request if search changes
+    }
+  }, [filters.search, userId])
 
   // Generate AI Reviews
   const generateAIReviews = async () => {
@@ -1228,8 +1246,10 @@ function ReviewsContent() {
 
 export default function ReviewsPage() {
   return (
-    <Suspense fallback={<ReviewsLoading />}>
-      <ReviewsContent />
-    </Suspense>
+    <EnhancedErrorBoundary>
+      <Suspense fallback={<ReviewsLoading />}>
+        <ReviewsContent />
+      </Suspense>
+    </EnhancedErrorBoundary>
   )
 }

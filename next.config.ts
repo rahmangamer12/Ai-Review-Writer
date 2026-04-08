@@ -58,6 +58,24 @@ const nextConfig: NextConfig = {
             key: 'Referrer-Policy',
             value: 'no-referrer-when-downgrade',
           },
+          {
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://clerk.com https://*.clerk.accounts.dev https://challenges.cloudflare.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com data:",
+              "img-src 'self' data: https: blob:",
+              "connect-src 'self' https://api.longcat.chat https://*.supabase.co https://clerk.com https://*.clerk.accounts.dev https://api.lemonsqueezy.com wss://*.supabase.co",
+              "frame-src 'self' https://challenges.cloudflare.com https://*.clerk.accounts.dev",
+              "worker-src 'self' blob:",
+              "manifest-src 'self'",
+            ].join('; '),
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
         ],
       },
       // PWA Service Worker

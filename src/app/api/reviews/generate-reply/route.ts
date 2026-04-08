@@ -2,6 +2,21 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { supabase } from '@/lib/supabase'
 import { longcatAI } from '@/lib/longcatAI'
+import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit'
+import { z } from 'zod'
+
+// Input validation schema
+const generateReplySchema = z.object({
+  reviewId: z.string().uuid().optional(),
+  reviewText: z.string().min(1).max(5000).optional(),
+  rating: z.number().min(1).max(5).optional(),
+  authorName: z.string().max(200).optional(),
+  platform: z.enum(['google', 'facebook', 'yelp', 'tripadvisor', 'trustpilot', 'manual']).default('google'),
+  tone: z.enum(['professional', 'friendly', 'apologetic', 'enthusiastic']).default('friendly'),
+  language: z.string().max(10).default('en'),
+  replyText: z.string().max(5000).optional(),
+  aiGenerated: z.boolean().default(false)
+})
 
 // POST - Generate AI reply or save existing reply
 export async function POST(request: NextRequest) {
@@ -11,18 +26,37 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Rate limiting - 10 AI requests per minute
+    const rateLimitResult = await rateLimit(userId, RATE_LIMITS.AI_GENERATION)
+
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: rateLimitResult.message,
+          retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
+        },
+        {
+          status: 429,
+          headers: getRateLimitHeaders(rateLimitResult)
+        }
+      )
+    }
+
+    // Validate input
     const body = await request.json()
-    const { 
-      reviewId, 
-      reviewText, 
-      rating, 
-      authorName, 
-      platform = 'google', 
-      tone = 'friendly', 
-      language = 'en',
+    const validated = generateReplySchema.parse(body)
+
+    const {
+      reviewId,
+      reviewText,
+      rating,
+      authorName,
+      platform,
+      tone,
+      language,
       replyText,
-      aiGenerated = false
-    } = body
+      aiGenerated
+    } = validated
 
     // If replyText is provided, save it directly
     if (replyText !== undefined) {
@@ -98,9 +132,9 @@ export async function POST(request: NextRequest) {
       console.log('[Generate Reply API] Sentiment:', sentimentResult.sentiment)
     } catch (e) {
       console.error('[Generate Reply API] Sentiment analysis failed, using fallback')
-      sentimentResult = { 
-        sentiment: rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'neutral',
-        confidence: 0.8 
+      sentimentResult = {
+        sentiment: (rating || 3) >= 4 ? 'positive' : (rating || 3) <= 2 ? 'negative' : 'neutral',
+        confidence: 0.8
       }
     }
 
@@ -129,28 +163,43 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({
-      success: true,
-      reply: aiReply,
-      metadata: {
-        original_rating: rating,
-        detected_sentiment: sentimentResult.sentiment,
-        confidence: sentimentResult.confidence,
-        tone_used: tone,
-        platform,
-        language,
-        generated_at: new Date().toISOString(),
-        ai_provider: 'LongCat AI',
+    return NextResponse.json(
+      {
+        success: true,
+        reply: aiReply,
+        metadata: {
+          original_rating: rating,
+          detected_sentiment: sentimentResult.sentiment,
+          confidence: sentimentResult.confidence,
+          tone_used: tone,
+          platform,
+          language,
+          generated_at: new Date().toISOString(),
+          ai_provider: 'LongCat AI',
+        }
+      },
+      {
+        headers: getRateLimitHeaders(rateLimitResult)
       }
-    })
+    )
 
   } catch (error: unknown) {
     console.error('[Generate Reply API Error]:', error)
+
+    // Handle validation errors
+    if (error && typeof error === 'object' && 'name' in error && error.name === 'ZodError') {
+      return NextResponse.json({
+        error: 'Invalid input',
+        details: (error as any).issues || [],
+        success: false
+      }, { status: 400 })
+    }
+
     const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ 
-      error: 'Failed to process request', 
-      details: message, 
-      success: false 
+    return NextResponse.json({
+      error: 'Failed to process request',
+      details: message,
+      success: false
     }, { status: 500 })
   }
 }

@@ -27,35 +27,58 @@ function UserProfile() {
       setUserData(null)
       return
     }
-    
+
+    let isMounted = true
+    let retryCount = 0
+    const MAX_RETRIES = 3
+
     const fetchUserData = async () => {
+      // Don't fetch if component unmounted or max retries reached
+      if (!isMounted || retryCount >= MAX_RETRIES) return
+
       try {
-        const response = await fetch('/api/user/me', { 
+        const response = await fetch('/api/user/me', {
           cache: 'no-store'
         })
         const text = await response.text()
-        
+
         // Check if response is NOT valid JSON
         const isJson = text.trim().startsWith('{') || text.trim().startsWith('[')
-        
+
         if (!isJson) {
           setUserData(null)
           return
         }
-        
+
         const data = JSON.parse(text)
-        
-        if (data.planType) {
+
+        if (data.planType && isMounted) {
           setUserData({ plan: data.planType, aiCredits: data.aiCredits, promptCount: data.promptCount || 0 })
+          retryCount = 0 // Reset on success
         }
       } catch (err) {
+        retryCount++
+        console.error('User data fetch failed (attempt ' + retryCount + '):', err)
         // Silently handle - don't show error
-        setUserData(null)
+        if (isMounted) {
+          setUserData(null)
+        }
       }
     }
+
     fetchUserData()
-    const interval = setInterval(fetchUserData, 30000)
-    return () => clearInterval(interval)
+
+    // Reduced from 30s to 60s to prevent API spam
+    const interval = setInterval(() => {
+      if (isMounted) {
+        fetchUserData()
+      }
+    }, 60000)
+
+    return () => {
+      isMounted = false
+      clearInterval(interval)
+    }
   }, [isLoaded, isSignedIn])
 
   const handleSignOut = async () => {

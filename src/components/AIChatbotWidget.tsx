@@ -122,9 +122,9 @@ export default function AIChatbot() {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
-  // Load from LocalStorage
+  // Load from sessionStorage instead of localStorage for security
   useEffect(() => {
-    // 1. Check if disabled in global settings
+    // 1. Check if disabled in global settings (still use localStorage for settings)
     const settings = localStorage.getItem('autoreview-settings')
     if (settings) {
       try {
@@ -133,12 +133,12 @@ export default function AIChatbot() {
       } catch (e) {}
     }
 
-    // 2. Load open state
-    const savedOpen = localStorage.getItem('autoreview-chatbot-open')
+    // 2. Load open state from sessionStorage (temporary)
+    const savedOpen = sessionStorage.getItem('autoreview-chatbot-open')
     if (savedOpen === 'true') setIsOpen(true)
 
-    // 3. Load history
-    const saved = localStorage.getItem('autoreview-chatbot-history')
+    // 3. Load history from sessionStorage (cleared on browser close)
+    const saved = sessionStorage.getItem('autoreview-chatbot-history')
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
@@ -178,15 +178,15 @@ export default function AIChatbot() {
     }
   }, [])
 
-  // Persist Open State
+  // Persist Open State to sessionStorage
   useEffect(() => {
-    localStorage.setItem('autoreview-chatbot-open', isOpen.toString())
+    sessionStorage.setItem('autoreview-chatbot-open', isOpen.toString())
   }, [isOpen])
 
-  // Save to LocalStorage
+  // Save to sessionStorage (cleared on browser close for security)
   useEffect(() => {
     if (messages.length > 0) {
-      localStorage.setItem('autoreview-chatbot-history', JSON.stringify({ messages }))
+      sessionStorage.setItem('autoreview-chatbot-history', JSON.stringify({ messages }))
     }
   }, [messages])
 
@@ -246,7 +246,7 @@ export default function AIChatbot() {
     setMessages([])
     setError(null)
     setHasStarted(false)
-    localStorage.removeItem('autoreview-chatbot-history')
+    sessionStorage.removeItem('autoreview-chatbot-history')
     setTimeout(() => {
       const welcomeMsg: Message = {
         id: 'welcome',

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -9,6 +8,7 @@ import DynamicBackground from "@/components/DynamicBackground";
 import FeedbackWidget from "@/components/FeedbackWidget";
 import AIChatbot from "@/components/AIChatbotWidget";
 import HydrationSuppressor from "@/components/HydrationSuppressor";
+import HydrationFix from "@/components/HydrationFix";
 import PWAUpdateNotification from "@/components/PWAUpdateNotification";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
 import ErrorBoundary from "@/components/ErrorBoundary";
@@ -92,6 +92,9 @@ export default function RootLayout({
           {/* Hydration Suppressor for browser extension attributes */}
           <HydrationSuppressor />
 
+          {/* Safe Hydration Fix - Replaces dangerouslySetInnerHTML script */}
+          <HydrationFix />
+
           {/* AI Customer Support Chatbot - Floating Widget */}
           <AIChatbot />
 
@@ -103,53 +106,6 @@ export default function RootLayout({
 
           {/* PWA Smart Install Banner for Mobile */}
           <PWAInstallBanner />
-
-          {/* Hydration Suppression Script - Using Next.js Script component to avoid warnings */}
-          <Script
-            id="hydration-suppressor-script"
-            strategy="afterInteractive"
-            dangerouslySetInnerHTML={{
-              __html: `
-                (function() {
-                  if (typeof window === 'undefined') return;
-                  var observer;
-                  function removeBisAttr() {
-                    var els = document.querySelectorAll('[bis_skin_checked]');
-                    for (var i = 0; i < els.length; i++) {
-                      els[i].removeAttribute('bis_skin_checked');
-                    }
-                  }
-                  function observe() {
-                    if (observer) observer.disconnect();
-                    observer = new MutationObserver(function(mutations) {
-                      var needsClean = false;
-                      for (var m = 0; m < mutations.length; m++) {
-                        var nodes = mutations[m].addedNodes;
-                        for (var n = 0; n < nodes.length; n++) {
-                          var node = nodes[n];
-                          if (node.nodeType === 1) {
-                            if (node && node.hasAttribute && node.hasAttribute('bis_skin_checked')) needsClean = true;
-                            if (node && node.querySelector && node.querySelector('[bis_skin_checked]')) needsClean = true;
-                          }
-                        }
-                      }
-                      if (needsClean) removeBisAttr();
-                    });
-                    if (document.body) {
-                      observer.observe(document.body, { childList: true, subtree: true });
-                    }
-                  }
-                  removeBisAttr();
-                  if (document.readyState === 'loading') {
-                    document.addEventListener('DOMContentLoaded', observe);
-                  } else {
-                    observe();
-                  }
-                  setInterval(removeBisAttr, 1000);
-                })();
-              `,
-            }}
-          />
         </body>
       </html>
     </ClerkProvider>

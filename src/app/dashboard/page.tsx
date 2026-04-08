@@ -17,6 +17,7 @@ import {
   TrendingDown, Users, MousePointer, Award, Layers,
   ZapIcon, Cpu, LineChart, AreaChart, BarChart, LayoutDashboard, Shield
 } from 'lucide-react'
+import EnhancedErrorBoundary from '@/components/EnhancedErrorBoundary'
 
 // Helper function for empty data
 function getEmptyData(): AnalyticsData {
@@ -333,8 +334,12 @@ export default function Dashboard() {
   const [aiInsights, setAiInsights] = useState<AIInsight[]>([])
   const [showAIInsightsPanel, setShowAIInsightsPanel] = useState(false)
   const [isOffline, setIsOffline] = useState(false)
-  // Removed: isSimulated - now using real data only
   const [mounted, setMounted] = useState(false)
+
+  // Prevent hydration mismatch - only render dynamic content after mount
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Better approach: Listen to browser online/offline events
   useEffect(() => {
