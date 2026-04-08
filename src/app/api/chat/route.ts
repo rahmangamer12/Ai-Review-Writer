@@ -67,40 +67,6 @@ export async function POST(request: NextRequest) {
     const validated = chatRequestSchema.parse(body);
 
     const { messages, model: selectedModel, temperature } = validated;
-    // 2. Fetch User & Verify Credits
-    let userDb = await (prisma.user as any).findUnique({
-      where: { id: userId },
-      select: { aiCredits: true, promptCount: true, email: true, name: true, planType: true }
-    });
-
-    if (!userDb) {
-      const clerkUser = await currentUser();
-      const userEmail = clerkUser?.emailAddresses?.[0]?.emailAddress || `${userId}@unknown.com`;
-      const userName = `${clerkUser?.firstName || ''} ${clerkUser?.lastName || ''}`.trim() || 'User';
-
-      userDb = await (prisma.user as any).create({
-        data: {
-          id: userId,
-          email: userEmail,
-          name: userName,
-          planType: 'free',
-          aiCredits: 20,
-          promptCount: 0,
-          maxPlatforms: 1,
-        },
-        select: { aiCredits: true, promptCount: true, email: true, name: true, planType: true }
-      });
-    }
-
-    if (!userDb || userDb.aiCredits <= 0) {
-      return NextResponse.json(
-        {
-          error: 'Insufficient AI credits or user not found. Please upgrade your plan to continue chatting.',
-          creditsRemaining: 0
-        },
-        { status: 402 }
-      );
-    }
 
     // Check if LongCat is available
     if (!process.env.LONGCAT_AI_API_KEY) {
@@ -110,44 +76,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 4. Provider Routing
-    const provider = longcat;
+    // Simplified user check - only verify credits, don't create user here
+    let userDb = await (prisma.user as any).findUnique({
+      where: { id: userId },
+      select: { aiCredits: true, promptCount: true }
+    });
 
+    // If user doesn't exist, return error (user should be created on sign-up)
+    if (!userDb || userDb.aiCredits <= 0) {
+      return NextResponse.json(
+        {
+          error: 'Insufficient AI credits. Please upgrade your plan to continue chatting.',
+          creditsRemaining: 0
+        },
+        { status: 402 }
+      );
+    }
+
+    const provider = longcat;
     console.log(`[Chat API] Using LongCat for model: ${selectedModel}`);
 
     const currentPromptCount = (userDb as any).promptCount ?? 0;
     const currentCredits = (userDb as any).aiCredits ?? 0;
 
-    // 5. Save User Message to DB (if session exists)
+    // Skip session save during streaming for speed - save after response completes
     const sessionId = request.headers.get('x-session-id');
-    if (sessionId && sessionId !== 'new' && messages.length > 0) {
-      const lastUserMsg = messages[messages.length - 1];
-      
-      try {
-        // Ensure session exists
-        await prisma.chatSession.upsert({
-          where: { id: sessionId },
-          update: { updatedAt: new Date() },
-          create: {
-            id: sessionId,
-            userId,
-            title: typeof lastUserMsg.content === 'string' 
-              ? lastUserMsg.content.slice(0, 30) 
-              : 'New Conversation'
-          }
-        });
-
-        await prisma.chatMessage.create({
-          data: {
-            sessionId,
-            role: 'user',
-            content: typeof lastUserMsg.content === 'string' ? lastUserMsg.content : JSON.stringify(lastUserMsg.content)
-          }
-        });
-      } catch (err) {
-        console.error('[Chat API] Session/Message save failed:', err);
-      }
-    }
 
     const formattedMessages: any[] = messages.map((m: any) => {
       const role = ['system', 'user', 'assistant', 'tool'].includes(m.role) ? m.role : 'user';
