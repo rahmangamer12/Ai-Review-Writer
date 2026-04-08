@@ -233,8 +233,11 @@ export class LongCatAI {
           throw error;
         }
 
-        // Wait before retrying (exponential backoff)
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        // Wait before retrying (exponential backoff with max cap)
+        // Cap at 10 seconds to prevent indefinite waiting
+        const delay = Math.min(Math.pow(2, attempt) * 1000, 10000);
+        console.log(`[LongCat] Retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
 

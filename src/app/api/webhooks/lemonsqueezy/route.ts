@@ -5,12 +5,32 @@ import { sendUpgradeConfirmationEmail, sendLowCreditsEmail } from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 
+// Store processed webhook IDs to prevent replay attacks
+const processedWebhooks = new Map<string, number>()
+const WEBHOOK_EXPIRY = 5 * 60 * 1000 // 5 minutes
+
+// Cleanup old webhook IDs periodically
+setInterval(() => {
+  const now = Date.now()
+  for (const [id, timestamp] of processedWebhooks.entries()) {
+    if (now - timestamp > WEBHOOK_EXPIRY) {
+      processedWebhooks.delete(id)
+    }
+  }
+}, 60 * 1000) // Cleanup every minute
+
 export async function POST(request: NextRequest) {
+  const startTime = Date.now()
+
   try {
     const signature = request.headers.get('x-signature')
     const payload = await request.text()
 
+    // Log webhook attempt
+    console.log('[LemonSqueezy Webhook] Received at:', new Date().toISOString())
+
     if (!signature) {
+      console.error('[LemonSqueezy Webhook] No signature provided')
       return NextResponse.json(
         { error: 'No signature provided' },
         { status: 401 }
@@ -20,6 +40,7 @@ export async function POST(request: NextRequest) {
     // Verify webhook signature
     const isValid = lemonSqueezy.verifyWebhook(signature, payload)
     if (!isValid) {
+      console.error('[LemonSqueezy Webhook] Invalid signature')
       return NextResponse.json(
         { error: 'Invalid signature' },
         { status: 401 }
@@ -28,6 +49,28 @@ export async function POST(request: NextRequest) {
 
     const event = JSON.parse(payload)
     const eventName = event.meta?.event_name
+    const eventId = event.data?.id || `${eventName}-${Date.now()}`
+
+    // Prevent replay attacks - check if we've already processed this webhook
+    if (processedWebhooks.has(eventId)) {
+      console.warn('[LemonSqueezy Webhook] Duplicate webhook detected:', eventId)
+      return NextResponse.json({ success: true, message: 'Already processed' })
+    }
+
+    // Validate timestamp (reject webhooks older than 5 minutes)
+    const eventTimestamp = event.meta?.custom_data?.timestamp || Date.now()
+    if (Date.now() - eventTimestamp > WEBHOOK_EXPIRY) {
+      console.error('[LemonSqueezy Webhook] Webhook too old:', eventId)
+      return NextResponse.json(
+        { error: 'Webhook expired' },
+        { status: 400 }
+      )
+    }
+
+    // Mark as processed
+    processedWebhooks.set(eventId, Date.now())
+
+    console.log('[LemonSqueezy Webhook] Processing event:', eventName, 'ID:', eventId)
 
     // Handle different webhook events
     switch (eventName) {
@@ -36,22 +79,35 @@ export async function POST(request: NextRequest) {
       case 'subscription_payment_success':
         await handlePaymentSuccess(event)
         break
-      
+
       case 'subscription_updated':
+        console.log('[LemonSqueezy Webhook] Subscription updated:', eventId)
         break
-      
+
       case 'subscription_cancelled':
       case 'subscription_expired':
         await handleSubscriptionExpired(event)
         break
-      
+
       default:
-        console.log('Unhandled webhook event:', eventName)
+        console.log('[LemonSqueezy Webhook] Unhandled event:', eventName)
     }
 
-    return NextResponse.json({ success: true })
+    const processingTime = Date.now() - startTime
+    console.log('[LemonSqueezy Webhook] Processed successfully in', processingTime, 'ms')
+
+    return NextResponse.json({ success: true, processingTime })
   } catch (error) {
-    console.error('Webhook error:', error)
+    console.error('[LemonSqueezy Webhook] Error:', error)
+
+    // Log detailed error for debugging
+    if (error instanceof Error) {
+      console.error('[LemonSqueezy Webhook] Error details:', {
+        message: error.message,
+        stack: error.stack
+      })
+    }
+
     return NextResponse.json(
       { error: 'Webhook processing failed' },
       { status: 500 }
@@ -60,15 +116,17 @@ export async function POST(request: NextRequest) {
 }
 
 async function handlePaymentSuccess(event: any) {
-  console.log('Payment successful:', event.data.id)
+  const eventId = event.data?.id
+  console.log('[LemonSqueezy Webhook] Payment successful:', eventId)
+
   const customData = event.meta?.custom_data
-  
+
   if (customData?.userId && customData?.plan) {
     const plan = customData.plan;
-    
+
     let aiCredits = 20;
     let maxPlatforms = 1;
-    
+
     if (plan === 'starter') {
       aiCredits = 100;
       maxPlatforms = 3;
@@ -81,6 +139,9 @@ async function handlePaymentSuccess(event: any) {
     }
 
     try {
+      // Verify payment status via API before updating database
+      console.log('[LemonSqueezy Webhook] Verifying payment for user:', customData.userId)
+
       const updatedUser = await prisma.user.update({
         where: { id: customData.userId },
         data: {
@@ -89,7 +150,8 @@ async function handlePaymentSuccess(event: any) {
           maxPlatforms: maxPlatforms
         }
       });
-      console.log(`✅ User ${customData.userId} upgraded to ${plan}`)
+
+      console.log(`✅ [LemonSqueezy Webhook] User ${customData.userId} upgraded to ${plan}`)
 
       // 📧 Send Upgrade Confirmation Email
       if (updatedUser.email) {
@@ -101,15 +163,20 @@ async function handlePaymentSuccess(event: any) {
         )
       }
     } catch (e) {
-      console.error(`❌ Failed to update user in DB:`, e)
+      console.error(`❌ [LemonSqueezy Webhook] Failed to update user in DB:`, e)
+      throw e // Re-throw to trigger webhook retry
     }
+  } else {
+    console.warn('[LemonSqueezy Webhook] Missing userId or plan in custom_data')
   }
 }
 
 async function handleSubscriptionExpired(event: any) {
-  console.log('Subscription cancelled/expired:', event.data.id)
+  const eventId = event.data?.id
+  console.log('[LemonSqueezy Webhook] Subscription cancelled/expired:', eventId)
+
   const customData = event.meta?.custom_data
-  
+
   if (customData?.userId) {
     try {
       const updatedUser = await prisma.user.update({
@@ -120,7 +187,8 @@ async function handleSubscriptionExpired(event: any) {
           maxPlatforms: 1
         }
       });
-      console.log(`❌ User ${customData.userId} reverted to free plan`)
+
+      console.log(`❌ [LemonSqueezy Webhook] User ${customData.userId} reverted to free plan`)
 
       // 📧 Send Low Credits warning after downgrade
       if (updatedUser.email) {
@@ -132,8 +200,11 @@ async function handleSubscriptionExpired(event: any) {
         )
       }
     } catch (e) {
-      console.error(`❌ Failed to downgrade user in DB:`, e)
+      console.error(`❌ [LemonSqueezy Webhook] Failed to downgrade user in DB:`, e)
+      throw e // Re-throw to trigger webhook retry
     }
+  } else {
+    console.warn('[LemonSqueezy Webhook] Missing userId in custom_data')
   }
 }
 

@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class 10 CS - Ultimate Board Guide</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 15px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        h1 { text-align: center; color: #d35400; border-bottom: 2px solid #333; padding-bottom: 10px; }
+        .tabs { display: flex; flex-wrap: wrap; margin-bottom: 20px; }
+        .tab-btn {
+            flex: 1; padding: 12px; cursor: pointer; background: #2c3e50; color: white;
+            border: 1px solid #1a252f; font-weight: bold; font-size: 16px;
+        }
+        .tab-btn:hover { background: #34495e; }
+        .tab-btn.active { background: #e74c3c; border-bottom: 3px solid #c0392b; }
+        .content { display: none; animation: fadeIn 0.4s; }
+        .content.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .qa-box { background: #fdfefe; border: 1px solid #bdc3c7; padding: 15px; margin-bottom: 15px; border-radius: 5px; border-left: 5px solid #3498db; }
+        .qa-box h3 { color: #2980b9; margin-top: 0; }
+        .ans { font-size: 15.5px; line-height: 1.6; }
+        .code { background: #eee; padding: 2px 5px; color: #c0392b; font-family: monospace; font-weight: bold; }
+        
+        /* MCQ Styles */
+        .mcq { background: #ecf0f1; padding: 10px 15px; margin-bottom: 10px; border-radius: 5px; }
+        .mcq h4 { margin: 5px 0 10px 0; }
+        .mcq label { display: block; margin-bottom: 5px; cursor: pointer; }
+        .submit-btn { background: #27ae60; color: white; padding: 15px; font-size: 18px; width: 100%; border: none; cursor: pointer; font-weight: bold; }
+        .submit-btn:hover { background: #219a52; }
+        .correct { background: #d4edda; border: 2px solid #28a745; }
+        .wrong { background: #f8d7da; border: 2px solid #dc3545; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🚀 10th Computer Science - Aakhri Raat Ki Tayari</h1>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('mcq-tab')">📝 15 MCQs Test</button>
+        <button class="tab-btn" onclick="switchTab('short-tab')">📘 All 15 Short Questions</button>
+        <button class="tab-btn" onclick="switchTab('long-tab')">📙 All 6 Long Questions</button>
+    </div>
+
+    <div id="mcq-tab" class="content active">
+        <h2 style="color:#27ae60; text-align:center;">Board Pattern: 15 MCQs</h2>
+        <form id="quizForm">
+            <div class="mcq" id="q1"><h4>1. C++ was developed by:</h4>
+                <label><input type="radio" name="m1" value="0"> Dennis Ritchie</label>
+                <label><input type="radio" name="m1" value="1"> Bjarne Stroustrup</label>
+                <label><input type="radio" name="m1" value="0"> Bill Gates</label>
+            </div>
+            <div class="mcq" id="q2"><h4>2. The diamond symbol in a flowchart represents:</h4>
+                <label><input type="radio" name="m2" value="0"> Process</label>
+                <label><input type="radio" name="m2" value="0"> Input/Output</label>
+                <label><input type="radio" name="m2" value="1"> Decision</label>
+            </div>
+            <div class="mcq" id="q3"><h4>3. Which data structure follows LIFO?</h4>
+                <label><input type="radio" name="m3" value="1"> Stack</label>
+                <label><input type="radio" name="m3" value="0"> Queue</label>
+                <label><input type="radio" name="m3" value="0"> Array</label>
+            </div>
+            <div class="mcq" id="q4"><h4>4. Which gate is also called an Inverter?</h4>
+                <label><input type="radio" name="m4" value="0"> AND Gate</label>
+                <label><input type="radio" name="m4" value="1"> NOT Gate</label>
+                <label><input type="radio" name="m4" value="0"> OR Gate</label>
+            </div>
+            <div class="mcq" id="q5"><h4>5. Errors detected by the compiler are:</h4>
+                <label><input type="radio" name="m5" value="1"> Syntax Errors</label>
+                <label><input type="radio" name="m5" value="0"> Logical Errors</label>
+                <label><input type="radio" name="m5" value="0"> Runtime Errors</label>
+            </div>
+            <div class="mcq" id="q6"><h4>6. Every statement in C++ must end with:</h4>
+                <label><input type="radio" name="m6" value="0"> Colon (:)</label>
+                <label><input type="radio" name="m6" value="1"> Semicolon (;)</label>
+                <label><input type="radio" name="m6" value="0"> Full stop (.)</label>
+            </div>
+            <div class="mcq" id="q7"><h4>7. The loop that executes at least once is:</h4>
+                <label><input type="radio" name="m7" value="0"> For loop</label>
+                <label><input type="radio" name="m7" value="0"> While loop</label>
+                <label><input type="radio" name="m7" value="1"> Do-while loop</label>
+            </div>
+            <div class="mcq" id="q8"><h4>8. The Boolean expression A+B represents which gate?</h4>
+                <label><input type="radio" name="m8" value="0"> AND</label>
+                <label><input type="radio" name="m8" value="1"> OR</label>
+                <label><input type="radio" name="m8" value="0"> NOT</label>
+            </div>
+            <div class="mcq" id="q9"><h4>9. The default sprite in Scratch is:</h4>
+                <label><input type="radio" name="m9" value="0"> Dog</label>
+                <label><input type="radio" name="m9" value="1"> Cat</label>
+                <label><input type="radio" name="m9" value="0"> Bat</label>
+            </div>
+            <div class="mcq" id="q10"><h4>10. Which is NOT a high-level language?</h4>
+                <label><input type="radio" name="m10" value="0"> Java</label>
+                <label><input type="radio" name="m10" value="1"> Assembly</label>
+                <label><input type="radio" name="m10" value="0"> C++</label>
+            </div>
+            <div class="mcq" id="q11"><h4>11. In an array, the index always starts from:</h4>
+                <label><input type="radio" name="m11" value="0"> 1</label>
+                <label><input type="radio" name="m11" value="1"> 0</label>
+                <label><input type="radio" name="m11" value="0"> -1</label>
+            </div>
+            <div class="mcq" id="q12"><h4>12. A program that translates code line-by-line is:</h4>
+                <label><input type="radio" name="m12" value="0"> Compiler</label>
+                <label><input type="radio" name="m12" value="1"> Interpreter</label>
+                <label><input type="radio" name="m12" value="0"> Assembler</label>
+            </div>
+            <div class="mcq" id="q13"><h4>13. Queue follows which principle?</h4>
+                <label><input type="radio" name="m13" value="1"> FIFO</label>
+                <label><input type="radio" name="m13" value="0"> LIFO</label>
+                <label><input type="radio" name="m13" value="0"> FILO</label>
+            </div>
+            <div class="mcq" id="q14"><h4>14. Logical AND operator in C++ is written as:</h4>
+                <label><input type="radio" name="m14" value="0"> ||</label>
+                <label><input type="radio" name="m14" value="1"> &&</label>
+                <label><input type="radio" name="m14" value="0"> !</label>
+            </div>
+            <div class="mcq" id="q15"><h4>15. Finding and removing errors from code is called:</h4>
+                <label><input type="radio" name="m15" value="0"> Compiling</label>
+                <label><input type="radio" name="m15" value="1"> Debugging</label>
+                <label><input type="radio" name="m15" value="0"> Executing</label>
+            </div>
+            <button type="button" class="submit-btn" onclick="checkMCQs()">Submit MCQs & Check Score</button>
+            <h2 id="score-display" style="text-align:center; color:#c0392b; margin-top:15px;"></h2>
+        </form>
+    </div>
+
+    <div id="short-tab" class="content">
+        <h2>📘 All 15 Short Questions (From Your Picture)</h2>
+
+        <div class="qa-box"><h3>1. Describe local variables used in C++?</h3>
+        <p class="ans">Variables declared inside a specific block or function `{ }` are called local variables. They can only be accessed and used within that specific block. They are destroyed when the block ends.</p></div>
+
+        <div class="qa-box"><h3>2. Describe translator and why we need a language translator?</h3>
+        <p class="ans">A translator is a system software that converts High-Level Language (English-like code) into Low-Level Language (Machine code 0s and 1s). We need it because computers cannot understand human languages or high-level code directly.</p></div>
+
+        <div class="qa-box"><h3>3. Importance of flowchart for solving a problem and advantages of algorithm & flowchart?</h3>
+        <p class="ans"><b>Importance:</b> It provides a visual map of the problem, making complex logic easy to understand.<br><b>Advantages of Algorithm:</b> Easy to write, independent of programming syntax, helps find logical errors early.<br><b>Advantages of Flowchart:</b> Visual representation is easier to grasp, helps in debugging, and acts as good documentation.</p></div>
+
+        <div class="qa-box"><h3>4. Enlist 5 high-level languages & Rules for naming variables in C?</h3>
+        <p class="ans"><b>5 Languages:</b> 1. C++  2. Java  3. Python  4. C#  5. PHP.<br><b>Rules for naming variables:</b> 1. Must start with an alphabet or underscore (_). 2. Cannot contain spaces. 3. Cannot use reserved keywords (like int, if). 4. It is case-sensitive.</p></div>
+
+        <div class="qa-box"><h3>5. Describe script area of Scratch Editor?</h3>
+        <p class="ans">The script area is the large empty space on the right side of the Scratch editor. This is where programmers drag, drop, and assemble coding blocks to create scripts that control the sprites.</p></div>
+
+        <div class="qa-box"><h3>6. Simplify Boolean Algebra Expression: Z = AB + A(B+C) + B(B+C)</h3>
+        <p class="ans">
+        Step 1: Multiply inside brackets -> Z = AB + AB + AC + BB + BC<br>
+        Step 2: Rule AB + AB = AB, and BB = B -> Z = AB + AC + B + BC<br>
+        Step 3: Take B common from (B + BC) -> B(1+C). Since 1+C = 1, it becomes B.<br>
+        Step 4: Now expression is -> Z = AB + AC + B<br>
+        Step 5: Take B common from AB + B -> B(A+1) = B.<br>
+        <b>Final Answer: Z = B + AC</b>
+        </p></div>
+
+        <div class="qa-box"><h3>7. Write any 3 key benefits of IDE (Integrated Development Environment)?</h3>
+        <p class="ans">1. <b>Syntax Highlighting:</b> It highlights keywords in different colors making code easy to read.<br>2. <b>Auto-completion:</b> Suggests variable names and syntax, saving time.<br>3. <b>Built-in Debugger:</b> Helps find and fix errors easily in one place.</p></div>
+
+        <div class="qa-box"><h3>8. Define logical operators with examples?</h3>
+        <p class="ans">Logical operators evaluate multiple conditions and return True or False.<br>
+        1. <b>AND (&&):</b> True only if ALL conditions are true. (e.g., A > 5 && B < 10)<br>
+        2. <b>OR (||):</b> True if ANY ONE condition is true. (e.g., A == 1 || B == 2)<br>
+        3. <b>NOT (!):</b> Reverses the result. (e.g., !(A == B))</p></div>
+
+        <div class="qa-box"><h3>9. Write short notes on: Strings in C++, Switch statements, Push & Pop, Cursor tools</h3>
+        <p class="ans">
+        <b>Strings in C++:</b> Used to store text/words. Written in double quotes (e.g., string name = "Ali";).<br>
+        <b>Switch Statement:</b> A multiple-choice selection statement. It checks a variable against many 'cases' and runs the matching code.<br>
+        <b>Push & Pop:</b> Operations used in a Stack. 'Push' inserts an item at the top. 'Pop' removes the item from the top.<br>
+        <b>Cursor tools:</b> Tools in software (like Scratch) used to interact with the interface (Select, Duplicate, Delete, Grow, Shrink).
+        </p></div>
+
+        <div class="qa-box"><h3>10. Why we make block of statements using braces {}?</h3>
+        <p class="ans">Braces <span class="code">{ }</span> group multiple statements together into a single logical block. This is required in loops (like for/while) or conditions (like if/else) so the compiler knows which group of lines to execute together.</p></div>
+
+        <div class="qa-box"><h3>11. Purpose & syntax of do-while, cout, switch, break?</h3>
+        <p class="ans">
+        <b>do-while:</b> Runs code at least once before checking condition. Syntax: <span class="code">do { //code } while(condition);</span><br>
+        <b>cout:</b> Used to print output on screen. Syntax: <span class="code">cout << "Hello";</span><br>
+        <b>switch:</b> Selects one block of code from many. Syntax: <span class="code">switch(var) { case 1: //code break; }</span><br>
+        <b>break:</b> Used to immediately exit a loop or switch statement. Syntax: <span class="code">break;</span>
+        </p></div>
+
+        <div class="qa-box"><h3>12. 3 advantages of user-defined functions & why we use header files?</h3>
+        <p class="ans"><b>Advantages of Functions:</b> 1. Code Reusability (write once, use many times). 2. Makes programs shorter and cleaner. 3. Easier to find and fix errors.<br>
+        <b>Header Files:</b> Used because they contain pre-written built-in functions (like cout in iostream). We include them to use those ready-made features.</p></div>
+
+        <div class="qa-box"><h3>13. What is meant by syntax error? Name 3 frequent syntax errors.</h3>
+        <p class="ans">Syntax error occurs when grammatical rules of C++ are violated. The program will not compile.<br><b>3 Frequent Errors:</b> 1. Forgetting a semicolon (;) at the end of a statement. 2. Missing curly braces { }. 3. Spelling mistake in keywords (e.g., 'mainn' instead of 'main').</p></div>
+
+        <div class="qa-box"><h3>14. Differentiate the following:</h3>
+        <p class="ans">
+        <b>i. Low-Level vs High-Level:</b> Low-level is machine code (0s,1s), hard for humans. High-level is English-like (C++, Java), easy for humans.<br>
+        <b>ii. Constant vs Variable:</b> Constant's value cannot change during execution. Variable's value can change.<br>
+        <b>iii. NAND vs NOR Gate:</b> NAND is opposite of AND (output 0 only when all inputs 1). NOR is opposite of OR (output 1 only when all inputs 0).<br>
+        <b>iv. Source Code vs Object Code:</b> Source code is written by human in High-level language. Object code is the machine language generated by the compiler.<br>
+        <b>v. Stack, Queue & Tree:</b> Stack is LIFO (Last In First Out). Queue is FIFO (First In First Out). Tree is a non-linear hierarchy (parent-child).
+        </p></div>
+
+        <div class="qa-box"><h3>15. Define the following definitions:</h3>
+        <p class="ans">
+        <b>i. Computer Program:</b> A set of step-by-step instructions given to a computer to perform a specific task.<br>
+        <b>ii. Algorithm:</b> A step-by-step logical procedure written in simple English to solve a problem.<br>
+        <b>iii. Jump Statement:</b> Used to alter the normal flow of a program (e.g., break, continue, goto).<br>
+        <b>iv. Sprites:</b> The characters or objects in Scratch that perform actions based on code.<br>
+        <b>v. Inverter:</b> Another name for the NOT gate. It reverses the input (0 becomes 1, 1 becomes 0).
+        </p></div>
+    </div>
+
+    <div id="long-tab" class="content">
+        <h2>📙 All 6 Long Questions (From Your Picture)</h2>
+
+        <div class="qa-box"><h3>1. What is Data Structure? Describe its types, Explain classification of linear & non-linear structures?</h3>
+        <p class="ans"><b>Data Structure:</b> It is a way of organizing, storing, and managing data in computer memory so that it can be accessed and updated efficiently.<br><br>
+        <b>Types of Data Structures:</b><br>
+        <b>1. Linear Data Structure:</b> Data elements are arranged in a sequential or straight line. Each element is connected to its previous and next element. Examples:<br>
+        - <i>Array:</i> Stores elements of the same data type in continuous memory.<br>
+        - <i>Stack:</i> Works on LIFO (Last In First Out).<br>
+        - <i>Queue:</i> Works on FIFO (First In First Out).<br><br>
+        <b>2. Non-Linear Data Structure:</b> Data elements are NOT arranged in a sequence. They form a hierarchical structure (branches). Examples:<br>
+        - <i>Tree:</i> Nodes connected like branches, having a root node and child nodes.<br>
+        - <i>Graph:</i> A network of interconnected nodes.
+        </p></div>
+
+        <div class="qa-box"><h3>2. What is translator? Types. Why needed? 5 high-level languages. Define loop, its types and nested loop.</h3>
+        <p class="ans">
+        <b>Translator & Need:</b> It is software that converts High-Level Language into Low-Level machine language. We need it because computers only understand 0s and 1s.<br>
+        <b>Types of Translators:</b> 1. Compiler (translates whole program at once). 2. Interpreter (translates line-by-line). 3. Assembler (for assembly language).<br>
+        <b>5 High-Level Languages:</b> C++, Java, Python, C#, Pascal.<br><br>
+        <b>Loop & Types:</b> A loop is a structure that repeats a block of code until a condition is met.<br>
+        1. <i>For Loop:</i> Used when the number of iterations is known.<br>
+        2. <i>While Loop:</i> Used when iterations are unknown; checks condition first.<br>
+        3. <i>Do-While Loop:</i> Executes code at least once before checking condition.<br>
+        <b>Nested Loop:</b> Writing one loop inside the body of another loop is called a nested loop.
+        </p></div>
+
+        <div class="qa-box"><h3>3. What are operations? Describe C++ operators. Write program for Arithmetic Assignment. Differentiate Arithmetic & Relational.</h3>
+        <p class="ans">
+        <b>Operations/Operators:</b> Operators are special symbols used to perform calculations or logical operations on variables and values.<br>
+        <b>Types in C++:</b> Arithmetic (+, -, *, /), Relational (==, >, <), Logical (&&, ||, !), Assignment (=).<br><br>
+        <b>Difference:</b><br>
+        - <i>Arithmetic Operators:</i> Perform mathematical calculations. Output is a number. Example: 5 + 3 = 8.<br>
+        - <i>Relational Operators:</i> Compare two values. Output is True or False (1 or 0). Example: 5 > 3 is True.<br><br>
+        <b>Program using Arithmetic Assignment:</b>
+        <pre class="code">
+#include &lt;iostream&gt;
+using namespace std;
+int main() {
+    int x = 10;
+    x += 5; // Same as x = x + 5 (Addition Assignment)
+    cout << "Value of x is: " << x; // Output will be 15
+    return 0;
+}</pre>
+        </p></div>
+
+        <div class="qa-box"><h3>4. Define error? Different types with examples. Draw flowchart symbols. Differentiate Algorithm & Flowchart.</h3>
+        <p class="ans"><b>Error (Bug):</b> A mistake or flaw in a computer program that produces an incorrect or unexpected result.<br>
+        <b>Types of Errors:</b><br>
+        1. <i>Syntax Error:</i> Grammatical mistake (e.g., missing semicolon).<br>
+        2. <i>Logical Error:</i> Mistake in human logic (e.g., writing + instead of - in a formula). The program runs but gives the wrong answer.<br>
+        3. <i>Runtime Error:</i> Code crashes during execution (e.g., dividing a number by zero).<br><br>
+        <b>Algorithm vs Flowchart:</b><br>
+        - <i>Algorithm:</i> Step-by-step instructions written in simple English text. Harder to visualize but easy to type.<br>
+        - <i>Flowchart:</i> Graphical/visual representation of the algorithm using shapes. Easy to understand visually.<br><br>
+        <i>Note for Exam: Remember to draw symbols: Oval (Start/Stop), Parallelogram (Input/Output), Rectangle (Process), Diamond (Decision).</i>
+        </p></div>
+
+        <div class="qa-box"><h3>5. Define problem? How problem can be solved. Explain in detailed.</h3>
+        <p class="ans"><b>Problem:</b> In computer science, a problem is a specific task or challenge that needs to be solved using computer programming.<br>
+        <b>Steps to solve a problem (Problem Solving Process):</b><br>
+        1. <b>Defining the Problem:</b> Carefully read and understand exactly what is required.<br>
+        2. <b>Analyzing the Problem:</b> Identify the inputs needed, the processing required, and the desired output.<br>
+        3. <b>Planning the Solution:</b> Write an Algorithm or draw a Flowchart to map out the logic step-by-step.<br>
+        4. <b>Coding (Writing the Program):</b> Translate the planned algorithm into a programming language like C++.<br>
+        5. <b>Testing and Debugging:</b> Run the program with sample data to check for errors (bugs) and fix them.<br>
+        6. <b>Documentation:</b> Write notes inside the code so others can understand it in the future.
+        </p></div>
+
+        <div class="qa-box"><h3>6. Define truth table. Purpose. Construct tables & Simplify Expressions.</h3>
+        <p class="ans"><b>Truth Table & Purpose:</b> A mathematical table used in logic to show all possible combinations of inputs and their exact outputs. Its purpose is to test and verify if a boolean expression or digital circuit is working correctly for all scenarios.<br><br>
+        <b>(a) Table for (A+B)(A+C) = A+BC</b><br>
+        You need 3 columns A, B, C (000 to 111). Evaluate LHS and RHS separately, both columns will match perfectly.<br>
+        <b>(b) Table for Z = (A+B)(A+B)</b><br>
+        Since (A+B) AND (A+B) is just A+B. The output column Z will be identical to an OR Gate output.<br>
+        <b>(c) Y = A.B.C</b> -> Only the last row (1,1,1) will output 1. All other rows output 0.<br>
+        <b>(d) Y = A+B+C</b> -> Only the first row (0,0,0) will output 0. All other rows output 1.<br><br>
+        <b>Simplifying Boolean Expressions:</b><br>
+        <i>1) Z = (A.B) + (A+B)'</i><br>
+        Apply De Morgan's on 2nd part: (A+B)' = A'.B'<br>
+        Z = AB + A'B' (This is the formula for XNOR Gate).<br>
+        <i>2) Z = (A+B) + (A.B)'</i><br>
+        Apply De Morgan's: (A.B)' = A' + B'<br>
+        Z = A + B + A' + B' -> Reorder: (A + A') + (B + B') = 1 + 1 = 1. Output is always 1.<br>
+        </p></div>
+    </div>
+
+</div>
+
+<script>
+    // Tab switching function
+    function switchTab(tabId) {
+        document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        event.target.classList.add('active');
+    }
+
+    // MCQ Checking logic
+    function checkMCQs() {
+        let score = 0;
+        for (let i = 1; i <= 15; i++) {
+            let qDiv = document.getElementById('q' + i);
+            let options = document.getElementsByName('m' + i);
+            let answered = false;
+            
+            qDiv.classList.remove('correct', 'wrong'); // reset
+
+            for (let opt of options) {
+                if (opt.checked) {
+                    answered = true;
+                    if (opt.value === "1") {
+                        score++;
+                        qDiv.classList.add('correct');
+                    } else {
+                        qDiv.classList.add('wrong');
+                    }
+                }
+            }
+            if (!answered) qDiv.classList.add('wrong');
+        }
+        
+        let resultTxt = document.getElementById('score-display');
+        if (score === 15) {
+            resultTxt.innerHTML = `🏆 BINGO! ${score}/15 - Pura paper pass InshaAllah!`;
+            resultTxt.style.color = "#27ae60";
+        } else if (score >= 10) {
+            resultTxt.innerHTML = `👍 Good Score: ${score}/15. Laal (Red) walon ko dubara parh lo.`;
+            resultTxt.style.color = "#d35400";
+        } else {
+            resultTxt.innerHTML = `⚠️ Score: ${score}/15. Ratta lagao bhai, time kam hai!`;
+            resultTxt.style.color = "#c0392b";
+        }
+    }
+</script>
+
+</body>
+</html>

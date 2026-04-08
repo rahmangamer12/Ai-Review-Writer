@@ -12,13 +12,15 @@ export function useServiceWorker() {
       return
     }
 
+    let updateInterval: NodeJS.Timeout | null = null
+
     const registerServiceWorker = async () => {
       try {
         const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
         setRegistration(reg)
 
-        // Check for updates every 60 seconds
-        setInterval(() => {
+        // Check for updates every 60 seconds - with proper cleanup
+        updateInterval = setInterval(() => {
           reg.update()
         }, 60000)
 
@@ -54,7 +56,11 @@ export function useServiceWorker() {
     window.addEventListener('online', handleOnline)
     window.addEventListener('offline', handleOffline)
 
+    // CRITICAL: Cleanup function to prevent memory leaks
     return () => {
+      if (updateInterval) {
+        clearInterval(updateInterval)
+      }
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }

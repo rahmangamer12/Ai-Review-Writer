@@ -12,11 +12,11 @@ export const usePWAInstall = () => {
     if (typeof window === 'undefined') return;
 
     const checkStandalone = () => {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches 
+      const isStandalone = window.matchMedia('(display-mode: standalone)').matches
         || (window.navigator as any).standalone === true
         || window.matchMedia('(display-mode: fullscreen)').matches
         || window.matchMedia('(display-mode: minimal-ui)').matches;
-      
+
       if (isStandalone) {
         setIsInstalled(true);
         setCanInstall(false);
@@ -26,7 +26,8 @@ export const usePWAInstall = () => {
 
     checkStandalone();
 
-    const handleBeforeInstallPrompt = (e: any) => {
+    // Define handlers inside useEffect to avoid stale closures
+    const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setCanInstall(true);
@@ -51,19 +52,20 @@ export const usePWAInstall = () => {
       }
     }, 3000);
 
+    // CRITICAL: Proper cleanup to prevent memory leaks
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
       window.removeEventListener('appinstalled', handleAppInstalled);
       clearTimeout(timeout);
     };
-  }, []);
+  }, []); // Empty dependency array - handlers defined inside useEffect
 
   const promptInstall = useCallback(async () => {
     if (deferredPrompt) {
       try {
         await deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
-        
+
         if (outcome === 'accepted') {
           setDeferredPrompt(null);
           setCanInstall(false);
@@ -85,7 +87,7 @@ export const usePWAInstall = () => {
       try {
         await deferredPrompt.prompt();
         const { outcome } = await deferredPrompt.userChoice;
-        
+
         if (outcome === 'accepted') {
           return { success: true, reason: 'installed' };
         }

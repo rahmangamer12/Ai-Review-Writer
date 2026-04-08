@@ -1,12 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { supabase } from '@/lib/supabase'
+import { z } from 'zod'
+
+// Input validation schemas
+const reviewIdSchema = z.string().uuid()
+const createReviewSchema = z.object({
+  content: z.string().min(1).max(5000),
+  rating: z.number().min(1).max(5),
+  author_name: z.string().max(200).optional(),
+  author_email: z.string().email().optional(),
+  platform: z.enum(['google', 'facebook', 'yelp', 'tripadvisor', 'trustpilot', 'manual']).default('manual'),
+  sentiment_label: z.enum(['positive', 'neutral', 'negative']).optional()
+})
+const updateReviewSchema = z.object({
+  reviewId: z.string().uuid(),
+  status: z.enum(['pending', 'approved', 'rejected'])
+})
 
 // GET - Analyze a single review or get review details
 export async function GET(req: NextRequest) {
   try {
     const { userId } = await auth()
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
@@ -18,10 +34,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Review ID required' }, { status: 400 })
     }
 
+    // Validate UUID format
+    const validatedId = reviewIdSchema.parse(reviewId)
+
     const { data: review, error } = await (supabase
       .from('reviews')
       .select('*') )
-      .eq('id', reviewId)
+      .eq('id', validatedId)
       .eq('user_id', userId)
       .single()
 
@@ -33,11 +52,14 @@ export async function GET(req: NextRequest) {
     const { data: reply } = await (supabase
       .from('replies')
       .select('*') )
-      .eq('review_id', reviewId)
+      .eq('review_id', validatedId)
       .single()
 
     return NextResponse.json({ ...review, reply })
   } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'name' in error && error.name === 'ZodError') {
+      return NextResponse.json({ error: 'Invalid review ID format', details: (error as any).issues || [] }, { status: 400 })
+    }
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }
 }
@@ -46,24 +68,22 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const { userId } = await auth()
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await req.json()
-    const { 
-      content, 
-      rating, 
-      author_name, 
-      author_email,
-      platform = 'manual',
-      sentiment_label 
-    } = body
+    const validated = createReviewSchema.parse(body)
 
-    if (!content || !rating) {
-      return NextResponse.json({ error: 'Content and rating required' }, { status: 400 })
-    }
+    const {
+      content,
+      rating,
+      author_name,
+      author_email,
+      platform,
+      sentiment_label
+    } = validated
 
     const { data: review, error } = await (supabase
       .from('reviews')
@@ -93,17 +113,15 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const { userId } = await auth()
-    
+
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const body = await req.json()
-    const { reviewId, status } = body
+    const validated = updateReviewSchema.parse(body)
 
-    if (!reviewId || !status) {
-      return NextResponse.json({ error: 'Review ID and status required' }, { status: 400 })
-    }
+    const { reviewId, status } = validated
 
     // Verify review belongs to user
     const { data: existing } = await (supabase
@@ -149,11 +167,14 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: 'Review ID required' }, { status: 400 })
     }
 
+    // Validate UUID format
+    const validatedId = reviewIdSchema.parse(reviewId)
+
     // Verify review belongs to user
     const { data: existing } = await (supabase
       .from('reviews')
       .select('id') )
-      .eq('id', reviewId)
+      .eq('id', validatedId)
       .eq('user_id', userId)
       .single()
 
@@ -162,20 +183,25 @@ export async function DELETE(req: NextRequest) {
     }
 
     // Delete replies first (cascade should handle this but being explicit)
-    await (supabase.from('replies').delete() ).eq('review_id', reviewId)
+    await (supabase.from('replies').delete() ).eq('review_id', validatedId)
 
     // Delete review
     const { error } = await (supabase
       .from('reviews')
       .delete() )
-      .eq('id', reviewId)
+      .eq('id', validatedId)
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
 
     return NextResponse.json({ success: true })
-  } catch (error: unknown) { const message = error instanceof Error ? error.message : "Unknown error"; return NextResponse.json({ error: message }, { status: 500 })
+  } catch (error: unknown) {
+    if (error && typeof error === 'object' && 'name' in error && error.name === 'ZodError') {
+      return NextResponse.json({ error: 'Invalid review ID format', details: (error as any).issues || [] }, { status: 400 })
+    }
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
 

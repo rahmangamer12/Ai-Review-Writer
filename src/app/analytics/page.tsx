@@ -4,11 +4,12 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, useScroll, useTransform } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { 
+import {
   Star, TrendingUp, RefreshCw, Database,
   Brain, Layers, ThumbsUp, ThumbsDown, Meh,
   Zap, ArrowUpRight, Sparkles, ChevronLeft
 } from 'lucide-react'
+import EnhancedErrorBoundary from '@/components/EnhancedErrorBoundary'
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -96,7 +97,7 @@ interface AIInsights {
   improvement_suggestions?: string[];
 }
 
-export default function AnalyticsPage() {
+function AnalyticsPage() {
   const [loading, setLoading] = useState(true)
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null)
   const [insights, setInsights] = useState<AIInsights | null>(null)
@@ -390,5 +391,13 @@ export default function AnalyticsPage() {
         </div>
       </footer>
     </div>
+  )
+}
+
+export default function AnalyticsPageWithErrorBoundary() {
+  return (
+    <EnhancedErrorBoundary>
+      <AnalyticsPage />
+    </EnhancedErrorBoundary>
   )
 }
