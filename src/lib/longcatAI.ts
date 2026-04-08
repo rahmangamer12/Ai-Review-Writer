@@ -13,12 +13,12 @@ const getApiKey = () => {
   return '';
 };
 
-export type LongCatModel = 
-  | "LongCat-Flash-Chat" 
+export type LongCatModel =
+  | "LongCat-Flash-Chat"
   | "LongCat-Flash-Thinking"
   | "LongCat-Flash-Thinking-2601"
-  | "LongCat-Flash-Lite"
-  | "LongCat-Flash-Omni-2603";
+  | "LongCat-Flash-Lite";
+  // | "LongCat-Flash-Omni-2603"; // Disabled - API returns "json format error"
 
 export interface ChatMessageContentPart {
   type: "text" | "image_url";

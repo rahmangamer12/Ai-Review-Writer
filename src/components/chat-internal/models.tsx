@@ -78,21 +78,21 @@ export const MODELS: AIModel[] = [
     supportsVision: false,
     supportsThinking: false
   },
-  {
-    id: 'LongCat-Flash-Omni-2603',
-    name: 'Flash Omni',
-    shortName: 'Omni',
-    iconName: 'Globe',
-    description: 'Multimodal vision + text engine for image analysis and understanding',
-    badge: 'VISION',
-    badgeColor: 'pink',
-    quality: 94,
-    speed: 'Advanced',
-    context: '128k',
-    contextTokens: 128000,
-    supportsVision: true,
-    supportsThinking: false
-  }
+  // {
+  //   id: 'LongCat-Flash-Omni-2603',
+  //   name: 'Flash Omni',
+  //   shortName: 'Omni',
+  //   iconName: 'Globe',
+  //   description: 'Multimodal vision + text engine for image analysis and understanding',
+  //   badge: 'VISION',
+  //   badgeColor: 'pink',
+  //   quality: 94,
+  //   speed: 'Advanced',
+  //   context: '128k',
+  //   contextTokens: 128000,
+  //   supportsVision: true,
+  //   supportsThinking: false
+  // } // Disabled - LongCat API returns "json format error"
 ]
 
 export const MODEL_GROUPS = {
@@ -100,14 +100,14 @@ export const MODEL_GROUPS = {
     'LongCat-Flash-Lite',
     'LongCat-Flash-Chat',
     'LongCat-Flash-Thinking',
-    'LongCat-Flash-Omni-2603'
+    // 'LongCat-Flash-Omni-2603' // Disabled
   ],
   reasoning: [
     'LongCat-Flash-Thinking',
     'LongCat-Flash-Thinking-2601'
   ],
   vision: [
-    'LongCat-Flash-Omni-2603'
+    // 'LongCat-Flash-Omni-2603' // Disabled - API error
   ]
 }
 

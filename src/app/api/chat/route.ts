@@ -20,7 +20,7 @@ const ALLOWED_MODELS = [
   'LongCat-Flash-Thinking',
   'LongCat-Flash-Thinking-2601',
   'LongCat-Flash-Lite',
-  'LongCat-Flash-Omni-2603',
+  // 'LongCat-Flash-Omni-2603', // Temporarily disabled - API returns "json format error"
 ];
 
 // Input validation schema

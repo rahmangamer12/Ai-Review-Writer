@@ -45,7 +45,7 @@ const LongCatModels = [
   { id: 'LongCat-Flash-Thinking', name: 'Flash Thinking', icon: <Brain className="w-3.5 h-3.5" /> },
   { id: 'LongCat-Flash-Thinking-2601', name: 'Thinking 2601', icon: <Lightbulb className="w-3.5 h-3.5" /> },
   { id: 'LongCat-Flash-Lite', name: 'Flash Lite', icon: <Rocket className="w-3.5 h-3.5" /> },
-  { id: 'LongCat-Flash-Omni-2603', name: 'Flash Omni', icon: <Globe className="w-3.5 h-3.5" /> }
+  // { id: 'LongCat-Flash-Omni-2603', name: 'Flash Omni', icon: <Globe className="w-3.5 h-3.5" /> } // Disabled - API error
 ]
 
 // Custom Typewriter Component for Markdown
