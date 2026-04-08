@@ -2,10 +2,10 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { 
-  X, Send, User, Sparkles, Loader2, Bot, 
+import {
+  X, Send, User, Sparkles, Loader2, Bot,
   RefreshCw, ChevronDown, Copy, Check, Download,
-  Zap, Brain, Lightbulb, Rocket, Globe
+  Zap, Brain, Lightbulb, Rocket, Globe, Upload
 } from 'lucide-react'
 
 interface Message {
@@ -100,10 +100,12 @@ export default function AIChatbot() {
   const [hasStarted, setHasStarted] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [isEnabled, setIsEnabled] = useState(true)
+  const [uploadedFiles, setUploadedFiles] = useState<Array<{name: string, preview: string}>>([])
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Auto-hide tooltip
   useEffect(() => {
@@ -229,6 +231,30 @@ export default function AIChatbot() {
     }
   }
 
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    Array.from(files).forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader()
+        reader.onload = (event) => {
+          if (event.target?.result) {
+            setUploadedFiles(prev => [...prev, {
+              name: file.name,
+              preview: event.target!.result as string
+            }])
+          }
+        }
+        reader.readAsDataURL(file)
+      }
+    })
+  }
+
+  const removeFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index))
+  }
+
   const exportChat = () => {
     let text = "AutoReview AI - Sarah Chat History\\n=================================\\n\\n"
     messages.forEach(m => {
@@ -263,19 +289,37 @@ export default function AIChatbot() {
   const handleSend = async (e?: React.FormEvent, quickText?: string) => {
     e?.preventDefault()
     const text = quickText || input
-    if (!text.trim() || isLoading) return
+    if ((!text.trim() && uploadedFiles.length === 0) || isLoading) return
 
     setError(null)
+
+    // Auto-switch to Omni if files uploaded
+    if (uploadedFiles.length > 0 && selectedModel !== 'LongCat-Flash-Omni-2603') {
+      setSelectedModel('LongCat-Flash-Omni-2603')
+    }
+
+    // Build message content with files
+    let messageContent: any = text
+    if (uploadedFiles.length > 0) {
+      messageContent = [
+        { type: 'text', text: text || 'Please analyze these files' },
+        ...uploadedFiles.map(file => ({
+          type: 'image_url',
+          image_url: { url: file.preview }
+        }))
+      ]
+    }
 
     const userMsg: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: text,
+      content: typeof messageContent === 'string' ? messageContent : JSON.stringify(messageContent),
       timestamp: new Date()
     }
-    
+
     setMessages(prev => [...prev, userMsg])
     if (!quickText) setInput('')
+    setUploadedFiles([]) // Clear files after sending
     setIsLoading(true)
 
     try {
@@ -691,6 +735,23 @@ export default function AIChatbot() {
                       disabled={isLoading}
                       className="flex-1 bg-gray-100 dark:bg-gray-800 border border-transparent focus:border-violet-400 rounded-xl px-4 py-3 text-xs sm:text-sm text-gray-800 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-4 focus:ring-violet-500/10 transition-all disabled:opacity-50 min-w-0"
                     />
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isLoading}
+                      className="p-2.5 bg-gray-100 dark:bg-gray-800 hover:bg-violet-100 dark:hover:bg-violet-900/30 rounded-xl transition-all disabled:opacity-50"
+                      title="Upload image"
+                    >
+                      <Upload className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                    </button>
                     <button
                       type="submit"
                       disabled={!input.trim() || isLoading}
