@@ -161,8 +161,10 @@ export default function ChatPage() {
 
     // Build message content with files if uploaded
     let messageContent: any = text || 'Analyze files'
+    let displayContent = text || 'Analyze files'
 
     if (uploadedFiles.length > 0) {
+      displayContent = `${text || 'Analyzing'} [${uploadedFiles.length} image${uploadedFiles.length > 1 ? 's' : ''}]`
       messageContent = [
         { type: 'text', text: text || 'Please analyze these files' },
         ...uploadedFiles.map(file => ({
@@ -172,7 +174,7 @@ export default function ChatPage() {
       ]
     }
 
-    const userMsg: Message = { id: uuidv4(), role: 'user', content: messageContent, timestamp: new Date() }
+    const userMsg: Message = { id: uuidv4(), role: 'user', content: displayContent, timestamp: new Date() }
     const aiId = uuidv4()
     const aiMsg: Message = { id: aiId, role: 'assistant', content: '', timestamp: new Date(), model: activeModel?.name, isTyping: true }
 
@@ -182,10 +184,16 @@ export default function ChatPage() {
     setIsLoading(true)
 
     try {
+      // Build API message with actual content (text or multimodal)
+      const apiMessage = {
+        role: 'user',
+        content: messageContent
+      }
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-session-id': sId },
-        body: JSON.stringify({ messages: [...messages, userMsg], model: selectedModel })
+        body: JSON.stringify({ messages: [...messages.map(m => ({ role: m.role, content: m.content })), apiMessage], model: selectedModel })
       })
 
       if (!res.ok) throw new Error('API Error')
