@@ -172,6 +172,20 @@ export default function ChatPage() {
 
       setSessions(prev => prev.map(s => s.id === sId ? { ...s, messages: s.messages.map(m => m.id === aiId ? { ...m, isTyping: false } : m) } : s))
 
+      // Save to backend after successful response
+      const finalSession = sessions.find(s => s.id === sId)
+      if (finalSession) {
+        await fetch('/api/chat/sessions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId: sId,
+            title: finalSession.title,
+            messages: [...finalSession.messages, userMsg, { ...aiMsg, content: accumulatedContent, isTyping: false }]
+          })
+        }).catch(() => {}) // Silent fail for save
+      }
+
     } catch {
       addNotification('Error sending message', 'error')
       setSessions(prev => prev.map(s => s.id === sId ? { ...s, messages: s.messages.map(m => m.id === aiId ? { ...m, content: 'Failed to connect. Please try again.', isTyping: false } : m) } : s))
@@ -236,13 +250,43 @@ export default function ChatPage() {
         sessions={sessions}
         currentSessionId={currentSessionId}
         setCurrentSessionId={setCurrentSessionId}
-        createNewSession={() => {
+        createNewSession={async () => {
           const id = uuidv4()
-          setSessions(prev => [{ id, title: 'New Chat', date: new Date().toISOString(), messages: [], isPinned: false }, ...prev])
-          setCurrentSessionId(id)
-          if (isMobile) setSidebarOpen(false)
+          const newSession = { id, title: 'New Chat', date: new Date().toISOString(), messages: [], isPinned: false }
+
+          try {
+            // Save to backend
+            await fetch('/api/chat/sessions', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ sessionId: id, title: 'New Chat', messages: [] })
+            })
+
+            // Add to frontend state
+            setSessions(prev => [newSession, ...prev])
+            setCurrentSessionId(id)
+            if (isMobile) setSidebarOpen(false)
+            addNotification('New chat created', 'success')
+          } catch (err) {
+            addNotification('Failed to create chat', 'error')
+          }
         }}
-        deleteSession={(id) => setSessions(prev => prev.filter(s => s.id !== id))}
+        deleteSession={async (id) => {
+          try {
+            // Delete from backend
+            await fetch(`/api/chat/sessions?id=${id}`, { method: 'DELETE' })
+            // Delete from frontend state
+            setSessions(prev => prev.filter(s => s.id !== id))
+            // If deleted session was current, switch to first available
+            if (currentSessionId === id) {
+              const remaining = sessions.filter(s => s.id !== id)
+              setCurrentSessionId(remaining.length > 0 ? remaining[0].id : null)
+            }
+            addNotification('Chat deleted', 'success')
+          } catch (err) {
+            addNotification('Failed to delete chat', 'error')
+          }
+        }}
         togglePin={(id) => setSessions(prev => prev.map(s => s.id === id ? { ...s, isPinned: !s.isPinned } : s))}
         editTitle={(id) => {
           const newTitle = prompt('New title?')
