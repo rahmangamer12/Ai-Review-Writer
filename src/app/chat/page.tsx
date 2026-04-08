@@ -131,8 +131,23 @@ export default function ChatPage() {
     if ((!text && uploadedFiles.length === 0) || isLoading) return
 
     let sId = currentSessionId || uuidv4()
+    let isNewSession = false
+
     if (!currentSessionId) {
+      isNewSession = true
       const newSession: ChatSession = { id: sId, title: text?.slice(0, 30) || 'Analyze files', date: new Date().toISOString(), messages: [], isPinned: false }
+
+      // Save new session to backend first
+      try {
+        await fetch('/api/chat/sessions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: sId, title: newSession.title, messages: [] })
+        })
+      } catch (err) {
+        console.error('Failed to create session:', err)
+      }
+
       setSessions(prev => [newSession, ...prev])
       setCurrentSessionId(sId)
     }
@@ -170,23 +185,30 @@ export default function ChatPage() {
         setSessions(prev => prev.map(s => s.id === sId ? { ...s, messages: s.messages.map(m => m.id === aiId ? { ...m, content: accumulatedContent } : m) } : s))
       }
 
-      setSessions(prev => prev.map(s => s.id === sId ? { ...s, messages: s.messages.map(m => m.id === aiId ? { ...m, isTyping: false } : m) } : s))
+      setSessions(prev => prev.map(s => s.id === sId ? {
+        ...s,
+        messages: s.messages.map(m => m.id === aiId ? { ...m, isTyping: false } : m)
+      } : s))
 
       // Save to backend after successful response
-      const finalSession = sessions.find(s => s.id === sId)
-      if (finalSession) {
-        await fetch('/api/chat/sessions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            sessionId: sId,
-            title: finalSession.title,
-            messages: [...finalSession.messages, userMsg, { ...aiMsg, content: accumulatedContent, isTyping: false }]
-          })
-        }).catch(() => {}) // Silent fail for save
-      }
+      setSessions(prev => {
+        const currentSession = prev.find(s => s.id === sId)
+        if (currentSession) {
+          fetch('/api/chat/sessions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sessionId: sId,
+              title: currentSession.title,
+              messages: currentSession.messages
+            })
+          }).catch(err => console.error('Failed to save session:', err))
+        }
+        return prev
+      })
 
-    } catch {
+    } catch (err) {
+      console.error('Chat error:', err)
       addNotification('Error sending message', 'error')
       setSessions(prev => prev.map(s => s.id === sId ? { ...s, messages: s.messages.map(m => m.id === aiId ? { ...m, content: 'Failed to connect. Please try again.', isTyping: false } : m) } : s))
     } finally {
