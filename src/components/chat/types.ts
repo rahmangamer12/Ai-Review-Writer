@@ -100,18 +100,18 @@ export const MODELS: AIModel[] = [
     speed: 'Instant',
     context: '32k'
   },
-  {
-    id: 'LongCat-Flash-Omni-2603',
-    name: 'Flash Omni',
-    shortName: 'Omni',
-    icon: null,
-    description: 'MultiModal vision + text engine',
-    badge: 'VISION',
-    color: 'pink',
-    quality: 94,
-    speed: 'Advanced',
-    context: '128k'
-  },
+  // {
+  //   id: 'LongCat-Flash-Omni-2603',
+  //   name: 'Flash Omni',
+  //   shortName: 'Omni',
+  //   icon: null,
+  //   description: 'MultiModal vision + text engine',
+  //   badge: 'VISION',
+  //   color: 'pink',
+  //   quality: 94,
+  //   speed: 'Advanced',
+  //   context: '128k'
+  // }, // Disabled - LongCat API returns "json format error"
   {
     id: 'deepseek-v3.2',
     name: 'DeepSeek V3.2',
