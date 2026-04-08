@@ -298,10 +298,16 @@ export default function AIChatbot() {
       setSelectedModel('LongCat-Flash-Omni-2603')
     }
 
-    // Build message content with files
-    let messageContent: any = text
+    // Build display content (string for UI)
+    let displayContent = text
     if (uploadedFiles.length > 0) {
-      messageContent = [
+      displayContent = `${text || 'Analyzing'} [${uploadedFiles.length} image${uploadedFiles.length > 1 ? 's' : ''}]`
+    }
+
+    // Build API content (can be multimodal)
+    let apiContent: any = text
+    if (uploadedFiles.length > 0) {
+      apiContent = [
         { type: 'text', text: text || 'Please analyze these files' },
         ...uploadedFiles.map(file => ({
           type: 'image_url',
@@ -313,7 +319,7 @@ export default function AIChatbot() {
     const userMsg: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: typeof messageContent === 'string' ? messageContent : JSON.stringify(messageContent),
+      content: displayContent,
       timestamp: new Date()
     }
 
@@ -325,11 +331,11 @@ export default function AIChatbot() {
     try {
       const apiMessages = [
         { role: 'system', content: SYSTEM_PROMPT },
-        ...messages.slice(-10).map(m => ({ 
-          role: m.role, 
-          content: m.content 
+        ...messages.slice(-10).map(m => ({
+          role: m.role,
+          content: m.content
         })),
-        { role: 'user', content: text }
+        { role: 'user', content: apiContent }
       ]
 
       const response = await fetch('/api/chat', {
