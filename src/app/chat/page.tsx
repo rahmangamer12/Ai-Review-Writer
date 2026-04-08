@@ -130,19 +130,26 @@ export default function ChatPage() {
     const text = (overrideText || input).trim()
     if ((!text && uploadedFiles.length === 0) || isLoading) return
 
+    // Auto-switch to Omni model if files are uploaded
+    if (uploadedFiles.length > 0 && selectedModel !== 'LongCat-Flash-Omni-2603') {
+      setSelectedModel('LongCat-Flash-Omni-2603')
+      addNotification('Switched to Omni model for file analysis', 'success')
+    }
+
     let sId = currentSessionId || uuidv4()
     let isNewSession = false
 
     if (!currentSessionId) {
       isNewSession = true
-      const newSession: ChatSession = { id: sId, title: text?.slice(0, 30) || 'Analyze files', date: new Date().toISOString(), messages: [], isPinned: false }
+      const chatTitle = text?.slice(0, 50) || 'New Conversation'
+      const newSession: ChatSession = { id: sId, title: chatTitle, date: new Date().toISOString(), messages: [], isPinned: false }
 
       // Save new session to backend first
       try {
         await fetch('/api/chat/sessions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId: sId, title: newSession.title, messages: [] })
+          body: JSON.stringify({ sessionId: sId, title: chatTitle, messages: [] })
         })
       } catch (err) {
         console.error('Failed to create session:', err)
@@ -152,12 +159,26 @@ export default function ChatPage() {
       setCurrentSessionId(sId)
     }
 
-    const userMsg: Message = { id: uuidv4(), role: 'user', content: text || 'Analyze files', timestamp: new Date() }
+    // Build message content with files if uploaded
+    let messageContent: any = text || 'Analyze files'
+
+    if (uploadedFiles.length > 0) {
+      messageContent = [
+        { type: 'text', text: text || 'Please analyze these files' },
+        ...uploadedFiles.map(file => ({
+          type: 'image_url',
+          image_url: { url: file.preview }
+        }))
+      ]
+    }
+
+    const userMsg: Message = { id: uuidv4(), role: 'user', content: messageContent, timestamp: new Date() }
     const aiId = uuidv4()
     const aiMsg: Message = { id: aiId, role: 'assistant', content: '', timestamp: new Date(), model: activeModel?.name, isTyping: true }
 
     setSessions(prev => prev.map(s => s.id === sId ? { ...s, messages: [...s.messages, userMsg, aiMsg] } : s))
     setInput('')
+    setUploadedFiles([]) // Clear uploaded files
     setIsLoading(true)
 
     try {
