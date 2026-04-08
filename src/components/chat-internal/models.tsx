@@ -101,14 +101,14 @@ export const MODEL_GROUPS = {
     'LongCat-Flash-Chat',
     'LongCat-Flash-Thinking',
     // 'LongCat-Flash-Omni-2603' // Disabled
-  ],
+  ] as const,
   reasoning: [
     'LongCat-Flash-Thinking',
     'LongCat-Flash-Thinking-2601'
-  ],
+  ] as const,
   vision: [
     // 'LongCat-Flash-Omni-2603' // Disabled - API error
-  ]
+  ] as const
 }
 
 export const getModelById = (id: string): AIModel | undefined => {

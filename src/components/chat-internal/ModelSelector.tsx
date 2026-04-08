@@ -75,8 +75,8 @@ export default function ModelSelector({
         models = models.filter(m => m.badge === 'GENERAL' || m.badge === 'FAST')
       } else {
         const group = MODEL_GROUPS[activeFilter as keyof typeof MODEL_GROUPS]
-        if (group) {
-          models = models.filter(m => group.includes(m.id))
+        if (group && group.length > 0) {
+          models = models.filter(m => (group as readonly string[]).includes(m.id))
         }
       }
     }
