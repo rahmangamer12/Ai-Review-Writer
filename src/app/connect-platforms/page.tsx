@@ -141,6 +141,7 @@ export default function ConnectPlatformsPage() {
   const [setupMode, setSetupMode] = useState<'self' | 'managed' | 'video'>('self')
 
   // Refs for auto-scroll
+  const selfSetupRef = useRef<HTMLDivElement>(null)
   const managedFormRef = useRef<HTMLDivElement>(null)
   const videoFormRef = useRef<HTMLDivElement>(null)
   
@@ -455,10 +456,14 @@ export default function ConnectPlatformsPage() {
                   whileHover={undefined}
                   onClick={() => {
                     setSetupMode(option.id as 'self' | 'managed' | 'video')
-                    // Auto-scroll to form after state update with slightly more delay for DOM stability
-                    setTimeout(() => {
-                      if (option.id === 'managed' && managedFormRef.current) {
-                        const yOffset = -100; // Leave some space at the top
+                    // Auto-scroll to form immediately
+                    requestAnimationFrame(() => {
+                      if (option.id === 'self' && selfSetupRef.current) {
+                        const yOffset = -100;
+                        const y = selfSetupRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                        window.scrollTo({top: y, behavior: 'smooth'});
+                      } else if (option.id === 'managed' && managedFormRef.current) {
+                        const yOffset = -100;
                         const y = managedFormRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
                         window.scrollTo({top: y, behavior: 'smooth'});
                       } else if (option.id === 'video' && videoFormRef.current) {
@@ -466,7 +471,7 @@ export default function ConnectPlatformsPage() {
                         const y = videoFormRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
                         window.scrollTo({top: y, behavior: 'smooth'});
                       }
-                    }, 150)
+                    });
                   }}
                   className={`glass-card border-2 ${
                     setupMode === option.id
@@ -531,6 +536,7 @@ export default function ConnectPlatformsPage() {
             {setupMode === 'self' && (
               <motion.div
                 key="self-setup"
+                ref={selfSetupRef}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
