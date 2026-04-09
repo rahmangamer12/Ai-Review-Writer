@@ -32,7 +32,7 @@ export default function ChatPage() {
   const [settings, setSettings] = useState<ChatSettings>(DEFAULT_SETTINGS)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedModel, setSelectedModel] = useState('LongCat-Flash-Chat')
+  const [selectedModel, setSelectedModel] = useState('LongCat-Flash-Lite') // Fastest model for instant responses
   const [isLoading, setIsLoading] = useState(false)
   const [isVoiceActive, setIsVoiceActive] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)

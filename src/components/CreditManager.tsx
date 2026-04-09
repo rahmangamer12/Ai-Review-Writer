@@ -215,7 +215,31 @@ export default function CreditManager() {
                   </div>
                 )}
                 <div className="text-2xl font-bold text-cyan-400 mb-4">${pkg.price}</div>
-                <button className="w-full px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg hover:from-cyan-600 hover:to-cyan-700 transition-all font-medium">
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch('/api/checkout', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                          planType: 'credits',
+                          creditAmount: pkg.credits + pkg.bonus,
+                          price: pkg.price
+                        })
+                      })
+                      const data = await response.json()
+                      if (data.checkoutUrl) {
+                        window.location.href = data.checkoutUrl
+                      } else if (data.demoMode) {
+                        alert('Demo Mode: LemonSqueezy not configured. Add API keys to enable payments.')
+                      }
+                    } catch (error) {
+                      console.error('Checkout error:', error)
+                      alert('Failed to initiate checkout. Please try again.')
+                    }
+                  }}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg hover:from-cyan-600 hover:to-cyan-700 transition-all font-medium"
+                >
                   Purchase
                 </button>
               </div>

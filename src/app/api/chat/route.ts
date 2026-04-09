@@ -143,35 +143,41 @@ CRITICAL INSTRUCTIONS FOR YOU:
       model: provider.chat(selectedModel),
       messages: modelMessages,
       temperature,
-      maxOutputTokens: 4000,
+      maxOutputTokens: 2000, // Reduced for faster responses
+      async onChunk({ chunk }) {
+        // Stream immediately without waiting for DB operations
+      },
       onFinish: async ({ text }) => {
-        try {
-          const nextPromptCount = currentPromptCount + 1;
-          if (nextPromptCount >= 10) {
-            await (prisma.user as any).update({
-              where: { id: userId },
-              data: { aiCredits: { decrement: 1 }, promptCount: 0 }
-            });
-          } else {
-            await (prisma.user as any).update({
-              where: { id: userId },
-              data: { promptCount: { increment: 1 } }
-            });
-          }
+        // Run DB operations in background after streaming completes
+        setImmediate(async () => {
+          try {
+            const nextPromptCount = currentPromptCount + 1;
+            if (nextPromptCount >= 10) {
+              await (prisma.user as any).update({
+                where: { id: userId },
+                data: { aiCredits: { decrement: 1 }, promptCount: 0 }
+              });
+            } else {
+              await (prisma.user as any).update({
+                where: { id: userId },
+                data: { promptCount: { increment: 1 } }
+              });
+            }
 
-          const sessionId = request.headers.get('x-session-id');
-          if (sessionId && sessionId !== 'new') {
-            await prisma.chatMessage.create({
-              data: {
-                sessionId,
-                role: 'assistant',
-                content: text
-              }
-            });
+            const sessionId = request.headers.get('x-session-id');
+            if (sessionId && sessionId !== 'new') {
+              await prisma.chatMessage.create({
+                data: {
+                  sessionId,
+                  role: 'assistant',
+                  content: text
+                }
+              });
+            }
+          } catch (dbErr) {
+            console.error('[Chat API] Database update error:', dbErr);
           }
-        } catch (dbErr) {
-          console.error('[Chat API] Database update error:', dbErr);
-        }
+        });
       }
     });
 
