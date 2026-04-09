@@ -455,23 +455,22 @@ export default function ConnectPlatformsPage() {
                   key={option.id}
                   whileHover={undefined}
                   onClick={() => {
-                    setSetupMode(option.id as 'self' | 'managed' | 'video')
-                    // Auto-scroll to form immediately
-                    requestAnimationFrame(() => {
-                      if (option.id === 'self' && selfSetupRef.current) {
+                    const targetMode = option.id as 'self' | 'managed' | 'video';
+                    setSetupMode(targetMode);
+
+                    // Wait for DOM to update, then scroll
+                    setTimeout(() => {
+                      let targetRef = null;
+                      if (targetMode === 'self') targetRef = selfSetupRef;
+                      else if (targetMode === 'managed') targetRef = managedFormRef;
+                      else if (targetMode === 'video') targetRef = videoFormRef;
+
+                      if (targetRef?.current) {
                         const yOffset = -100;
-                        const y = selfSetupRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                        window.scrollTo({top: y, behavior: 'smooth'});
-                      } else if (option.id === 'managed' && managedFormRef.current) {
-                        const yOffset = -100;
-                        const y = managedFormRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                        window.scrollTo({top: y, behavior: 'smooth'});
-                      } else if (option.id === 'video' && videoFormRef.current) {
-                        const yOffset = -100;
-                        const y = videoFormRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                        const y = targetRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
                         window.scrollTo({top: y, behavior: 'smooth'});
                       }
-                    });
+                    }, 300); // Increased delay for DOM stability
                   }}
                   className={`glass-card border-2 ${
                     setupMode === option.id
