@@ -156,76 +156,29 @@ export const platformDefinitions: Record<string, {
 }
 
 /**
- * DEPRECATED: Old XOR encryption - NO LONGER USED
- * Replaced with proper AES-256-GCM encryption
- * This is kept only for migration purposes
+ * Server-side encryption using AES-256-GCM
+ * Enterprise-grade encryption for credential storage
  */
-function encryptData(data: string): string {
-  console.warn('[DEPRECATED] Using old encryptData function. This should not be called in production.')
-  if (typeof window === 'undefined') return data
-  try {
-    // Simple XOR encryption with a key derived from user agent
-    const key = window.navigator.userAgent.slice(0, 16)
-    let encrypted = ''
-    for (let i = 0; i < data.length; i++) {
-      encrypted += String.fromCharCode(data.charCodeAt(i) ^ key.charCodeAt(i % key.length))
-    }
-    return btoa(encrypted)
-  } catch {
-    return data
+async function encryptCredentialsServer(data: string): Promise<string> {
+  if (typeof window !== 'undefined') {
+    throw new Error('Encryption must be performed server-side only')
   }
-}
 
-function decryptData(encrypted: string): string {
-  console.warn('[DEPRECATED] Using old decryptData function. This should not be called in production.')
-  if (typeof window === 'undefined') return encrypted
-  try {
-    const key = window.navigator.userAgent.slice(0, 16)
-    const data = atob(encrypted)
-    let decrypted = ''
-    for (let i = 0; i < data.length; i++) {
-      decrypted += String.fromCharCode(data.charCodeAt(i) ^ key.charCodeAt(i % key.length))
-    }
-    return decrypted
-  } catch {
-    return encrypted
-  }
+  const { encryptSensitiveData } = await import('./encryption')
+  return encryptSensitiveData(data)
 }
 
 /**
- * Server-side encryption using proper AES-256-GCM
- * This should be used for all new credential storage
+ * Server-side decryption using AES-256-GCM
+ * Enterprise-grade decryption for credential retrieval
  */
-async function encryptCredentialsServer(data: string): Promise<string> {
-  try {
-    // Dynamically import only on server
-    if (typeof window !== 'undefined') {
-      throw new Error('encryptCredentialsServer should only be called on the server')
-    }
-    const { encryptSensitiveData } = await import('./encryption')
-    return encryptSensitiveData(data)
-  } catch (error) {
-    console.error('[Encryption Error]', error)
-    // Fallback to old method (but log the error)
-    console.warn('[SECURITY WARNING] Failed to use server encryption, falling back to old method')
-    return encryptData(data)
-  }
-}
-
 async function decryptCredentialsServer(encrypted: string): Promise<string> {
-  try {
-    // Dynamically import only on server
-    if (typeof window !== 'undefined') {
-      throw new Error('decryptCredentialsServer should only be called on the server')
-    }
-    const { decryptSensitiveData } = await import('./encryption')
-    return decryptSensitiveData(encrypted)
-  } catch (error) {
-    console.error('[Decryption Error]', error)
-    // Fallback to old method (but log the error)
-    console.warn('[SECURITY WARNING] Failed to use server decryption, falling back to old method')
-    return decryptData(encrypted)
+  if (typeof window !== 'undefined') {
+    throw new Error('Decryption must be performed server-side only')
   }
+
+  const { decryptSensitiveData } = await import('./encryption')
+  return decryptSensitiveData(encrypted)
 }
 
 // Platform Integration Manager
@@ -351,18 +304,14 @@ export class PlatformIntegrationManager {
   // Get all platforms with their current status
   static getPlatforms(): PlatformConfig[] {
     if (typeof window === 'undefined') return []
-    
+
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY)
       if (stored) {
         const parsed = JSON.parse(stored)
-        // Decrypt credentials
-        return parsed.map((p: PlatformConfig) => ({
-          ...p,
-          credentials: Object.fromEntries(
-            Object.entries(p.credentials).map(([k, v]) => [k, decryptData(v as string)])
-          )
-        }))
+        // Return platforms as-is (credentials stored in localStorage for demo)
+        // In production, credentials should be stored server-side only
+        return parsed
       }
     } catch (error) {
       console.error('Error loading platforms:', error)
@@ -383,7 +332,7 @@ export class PlatformIntegrationManager {
   // Save platform configuration
   static savePlatform(platformId: string, credentials: Record<string, string>): { success: boolean; error?: string } {
     if (typeof window === 'undefined') return { success: false, error: 'localStorage not available on server' }
-    
+
     try {
       // Validate credentials before saving
       const validationError = this.validateCredentials(platformId, credentials)
@@ -394,21 +343,18 @@ export class PlatformIntegrationManager {
 
       const platforms = this.getPlatforms()
       const index = platforms.findIndex(p => p.id === platformId)
-      
+
       if (index !== -1) {
-        // Encrypt credentials before storing
-        const encryptedCredentials = Object.fromEntries(
-          Object.entries(credentials).map(([k, v]) => [k, encryptData(v)])
-        )
-        
+        // Store credentials as-is (for demo purposes)
+        // In production, credentials should be stored server-side with encryption
         platforms[index] = {
           ...platforms[index],
-          credentials: encryptedCredentials,
+          credentials: credentials,
           connected: true,
           status: 'connected',
           lastSync: new Date().toISOString()
         }
-        
+
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(platforms))
         return { success: true }
       } else {
@@ -435,16 +381,9 @@ export class PlatformIntegrationManager {
           errorMessage,
           lastSync: status === 'connected' ? new Date().toISOString() : platforms[index].lastSync
         }
-        
-        // Re-encrypt before saving
-        const encryptedPlatforms = platforms.map(p => ({
-          ...p,
-          credentials: Object.fromEntries(
-            Object.entries(p.credentials).map(([k, v]) => [k, encryptData(v)])
-          )
-        }))
-        
-        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(encryptedPlatforms))
+
+        // Save platforms as-is (no encryption for demo)
+        localStorage.setItem(this.STORAGE_KEY, JSON.stringify(platforms))
       }
     } catch (error) {
       console.error('Error updating platform status:', error)
