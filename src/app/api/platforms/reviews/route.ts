@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { PlatformIntegrationManager } from '@/lib/platformIntegrations'
+import { auth } from '@clerk/nextjs/server'
 
 // GET /api/platforms/reviews - Fetch reviews from all connected platforms
 export async function GET() {
   try {
+    const { userId } = await auth()
+
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
     const platforms = PlatformIntegrationManager.getPlatforms()
     const connectedPlatforms = platforms.filter(p => p.connected)
     

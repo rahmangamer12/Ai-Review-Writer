@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useToast } from '@/components/ui/Toast'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth, useUser } from '@clerk/nextjs'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -121,6 +122,7 @@ function ReviewsContent() {
   const [replyText, setReplyText] = useState('')
   const [showReplyModal, setShowReplyModal] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const { success: toastSuccess, error: toastError, info: toastInfo } = useToast()
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -296,26 +298,22 @@ function ReviewsContent() {
     setError(null)
     
     try {
-      console.log('[Agentic] Starting agentic review process...')
-      
       const response = await fetch('/api/agentic/reviews', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       })
       
       const result = await response.json()
-      console.log('[Agentic] Response:', result)
       
       if (!response.ok) {
         throw new Error(result.error || 'Failed to run agentic review')
       }
       
       if (result.processed > 0) {
-        // Show success message
-        alert(`Agentic AI processed ${result.processed} reviews successfully!`)
+        toastSuccess(`Agent processed ${result.processed} reviews`, 'AI has replied to all pending reviews.')
         fetchReviews()
       } else {
-        alert(result.message || 'No pending reviews to process')
+        toastInfo('No reviews to process', result.message || 'No pending reviews found.')
       }
     } catch (err: unknown) {
       console.error('[Agentic] Error:', err)
@@ -411,14 +409,23 @@ function ReviewsContent() {
     }
   }
 
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+
   const deleteReview = async (reviewId: string) => {
-    if (!confirm('Are you sure you want to delete this review?')) return
-    
+    // Replace confirm() with state-based flow
+    setPendingDeleteId(reviewId)
+  }
+
+  const confirmDelete = async () => {
+    if (!pendingDeleteId) return
     try {
-      await fetch(`/api/reviews/analyze?id=${reviewId}`, { method: 'DELETE' })
+      await fetch(`/api/reviews/analyze?id=${pendingDeleteId}`, { method: 'DELETE' })
+      toastSuccess('Review deleted', 'The review has been removed.')
       fetchReviews()
     } catch (err) {
-      setError('Failed to delete review')
+      toastError('Delete failed', 'Could not delete the review. Please try again.')
+    } finally {
+      setPendingDeleteId(null)
     }
   }
 
@@ -938,11 +945,11 @@ function ReviewsContent() {
             </div>
 
             {totalPages > 1 && (
-              <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-3">
-                <p className="text-sm text-gray-500">
+              <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p className="text-xs sm:text-sm text-gray-500 text-center">
                   Showing {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, totalCount)} of {totalCount} reviews
                 </p>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center justify-center gap-2 w-full sm:w-auto">
                   <button
                     onClick={() => {
                       const newPage = Math.max(1, currentPage - 1)

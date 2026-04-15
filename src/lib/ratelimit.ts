@@ -1,222 +1,164 @@
 /**
- * Memory-based Rate Limiting
- * Protects API routes from abuse without external dependencies
+ * Rate Limiting — Upstash Redis (Serverless-safe sliding window)
+ *
+ * Falls back to in-memory limiter when UPSTASH env vars are not set (local dev).
+ * Callers use the same rateLimit() / RATE_LIMITS / getRateLimitHeaders() API.
  */
 
-interface RateLimitEntry {
-  count: number
-  resetTime: number
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+export interface RateLimitConfig {
+  limit: number
+  windowMs: number
+  message: string
 }
 
-class MemoryRateLimiter {
-  private store: Map<string, RateLimitEntry> = new Map()
-  private cleanupInterval: NodeJS.Timeout | null = null
-
-  constructor() {
-    // Cleanup expired entries every 5 minutes
-    this.cleanupInterval = setInterval(() => {
-      this.cleanup()
-    }, 5 * 60 * 1000)
-  }
-
-  private cleanup() {
-    const now = Date.now()
-    for (const [key, entry] of this.store.entries()) {
-      if (entry.resetTime < now) {
-        this.store.delete(key)
-      }
-    }
-  }
-
-  /**
-   * Check if request is allowed
-   * @param identifier - Unique identifier (userId, IP, etc.)
-   * @param limit - Maximum requests allowed
-   * @param windowMs - Time window in milliseconds
-   * @returns { success: boolean, remaining: number, resetTime: number }
-   */
-  async check(
-    identifier: string,
-    limit: number,
-    windowMs: number
-  ): Promise<{
-    success: boolean
-    remaining: number
-    resetTime: number
-    limit: number
-  }> {
-    const now = Date.now()
-    const entry = this.store.get(identifier)
-
-    // No entry or expired - create new
-    if (!entry || entry.resetTime < now) {
-      const resetTime = now + windowMs
-      this.store.set(identifier, {
-        count: 1,
-        resetTime
-      })
-      return {
-        success: true,
-        remaining: limit - 1,
-        resetTime,
-        limit
-      }
-    }
-
-    // Entry exists and not expired
-    if (entry.count >= limit) {
-      return {
-        success: false,
-        remaining: 0,
-        resetTime: entry.resetTime,
-        limit
-      }
-    }
-
-    // Increment count
-    entry.count++
-    this.store.set(identifier, entry)
-
-    return {
-      success: true,
-      remaining: limit - entry.count,
-      resetTime: entry.resetTime,
-      limit
-    }
-  }
-
-  /**
-   * Reset rate limit for a specific identifier
-   */
-  reset(identifier: string): void {
-    this.store.delete(identifier)
-  }
-
-  /**
-   * Get current status without incrementing
-   */
-  getStatus(identifier: string): {
-    count: number
-    remaining: number
-    resetTime: number
-  } | null {
-    const entry = this.store.get(identifier)
-    if (!entry) return null
-
-    const now = Date.now()
-    if (entry.resetTime < now) {
-      this.store.delete(identifier)
-      return null
-    }
-
-    return {
-      count: entry.count,
-      remaining: Math.max(0, 10 - entry.count), // Default limit
-      resetTime: entry.resetTime
-    }
-  }
-
-  /**
-   * Cleanup on shutdown
-   */
-  destroy(): void {
-    if (this.cleanupInterval) {
-      clearInterval(this.cleanupInterval)
-      this.cleanupInterval = null
-    }
-    this.store.clear()
-  }
-}
-
-// Singleton instance
-const rateLimiter = new MemoryRateLimiter()
-
-// Cleanup on process exit
-if (typeof process !== 'undefined') {
-  process.on('SIGTERM', () => rateLimiter.destroy())
-  process.on('SIGINT', () => rateLimiter.destroy())
-}
-
-/**
- * Rate limit configurations for different endpoints
- */
-export const RATE_LIMITS = {
-  // AI endpoints - expensive operations
-  AI_GENERATION: {
-    limit: 10,
-    windowMs: 60 * 1000, // 10 requests per minute
-    message: 'Too many AI requests. Please wait a moment.'
-  },
-  AI_ANALYSIS: {
-    limit: 20,
-    windowMs: 60 * 1000, // 20 requests per minute
-    message: 'Too many analysis requests. Please slow down.'
-  },
-
-  // Standard API endpoints
-  API_STANDARD: {
-    limit: 100,
-    windowMs: 60 * 1000, // 100 requests per minute
-    message: 'Too many requests. Please try again later.'
-  },
-
-  // Authentication endpoints
-  AUTH: {
-    limit: 5,
-    windowMs: 15 * 60 * 1000, // 5 requests per 15 minutes
-    message: 'Too many authentication attempts. Please try again later.'
-  },
-
-  // Webhook endpoints
-  WEBHOOK: {
-    limit: 50,
-    windowMs: 60 * 1000, // 50 requests per minute
-    message: 'Webhook rate limit exceeded.'
-  }
-}
-
-/**
- * Rate limit middleware helper
- */
-export async function rateLimit(
-  identifier: string,
-  config: typeof RATE_LIMITS.AI_GENERATION
-): Promise<{
+export interface RateLimitResult {
   success: boolean
   remaining: number
   resetTime: number
   limit: number
   message?: string
-}> {
-  const result = await rateLimiter.check(
-    identifier,
-    config.limit,
-    config.windowMs
-  )
+}
 
-  if (!result.success) {
-    return {
-      ...result,
-      message: config.message
-    }
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+export const RATE_LIMITS = {
+  AI_GENERATION: {
+    limit: 10,
+    windowMs: 60 * 1000,
+    message: 'Too many AI requests. Please wait a moment.',
+  },
+  AI_ANALYSIS: {
+    limit: 20,
+    windowMs: 60 * 1000,
+    message: 'Too many analysis requests. Please slow down.',
+  },
+  API_STANDARD: {
+    limit: 100,
+    windowMs: 60 * 1000,
+    message: 'Too many requests. Please try again later.',
+  },
+  AUTH: {
+    limit: 5,
+    windowMs: 15 * 60 * 1000,
+    message: 'Too many authentication attempts. Please try again later.',
+  },
+  WEBHOOK: {
+    limit: 50,
+    windowMs: 60 * 1000,
+    message: 'Webhook rate limit exceeded.',
+  },
+} as const
+
+// ─── Upstash Implementation ───────────────────────────────────────────────────
+
+async function getUpstashLimiter() {
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+
+  if (!url || !token) return null
+
+  try {
+    const { Ratelimit } = await import('@upstash/ratelimit')
+    const { Redis } = await import('@upstash/redis')
+
+    const redis = new Redis({ url, token })
+
+    return { Ratelimit, redis }
+  } catch {
+    return null
+  }
+}
+
+// ─── Memory Fallback (Dev / Missing Env) ─────────────────────────────────────
+
+interface MemEntry { count: number; resetTime: number }
+const memStore = new Map<string, MemEntry>()
+
+function memCheck(
+  key: string,
+  limit: number,
+  windowMs: number
+): RateLimitResult {
+  const now = Date.now()
+  const entry = memStore.get(key)
+
+  if (!entry || entry.resetTime < now) {
+    const resetTime = now + windowMs
+    memStore.set(key, { count: 1, resetTime })
+    return { success: true, remaining: limit - 1, resetTime, limit }
   }
 
+  if (entry.count >= limit) {
+    return { success: false, remaining: 0, resetTime: entry.resetTime, limit }
+  }
+
+  entry.count++
+  memStore.set(key, entry)
+  return { success: true, remaining: limit - entry.count, resetTime: entry.resetTime, limit }
+}
+
+// Cleanup every 5 min (dev only — Upstash handles this in prod)
+if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
+  setInterval(() => {
+    const now = Date.now()
+    for (const [k, v] of memStore.entries()) {
+      if (v.resetTime < now) memStore.delete(k)
+    }
+  }, 5 * 60 * 1000)
+}
+
+// ─── Public API ───────────────────────────────────────────────────────────────
+
+export async function rateLimit(
+  identifier: string,
+  config: RateLimitConfig
+): Promise<RateLimitResult> {
+  const upstash = await getUpstashLimiter()
+
+  if (upstash) {
+    const { Ratelimit, redis } = upstash
+    const windowSec = Math.ceil(config.windowMs / 1000)
+
+    const limiter = new Ratelimit({
+      redis,
+      limiter: Ratelimit.slidingWindow(config.limit, `${windowSec} s`),
+      analytics: false, // Set to true if you want Upstash analytics dashboard
+      prefix: `rl:${identifier.split(':')[0]}`, // Namespace per endpoint type
+    })
+
+    const { success, remaining, reset } = await limiter.limit(identifier)
+
+    const result: RateLimitResult = {
+      success,
+      remaining,
+      resetTime: reset,
+      limit: config.limit,
+    }
+
+    if (!success) result.message = config.message
+    return result
+  }
+
+  // Fallback: memory-based (dev or missing env vars)
+  const result = memCheck(identifier, config.limit, config.windowMs)
+  if (!result.success) result.message = config.message
   return result
 }
 
-/**
- * Get rate limit headers for response
- */
-export function getRateLimitHeaders(result: {
-  limit: number
-  remaining: number
-  resetTime: number
-}): Record<string, string> {
+export function getRateLimitHeaders(result: RateLimitResult): Record<string, string> {
   return {
     'X-RateLimit-Limit': result.limit.toString(),
     'X-RateLimit-Remaining': result.remaining.toString(),
-    'X-RateLimit-Reset': new Date(result.resetTime).toISOString()
+    'X-RateLimit-Reset': new Date(result.resetTime).toISOString(),
   }
 }
 
-export { rateLimiter }
+// Legacy compat export (used in a few places)
+export const rateLimiter = {
+  check: (id: string, limit: number, windowMs: number) =>
+    rateLimit(id, { limit, windowMs, message: 'Rate limit exceeded' }),
+  reset: (id: string) => memStore.delete(id),
+  destroy: () => memStore.clear(),
+}

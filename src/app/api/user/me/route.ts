@@ -17,12 +17,9 @@ export async function GET() {
     
     if (!userId) {
       return NextResponse.json({ 
-        planType: 'free', 
-        aiCredits: 0, 
-        promptCount: 0, 
-        maxPlatforms: 1,
-        name: 'Guest'
-      }, { status: 200 })
+        error: 'Unauthorized',
+        message: 'Authentication required'
+      }, { status: 401 })
     }
 
     let user = await prisma.user.findUnique({
@@ -82,11 +79,7 @@ export async function GET() {
   } catch (error) {
     console.error('[User/Me API] Fatal Error:', error)
     return NextResponse.json({ 
-      planType: 'free',
-      aiCredits: 0,
-      promptCount: 0,
-      maxPlatforms: 1,
-      name: 'Guest'
-    }, { status: 200 })
+      error: 'Internal server error'
+    }, { status: 500 })
   }
 }

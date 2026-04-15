@@ -45,6 +45,8 @@ export default function ChatPage() {
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([])
   const [input, setInput] = useState('')
   const [isMounted, setIsMounted] = useState(false)
+  const [renamingId, setRenamingId] = useState<string | null>(null)
+  const [renameValue, setRenameValue] = useState('')
 
   // --- 2. REFS ---
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -105,6 +107,7 @@ export default function ChatPage() {
   const fetchUserData = useCallback(async () => {
     try {
       const res = await fetch('/api/user/me', { cache: 'no-store' })
+      if (res.status === 401 || res.status === 500) return
       const data = await res.json()
       if (data.planType) setUserData(data)
     } catch (err) {}
@@ -296,7 +299,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-[calc(100dvh-129px-env(safe-area-inset-top)-env(safe-area-inset-bottom))] lg:h-[100dvh] w-full bg-[#030308] text-white overflow-hidden relative">
+    <div className="flex h-[calc(100dvh-57px-env(safe-area-inset-top))] lg:h-[100dvh] w-full bg-[#030308] text-white overflow-hidden relative">
       <ChatSidebar
         sessions={sessions}
         currentSessionId={currentSessionId}
@@ -340,8 +343,11 @@ export default function ChatPage() {
         }}
         togglePin={(id) => setSessions(prev => prev.map(s => s.id === id ? { ...s, isPinned: !s.isPinned } : s))}
         editTitle={(id) => {
-          const newTitle = prompt('New title?')
-          if (newTitle) setSessions(prev => prev.map(s => s.id === id ? { ...s, title: newTitle } : s))
+          const session = sessions.find(s => s.id === id)
+          if (session) {
+            setRenamingId(id)
+            setRenameValue(session.title)
+          }
         }}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -427,7 +433,7 @@ export default function ChatPage() {
           </div>
         </div>
 
-        <div className="shrink-0 fixed bottom-0 left-0 right-0 z-[29] bg-gradient-to-t from-[#030308] via-[#030308]/95 to-transparent pb-[calc(84px+env(safe-area-inset-bottom))] lg:pb-8 pt-4 px-4 lg:px-12 lg:ml-[calc(16rem+320px)] xl:ml-[calc(18rem+340px)] pointer-events-none">
+        <div className="shrink-0 fixed bottom-0 left-0 right-0 z-[29] bg-gradient-to-t from-[#030308] via-[#030308]/95 to-transparent pb-[calc(110px+env(safe-area-inset-bottom))] lg:pb-8 pt-4 px-4 lg:px-12 lg:ml-[calc(16rem+320px)] xl:ml-[calc(18rem+340px)] pointer-events-none">
           <div className="max-w-4xl mx-auto w-full flex flex-col gap-3 pointer-events-auto">
             <div className="lg:hidden flex items-center justify-between px-2">
                <button onClick={() => setSidebarOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-white/40 active:scale-95 backdrop-blur-md">
@@ -456,6 +462,62 @@ export default function ChatPage() {
 
       <ModelSelector isOpen={showModelSelector} onClose={() => setShowModelSelector(false)} selectedModel={selectedModel} onSelectModel={setSelectedModel} />
       <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} settings={settings} setSettings={setSettings} userData={userData || undefined} />
+
+      {/* Inline Rename Modal — replaces prompt() */}
+      <AnimatePresence>
+        {renamingId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+            onClick={() => setRenamingId(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-[#0c0c18] border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+              onClick={e => e.stopPropagation()}
+            >
+              <h3 className="text-white font-semibold mb-4">Rename Chat</h3>
+              <input
+                autoFocus
+                value={renameValue}
+                onChange={e => setRenameValue(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && renameValue.trim()) {
+                    setSessions(prev => prev.map(s => s.id === renamingId ? { ...s, title: renameValue.trim() } : s))
+                    setRenamingId(null)
+                  }
+                  if (e.key === 'Escape') setRenamingId(null)
+                }}
+                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-violet-500 text-sm mb-4"
+                placeholder="Chat title..."
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setRenamingId(null)}
+                  className="flex-1 py-2 text-sm text-white/50 hover:text-white bg-white/5 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (renameValue.trim()) {
+                      setSessions(prev => prev.map(s => s.id === renamingId ? { ...s, title: renameValue.trim() } : s))
+                      setRenamingId(null)
+                    }
+                  }}
+                  className="flex-1 py-2 text-sm font-semibold text-white bg-violet-600 hover:bg-violet-500 rounded-xl transition-colors"
+                >
+                  Rename
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }

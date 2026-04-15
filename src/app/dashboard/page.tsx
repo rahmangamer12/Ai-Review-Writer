@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { useToast } from '@/components/ui/Toast'
 import { useRouter } from 'next/navigation'
 import { useAuth, useUser } from '@clerk/nextjs'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -335,13 +336,12 @@ export default function Dashboard() {
   const [showAIInsightsPanel, setShowAIInsightsPanel] = useState(false)
   const [isOffline, setIsOffline] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const { toast, success: toastSuccess, info: toastInfo } = useToast()
 
   // Prevent hydration mismatch - only render dynamic content after mount
   useEffect(() => {
     setMounted(true)
   }, [])
-
-  // Better approach: Listen to browser online/offline events
   useEffect(() => {
     const handleOnline = () => {
       setIsOffline(false)
@@ -367,10 +367,7 @@ export default function Dashboard() {
     }
   }, [])
 
-  // Prevent hydration mismatch
-  useEffect(() => {
-    setMounted(true)
-  }, [])
+
 
   const fetchAnalytics = async (signal?: AbortSignal) => {
     if (!userId) return
@@ -415,6 +412,14 @@ export default function Dashboard() {
       }
 
       const analyticsData = await response.json()
+
+      // 401 = not authenticated, silently show empty state
+      if (response.status === 401) {
+        const emptyData = getEmptyData()
+        setData(emptyData)
+        generateAIInsights(emptyData)
+        return
+      }
 
       if (!response?.ok) {
         throw new Error(analyticsData.error || `Failed to fetch analytics (Status: ${response.status})`)
@@ -548,9 +553,13 @@ export default function Dashboard() {
       const response = await fetch('/api/agentic/reviews', { method: 'POST' })
       const result = await response.json()
       if (result.processed > 0) {
-        setAgenticReviews(result.reviews || [])
-        alert(`Agentic AI processed ${result.processed} reviews successfully!`)
+        toastSuccess(`Processed ${result.processed} reviews`, 'Agentic AI has replied to pending reviews.')
+        if (result.results) {
+          setAgenticReviews(prev => [...result.results, ...prev].slice(0, 50))
+        }
         fetchAnalytics()
+      } else {
+        toastInfo('No reviews processed', 'There were no pending reviews that required attention.')
       }
     } catch (err) {
       setError('Agentic review failed')
@@ -560,11 +569,8 @@ export default function Dashboard() {
   }
 
   const exportData = (format: 'csv' | 'json' | 'pdf') => {
-    // Implement real export logic here
-    console.log(`Exporting data as ${format.toUpperCase()}...`)
     setShowExportModal(false)
-    // For now, inform the user it's being prepared
-    alert(`Your ${format.toUpperCase()} report is being generated and will be ready for download shortly.`)
+    toastInfo(`${format.toUpperCase()} export coming soon`, 'This feature is currently being implemented.')
   }
 
   const stats = data?.stats || {
@@ -583,7 +589,7 @@ export default function Dashboard() {
   const renderOverview = () => (
     <div className="pt-2 sm:pt-4">
       {/* Stats Grid - Perfectly responsive for all screens */}
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
         <ModernStatCard title="Total Reviews" value={stats.totalReviews.toString()} subtitle="All time reviews" icon={MessageSquare} color="blue" delay={0} trend="up" trendValue="12" />
         <ModernStatCard title="Pending" value={stats.pendingReviews.toString()} subtitle="Need your attention" icon={Clock} color="amber" delay={0.1} trend="down" trendValue="5" />
         <ModernStatCard title="Response Rate" value={`${stats.responseRate}%`} subtitle={`${stats.repliedReviews} replied`} icon={CheckCircle} color="emerald" delay={0.2} trend="up" trendValue="8" />

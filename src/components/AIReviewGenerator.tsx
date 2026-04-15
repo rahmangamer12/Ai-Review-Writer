@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, X, Star, Loader2, RefreshCw, Check, AlertTriangle } from 'lucide-react'
+import { SanitizationService } from '@/lib/sanitization'
 
 interface AIReviewGeneratorProps {
   onGenerate?: (review: { content: string; rating: number; author: string }) => void
@@ -27,6 +28,13 @@ export default function AIReviewGenerator({ onGenerate }: AIReviewGeneratorProps
 
     setLoading(true)
     setError(null)
+
+    // Sanitize user prompt
+    const sanitizedPrompt = SanitizationService.sanitizeInput(prompt, {
+      maxLength: 1000,
+      stripHTML: true
+    })
+
     try {
       const response = await fetch('/api/chat', {
         method: 'POST',
@@ -39,7 +47,7 @@ export default function AIReviewGenerator({ onGenerate }: AIReviewGeneratorProps
             },
             {
               role: 'user',
-              content: `Generate a realistic customer review based on: "${prompt}".
+              content: `Generate a realistic customer review based on: "${sanitizedPrompt}".
               Return ONLY valid JSON with this exact format:
               {"content": "review text here", "rating": 1-5, "author": "Full Name", "sentiment": "positive/negative/neutral"}`
             }
@@ -63,8 +71,14 @@ export default function AIReviewGenerator({ onGenerate }: AIReviewGeneratorProps
         throw new Error('Invalid response format from AI service')
       }
 
+      // Sanitize and validate AI-generated review
       if (review && review.content && review.rating) {
-        setGeneratedReview(review)
+        const validation = SanitizationService.validateReviewData(review)
+        if (!validation.isValid) {
+          throw new Error('Invalid review format from AI service')
+        }
+
+        setGeneratedReview(validation.sanitizedData)
       } else {
         throw new Error('Invalid review format from AI service')
       }

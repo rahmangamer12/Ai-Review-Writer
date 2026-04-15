@@ -26,7 +26,7 @@ export async function GET(req: NextRequest) {
     // During build time, return 200 empty instead of 401
     if (!userId) {
       console.warn('[Analytics API] No userId found in session')
-      return NextResponse.json(buildEmptyResponse(), { status: 200 })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     console.log(`[Analytics API] Fetching analytics for userId: ${userId}, days: ${days}`)

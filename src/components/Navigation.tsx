@@ -7,6 +7,8 @@ import { useState, useEffect } from 'react'
 import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useUser, useClerk } from '@clerk/nextjs'
 import { Menu, X, Sparkles, LayoutDashboard, MessageSquare, BarChart3, Plug2, User, Settings, FileText, Puzzle, LogOut, Bot, Download } from 'lucide-react'
 import { usePWAInstall } from '@/hooks/usePWAInstall'
+import { useToast } from '@/components/ui/Toast'
+import { sanitizationService } from '@/lib/sanitization'
 
 function useHydrated() {
   const [hydrated, setHydrated] = useState(false)
@@ -40,6 +42,13 @@ function UserProfile() {
         const response = await fetch('/api/user/me', {
           cache: 'no-store'
         })
+
+        // 401 = not signed in, silently bail
+        if (response.status === 401 || response.status === 500) {
+          setUserData(null)
+          return
+        }
+
         const text = await response.text()
 
         // Check if response is NOT valid JSON
@@ -58,7 +67,6 @@ function UserProfile() {
         }
       } catch (err) {
         retryCount++
-        console.error('User data fetch failed (attempt ' + retryCount + '):', err)
         // Silently handle - don't show error
         if (isMounted) {
           setUserData(null)
@@ -161,6 +169,7 @@ export default function Navigation() {
 
   const [isHovered, setIsHovered] = useState<string | null>(null)
   const { canInstall, isInstalled, isChecking, triggerInstall, deferredPrompt: currentPrompt } = usePWAInstall();
+  const { success: toastSuccess } = useToast()
   const [showInstallModal, setShowInstallModal] = useState(false)
   const [installInstructions, setInstallInstructions] = useState<{title: string, desc: string, icon: any} | null>(null)
   const [isInstalling, setIsInstalling] = useState(false)
@@ -175,7 +184,7 @@ export default function Navigation() {
     setInstallStarted(true)
 
     if (isInstalled) {
-      alert('App already installed! Check your home screen.')
+      toastSuccess('Already installed', 'Check your home screen or app list.')
       setIsInstalling(false)
       return
     }

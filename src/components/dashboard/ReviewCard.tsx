@@ -3,6 +3,7 @@
 import { motion, AnimatePresence, PanInfo } from 'framer-motion'
 import { useState, useCallback } from 'react'
 import { Edit2, Trash2, Check, X, ThumbsUp, ThumbsDown, MessageSquare, Send } from 'lucide-react'
+import { SanitizationService } from '@/lib/sanitization'
 
 interface Review {
   id: string
@@ -14,6 +15,14 @@ interface Review {
   reply?: string | null
 }
 
+// Sanitize review data to prevent XSS
+const sanitizeReview = (review: Review): Review => ({
+  ...review,
+  content: SanitizationService.sanitizeReviewText(review.content),
+  author: SanitizationService.sanitizeUserName(review.author),
+  reply: review.reply ? SanitizationService.sanitizeInput(review.reply) : null
+})
+
 interface ReviewCardProps {
   review: Review
   onSwipeLeft: (id: string) => void
@@ -23,10 +32,10 @@ interface ReviewCardProps {
   activeTab?: 'pending' | 'approved' | 'rejected'
 }
 
-export default function ReviewCard({ 
-  review, 
-  onSwipeLeft, 
-  onSwipeRight, 
+export default function ReviewCard({
+  review,
+  onSwipeLeft,
+  onSwipeRight,
   onEdit,
   onDelete,
   activeTab = 'pending'
@@ -34,6 +43,10 @@ export default function ReviewCard({
   const [dragOffset, setDragOffset] = useState(0)
   const [showEditModal, setShowEditModal] = useState(false)
   const [editedReply, setEditedReply] = useState(review.reply || '')
+
+  // Sanitize review data and add ARIA labels
+  const sanitizedReview = useCallback(() => sanitizeReview(review), [review])
+  const currentReview = sanitizedReview()
   
   const handleDragEnd = useCallback((event: any, info: PanInfo) => {
     const offset = info.offset.x
@@ -184,11 +197,7 @@ export default function ReviewCard({
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  if (confirm('Are you sure you want to delete this review?')) {
-                    onDelete(review.id)
-                  }
-                }}
+                onClick={() => onDelete && onDelete(review.id)}
                 className="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors"
                 title="Delete Review"
               >

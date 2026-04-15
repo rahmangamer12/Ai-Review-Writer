@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
     }
 
     const provider = longcat;
-    console.log(`[Chat API] Using LongCat for model: ${selectedModel}`);
+
 
     const currentPromptCount = (userDb as any).promptCount ?? 0;
     const currentCredits = (userDb as any).aiCredits ?? 0;
@@ -175,7 +175,7 @@ CRITICAL INSTRUCTIONS FOR YOU:
               });
             }
           } catch (dbErr) {
-            console.error('[Chat API] Database update error:', dbErr);
+            console.error('[Chat API] Database error:', dbErr);
           }
         });
       }
@@ -204,7 +204,7 @@ CRITICAL INSTRUCTIONS FOR YOU:
     }
 
     return NextResponse.json({
-      error: error?.message || 'Unknown error',
+      error: 'An error occurred. Please try again.',
       success: false
     }, { status: 500 });
   }

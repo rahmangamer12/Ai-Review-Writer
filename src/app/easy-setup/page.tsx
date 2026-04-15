@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { managedOAuthService } from '@/lib/oauth-helper'
+import { useToast } from '@/components/ui/Toast'
 
 export default function EasySetupPage() {
   const [step, setStep] = useState<'choose' | 'managed' | 'call' | 'success'>('choose')
@@ -15,6 +16,7 @@ export default function EasySetupPage() {
     preferredTime: '',
     platforms: [] as string[]
   })
+  const { error: toastError } = useToast()
 
   const handleManagedSetup = async () => {
     setLoading(true)
@@ -29,10 +31,10 @@ export default function EasySetupPage() {
       if (result.success) {
         setStep('success')
       } else {
-        alert(result.message)
+        toastError('Setup Failed', result.message)
       }
     } catch {
-      alert('Error submitting request. Please try again.')
+      toastError('Setup Failed', 'Error submitting request. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -46,10 +48,10 @@ export default function EasySetupPage() {
       if (result.success) {
         setStep('success')
       } else {
-        alert(result.message)
+        toastError('Booking Failed', result.message)
       }
     } catch {
-      alert('Error scheduling call. Please try again.')
+      toastError('Booking Failed', 'Error scheduling call. Please try again.')
     } finally {
       setLoading(false)
     }

@@ -3,9 +3,11 @@
 import { motion } from 'framer-motion'
 import { Mail, Phone, MapPin, Clock, Send, Calendar } from 'lucide-react'
 import { useForm, ValidationError } from '@formspree/react'
+import { useToast } from '@/components/ui/Toast'
 
 export default function ContactPage() {
   const [state, handleSubmit] = useForm("xreqgero")
+  const { info: toastInfo } = useToast()
   
   if (!state) {
     return <div className="min-h-screen bg-background flex items-center justify-center">
@@ -15,7 +17,7 @@ export default function ContactPage() {
 
   const handleScheduleCall = () => {
     // Demo mode - show alert
-    alert('📅 Schedule a Call\n\nThis feature would open a calendar booking system (like Calendly).\n\nFor demo purposes, you can contact us at:\nsupport@autoreview-ai.com\n\nWe typically respond within 24 hours!')
+    toastInfo('📅 Schedule a Call', 'This feature would open a calendar booking system.\nFor demo purposes, you can contact us at:\nsupport@autoreview-ai.com')
   }
 
   return (
