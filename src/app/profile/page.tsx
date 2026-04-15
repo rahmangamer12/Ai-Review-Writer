@@ -301,18 +301,30 @@ export default function ProfilePage() {
     }
   }
 
+  const [loadTimeout, setLoadTimeout] = useState(false)
+  useEffect(() => {
+    const timer = setTimeout(() => setLoadTimeout(true), 8000)
+    return () => clearTimeout(timer)
+  }, [])
+
   // Loading state
   if (!isLoaded) {
     return (
-      <div className="min-h-[100dvh] bg-background flex items-center justify-center overflow-x-hidden">
+      <div className="min-h-[100dvh] bg-background flex flex-col items-center justify-center overflow-x-hidden">
         <motion.div 
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="text-center"
+          className="text-center mb-6"
         >
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-white/70">Loading...</p>
+          <p className="text-white/70">{loadTimeout ? 'Still loading...' : 'Loading...'}</p>
         </motion.div>
+        {loadTimeout && (
+          <div className="text-center max-w-sm px-4">
+            <p className="text-red-400 text-sm mb-4">Authentication is taking longer than expected. Please check your connection or reload the page.</p>
+            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors">Reload Page</button>
+          </div>
+        )}
       </div>
     )
   }

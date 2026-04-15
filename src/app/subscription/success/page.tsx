@@ -56,10 +56,22 @@ function SubscriptionSuccessContent() {
     handleSuccess()
   }, [isLoaded, user, searchParams, router])
 
+  const [loadTimeout, setLoadTimeout] = useState(false)
+  useEffect(() => {
+    const timer = setTimeout(() => setLoadTimeout(true), 8000)
+    return () => clearTimeout(timer)
+  }, [])
+
   if (!isLoaded) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary mb-4" />
+        {loadTimeout && (
+          <div className="text-center max-w-sm px-4">
+            <p className="text-red-400 text-sm mb-4">Authentication is taking longer than expected. Please check your connection or reload the page.</p>
+            <button onClick={() => window.location.reload()} className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-xl text-white transition-colors">Reload Page</button>
+          </div>
+        )}
       </div>
     )
   }

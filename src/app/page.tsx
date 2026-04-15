@@ -132,24 +132,13 @@ export default function Home() {
     }).catch(() => {})
   }, [])
 
+
+
   useEffect(() => {
-    // Wait for Clerk to load securely
-    if (isLoaded) {
-      if (isSignedIn) {
-        router.replace('/dashboard')
-      } else {
-        setShouldRender(true)
-      }
+    if (isLoaded && isSignedIn) {
+      router.replace('/dashboard')
     }
   }, [isLoaded, isSignedIn, router])
-
-  if (!isLoaded || !shouldRender) {
-    return (
-      <div className="min-h-[100dvh] bg-[#050505] flex items-center justify-center relative overflow-x-hidden" suppressHydrationWarning>
-        <div className="w-8 h-8 rounded-full border-2 border-neutral-800 border-t-neutral-300 animate-spin" suppressHydrationWarning />
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-[100dvh] bg-[#050505] font-sans selection:bg-neutral-800 selection:text-white overflow-x-hidden">
