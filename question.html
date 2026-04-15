@@ -3,386 +3,291 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Abdul Rehman's VIP Target Paper Prep</title>
+    <title>Abdul Rehman's Mega Board Simulator 2026</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Poppins:wght@300;500;700&display=swap');
+        /* --- MEGA CSS FOR PREMIUM UI --- */
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&family=Fira+Code&display=swap');
 
         :root {
-            --bg-color: #0d1117;
-            --card-bg: #161b22;
-            --primary: #58a6ff;
-            --accent: #2ea043;
-            --warning: #d29922;
-            --text-main: #c9d1d9;
-            --text-muted: #8b949e;
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
+            --bg: #0b0f19; --surface: #151e2e; --surface-2: #1e293b;
+            --primary: #3b82f6; --success: #10b981; --warning: #f59e0b;
+            --danger: #ef4444; --text: #f1f5f9; --text-dim: #94a3b8;
         }
 
         body {
-            font-family: 'Poppins', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            line-height: 1.6;
-            padding: 20px;
+            font-family: 'Nunito', sans-serif; background-color: var(--bg);
+            color: var(--text); margin: 0; padding: 0; line-height: 1.6;
         }
 
-        header {
-            text-align: center;
-            padding: 40px 20px;
-            background: linear-gradient(180deg, rgba(88,166,255,0.1) 0%, rgba(13,17,23,1) 100%);
-            border-bottom: 2px solid #30363d;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            box-shadow: 0 0 20px rgba(88, 166, 255, 0.2);
+        .navbar {
+            background: linear-gradient(90deg, #1e3a8a 0%, #0f172a 100%);
+            padding: 20px; text-align: center; border-bottom: 4px solid var(--primary);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+        .navbar h1 { margin: 0; font-size: 2.5rem; font-weight: 900; color: #fff; letter-spacing: 1px;}
+        .navbar p { margin: 5px 0 0; color: var(--warning); font-weight: bold; font-size: 1.2rem;}
+
+        .container { max-width: 1100px; margin: 30px auto; padding: 0 20px; }
+
+        /* PANIC BUTTON */
+        .panic-box {
+            background-color: rgba(239, 68, 68, 0.1); border: 2px dashed var(--danger);
+            padding: 20px; text-align: center; border-radius: 12px; margin-bottom: 30px;
+            cursor: pointer; transition: 0.3s;
+        }
+        .panic-box:hover { background-color: rgba(239, 68, 68, 0.2); transform: scale(1.02); }
+        .panic-box h2 { color: var(--danger); margin: 0; }
+
+        /* TABS */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;}
+        .tab-btn {
+            flex: 1; padding: 15px; background: var(--surface); color: var(--text);
+            border: 2px solid transparent; border-radius: 8px; font-size: 1.1rem;
+            font-weight: bold; cursor: pointer; transition: all 0.3s ease;
+        }
+        .tab-btn.active { background: var(--primary); border-color: #60a5fa; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4); }
+        .tab-content { display: none; background: var(--surface); padding: 30px; border-radius: 12px; border: 1px solid #334155;}
+        .tab-content.active { display: block; animation: slideUp 0.4s ease-out; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* STORY MODE STYLES */
+        .story-card {
+            background: var(--surface-2); padding: 20px; border-left: 5px solid var(--success);
+            margin-bottom: 20px; border-radius: 8px;
+        }
+        .story-card h3 { color: var(--success); margin-top: 0; font-size: 1.5rem; border-bottom: 1px solid #334155; padding-bottom: 10px;}
+        .story-text { font-size: 1.1rem; color: #cbd5e1; }
+        .formal-text { background: rgba(0,0,0,0.3); padding: 10px; margin-top: 10px; border-radius: 5px; font-style: italic; color: var(--warning);}
+
+        /* FILL IN THE BLANKS */
+        .fib-container { font-size: 1.2rem; line-height: 2.5; }
+        .fib-blank {
+            background: #0f172a; border: none; border-bottom: 2px solid var(--primary);
+            color: var(--success); font-weight: bold; font-size: 1.1rem; padding: 5px 10px;
+            width: 150px; text-align: center; outline: none; font-family: 'Fira Code', monospace;
+        }
+        .fib-blank:focus { border-bottom-color: var(--warning); background: #1e293b;}
+        .check-btn {
+            background: var(--primary); color: white; border: none; padding: 10px 20px;
+            border-radius: 5px; font-weight: bold; cursor: pointer; margin-top: 20px;
         }
 
-        h1 { color: var(--primary); font-size: 2.5rem; text-transform: uppercase; letter-spacing: 2px; }
-        .subtitle { color: var(--accent); font-weight: bold; font-size: 1.2rem; }
-        
-        .container { max-width: 1000px; margin: 0 auto; }
+        /* CODE BLOCK */
+        pre { background: #000; padding: 20px; border-radius: 8px; font-family: 'Fira Code', monospace; color: #a78bfa; overflow-x: auto; border: 1px solid #334155;}
+        .code-comment { color: #10b981; }
+        .code-keyword { color: #f43f5e; }
 
-        .section-title {
-            color: var(--primary);
-            font-size: 1.8rem;
-            margin: 30px 0 15px;
-            border-left: 5px solid var(--accent);
-            padding-left: 15px;
-            background: #161b22;
-            padding: 10px 15px;
-            border-radius: 0 8px 8px 0;
+        /* MCQ MEGA BANK */
+        .mcq-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .mcq-item { background: var(--surface-2); padding: 20px; border-radius: 8px; border: 1px solid #334155; }
+        .mcq-item h4 { margin-top: 0; color: #e2e8f0; font-size: 1.2rem; }
+        .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .opt-btn {
+            background: var(--surface); color: var(--text-dim); border: 1px solid #475569;
+            padding: 12px; border-radius: 6px; cursor: pointer; transition: 0.2s; font-weight: bold; text-align: left;
         }
-
-        /* Accordion Style Cards */
-        .card {
-            background-color: var(--card-bg);
-            border: 1px solid #30363d;
-            border-radius: 10px;
-            margin-bottom: 15px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-        }
-
-        .card:hover {
-            border-color: var(--primary);
-            box-shadow: 0 0 15px rgba(88, 166, 255, 0.1);
-        }
-
-        .card-header {
-            padding: 18px 20px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: #e6edf3;
-            background: #21262d;
-        }
-
-        .card-content {
-            padding: 0 20px;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.4s ease-out, padding 0.4s ease;
-            background-color: var(--card-bg);
-        }
-
-        .card.active .card-content {
-            padding: 20px;
-            max-height: 2000px; /* Arbitrary large number for expansion */
-            border-top: 1px solid #30363d;
-        }
-
-        .card.active .card-header {
-            color: var(--primary);
-        }
-
-        /* Typography & Elements inside Cards */
-        strong { color: var(--warning); }
-        ul, ol { margin-left: 20px; margin-top: 10px; }
-        li { margin-bottom: 8px; }
-
-        pre {
-            background-color: #010409;
-            border: 1px solid #30363d;
-            border-radius: 6px;
-            padding: 15px;
-            overflow-x: auto;
-            margin: 15px 0;
-            font-family: 'Fira Code', monospace;
-            color: #79c0ff;
-        }
-
-        code {
-            font-family: 'Fira Code', monospace;
-            background: #21262d;
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: #ff7b72;
-        }
-
-        .highlight-box {
-            background: rgba(46, 160, 67, 0.1);
-            border-left: 4px solid var(--accent);
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 0 8px 8px 0;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-        }
-        th, td {
-            border: 1px solid #30363d;
-            padding: 10px;
-            text-align: left;
-        }
-        th { background-color: #21262d; color: var(--primary); }
-
-        .progress-container {
-            width: 100%;
-            background-color: #21262d;
-            border-radius: 20px;
-            margin: 20px 0;
-            height: 25px;
-        }
-        .progress-bar {
-            width: 0%;
-            height: 100%;
-            background-color: var(--accent);
-            border-radius: 20px;
-            text-align: center;
-            line-height: 25px;
-            color: white;
-            font-weight: bold;
-            transition: width 0.4s;
-        }
-
-        /* Motivation Footer */
-        .footer-note {
-            text-align: center;
-            margin-top: 50px;
-            padding: 20px;
-            color: var(--warning);
-            font-weight: bold;
-            font-size: 1.2rem;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
-        }
+        .opt-btn:hover { background: #334155; color: #fff; }
+        .opt-btn.correct { background: var(--success); color: #fff; border-color: var(--success); }
+        .opt-btn.wrong { background: var(--danger); color: #fff; border-color: var(--danger); }
     </style>
 </head>
 <body>
 
-<header>
-    <h1>🚀 Target Paper Masterclass</h1>
-    <div class="subtitle">System Override: Abdul Rehman | Mission: 50+ Marks in 3 Hours</div>
-    <p style="margin-top: 10px; color: var(--text-muted);">Sawal padho, answer pe click karo aur ratta laga lo. UI ko interactable banaya hai taake neend na aaye.</p>
-</header>
-
-<div class="container">
-
-    <div class="highlight-box" style="text-align:center;">
-        <strong>Padhai ka Progress:</strong> Har answer yaad karne ke baad apne mind mein tick karo!
-        <div class="progress-container">
-            <div class="progress-bar" id="myBar">0%</div>
-        </div>
+    <div class="navbar">
+        <h1>BSEK MASTER-CLASS 2026</h1>
+        <p>Abdul Rehman | Mission 40+ | Tension Free Zone</p>
     </div>
 
-    <div class="section-title">💻 Section 1: C++ Programming Fundamentals</div>
+    <div class="container">
+        <div class="panic-box" onclick="calmDown()">
+            <h2 id="panic-text">🚨 Darr Lag Raha Hai? Isko Click Karo! 🚨</h2>
+        </div>
 
-    <div class="card" onclick="toggleCard(this)">
-        <div class="card-header">Q: Explain the basic structure of a C++ program. <span>▼</span></div>
-        <div class="card-content">
-            <p>A C++ program consists of 3 main parts:</p>
-            <ol>
-                <li><strong>Header Files:</strong> They contain pre-written functions. e.g., <code>#include &lt;iostream&gt;</code> is used for input/output.</li>
-                <li><strong>Namespace:</strong> <code>using namespace std;</code> tells the compiler to use standard library names.</li>
-                <li><strong>Main Function:</strong> <code>int main()</code> is the starting point of program execution.</li>
-            </ol>
+        <div class="tabs">
+            <div class="tab-btn active" onclick="switchTab('story')">1. Story Mode (Aasaan Alfaz)</div>
+            <div class="tab-btn" onclick="switchTab('fib')">2. Fill in the Blanks</div>
+            <div class="tab-btn" onclick="switchTab('code')">3. Sirf Ye Code Yaad Karo</div>
+            <div class="tab-btn" onclick="switchTab('mcq')">4. Mega MCQs (20 Questions)</div>
+        </div>
+
+        <div id="story" class="tab-content active">
+            <h2 style="color:var(--primary);">Ratta Nahi, Kahani Samjho!</h2>
+            
+            <div class="story-card">
+                <h3>1. Stack aur Queue mein kya farq hai?</h3>
+                <div class="story-text">
+                    <strong>Stack (Shadi ki Plates):</strong> Shadi mein plates ek ke upar ek rakhi hoti hain. Jo plate sab se aakhir mein rakhi jati hai, wahi sab se pehle uthayi jati hai. Isko <strong>LIFO (Last In, First Out)</strong> kehte hain.
+                    <br><br>
+                    <strong>Queue (ATM ki Line):</strong> ATM ke bahar line lagi hoti hai. Jo banda sab se pehle aata hai, usay pehle paise milte hain. Isko <strong>FIFO (First In, First Out)</strong> kehte hain.
+                </div>
+                <div class="formal-text">Paper mein likhna: Stack uses LIFO principle. Queue uses FIFO principle.</div>
+            </div>
+
+            <div class="story-card">
+                <h3>2. Compiler aur Interpreter ka farq?</h3>
+                <div class="story-text">
+                    Maan lo tumhein ek English kitaab parhni hai jo Urdu mein nahi hai.<br>
+                    <strong>Compiler:</strong> Ye wo dost hai jo aapse poori kitaab leta hai, aur agle din poori kitaab ka Urdu tarjuma ek sath la kar de deta hai. (Fast, translates whole code at once).<br>
+                    <strong>Interpreter:</strong> Ye wo dost hai jo aapke sath baithta hai, ek ek line parhta hai aur tarjuma karta hai. Agar koi mushkil lafz aaye toh wahi ruk jata hai. (Slow, translates line-by-line).
+                </div>
+                <div class="formal-text">Paper mein likhna: Compiler translates whole program at once. Interpreter translates line-by-line.</div>
+            </div>
+
+            <div class="story-card">
+                <h3>3. For Loop vs While Loop</h3>
+                <div class="story-text">
+                    <strong>For Loop:</strong> Jab tumhein pehle se pata ho ke kitne chakkar lagane hain. (Jaise: Ground ke theek 5 chakkar lagao).<br>
+                    <strong>While Loop:</strong> Jab tumhein chakkar nahi pata, bas condition pata ho. (Jaise: Tab tak chakkar lagao jab tak thak na jao).
+                </div>
+            </div>
+        </div>
+
+        <div id="fib" class="tab-content">
+            <h2 style="color:var(--success);">Mind Game: Khali Jagah Pur Karein</h2>
+            <p>Keywords yaad nahi ho rahe the na? Ab yahan khud type karo, dimaagh mein chipak jayega. (Answers: LIFO, FIFO, algorithm, semicolon, once)</p>
+
+            <div class="fib-container">
+                1. Stack hamesha <input type="text" class="fib-blank" data-ans="LIFO" placeholder="type here..."> principle par kaam karta hai.<br>
+                2. Queue hamesha <input type="text" class="fib-blank" data-ans="FIFO" placeholder="type here..."> principle par kaam karta hai.<br>
+                3. Ek step-by-step tareeqa kisi problem ko solve karne ka <input type="text" class="fib-blank" data-ans="algorithm" placeholder="type here..."> kehlata hai.<br>
+                4. C++ mein har line ke end mein <input type="text" class="fib-blank" data-ans="semicolon" placeholder="type here..."> (;) lagana lazmi hai.<br>
+                5. Compiler poore program ko at <input type="text" class="fib-blank" data-ans="once" placeholder="type here..."> translate kar deta hai.
+            </div>
+            <button class="check-btn" onclick="checkFIB()">Check Answers</button>
+        </div>
+
+        <div id="code" class="tab-content">
+            <h2 style="color:var(--warning);">Sirf Ye 2 Code Likh Kar Aana Hai</h2>
+            <p>Paper mein lambi kahaniyan nahi parhi jatin. Examiner code dekhta hai. Isko 3 dafa rough copy par likho abhi!</p>
+
+            <h3>1. C++ Ka Basic Dhancha (Skeleton)</h3>
 <pre>
-#include &lt;iostream&gt;
-using namespace std;
+<span class="code-comment">// 1. Header file lazmi hai</span>
+<span class="code-keyword">#include</span> &lt;iostream&gt;
+<span class="code-keyword">using namespace</span> std;
 
-int main() {
-    cout &lt;&lt; "Abdul Rehman will pass!" &lt;&lt; endl;
-    return 0;
+<span class="code-comment">// 2. Main function jahan se program shuru hota hai</span>
+<span class="code-keyword">int</span> main() {
+    <span class="code-comment">// 3. Output print karne ke liye cout</span>
+    cout &lt;&lt; "Bismillah. Paper aasaan hoga!";
+    
+    <span class="code-keyword">return</span> 0;
+}
+</pre>
+
+            <h3>2. FOR Loop Ka Syntax</h3>
+<pre>
+<span class="code-comment">// loop(kahan se shuru; kahan tak; kitna aage barhna hai)</span>
+<span class="code-keyword">for</span> (<span class="code-keyword">int</span> i = 1; i <= 5; i++) {
+    cout &lt;&lt; i &lt;&lt; "\n";
 }
 </pre>
         </div>
-    </div>
 
-    <div class="card" onclick="toggleCard(this)">
-        <div class="card-header">Q: What are the rules for naming a variable? <span>▼</span></div>
-        <div class="card-content">
-            <ul>
-                <li>It can only contain <strong>letters, digits, and underscores (_)</strong>.</li>
-                <li>It <strong>cannot start with a digit</strong>. (e.g., <code>int 1stName;</code> is wrong).</li>
-                <li>No spaces are allowed. (e.g., <code>int my age;</code> is wrong).</li>
-                <li>Keywords (reserved words like int, float, if, else) cannot be used as variable names.</li>
-            </ul>
+        <div id="mcq" class="tab-content">
+            <h2 style="color:var(--danger);">Ultimate 20 MCQs (Board Level)</h2>
+            <div class="mcq-grid" id="mcq-container">
+                </div>
         </div>
+
     </div>
 
-    <div class="card" onclick="toggleCard(this)">
-        <div class="card-header">Q: Difference between while loop and do-while loop? (V. IMP) <span>▼</span></div>
-        <div class="card-content">
-            <table>
-                <tr>
-                    <th>While Loop</th>
-                    <th>Do-While Loop</th>
-                </tr>
-                <tr>
-                    <td>Condition is checked <strong>BEFORE</strong> executing the body (Entry-controlled).</td>
-                    <td>Condition is checked <strong>AFTER</strong> executing the body (Exit-controlled).</td>
-                </tr>
-                <tr>
-                    <td>If condition is false initially, the loop will <strong>never execute</strong>.</td>
-                    <td>The loop will execute <strong>at least once</strong>, even if the condition is false.</td>
-                </tr>
-            </table>
-        </div>
-    </div>
-
-    <div class="section-title">📦 Section 2: Data Structures (Stack & Queue)</div>
-
-    <div class="card" onclick="toggleCard(this)">
-        <div class="card-header">Q: Define Queue and Stack. Write their differences. <span>▼</span></div>
-        <div class="card-content">
-            <p><strong>Stack:</strong> It is a linear data structure that works on the <strong>LIFO</strong> (Last In First Out) principle. Example: A stack of plates. Jo plate sab se aakhir mein rakhi, wo sab se pehle uthayi jayegi.</p>
-            <p><strong>Queue:</strong> It is a linear data structure that works on the <strong>FIFO</strong> (First In First Out) principle. Example: A line of people at a ticket counter. Jo pehle aayega, usay pehle ticket milegi.</p>
-            <div class="highlight-box">
-                <strong>Key Terms:</strong><br>
-                • <strong>PUSH:</strong> Inserting an element into a Stack.<br>
-                • <strong>POP:</strong> Removing an element from a Stack.<br>
-                • <strong>Enqueue:</strong> Inserting an element into a Queue.<br>
-                • <strong>Overflow:</strong> Condition when we try to add an element to a Stack/Queue that is already FULL.
-            </div>
-        </div>
-    </div>
-
-    <div class="section-title">⚠️ Section 3: Translators & Errors</div>
-
-    <div class="card" onclick="toggleCard(this)">
-        <div class="card-header">Q: Define Compiler and Interpreter. <span>▼</span></div>
-        <div class="card-content">
-            <p>Both are Language Translators that convert High-Level Language (Human readable) into Low-Level Language (Machine code 0s and 1s).</p>
-            <ul>
-                <li><strong>Compiler:</strong> Reads the <em>entire program at once</em>, translates it, and generates an object code. It is faster but debugging is harder.</li>
-                <li><strong>Interpreter:</strong> Translates the program <em>line-by-line</em>. If it finds an error, it stops immediately. Slower, but debugging is easier.</li>
-            </ul>
-        </div>
-    </div>
-
-    <div class="card" onclick="toggleCard(this)">
-        <div class="card-header">Q: What are errors? Explain Syntax and Logical Errors. <span>▼</span></div>
-        <div class="card-content">
-            <p>Bugs or mistakes in a program are called errors.</p>
-            <ol>
-                <li><strong>Syntax Error:</strong> Mistake in the grammar or rules of the programming language. Example: Missing a semicolon <code>;</code> at the end of a line. (Caught by compiler easily).</li>
-                <li><strong>Logical Error:</strong> Mistake in the formula or logic of the programmer. Program runs fine but gives the wrong output. Example: Writing <code>a - b</code> instead of <code>a + b</code>. (Hardest to find).</li>
-                <li><strong>Runtime Error:</strong> Program crashes during execution. Example: Dividing a number by zero.</li>
-            </ol>
-        </div>
-    </div>
-
-    <div class="section-title">📊 Section 4: Algorithms & Flowcharts</div>
-
-    <div class="card" onclick="toggleCard(this)">
-        <div class="card-header">Q: Define Algorithm. Write its advantages. <span>▼</span></div>
-        <div class="card-content">
-            <p><strong>Definition:</strong> A step-by-step written procedure in simple English to solve a specific problem.</p>
-            <strong>Advantages:</strong>
-            <ul>
-                <li>Easy to understand as it is written in simple English.</li>
-                <li>Helps to find and fix errors before writing actual code.</li>
-                <li>Breaks down a big complex problem into small, manageable steps.</li>
-            </ul>
-        </div>
-    </div>
-
-    <div class="section-title">🔌 Section 5: Logic Gates & Scratch Basics</div>
-
-    <div class="card" onclick="toggleCard(this)">
-        <div class="card-header">Q: Define AND, OR, NOT and NOR Gates. <span>▼</span></div>
-        <div class="card-content">
-            <ul>
-                <li><strong>AND Gate:</strong> Performs Logical Multiplication (.). Output is 1 ONLY if all inputs are 1.</li>
-                <li><strong>OR Gate:</strong> Performs Logical Addition (+). Output is 1 if AT LEAST ONE input is 1.</li>
-                <li><strong>NOT Gate (Inverter):</strong> Reverses the input. If input is 0, output is 1. If input is 1, output is 0.</li>
-                <li><strong>NOR Gate:</strong> Opposite of OR Gate (OR + NOT). Output is 1 ONLY if all inputs are 0.</li>
-            </ul>
-            <p><em>*Truth Table: A mathematical table used in logic to compute the functional values of logical expressions.</em></p>
-        </div>
-    </div>
-
-    <div class="card" onclick="toggleCard(this)">
-        <div class="card-header">Q: Explain Scratch terms: Script, Sprite, Backdrop. <span>▼</span></div>
-        <div class="card-content">
-            <ul>
-                <li><strong>Sprite:</strong> A character or object in Scratch that performs actions on the stage (e.g., the default Cat).</li>
-                <li><strong>Script:</strong> A stack of blocks joined together to tell a Sprite what to do (like a program).</li>
-                <li><strong>Backdrop:</strong> The background image of the Stage where sprites move.</li>
-            </ul>
-            <strong>Blocks Purpose:</strong>
-            <ul>
-                <li><code>forever</code>: Runs the blocks inside it over and over again infinitely.</li>
-                <li><code>go to x: y:</code>: Instantly moves the sprite to specific coordinates on the screen.</li>
-            </ul>
-        </div>
-    </div>
-
-    <div class="footer-note">
-        "Mehnat kabhi zaya nahi jati Abdul Rehman. Is page ko agle 2 ghante baar baar parho. You got this!" 💯
-    </div>
-
-</div>
-
-<script>
-    let openedCards = 0;
-    const totalCards = document.querySelectorAll('.card').length;
-
-    function toggleCard(element) {
-        // Toggle the active class
-        element.classList.toggle('active');
-        
-        // Update arrow
-        const headerText = element.querySelector('.card-header');
-        if(element.classList.contains('active')) {
-            headerText.innerHTML = headerText.innerHTML.replace('▼', '▲');
-            openedCards++;
-        } else {
-            headerText.innerHTML = headerText.innerHTML.replace('▲', '▼');
-            // We don't decrease progress, let him feel good about reading it once
+    <script>
+        // --- 1. PANIC BUTTON LOGIC ---
+        function calmDown() {
+            const msgs = [
+                "Tu akela nahi hai bhai, hazaron bache is waqt jag rahe hain!",
+                "Sirf 33 marks lene hain pass hone ke liye, wo MCQs aur short se aa jayenge!",
+                "Exam check karne wala bhi insaan hai, heading likh kar aana number milenge!",
+                "Computer science Pak studies nahi hai, lambi nahi chhorni, To the point likhna hai!",
+                "Ratta mat maar, kahani yaad kar, Inshallah kal paper A1 hoga!"
+            ];
+            const text = document.getElementById('panic-text');
+            const randomMsg = msgs[Math.floor(Math.random() * msgs.length)];
+            text.innerText = "💡 " + randomMsg;
+            text.style.color = "#10b981";
         }
 
-        // Update Progress Bar
-        updateProgress();
-    }
-
-    function updateProgress() {
-        // Limit to 100%
-        let percentage = Math.min((openedCards / totalCards) * 100, 100);
-        const bar = document.getElementById("myBar");
-        bar.style.width = percentage + "%";
-        bar.innerHTML = Math.round(percentage) + "% Ready!";
-        
-        if(percentage === 100) {
-            bar.style.backgroundColor = "#2ea043"; // Make it green
+        // --- 2. TABS LOGIC ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+            
+            document.getElementById(tabId).classList.add('active');
+            event.target.classList.add('active');
         }
-    }
-</script>
 
+        // --- 3. FILL IN THE BLANKS LOGIC ---
+        function checkFIB() {
+            const inputs = document.querySelectorAll('.fib-blank');
+            inputs.forEach(input => {
+                const ans = input.getAttribute('data-ans').toLowerCase();
+                const val = input.value.trim().toLowerCase();
+                if(val === ans) {
+                    input.style.borderColor = "var(--success)";
+                    input.style.color = "var(--success)";
+                } else {
+                    input.style.borderColor = "var(--danger)";
+                    input.style.color = "var(--danger)";
+                }
+            });
+        }
+
+        // --- 4. MCQ DATA & LOGIC ---
+        const mcqData = [
+            {q: "C++ was developed by?", opts: ["Bill Gates", "Dennis Ritchie", "Bjarne Stroustrup", "Steve Jobs"], ans: 2},
+            {q: "Which data structure follows FIFO?", opts: ["Stack", "Queue", "Tree", "Graph"], ans: 1},
+            {q: "Which translator converts line-by-line?", opts: ["Compiler", "Assembler", "Interpreter", "Linker"], ans: 2},
+            {q: "Logical Error can be found by?", opts: ["Compiler", "User/Programmer", "Interpreter", "Operating System"], ans: 1},
+            {q: "Algorithm written in shapes is called?", opts: ["Program", "Syntax", "Flowchart", "Code"], ans: 2},
+            {q: "Symbol for Decision Making in Flowchart is?", opts: ["Oval", "Rectangle", "Diamond", "Parallelogram"], ans: 2},
+            {q: "Data type for characters like 'A' is?", opts: ["int", "float", "char", "bool"], ans: 2},
+            {q: "Which is a valid variable name?", opts: ["1st_name", "my name", "total_marks", "int"], ans: 2},
+            {q: "A condition that is always false in AND Gate produces?", opts: ["1", "0", "True", "High"], ans: 1},
+            {q: "NOT Gate is also known as?", opts: ["Multiplier", "Adder", "Inverter", "Divider"], ans: 2},
+            {q: "Which loop checks condition at the end?", opts: ["For", "While", "Do-While", "Nested"], ans: 2},
+            {q: "Array index always starts from?", opts: ["1", "0", "-1", "2"], ans: 1},
+            {q: "To move to a new line in C++, we use?", opts: ["\\t", "\\a", "\\b", "\\n"], ans: 3},
+            {q: "The main() in C++ is a?", opts: ["Variable", "Function", "Header File", "Object"], ans: 1},
+            {q: "Variable declared outside all functions is called?", opts: ["Local", "Global", "Static", "Private"], ans: 1},
+            {q: "In Scratch, the character is called?", opts: ["Actor", "Sprite", "Hero", "Script"], ans: 1},
+            {q: "Pushing means?", opts: ["Removing from Queue", "Adding to Stack", "Removing from Stack", "Adding to Queue"], ans: 1},
+            {q: "Which is not a logic gate?", opts: ["AND", "OR", "IF", "NOT"], ans: 2},
+            {q: "The block 'forever' in scratch is a type of?", opts: ["Condition", "Variable", "Loop", "Event"], ans: 2},
+            {q: "To store decimal values like 3.14, we use?", opts: ["int", "float", "char", "bool"], ans: 1}
+        ];
+
+        const mcqContainer = document.getElementById('mcq-container');
+        
+        mcqData.forEach((item, index) => {
+            let optsHTML = '';
+            item.opts.forEach((opt, oIdx) => {
+                optsHTML += `<button class="opt-btn" onclick="checkMCQ(this, ${oIdx}, ${item.ans})">${opt}</button>`;
+            });
+            
+            mcqContainer.innerHTML += `
+                <div class="mcq-item">
+                    <h4>Q${index + 1}: ${item.q}</h4>
+                    <div class="options">${optsHTML}</div>
+                </div>
+            `;
+        });
+
+        function checkMCQ(btn, selected, correct) {
+            const parent = btn.parentElement;
+            const buttons = parent.querySelectorAll('.opt-btn');
+            
+            // Disable all buttons in this question
+            buttons.forEach(b => b.style.pointerEvents = 'none');
+            
+            if(selected === correct) {
+                btn.classList.add('correct');
+            } else {
+                btn.classList.add('wrong');
+                buttons[correct].classList.add('correct');
+            }
+        }
+    </script>
 </body>
 </html>

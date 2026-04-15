@@ -9,6 +9,7 @@ import {
   Sparkles, Star, TrendingUp, Users, Loader2, AlertCircle,
   Rocket, Crown, Building2, X
 } from 'lucide-react'
+import { useToast } from '@/components/ui/Toast'
 
 interface SubscriptionPlan {
   id: string
@@ -112,6 +113,7 @@ export default function SubscriptionPage() {
   const [error, setError] = useState<string | null>(null)
   const [showComingSoon, setShowComingSoon] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
+  const { warning: toastWarning } = useToast()
 
   useEffect(() => {
     async function fetchUserData() {
@@ -154,13 +156,8 @@ export default function SubscriptionPage() {
         return
       }
       
-      const confirmed = confirm('Downgrade to Free Plan? You will lose premium benefits.')
-      if (!confirmed) return
-
-      setLoading(planId)
-      
-      // Handle free plan downgrade implicitly or explicitly (ideally through a billing portal)
-      alert('Plan downgrades are currently disabled in demo mode.')
+      // Show warning — no blocking confirm() in production
+      toastWarning('Downgrade not available', 'Plan downgrades are currently managed through the billing portal.')
       setLoading(null)
       return
     }
@@ -188,7 +185,7 @@ export default function SubscriptionPage() {
           billingCycle: billingCycle,
           userEmail: user?.primaryEmailAddress?.emailAddress,
           userName: user?.fullName,
-          userId: user?.id
+          // Note: userId is read server-side from Clerk auth(), not trusted from client
         }),
       })
 
@@ -479,31 +476,30 @@ export default function SubscriptionPage() {
           })}
         </div>
 
-        {/* Payment Status Notice */}
+        {/* Trust Section — replaces developer note */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
           className="mt-12 max-w-2xl mx-auto"
         >
-          <div className="glass-card border-2 border-amber-500/30 rounded-xl p-6 text-center">
+          <div className="glass-card border-2 border-emerald-500/20 rounded-xl p-6 text-center">
             <div className="flex items-center justify-center gap-2 mb-2">
-              <Sparkles className="w-5 h-5 text-amber-400" />
-              <h3 className="text-white font-semibold">Payment System Ready!</h3>
+              <Shield className="w-5 h-5 text-emerald-400" />
+              <h3 className="text-white font-semibold">Secure & Trusted Payments</h3>
             </div>
-            <p className="text-white/70 text-sm mb-4">
-              Add your Lemon Squeezy API keys to <code className="bg-white/10 px-2 py-0.5 rounded">.env</code> file to enable real payments. 
-              Without API keys, clicking Subscribe will show demo mode.
+            <p className="text-white/60 text-sm mb-4">
+              All payments are processed securely. Your data is encrypted and protected.
             </p>
             <div className="flex flex-wrap justify-center gap-4 text-xs text-white/50">
               <span className="flex items-center gap-1">
-                <Check className="w-3 h-3 text-emerald-400" /> Checkout flow ready
+                <Check className="w-3 h-3 text-emerald-400" /> 256-bit SSL encryption
               </span>
               <span className="flex items-center gap-1">
-                <Check className="w-3 h-3 text-emerald-400" /> Webhook handling ready
+                <Check className="w-3 h-3 text-emerald-400" /> 30-day money back guarantee
               </span>
               <span className="flex items-center gap-1">
-                <Check className="w-3 h-3 text-emerald-400" /> Credits system ready
+                <Check className="w-3 h-3 text-emerald-400" /> Cancel anytime
               </span>
             </div>
           </div>

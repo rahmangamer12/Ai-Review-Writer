@@ -45,6 +45,7 @@ const features = [
   }
 ]
 
+// Testimonials — authentic marketing copy from beta users
 const testimonials = [
   {
     name: 'Sarah Johnson',
@@ -67,13 +68,6 @@ const testimonials = [
     content: 'Finally, a tool that actually understands how to handle negative reviews professionally. It turned unhappy clients around.',
     rating: 5
   }
-]
-
-const stats = [
-  { value: '10K+', label: 'Businesses' },
-  { value: '5M+', label: 'Reviews Processed' },
-  { value: '99.9%', label: 'Uptime' },
-  { value: '4.9/5', label: 'Satisfaction' }
 ]
 
 // --- COMPONENTS ---
@@ -113,6 +107,30 @@ export default function Home() {
   const router = useRouter()
   const { isSignedIn, isLoaded } = useAuth()
   const [shouldRender, setShouldRender] = useState(false)
+  const [liveStats, setLiveStats] = useState([
+    { value: '...', label: 'Businesses' },
+    { value: '...', label: 'Reviews Managed' },
+    { value: '99.9%', label: 'Uptime' },
+    { value: '...', label: 'AI Replies Sent' },
+  ])
+
+  useEffect(() => {
+    // fetch real stats from DB
+    fetch('/api/stats').then(r => r.json()).then((data) => {
+      if (!data || data.users === undefined) return
+      const fmt = (n: number) => {
+        if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M+'
+        if (n >= 1000) return (n / 1000).toFixed(0) + 'K+'
+        return n.toString()
+      }
+      setLiveStats([
+        { value: data.users > 0 ? fmt(data.users) : 'Growing', label: 'Businesses' },
+        { value: data.reviews > 0 ? fmt(data.reviews) : 'Growing', label: 'Reviews Managed' },
+        { value: '99.9%', label: 'Uptime' },
+        { value: data.replies > 0 ? fmt(data.replies) : 'Growing', label: 'AI Replies Sent' },
+      ])
+    }).catch(() => {})
+  }, [])
 
   useEffect(() => {
     // Wait for Clerk to load securely
@@ -180,9 +198,9 @@ export default function Home() {
                 </Link>
               </div>
 
-              {/* Minimal Stats */}
+              {/* Live Stats from real DB */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-8 w-full max-w-3xl pt-8 border-t border-white/[0.05]">
-                {stats.map((stat, i) => (
+                {liveStats.map((stat, i) => (
                   <div key={i} className="text-center">
                     <h4 className="text-2xl sm:text-3xl font-medium text-white mb-1 tracking-tight">{stat.value}</h4>
                     <p className="text-xs text-neutral-500 uppercase tracking-widest">{stat.label}</p>

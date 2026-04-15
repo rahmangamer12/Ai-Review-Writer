@@ -1,12 +1,21 @@
 /**
  * LongCat AI Integration Service
  * Provides AI-powered review analysis and response generation
+ *
+ * SECURITY NOTE: This client-side service should NOT contain API keys.
+ * All AI processing should be done through API routes for security.
  */
 
 const LONGCAT_API_URL = "https://api.longcat.chat/openai/v1/chat/completions";
 
-// Get API key from environment variable
+// Get API key from environment variable - ONLY for server-side use
 const getApiKey = () => {
+  // Only access API key in server context
+  if (typeof window !== 'undefined') {
+    console.warn('Warning: Attempting to access API key from client-side code');
+    return '';
+  }
+
   if (typeof process !== 'undefined' && process.env) {
     return process.env.LONGCAT_AI_API_KEY || '';
   }
@@ -118,7 +127,6 @@ export class LongCatAI {
     this.apiKey = apiKey || getApiKey();
     this.apiUrl = apiUrl;
     this.circuitBreaker = new CircuitBreaker();
-    console.log('[LongCat] API Key loaded:', this.apiKey ? 'Yes (length: ' + this.apiKey.length + ')' : 'NO - Empty!');
   }
 
   // Always read fresh from env (in case of Next.js module caching)
@@ -129,7 +137,6 @@ export class LongCatAI {
   // Reset circuit breaker - useful when API key is updated
   public resetCircuitBreaker(): void {
     this.circuitBreaker = new CircuitBreaker();
-    console.log('[LongCat] Circuit breaker reset');
   }
 
   // Check if API key is configured
@@ -172,11 +179,8 @@ export class LongCatAI {
 
       try {
         if (!currentApiKey) {
-          console.warn('[LongCat] No API key found, cannot make API call');
-          throw new Error('No API key configured. Please add LONGCAT_AI_API_KEY to your .env file.');
+          throw new Error('AI service is not configured.');
         }
-
-        console.log('[LongCat] Sending request with model:', model);
 
         const requestBody = {
           model,
@@ -185,14 +189,7 @@ export class LongCatAI {
           temperature: options.temperature || 0.7,
         };
         
-        if (model.includes('Omni')) {
-          console.log('[LongCat] Request Detail (Omni):', {
-            model,
-            msgCount: messages.length,
-            roles: messages.map(m => m.role),
-            hasImages: messages.some(m => Array.isArray(m.content) && m.content.some(cp => cp.type === 'image_url'))
-          });
-        }
+
 
         const response = await fetch(this.apiUrl, {
           method: "POST",
@@ -213,8 +210,6 @@ export class LongCatAI {
         const data: ChatCompletionResponse = await response.json();
         const content = data.choices[0]?.message?.content || "";
 
-        console.log('[LongCat] Response received:', content.substring(0, 100) + '...');
-
         return content;
       } finally {
         clearTimeout(timeoutId);
@@ -226,17 +221,13 @@ export class LongCatAI {
       try {
         return await this.circuitBreaker.call(makeCall);
       } catch (error) {
-        console.error(`[LongCat] Attempt ${attempt + 1} failed:`, error);
-
         // If this was the last attempt, throw the error
         if (attempt === maxRetries) {
           throw error;
         }
 
-        // Wait before retrying (exponential backoff with max cap)
-        // Cap at 10 seconds to prevent indefinite waiting
+        // Exponential backoff with 10s max
         const delay = Math.min(Math.pow(2, attempt) * 1000, 10000);
-        console.log(`[LongCat] Retrying in ${delay}ms...`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
     }

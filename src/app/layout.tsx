@@ -6,13 +6,14 @@ import Navigation from "@/components/Navigation";
 import ClientOnly from "@/components/ClientOnly";
 import DynamicBackground from "@/components/DynamicBackground";
 import FeedbackWidget from "@/components/FeedbackWidget";
-import AIChatbot from "@/components/AIChatbotWidget";
+import ConditionalChatbot from "@/components/ConditionalChatbot";
 import HydrationSuppressor from "@/components/HydrationSuppressor";
 import HydrationFix from "@/components/HydrationFix";
 import PWAUpdateNotification from "@/components/PWAUpdateNotification";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { ClerkProvider } from '@clerk/nextjs'
+import { ToastProvider } from '@/components/ui/Toast'
 
 const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
@@ -79,6 +80,7 @@ export default function RootLayout({
         >
           <DynamicBackground />
           <ErrorBoundary>
+            <ToastProvider>
             <div className="flex flex-col lg:flex-row min-h-[100dvh] max-w-[100vw] relative z-10" suppressHydrationWarning>
               <Navigation />
               <main className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pt-[calc(57px+env(safe-area-inset-top))] lg:pt-0 pb-[calc(72px+env(safe-area-inset-bottom))] lg:pb-0 min-w-0 max-w-full lg:pl-64 xl:pl-72" suppressHydrationWarning>
@@ -87,6 +89,7 @@ export default function RootLayout({
                 </div>
               </main>
             </div>
+            </ToastProvider>
           </ErrorBoundary>
           
           {/* Hydration Suppressor for browser extension attributes */}
@@ -96,7 +99,7 @@ export default function RootLayout({
           <HydrationFix />
 
           {/* AI Customer Support Chatbot - Floating Widget */}
-          <AIChatbot />
+          <ConditionalChatbot />
 
           {/* Feedback Widget */}
           <FeedbackWidget />

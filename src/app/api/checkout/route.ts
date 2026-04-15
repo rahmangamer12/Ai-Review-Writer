@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { lemonSqueezy } from '@/lib/lemonsqueezy'
+import { auth } from '@clerk/nextjs/server'
 
 export async function POST(request: NextRequest) {
   try {
-    const { plan, billingCycle, userEmail, userName, userId } = await request.json()
+    const { userId } = await auth()
+
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { plan, billingCycle, userEmail, userName } = await request.json()
 
     // Validate plan - accept all valid plan IDs
     if (!plan || !['starter', 'growth', 'business', 'professional', 'enterprise'].includes(plan)) {

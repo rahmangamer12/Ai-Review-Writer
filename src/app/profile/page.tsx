@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
+import { useToast } from '@/components/ui/Toast'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useUser } from '@clerk/nextjs'
 import Link from 'next/link'
@@ -82,6 +83,7 @@ export default function ProfilePage() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [reviewsData, setReviewsData] = useState<ReviewData[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const { success: toastSuccess, error: toastError } = useToast()
 
   const loadProfile = useCallback(async () => {
     if (!user) return
@@ -270,12 +272,10 @@ export default function ProfilePage() {
       
       setProfile(updatedProfile)
       setEditing(false)
-      
-      // Show success message
-      alert('✅ Profile updated successfully!')
+      toastSuccess('Profile updated!', 'Your profile has been saved successfully.')
     } catch (error) {
       console.error('Error saving profile:', error)
-      alert('❌ Failed to save profile. Please try again.')
+      toastError('Save failed', 'Could not save profile. Please try again.')
     } finally {
       setSaving(false)
     }
@@ -291,14 +291,11 @@ export default function ProfilePage() {
       const imageUrl = URL.createObjectURL(file)
       
       setEditedProfile(prev => ({ ...prev, avatar_url: imageUrl }))
-      
-      // Simulate upload delay
       await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      alert('✅ Avatar uploaded successfully!')
+      toastSuccess('Avatar updated!', 'Your profile photo has been updated.')
     } catch (error) {
       console.error('Error uploading avatar:', error)
-      alert('❌ Failed to upload avatar. Please try again.')
+      toastError('Upload failed', 'Could not upload avatar. Please try again.')
     } finally {
       setUploadingAvatar(false)
     }

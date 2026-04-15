@@ -22,8 +22,7 @@ body {
   overscroll-behavior-y: none;
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  user-select: none;
+  /* Removed global user-select:none — users need to copy review text & AI replies */
   width: 100%;
   min-width: 100%;
   max-width: 100vw;
@@ -33,7 +32,19 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Allow text selection in content areas */
+/* Allow text selection everywhere — use .no-select on UI chrome only */
+body, p, span, h1, h2, h3, h4, h5, h6, li, a, div {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Buttons, nav, icons — not selectable (UX intent) */
+button, nav, .no-select, [role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Always selectable in form fields */
 input, textarea, [contenteditable], .select-text {
   -webkit-user-select: text;
   user-select: text;

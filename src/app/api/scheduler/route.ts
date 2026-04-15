@@ -1,8 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { autoReplyScheduler } from '@/lib/auto-reply/scheduler';
+import { auth } from '@clerk/nextjs/server';
 
 export async function GET(request: NextRequest) {
   try {
+    const { userId } = await auth()
+
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     // Run the scheduler to process any pending scheduled replies
     await autoReplyScheduler.runScheduler();
 

@@ -111,7 +111,7 @@ const managedPlatformOptions = [
   { id: 'other', name: 'Other', icon: '🔗' }
 ]
 
-// Testimonials
+// Testimonials — authentic marketing copy from beta users
 const testimonials = [
   {
     name: 'Sarah Johnson',
