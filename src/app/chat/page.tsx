@@ -36,6 +36,7 @@ export default function ChatPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isVoiceActive, setIsVoiceActive] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
+  const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null)
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
   const [showModelSelector, setShowModelSelector] = useState(false)
@@ -248,17 +249,41 @@ export default function ChatPage() {
     }
   }, [input, uploadedFiles, isLoading, currentSessionId, messages, selectedModel, activeModel, addNotification])
 
-  const handleVoice = useCallback(() => {
+  const handleVoice = useCallback(async () => {
     if (isVoiceActive) {
       recognitionRef.current?.stop()
       setIsVoiceActive(false)
       return
     }
     const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition
-    if (!SpeechRecognition) return addNotification('Voice not supported', 'error')
+    if (!SpeechRecognition) {
+      addNotification('Voice input not supported in this browser. Try Chrome.', 'error')
+      return
+    }
+    // Request mic permission explicitly
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true })
+    } catch (err) {
+      addNotification('Microphone access denied. Please enable it in browser settings.', 'error')
+      return
+    }
     const rec = new SpeechRecognition()
+    rec.lang = 'en-US'
+    rec.interimResults = false
+    rec.maxAlternatives = 1
     rec.onstart = () => setIsVoiceActive(true)
-    rec.onresult = (e: any) => setInput(e.results[0][0].transcript)
+    rec.onresult = (e: any) => {
+      const transcript = e.results[0][0].transcript
+      setInput(prev => prev ? prev + ' ' + transcript : transcript)
+    }
+    rec.onerror = (e: any) => {
+      console.warn('Voice error:', e.error)
+      addNotification(
+        e.error === 'not-allowed' ? 'Microphone access denied.' : 'Voice recognition failed. Try again.',
+        'error'
+      )
+      setIsVoiceActive(false)
+    }
     rec.onend = () => setIsVoiceActive(false)
     recognitionRef.current = rec
     rec.start()
@@ -418,22 +443,27 @@ export default function ChatPage() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto custom-scrollbar px-4 lg:px-12 pb-[140px] md:pb-[100px]">
+        <div className="flex-1 overflow-y-auto custom-scrollbar px-2 sm:px-4 lg:px-12 pb-[180px] sm:pb-[150px] md:pb-[110px] lg:pb-16">
           <div className="max-w-4xl mx-auto w-full py-8">
             <ChatMessages
               messages={messages}
               isLoading={isLoading}
               onRetry={() => handleSend()}
               onCopy={(t) => navigator.clipboard.writeText(t)}
-              onSpeak={(t) => {}}
-              onStopSpeaking={() => {}}
+              onSpeak={(t) => {
+                setIsSpeaking(true)
+              }}
+              onStopSpeaking={() => {
+                window.speechSynthesis?.cancel()
+                setIsSpeaking(false)
+              }}
               isSpeaking={isSpeaking}
             />
             <div ref={messagesEndRef} className="h-1" />
           </div>
         </div>
 
-        <div className="shrink-0 fixed bottom-0 left-0 right-0 z-[29] bg-gradient-to-t from-[#030308] via-[#030308]/95 to-transparent pb-[calc(110px+env(safe-area-inset-bottom))] lg:pb-8 pt-4 px-4 lg:px-12 lg:ml-[calc(16rem+320px)] xl:ml-[calc(18rem+340px)] pointer-events-none">
+        <div className="shrink-0 fixed bottom-0 left-0 right-0 z-[29] bg-gradient-to-t from-[#030308] via-[#030308]/95 to-transparent pb-[calc(80px+env(safe-area-inset-bottom))] lg:pb-6 pt-3 px-3 sm:px-4 lg:px-12 lg:ml-[calc(16rem+320px)] xl:ml-[calc(18rem+340px)] pointer-events-none">
           <div className="max-w-4xl mx-auto w-full flex flex-col gap-3 pointer-events-auto">
             <div className="lg:hidden flex items-center justify-between px-2">
                <button onClick={() => setSidebarOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-white/40 active:scale-95 backdrop-blur-md">

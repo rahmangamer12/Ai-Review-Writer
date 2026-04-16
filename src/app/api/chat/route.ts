@@ -46,8 +46,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Rate limiting - 20 chat requests per minute
-    const rateLimitResult = await rateLimit(userId, RATE_LIMITS.AI_ANALYSIS)
+    // ULTRA-FAST OPTIMIZATION: Run Rate Limit and DB checks concurrently
+    const [rateLimitResult, userDb] = await Promise.all([
+      rateLimit(userId, RATE_LIMITS.AI_ANALYSIS).catch(() => ({ success: true, message: '', resetTime: Date.now(), remaining: 100, limit: 100 })), // Fail open for max speed
+      (prisma.user as any).findUnique({
+        where: { id: userId },
+        select: { aiCredits: true, promptCount: true }
+      }).catch(() => null)
+    ])
 
     if (!rateLimitResult.success) {
       return NextResponse.json(
@@ -62,7 +68,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Validate input
+    // Validate input immediately
     const body = await request.json();
     const validated = chatRequestSchema.parse(body);
 
@@ -75,12 +81,6 @@ export async function POST(request: NextRequest) {
         { status: 503 }
       );
     }
-
-    // Simplified user check - only verify credits, don't create user here
-    let userDb = await (prisma.user as any).findUnique({
-      where: { id: userId },
-      select: { aiCredits: true, promptCount: true }
-    });
 
     // If user doesn't exist, return error (user should be created on sign-up)
     if (!userDb || userDb.aiCredits <= 0) {

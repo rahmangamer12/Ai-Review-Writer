@@ -16,12 +16,19 @@ function getEncryptionKey(): Buffer {
   const keyEnv = process.env.ENCRYPTION_KEY
   
   if (!keyEnv) {
+    // In production, ENCRYPTION_KEY must be set — no insecure fallback allowed
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error(
+        '[SECURITY ERROR] ENCRYPTION_KEY environment variable is not set. ' +
+        'Generate one with: openssl rand -hex 32  — then add it to your .env file.'
+      )
+    }
+    // Development-only fallback (safe to use locally, never in prod)
     console.warn(
-      '[SECURITY WARNING] ENCRYPTION_KEY not set in environment. ' +
-      'Using fallback key. In production, set ENCRYPTION_KEY to a 64-character hex string (32 bytes).'
+      '[DEV WARNING] ENCRYPTION_KEY not set. Using dev-only fallback. ' +
+      'This will throw in production. Generate a key with: openssl rand -hex 32'
     )
-    // Fallback: generate a consistent key from a default (NOT for production)
-    return crypto.createHash('sha256').update('default-fallback-key-change-in-production').digest()
+    return crypto.createHash('sha256').update('dev-only-not-for-production-' + process.env.NODE_ENV).digest()
   }
 
   // Key should be 64 hex characters (32 bytes when decoded)
