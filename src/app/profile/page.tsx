@@ -151,7 +151,7 @@ export default function ProfilePage() {
           avg_response_time: 15,
           total_replies: totalReplies,
           platforms_connected: 0,
-          satisfaction_score: Math.min(100, Math.max(60, Math.floor(avgRating * 20 + responseRate * 0.2)))
+          satisfaction_score: totalReviews === 0 ? 0 : Math.min(100, Math.max(0, Math.floor(avgRating * 20 + responseRate * 0.2)))
         },
         achievements: [], // Could be fetched
         activity: generateActivityLog([], [], totalReviews, totalReplies)

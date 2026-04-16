@@ -92,7 +92,22 @@ export const MODELS: AIModel[] = [
   //   contextTokens: 128000,
   //   supportsVision: true,
   //   supportsThinking: false
-  // } // Disabled - LongCat API returns "json format error"
+  // }, // Disabled - LongCat API returns "json format error"
+  {
+    id: 'gemini-1.5-flash',
+    name: 'Gemini 1.5 Flash',
+    shortName: 'Flash',
+    iconName: 'Globe',
+    description: 'Free Google multimodal AI. Analyzes text, PDFs, files, and images perfectly via Google AI SDK. Supports live web search!',
+    badge: 'VISION (FREE)',
+    badgeColor: 'blue',
+    quality: 95,
+    speed: 'Ultra Fast',
+    context: '1M',
+    contextTokens: 1048576,
+    supportsVision: true,
+    supportsThinking: false
+  }
 ]
 
 export const MODEL_GROUPS = {
@@ -107,7 +122,7 @@ export const MODEL_GROUPS = {
     'LongCat-Flash-Thinking-2601'
   ] as const,
   vision: [
-    // 'LongCat-Flash-Omni-2603' // Disabled - API error
+    'gemini-1.5-flash'
   ] as const
 }
 
