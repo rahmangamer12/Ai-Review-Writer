@@ -161,8 +161,10 @@ CRITICAL INSTRUCTIONS FOR YOU:
       tools: {
         getCurrentTime: tool({
           description: 'Get the exact current date, time, and timezone. Call this when the user asks for the time, date, today, or live time info.',
-          parameters: z.object({}),
-          execute: async () => {
+          parameters: z.object({
+            location: z.string().optional().describe('Optional specific location or timezone, otherwise returns system time')
+          }),
+          execute: async ({ location }) => {
             const date = new Date();
             return {
               time: date.toLocaleTimeString(),
