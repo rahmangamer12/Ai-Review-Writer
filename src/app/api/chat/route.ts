@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import prisma from '@/lib/db';
 import { createOpenAI } from '@ai-sdk/openai';
-import { streamText } from 'ai';
+import { createGoogleGenerativeAI } from '@ai-sdk/google';
+import { streamText, tool } from 'ai';
 import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit';
 import { z } from 'zod';
 
@@ -10,8 +11,13 @@ export const dynamic = 'force-dynamic'
 
 // Configure LongCat as a custom OpenAI provider
 const longcat = createOpenAI({
-  apiKey: process.env.LONGCAT_AI_API_KEY,
+  apiKey: process.env.LONGCAT_AI_API_KEY || 'dummy_key',
   baseURL: 'https://api.longcat.chat/openai/v1',
+});
+
+// Configure Google Generative AI (Free Tier Multimodal Model)
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || 'dummy_key',
 });
 
 // Allowed models for security
@@ -20,7 +26,8 @@ const ALLOWED_MODELS = [
   'LongCat-Flash-Thinking',
   'LongCat-Flash-Thinking-2601',
   'LongCat-Flash-Lite',
-  // 'LongCat-Flash-Omni-2603', // Temporarily disabled - API returns "json format error"
+  'gemini-1.5-flash',
+  'gemini-1.5-pro'
 ];
 
 // Input validation schema
@@ -74,8 +81,14 @@ export async function POST(request: NextRequest) {
 
     const { messages, model: selectedModel, temperature } = validated;
 
-    // Check if LongCat is available
-    if (!process.env.LONGCAT_AI_API_KEY) {
+    // Check if LongCat or Google is available depending on model
+    if (selectedModel.startsWith('gemini') && !process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+      return NextResponse.json(
+        { error: 'Google Gemini models are currently unavailable. Please check your API key.' },
+        { status: 503 }
+      );
+    }
+    if (!selectedModel.startsWith('gemini') && !process.env.LONGCAT_AI_API_KEY) {
       return NextResponse.json(
         { error: 'AI models are currently unavailable. Please check your API key.' },
         { status: 503 }
@@ -93,8 +106,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const provider = longcat;
-
+    const provider = selectedModel.startsWith('gemini') 
+      ? google(selectedModel) 
+      : longcat.chat(selectedModel);
 
     const currentPromptCount = (userDb as any).promptCount ?? 0;
     const currentCredits = (userDb as any).aiCredits ?? 0;
@@ -140,10 +154,46 @@ CRITICAL INSTRUCTIONS FOR YOU:
     const modelMessages = [godTierPrompt, ...formattedMessages.filter((m: any) => m.role !== 'system')];
 
     const result = streamText({
-      model: provider.chat(selectedModel),
+      model: provider,
       messages: modelMessages,
       temperature,
       maxOutputTokens: 2000, // Reduced for faster responses
+      tools: {
+        getCurrentTime: tool({
+          description: 'Get the exact current date, time, and timezone. Call this when the user asks for the time, date, today, or live time info.',
+          parameters: z.object({}),
+          execute: async () => {
+            const date = new Date();
+            return {
+              time: date.toLocaleTimeString(),
+              date: date.toLocaleDateString(),
+              zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+              iso: date.toISOString()
+            };
+          },
+        }),
+        searchWeb: tool({
+          description: 'Search Wikipedia for live real-time information, facts, definitions, and news. Call this when the user asks a question about the real world, events, people, places, or any general knowledge that requires searching.',
+          parameters: z.object({
+            query: z.string().describe('The search query or keyword to find on Wikipedia.')
+          }),
+          execute: async ({ query }) => {
+            try {
+              const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&utf8=&format=json&origin=*`);
+              const data = await res.json();
+              if (data.query && data.query.search && data.query.search.length > 0) {
+                return data.query.search.slice(0, 3).map((item: any) => ({
+                  title: item.title,
+                  snippet: item.snippet.replace(/<\/?[^>]+(>|$)/g, "") // Clean HTML tags
+                }));
+              }
+              return { error: 'No results found on Wikipedia.' };
+            } catch (err) {
+              return { error: 'Search failed.' };
+            }
+          }
+        })
+      },
       async onChunk({ chunk }) {
         // Stream immediately without waiting for DB operations
       },
