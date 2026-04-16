@@ -28,8 +28,22 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AutoReview AI - Review Management",
-  description: "AI-powered review management platform for businesses",
+  title: "AutoReview AI | Automate & Manage Reviews 10x Faster",
+  description: "Boost your business reputation with AutoReview AI. Automatically track, analyze, and reply to customer reviews across Google, Yelp, and Facebook using AI.",
+  keywords: ["review management", "AI auto reply", "reputation management", "customer reviews AI", "Google reviews software"],
+  authors: [{ name: "AutoReview AI Team" }],
+  openGraph: {
+    title: "AutoReview AI - Intelligent Reputation Management",
+    description: "Connect your platforms and let our AI generate personalized, context-aware responses to your customer reviews instantly.",
+    type: "website",
+    url: "https://autoreview.ai",
+    siteName: "AutoReview AI"
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AutoReview AI | Smart Review Automation",
+    description: "Manage your online reputation effortlessly with AI-powered review responses."
+  }
 };
 
 export default function RootLayout({

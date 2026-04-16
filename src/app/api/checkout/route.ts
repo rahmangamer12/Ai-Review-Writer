@@ -22,13 +22,14 @@ export async function POST(request: NextRequest) {
 
     // Check if Lemon Squeezy is configured
     if (!lemonSqueezy.isConfigured()) {
-      console.log('Lemon Squeezy not configured - running in demo mode')
+      console.log('Lemon Squeezy not configured - running in early access mode')
       
-      // Return error so frontend can handle demo mode
+      // Return earlyAccess flag so frontend shows waitlist modal
       return NextResponse.json(
         { 
           error: 'Payment system not configured',
           demo: true,
+          earlyAccess: true,
           message: 'Add LEMONSQUEEZY_API_KEY to .env file for real payments'
         },
         { status: 503 }

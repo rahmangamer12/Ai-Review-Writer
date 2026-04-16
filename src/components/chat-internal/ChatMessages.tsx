@@ -1,12 +1,12 @@
 'use client'
 
-import React, { useState, useEffect, useRef, memo } from 'react'
+import React, { useState, useEffect, useRef, memo, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import dynamic from 'next/dynamic'
 import {
   User, Bot, Clock, Copy, Volume2, VolumeX, RefreshCw,
   Check, X, Smartphone, Ghost, Sparkles, Share2, Edit3,
-  ThumbsUp, ThumbsDown, MoreHorizontal, FileText, Image
+  ThumbsUp, ThumbsDown, MoreHorizontal, FileText, Image, Square
 } from 'lucide-react'
 import type { Message } from './types'
 
@@ -64,32 +64,38 @@ const CodeBlock = memo(({ language, children }: { language: string; children: st
 
 CodeBlock.displayName = 'CodeBlock'
 
+// ✅ FIXED: TypingIndicator — standalone component, only shown via isLoading prop from parent
+// Dots bounce sequentially with proper animation delays
 const TypingIndicator = () => (
   <motion.div
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, y: 5 }}
     className="flex gap-2 sm:gap-3"
   >
     <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-600/20 shrink-0">
       <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 lg:w-5 lg:h-5 text-white" />
     </div>
-    <div className="flex items-center gap-2 sm:gap-2.5 bg-white/[0.05] px-3 sm:px-4 lg:px-5 py-2.5 sm:py-3 lg:py-4 rounded-xl sm:rounded-2xl border border-white/8">
-      <div className="flex gap-1">
+    <div className="flex items-center gap-2 sm:gap-2.5 bg-white/[0.05] px-3 sm:px-4 lg:px-5 py-2.5 sm:py-3 lg:py-4 rounded-xl sm:rounded-2xl border border-white/[0.08]">
+      <div className="flex gap-1 items-center">
         {[0, 1, 2].map(i => (
-          <motion.div
+          <motion.span
             key={i}
-            className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-violet-400 rounded-full"
+            className="block w-2 h-2 bg-violet-400 rounded-full"
             animate={{ y: [0, -6, 0] }}
             transition={{
-              duration: 0.6,
+              duration: 0.7,
               repeat: Infinity,
-              delay: i * 0.15,
+              repeatType: 'loop',
+              delay: i * 0.18,
               ease: 'easeInOut'
             }}
           />
         ))}
       </div>
-      <span className="text-[10px] sm:text-xs text-white/40 ml-0.5 sm:ml-1 font-medium whitespace-nowrap">Thinking...</span>
+      <span className="text-[10px] sm:text-xs text-white/40 ml-1 font-medium whitespace-nowrap">
+        Sarah is thinking...
+      </span>
     </div>
   </motion.div>
 )
@@ -182,10 +188,59 @@ export default function ChatMessages({
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [showCopied, setShowCopied] = useState<string | null>(null)
   const [reactions, setReactions] = useState<Record<string, 'like' | 'dislike' | null>>({})
+  // ✅ Track which message is being read aloud
+  const [speakingId, setSpeakingId] = useState<string | null>(null)
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isLoading])
+
+  // ✅ FIXED: Text-to-speech with proper start/stop
+  const handleSpeak = useCallback((text: string, msgId: string) => {
+    if (!('speechSynthesis' in window)) return
+
+    // Stop if already speaking this message
+    if (speakingId === msgId) {
+      window.speechSynthesis.cancel()
+      setSpeakingId(null)
+      utteranceRef.current = null
+      onStopSpeaking?.()
+      return
+    }
+
+    // Stop any ongoing speech first
+    window.speechSynthesis.cancel()
+
+    const utterance = new SpeechSynthesisUtterance(text)
+    utterance.rate = 1.0
+    utterance.pitch = 1.0
+    utterance.volume = 1.0
+    utterance.onstart = () => {
+      setSpeakingId(msgId)
+      onSpeak?.(text)
+    }
+    utterance.onend = () => {
+      setSpeakingId(null)
+      utteranceRef.current = null
+      onStopSpeaking?.()
+    }
+    utterance.onerror = () => {
+      setSpeakingId(null)
+      utteranceRef.current = null
+    }
+    utteranceRef.current = utterance
+    window.speechSynthesis.speak(utterance)
+  }, [speakingId, onSpeak, onStopSpeaking])
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (utteranceRef.current) {
+        window.speechSynthesis.cancel()
+      }
+    }
+  }, [])
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text)
@@ -265,14 +320,14 @@ export default function ChatMessages({
   }
 
   return (
-    <div className="w-full max-w-full mx-auto space-y-3 sm:space-y-4 lg:space-y-6 py-2 sm:py-4 lg:py-6 px-2 sm:px-3 lg:px-4">
-      <AnimatePresence>
+    <div className="w-full max-w-full mx-auto space-y-3 sm:space-y-4 lg:space-y-6 py-2 sm:py-4 lg:py-6 px-1 sm:px-2 lg:px-4">
+      <AnimatePresence initial={false}>
         {messages.map((msg, idx) => (
           <motion.div
             key={msg.id}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: idx * 0.05, ease: [0.4, 0, 0.2, 1] }}
+            transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
             className={`flex gap-2 sm:gap-3 lg:gap-4 ${msg.role === 'user' ? 'flex-row-reverse' : ''} w-full will-change-transform`}
           >
             {/* Avatar */}
@@ -318,29 +373,38 @@ export default function ChatMessages({
               <div className={`relative p-2.5 sm:p-4 lg:p-5 rounded-xl sm:rounded-2xl lg:rounded-[24px] border shadow-xl transition-all duration-300 w-full ${
                 msg.role === 'user'
                   ? 'bg-gradient-to-br from-violet-600/20 to-indigo-600/20 border-violet-500/20 rounded-tr-md'
-                  : 'bg-gradient-to-br from-white/[0.04] to-white/[0.02] border-white/8 rounded-tl-md'
+                  : 'bg-gradient-to-br from-white/[0.04] to-white/[0.02] border-white/[0.08] rounded-tl-md'
               }`}>
-                <div className="prose prose-invert max-w-none prose-xs sm:prose-sm overflow-x-auto break-words">
-                  {msg.role === 'assistant' && msg.content ? (
-                    <ReactMarkdown components={MarkdownComponents}>
-                      {msg.content}
-                    </ReactMarkdown>
-                  ) : (
-                    <p className="text-xs sm:text-sm lg:text-[15px] leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>
-                  )}
-                </div>
-
-                {/* Typing Indicator */}
-                {msg.isTyping && (
-                  <div className="flex gap-2 mt-3 sm:mt-4 items-center">
-                    <div className="flex gap-1">
-                      <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce" />
-                      <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                      <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                    </div>
-                    <span className="text-[9px] sm:text-[10px] font-medium text-white/20 uppercase tracking-[0.2em] ml-2">
-                      Processing...
-                    </span>
+                {/* ✅ FIXED: Show content OR typing dots, never both */}
+                {msg.isTyping && !msg.content ? (
+                  // Pure typing state — no content yet
+                  <div className="flex gap-1.5 items-center py-1">
+                    {[0, 1, 2].map(i => (
+                      <motion.span
+                        key={i}
+                        className="block w-2 h-2 bg-violet-400 rounded-full"
+                        animate={{ y: [0, -5, 0] }}
+                        transition={{
+                          duration: 0.65,
+                          repeat: Infinity,
+                          repeatType: 'loop',
+                          delay: i * 0.18,
+                          ease: 'easeInOut'
+                        }}
+                      />
+                    ))}
+                    <span className="text-[10px] text-white/30 ml-2 font-medium">Generating...</span>
+                  </div>
+                ) : (
+                  // Content rendering
+                  <div className="prose prose-invert max-w-none prose-xs sm:prose-sm overflow-x-auto break-words">
+                    {msg.role === 'assistant' && msg.content ? (
+                      <ReactMarkdown components={MarkdownComponents}>
+                        {msg.content}
+                      </ReactMarkdown>
+                    ) : (
+                      <p className="text-xs sm:text-sm lg:text-[15px] leading-relaxed whitespace-pre-wrap break-words">{msg.content}</p>
+                    )}
                   </div>
                 )}
 
@@ -359,18 +423,20 @@ export default function ChatMessages({
                 )}
               </div>
 
-              {/* Action Buttons */}
-              {msg.role === 'assistant' && !msg.isTyping && (
+              {/* Action Buttons — assistant */}
+              {msg.role === 'assistant' && !msg.isTyping && msg.content && (
                 <motion.div
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.2, delay: 0.1 }}
                   className="flex items-center gap-1 sm:gap-1.5 mt-2 sm:mt-3 flex-wrap"
                 >
+                  {/* Copy */}
                   <button
                     onClick={() => handleCopy(msg.content, msg.id)}
                     className="p-1.5 sm:p-2 bg-white/[0.03] hover:bg-white/[0.08] rounded-lg sm:rounded-xl text-white/40 hover:text-white transition-colors border border-white/5 active:scale-[0.98]"
                     title="Copy"
+                    aria-label="Copy message"
                   >
                     {showCopied === msg.id ? (
                       <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
@@ -379,23 +445,25 @@ export default function ChatMessages({
                     )}
                   </button>
 
+                  {/* ✅ FIXED: Text-to-speech button — works, shows stop icon when speaking */}
                   <button
-                    onClick={() => isSpeaking ? onStopSpeaking?.() : onSpeak?.(msg.content)}
+                    onClick={() => handleSpeak(msg.content, msg.id)}
                     className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-colors border active:scale-[0.98] ${
-                      isSpeaking
-                        ? 'bg-red-500/20 text-red-400 border-red-500/30'
-                        : 'bg-white/[0.03] hover:bg-white/[0.08] text-white/40 hover:text-white border-white/5'
+                      speakingId === msg.id
+                        ? 'bg-violet-500/20 text-violet-400 border-violet-500/30 animate-pulse'
+                        : 'bg-white/[0.03] hover:bg-white/[0.08] text-white/40 hover:text-violet-400 border-white/5'
                     }`}
-                    title={isSpeaking ? 'Stop' : 'Read aloud'}
+                    title={speakingId === msg.id ? 'Stop reading' : 'Read aloud'}
+                    aria-label={speakingId === msg.id ? 'Stop reading aloud' : 'Read message aloud'}
                   >
-                    {isSpeaking ? (
-                      <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    {speakingId === msg.id ? (
+                      <Square className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current" />
                     ) : (
                       <Volume2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     )}
                   </button>
 
-                  {/* Reaction Buttons */}
+                  {/* Like */}
                   <button
                     onClick={() => handleReaction(msg.id, 'like')}
                     className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all border active:scale-[0.98] ${
@@ -404,10 +472,12 @@ export default function ChatMessages({
                         : 'bg-white/[0.03] hover:bg-white/[0.08] text-white/40 hover:text-emerald-400 border-white/5'
                     }`}
                     title="Like"
+                    aria-label="Like response"
                   >
                     <ThumbsUp className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${reactions[msg.id] === 'like' ? 'fill-current' : ''}`} />
                   </button>
 
+                  {/* Dislike */}
                   <button
                     onClick={() => handleReaction(msg.id, 'dislike')}
                     className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl transition-all border active:scale-[0.98] ${
@@ -416,10 +486,12 @@ export default function ChatMessages({
                         : 'bg-white/[0.03] hover:bg-white/[0.08] text-white/40 hover:text-red-400 border-white/5'
                     }`}
                     title="Dislike"
+                    aria-label="Dislike response"
                   >
                     <ThumbsDown className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${reactions[msg.id] === 'dislike' ? 'fill-current' : ''}`} />
                   </button>
 
+                  {/* Share */}
                   <button
                     onClick={() => {
                       if (navigator.share) {
@@ -430,15 +502,9 @@ export default function ChatMessages({
                     }}
                     className="p-1.5 sm:p-2 bg-white/[0.03] hover:bg-white/[0.08] rounded-lg sm:rounded-xl text-white/40 hover:text-white transition-colors border border-white/5 active:scale-[0.98]"
                     title="Share"
+                    aria-label="Share message"
                   >
                     <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  </button>
-
-                  <button
-                    className="p-1.5 sm:p-2 bg-white/[0.03] hover:bg-white/[0.08] rounded-lg sm:rounded-xl text-white/40 hover:text-white transition-colors border border-white/5 active:scale-[0.98]"
-                    title="More"
-                  >
-                    <MoreHorizontal className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </button>
                 </motion.div>
               )}
@@ -455,22 +521,13 @@ export default function ChatMessages({
                     onClick={() => handleCopy(msg.content, msg.id)}
                     className="p-1.5 sm:p-2 bg-white/[0.03] hover:bg-white/[0.08] rounded-lg sm:rounded-xl text-white/40 hover:text-white transition-colors border border-white/5 active:scale-[0.98]"
                     title="Copy"
+                    aria-label="Copy message"
                   >
                     {showCopied === msg.id ? (
                       <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
                     ) : (
                       <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     )}
-                  </button>
-
-                  <button
-                    onClick={() => {
-                      navigator.clipboard.writeText(msg.content)
-                    }}
-                    className="p-1.5 sm:p-2 bg-white/[0.03] hover:bg-white/[0.08] rounded-lg sm:rounded-xl text-white/40 hover:text-white transition-colors border border-white/5 active:scale-[0.98]"
-                    title="Regenerate"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   </button>
                 </motion.div>
               )}
@@ -479,7 +536,10 @@ export default function ChatMessages({
         ))}
       </AnimatePresence>
 
-      {isLoading && <TypingIndicator />}
+      {/* ✅ FIXED: Standalone typing indicator — only shows during isLoading, not per-message */}
+      <AnimatePresence>
+        {isLoading && <TypingIndicator />}
+      </AnimatePresence>
 
       <div ref={messagesEndRef} className="h-2 sm:h-4" />
     </div>
