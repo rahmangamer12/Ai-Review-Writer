@@ -158,6 +158,7 @@ CRITICAL INSTRUCTIONS FOR YOU:
       messages: modelMessages,
       temperature,
       maxOutputTokens: 2000, // Reduced for faster responses
+      maxSteps: 5,
       tools: {
         // @ts-ignore
         getCurrentTime: tool({
