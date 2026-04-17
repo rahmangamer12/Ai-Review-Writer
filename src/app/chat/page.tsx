@@ -134,10 +134,10 @@ export default function ChatPage() {
     const text = (overrideText || input).trim()
     if ((!text && uploadedFiles.length === 0) || isLoading) return
 
-    // Auto-switch to Omni model if files are uploaded
-    if (uploadedFiles.length > 0 && selectedModel !== 'LongCat-Flash-Omni-2603') {
-      setSelectedModel('LongCat-Flash-Omni-2603')
-      addNotification('Switched to Omni model for file analysis', 'success')
+    // Auto-switch to Vision model if files are uploaded
+    if (uploadedFiles.length > 0 && selectedModel !== 'gemini-2.0-flash') {
+      setSelectedModel('gemini-2.0-flash')
+      addNotification('Switched to Gemini 2.0 Flash for file analysis', 'success')
     }
 
     let sId = currentSessionId || uuidv4()
@@ -207,6 +207,9 @@ export default function ChatPage() {
 
       const decoder = new TextDecoder()
       let accumulatedContent = ''
+      
+      // Update UI initially to show connection established
+      setSessions(prev => prev.map(s => s.id === sId ? { ...s, messages: s.messages.map(m => m.id === aiId ? { ...m, isTyping: true } : m) } : s))
 
       while (true) {
         const { done, value } = await reader.read()
