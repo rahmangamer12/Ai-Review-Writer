@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useUser } from '@clerk/nextjs'
-import { CreditsManager, type CreditUsage } from '@/lib/credits'
+import { type CreditUsage } from '@/lib/credits'
 
 export default function CreditManager() {
   const { user, isLoaded } = useUser()
