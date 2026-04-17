@@ -20,6 +20,7 @@ export interface ChatSession {
 export interface UserData {
   name: string
   email?: string
+  imageUrl?: string | null
   planType: string
   aiCredits: number
   promptCount?: number
