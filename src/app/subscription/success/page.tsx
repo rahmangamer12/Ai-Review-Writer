@@ -26,10 +26,7 @@ function SubscriptionSuccessContent() {
         // Get current plan before updating
         const currentPlan = localStorage.getItem('autoreview-plan') || 'free'
         
-        // Update credits based on new plan
-        CreditsManager.handlePlanChange(user.id, currentPlan, planId)
-        
-        // Update localStorage
+        // Backend handles credits, just update local plan
         localStorage.setItem('autoreview-plan', planId)
         localStorage.removeItem('pending-plan')
         
