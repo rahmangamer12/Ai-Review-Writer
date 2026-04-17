@@ -11,13 +11,13 @@ export const dynamic = 'force-dynamic'
 
 // Configure LongCat as a custom OpenAI provider
 const longcat = createOpenAI({
-  apiKey: process.env.LONGCAT_AI_API_KEY || 'dummy_key',
+  apiKey: process.env.LONGCAT_AI_API_KEY,
   baseURL: 'https://api.longcat.chat/openai/v1',
 });
 
 // Configure Google Generative AI (Free Tier Multimodal Model)
 const google = createGoogleGenerativeAI({
-  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY || 'dummy_key',
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
 
 // Allowed models for security
@@ -158,6 +158,7 @@ CRITICAL INSTRUCTIONS FOR YOU:
       messages: modelMessages,
       temperature,
       maxOutputTokens: 2000, // Reduced for faster responses
+      // @ts-ignore
       maxSteps: 5,
       tools: {
         // @ts-ignore
