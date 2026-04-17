@@ -74,7 +74,8 @@ export async function GET() {
       aiCredits: user?.aiCredits || 20,
       promptCount: user?.promptCount || 0,
       maxPlatforms: user?.maxPlatforms || 1,
-      name: user?.name || 'User'
+      name: user?.name || 'User',
+      imageUrl: (user as any)?.imageUrl || null
     })
   } catch (error) {
     console.error('[User/Me API] Fatal Error:', error)

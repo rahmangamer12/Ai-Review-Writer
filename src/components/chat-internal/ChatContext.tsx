@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react'
 import type { ChatSession, Message, UserData, ChatSettings, Notification, AIModel } from './types'
 import { DEFAULT_SETTINGS } from './types'
+import { getModelById } from './models'
 
 interface ChatContextType {
   sessions: ChatSession[]
@@ -123,21 +124,10 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('chat-settings', JSON.stringify(settings))
   }, [settings])
 
-  return (
-    <ChatContext.Provider value={{
-      sessions,
-      setSessions,
-      currentSessionId,
-      setCurrentSessionId,
-      currentSession,
-      messages,
-      userData,
-      setUserData,
-      settings,
       setSettings,
       selectedModel,
       setSelectedModel,
-      activeModel: undefined,
+      activeModel: getModelById(selectedModel),
       addNotification,
       notifications,
       searchQuery,
