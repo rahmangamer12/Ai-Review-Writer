@@ -6,6 +6,7 @@ import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { streamText, tool } from 'ai';
 import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit';
 import { z } from 'zod';
+import { withCSRFProtection } from '@/lib/csrfProtection';
 
 export const dynamic = 'force-dynamic'
 
@@ -40,7 +41,7 @@ const chatRequestSchema = z.object({
   temperature: z.number().min(0).max(2).default(0.7)
 });
 
-export async function POST(request: NextRequest) {
+async function handler(request: NextRequest) {
   try {
     // Quick auth check without triggering full session validation
     const authResult = await auth()
@@ -56,7 +57,7 @@ export async function POST(request: NextRequest) {
     // ULTRA-FAST OPTIMIZATION: Run Rate Limit and DB checks concurrently
     const [rateLimitResult, userDb] = await Promise.all([
       rateLimit(userId, RATE_LIMITS.AI_ANALYSIS).catch(() => ({ success: true, message: '', resetTime: Date.now(), remaining: 100, limit: 100 })), // Fail open for max speed
-      (prisma.user as any).findUnique({
+      prisma.user.findUnique({
         where: { id: userId },
         select: { aiCredits: true, promptCount: true }
       }).catch(() => null)
@@ -211,16 +212,22 @@ CRITICAL INSTRUCTIONS FOR YOU:
         setImmediate(async () => {
           try {
             const nextPromptCount = currentPromptCount + 1;
+            
+            // Use atomic transaction to prevent race conditions
             if (nextPromptCount >= 10) {
-              await (prisma.user as any).update({
-                where: { id: userId },
-                data: { aiCredits: { decrement: 1 }, promptCount: 0 }
-              });
+              await prisma.$transaction([
+                prisma.user.update({
+                  where: { id: userId },
+                  data: { aiCredits: { decrement: 1 }, promptCount: 0 }
+                })
+              ]);
             } else {
-              await (prisma.user as any).update({
-                where: { id: userId },
-                data: { promptCount: { increment: 1 } }
-              });
+              await prisma.$transaction([
+                prisma.user.update({
+                  where: { id: userId },
+                  data: { promptCount: { increment: 1 } }
+                })
+              ]);
             }
 
             const sessionId = request.headers.get('x-session-id');
@@ -268,6 +275,8 @@ CRITICAL INSTRUCTIONS FOR YOU:
     }, { status: 500 });
   }
 }
+
+export const POST = withCSRFProtection(handler);
 
 export async function GET() {
   return NextResponse.json({ 

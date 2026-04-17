@@ -5,19 +5,43 @@ import { sendUpgradeConfirmationEmail, sendLowCreditsEmail } from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 
-// Store processed webhook IDs to prevent replay attacks
-const processedWebhooks = new Map<string, number>()
 const WEBHOOK_EXPIRY = 5 * 60 * 1000 // 5 minutes
 
-// Cleanup old webhook IDs periodically
-setInterval(() => {
-  const now = Date.now()
-  for (const [id, timestamp] of processedWebhooks.entries()) {
-    if (now - timestamp > WEBHOOK_EXPIRY) {
-      processedWebhooks.delete(id)
+// Redis client for webhook storage (prevents replay attacks in serverless)
+async function getRedisClient() {
+  const { Redis } = await import('@upstash/redis')
+  const url = process.env.UPSTASH_REDIS_REST_URL
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN
+  
+  if (!url || !token) return null
+  return new Redis({ url, token })
+}
+
+// Check if webhook was already processed (using Redis for persistence)
+async function isWebhookProcessed(eventId: string): Promise<boolean> {
+  try {
+    const redis = await getRedisClient()
+    if (redis) {
+      const result = await redis.exists(`webhook:${eventId}`)
+      return result === 1
     }
+  } catch {
+    // Redis not available, continue
   }
-}, 60 * 1000) // Cleanup every minute
+  return false
+}
+
+// Mark webhook as processed
+async function markWebhookProcessed(eventId: string): Promise<void> {
+  try {
+    const redis = await getRedisClient()
+    if (redis) {
+      await redis.set(`webhook:${eventId}`, 'processed', { ex: 300 })
+    }
+  } catch {
+    // Redis not available, continue
+  }
+}
 
 export async function POST(request: NextRequest) {
   const startTime = Date.now()
@@ -51,8 +75,9 @@ export async function POST(request: NextRequest) {
     const eventName = event.meta?.event_name
     const eventId = event.data?.id || `${eventName}-${Date.now()}`
 
-    // Prevent replay attacks - check if we've already processed this webhook
-    if (processedWebhooks.has(eventId)) {
+    // Prevent replay attacks - check if we've already processed this webhook (Redis-based)
+    const alreadyProcessed = await isWebhookProcessed(eventId)
+    if (alreadyProcessed) {
       console.warn('[LemonSqueezy Webhook] Duplicate webhook detected:', eventId)
       return NextResponse.json({ success: true, message: 'Already processed' })
     }
@@ -67,8 +92,8 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Mark as processed
-    processedWebhooks.set(eventId, Date.now())
+    // Mark as processed in Redis
+    await markWebhookProcessed(eventId)
 
     console.log('[LemonSqueezy Webhook] Processing event:', eventName, 'ID:', eventId)
 

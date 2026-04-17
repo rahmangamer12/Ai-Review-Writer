@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase'
 import { longcatAI } from '@/lib/longcatAI'
 import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit'
 import { z } from 'zod'
+import { withCSRFProtection } from '@/lib/csrfProtection'
 
 // Input validation schema
 const generateReplySchema = z.object({
@@ -19,7 +20,7 @@ const generateReplySchema = z.object({
 })
 
 // POST - Generate AI reply or save existing reply
-export async function POST(request: NextRequest) {
+async function handler(request: NextRequest) {
   try {
     const { userId } = await auth()
     if (!userId) {
@@ -203,6 +204,8 @@ export async function POST(request: NextRequest) {
     }, { status: 500 })
   }
 }
+
+export const POST = withCSRFProtection(handler);
 
 // GET - Get API status
 export async function GET() {
