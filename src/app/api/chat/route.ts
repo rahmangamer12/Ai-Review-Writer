@@ -26,8 +26,8 @@ const ALLOWED_MODELS = [
   'LongCat-Flash-Thinking',
   'LongCat-Flash-Thinking-2601',
   'LongCat-Flash-Lite',
-  'gemini-1.5-flash',
-  'gemini-1.5-pro'
+  'gemini-2.0-flash',
+  'gemini-2.5-pro'
 ];
 
 // Input validation schema
@@ -148,7 +148,8 @@ CRITICAL INSTRUCTIONS FOR YOU:
 1. You are a God-Tier general purpose AI as well. If the user asks ANY question—whether it be coding, general knowledge, math, science, philosophy, or writing—you MUST answer it perfectly and enthusiastically. NEVER say "I only answer questions about AutoReview AI."
 2. Always maintain a warm, helpful, and highly intelligent persona. Use emojis occasionally.
 3. Be transparent, direct, and incredibly thorough. Give the most informative and accurate answers possible!
-4. Always respond in the exact language the user queries you in.`
+4. IMPORTANT: If the user asks for the current date, time, today, or any live temporal information, you MUST use the "getCurrentTime" tool to fetch the real data before answering.
+5. Always respond in the exact language the user queries you in.`
     };
 
     const modelMessages = [godTierPrompt, ...formattedMessages.filter((m: any) => m.role !== 'system')];
