@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { longcatAI } from '@/lib/longcatAI'
 import { desiPersonas, type Persona } from '@/lib/desiPersonas'
 
 export default function MagicDemo() {
@@ -33,25 +32,37 @@ Review: "${reviewText}"
 
 Generate ONLY the reply text, nothing else. Match the persona's style exactly.`
 
-      const reply = await longcatAI.chat(
-        [
-          {
-            role: 'system',
-            content: `You are a persona-based reply generator. Generate responses that match the exact style and tone of the given persona.`
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        'LongCat-Flash-Chat',
-        { temperature: 0.85, max_tokens: 400 }
-      )
+      const apiResponse = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          messages: [
+            {
+              role: 'system',
+              content: `You are a persona-based reply generator. Generate responses that match the exact style and tone of the given persona.`
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          model: 'LongCat-Flash-Chat',
+          options: { temperature: 0.85, max_tokens: 400 }
+        })
+      });
 
-      setResponse(reply.trim())
+      if (!apiResponse.ok) {
+        const errorData = await apiResponse.json();
+        throw new Error(errorData.error || 'AI generation failed');
+      }
+
+      const data = await apiResponse.json();
+      setResponse(data.reply.trim())
     } catch (error) {
       console.error('Magic demo error:', error)
-      setResponse('Sorry! Something went wrong. Please try again.')
+      setResponse('Sorry! Something went wrong. Please sign in to try again.')
     } finally {
       setLoading(false)
     }

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { longcatAI } from '@/lib/longcatAI';
 import { auth } from '@clerk/nextjs/server';
+import { withCSRFProtection } from '@/lib/csrfProtection';
 
-export async function POST(request: NextRequest) {
+async function handler(request: NextRequest) {
   try {
     const { userId } = await auth()
 
@@ -75,6 +76,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
   }
 }
+
+export const POST = withCSRFProtection(handler);
 
 export async function GET() {
   return NextResponse.json({
