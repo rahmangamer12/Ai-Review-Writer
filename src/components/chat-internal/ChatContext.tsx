@@ -124,6 +124,17 @@ export function ChatProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('chat-settings', JSON.stringify(settings))
   }, [settings])
 
+  return (
+    <ChatContext.Provider value={{
+      sessions,
+      setSessions,
+      currentSessionId,
+      setCurrentSessionId,
+      currentSession,
+      messages,
+      userData,
+      setUserData,
+      settings,
       setSettings,
       selectedModel,
       setSelectedModel,
