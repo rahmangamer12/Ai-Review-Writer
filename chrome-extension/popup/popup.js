@@ -1,7 +1,6 @@
-// AutoReview AI Chrome Extension - Popup Script
-
-// const API_BASE_URL = 'https://autoreview-ai.com'; // Change to your domain
-const API_BASE_URL = 'http://localhost:3000'; // For local testing
+// 💡 PRODUCTION: Change this to your deployed URL
+const API_BASE_URL = 'https://ai-review-writer.vercel.app'; 
+// 🏠 LOCAL: http://localhost:3000
 
 // DOM Elements
 const elements = {

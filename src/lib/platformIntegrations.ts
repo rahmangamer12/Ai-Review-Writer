@@ -516,6 +516,16 @@ export class PlatformIntegrationManager {
     }
 
     try {
+      // Demo/Test Mode Bypass
+      const isDemo = Object.values(credentials).some(v => 
+        v?.toString().toLowerCase().includes('demo_') || 
+        v?.toString().toLowerCase() === 'test'
+      )
+      
+      if (isDemo) {
+        return { success: true, message: `${platformId} connected (Demo Mode)!` }
+      }
+
       const url = handler.testUrl(credentials)
       const headers = handler.testHeaders ? handler.testHeaders(credentials) : undefined
       const res = await this.proxyFetch(url, headers)

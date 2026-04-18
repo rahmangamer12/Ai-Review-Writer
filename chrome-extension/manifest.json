@@ -23,6 +23,7 @@
     "https://www.tripadvisor.com/*",
     "https://www.trustpilot.com/*",
     "https://autoreview-ai.com/*",
+    "https://ai-review-writer.vercel.app/*",
     "http://localhost:3000/*"
   ],
   "action": {
