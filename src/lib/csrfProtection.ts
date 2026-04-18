@@ -37,7 +37,14 @@ export function validateCSRF(request: NextRequest): {
       try {
         const allowedUrl = new URL(allowed)
         const originUrl = new URL(origin)
-        return allowedUrl.origin === originUrl.origin
+        
+        // Allow same-origin
+        if (allowedUrl.origin === originUrl.origin) return true
+        
+        // Allow Chrome Extensions
+        if (originUrl.protocol === 'chrome-extension:') return true
+        
+        return false
       } catch {
         return false
       }
