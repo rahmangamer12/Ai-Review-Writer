@@ -425,216 +425,143 @@ export class PlatformIntegrationManager {
     return res.json()
   }
 
-  // Test connection (real API implementation)
-  static async testConnection(platformId: string, credentials: Record<string, string>): Promise<{ success: boolean; message: string }> {
-    if (typeof window === 'undefined') {
-      return { success: false, message: 'Loading...' }
+  /**
+   * Platform-specific configurations for API calls
+   */
+  private static platformHandlers: Record<string, {
+    testUrl: (creds: Record<string, string>) => string,
+    testHeaders?: (creds: Record<string, string>) => Record<string, string>,
+    reviewsUrl: (creds: Record<string, string>) => string,
+    reviewsHeaders?: (creds: Record<string, string>) => Record<string, string>,
+    mapReview: (r: any, platformId: string) => any
+  }> = {
+    google: {
+      testUrl: (creds) => `https://maps.googleapis.com/maps/api/place/details/json?place_id=${creds.placeId}&fields=name&key=${creds.apiKey}`,
+      reviewsUrl: (creds) => `https://maps.googleapis.com/maps/api/place/details/json?place_id=${creds.placeId}&fields=reviews&key=${creds.apiKey}`,
+      mapReview: (r) => ({
+        id: r.author_name + '-' + r.time,
+        content: r.text,
+        rating: r.rating,
+        author: r.author_name,
+        date: new Date(r.time * 1000).toISOString(),
+        platform: 'google'
+      })
+    },
+    yelp: {
+      testUrl: (creds) => `https://api.yelp.com/v3/businesses/${creds.businessId}`,
+      testHeaders: (creds) => ({ Authorization: `Bearer ${creds.apiKey}` }),
+      reviewsUrl: (creds) => `https://api.yelp.com/v3/businesses/${creds.businessId}/reviews`,
+      reviewsHeaders: (creds) => ({ Authorization: `Bearer ${creds.apiKey}` }),
+      mapReview: (r) => ({
+        id: r.id,
+        content: r.text,
+        rating: r.rating,
+        author: r.user.name,
+        date: r.time_created,
+        platform: 'yelp'
+      })
+    },
+    facebook: {
+      testUrl: (creds) => `https://graph.facebook.com/${creds.pageId}?access_token=${creds.pageAccessToken}`,
+      reviewsUrl: (creds) => `https://graph.facebook.com/${creds.pageId}/ratings?access_token=${creds.pageAccessToken}&fields=reviewer_name,rating,review_text,created_time`,
+      mapReview: (r) => ({
+        id: r.id,
+        content: r.review_text,
+        rating: r.rating,
+        author: r.reviewer_name,
+        date: r.created_time,
+        platform: 'facebook'
+      })
+    },
+    tripadvisor: {
+      testUrl: (creds) => `https://api.content.tripadvisor.com/api/v1/location/${creds.locationId}/details?key=${creds.apiKey}`,
+      reviewsUrl: (creds) => `https://api.content.tripadvisor.com/api/v1/location/${creds.locationId}/reviews?key=${creds.apiKey}`,
+      mapReview: (r) => ({
+        id: r.id,
+        content: r.text,
+        rating: r.rating,
+        author: r.author,
+        date: r.publish_date,
+        platform: 'tripadvisor'
+      })
+    },
+    trustpilot: {
+      testUrl: (creds) => `https://api.trustpilot.com/v1/business-units/${creds.businessUnitId}`,
+      testHeaders: (creds) => ({ Authorization: `Basic ${btoa(creds.apiKey + ':')}` }),
+      reviewsUrl: (creds) => `https://api.trustpilot.com/v1/business-units/${creds.businessUnitId}/reviews?apikey=${creds.apiKey}`,
+      mapReview: (r) => ({
+        id: r.id,
+        content: r.content,
+        rating: r.stars,
+        author: r.author.name,
+        date: r.createdAt,
+        platform: 'trustpilot'
+      })
     }
-
-    const requiredFields = platformDefinitions[platformId]?.fields || []
-    
-    for (const field of requiredFields) {
-      if (field.required && !credentials[field.name]) {
-        return {
-          success: false,
-          message: `Missing required field: ${field.label}`
-        }
-      }
-    }
-
-    // Google
-    if (platformId === 'google') {
-      try {
-        const res = await this.proxyFetch(
-          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${credentials.placeId}&fields=name&key=${credentials.apiKey}`
-        )
-        if (!res.ok) return { success: false, message: `Google API Error: Invalid API Key or missing permissions.` }
-        if (res.data.status === 'OK') return { success: true, message: 'Google connected!' }
-        return { success: false, message: `Google Error: ${res.data.status}` }
-      } catch (err) {
-        return { success: false, message: 'Failed to access Google API. Check credentials.' }
-      }
-    }
-
-    // Yelp
-    if (platformId === 'yelp') {
-      try {
-        const res = await this.proxyFetch(
-          `https://api.yelp.com/v3/businesses/${credentials.businessId}`,
-          { Authorization: `Bearer ${credentials.apiKey}` }
-        )
-        if (!res.ok) return { success: false, message: 'Invalid Yelp credentials or missing permissions' }
-        return { success: true, message: 'Yelp connected!' }
-      } catch (err) {
-        return { success: false, message: 'Failed to access Yelp API. Check credentials.' }
-      }
-    }
-
-    // Facebook
-    if (platformId === 'facebook') {
-      try {
-        const res = await this.proxyFetch(
-          `https://graph.facebook.com/${credentials.pageId}?access_token=${credentials.pageAccessToken}`
-        )
-        if (!res.ok) return { success: false, message: 'Invalid Facebook token or page ID' }
-        if (res.data.id) return { success: true, message: 'Facebook connected!' }
-        return { success: false, message: 'Invalid Facebook Developer credentials' }
-      } catch (err) {
-        return { success: false, message: 'Failed to access Facebook Graph. Check credentials.' }
-      }
-    }
-
-    // TripAdvisor
-    if (platformId === 'tripadvisor') {
-      try {
-        const res = await this.proxyFetch(
-          `https://api.content.tripadvisor.com/api/v1/location/${credentials.locationId}/details?key=${credentials.apiKey}`
-        )
-        if (!res.ok) return { success: false, message: 'Invalid TripAdvisor key or location ID' }
-        return { success: true, message: 'TripAdvisor connected!' }
-      } catch (err) {
-        return { success: false, message: 'Failed to access TripAdvisor APIs. Check credentials.' }
-      }
-    }
-
-    // Trustpilot
-    if (platformId === 'trustpilot') {
-      try {
-        const res = await this.proxyFetch(
-          `https://api.trustpilot.com/v1/business-units/${credentials.businessUnitId}`,
-          { Authorization: `Basic ${btoa(credentials.apiKey + ':')}` }
-        )
-        if (!res.ok) return { success: false, message: 'Invalid Trustpilot Authorization credentials' }
-        return { success: true, message: 'Trustpilot connected!' }
-      } catch (err) {
-        return { success: false, message: 'Failed to access Trustpilot APIs. Check credentials.' }
-      }
-    }
-
-    return { success: false, message: 'Unknown platform' }
   }
 
-  // Fetch reviews from a platform
+  // Test connection (Deduplicated)
+  static async testConnection(platformId: string, credentials: Record<string, string>): Promise<{ success: boolean; message: string }> {
+    if (typeof window === 'undefined') return { success: false, message: 'Loading...' }
+
+    const handler = this.platformHandlers[platformId]
+    if (!handler) return { success: false, message: 'Unknown platform' }
+
+    // Validate required fields
+    const requiredFields = platformDefinitions[platformId]?.fields || []
+    for (const field of requiredFields) {
+      if (field.required && !credentials[field.name]) {
+        return { success: false, message: `Missing required field: ${field.label}` }
+      }
+    }
+
+    try {
+      const url = handler.testUrl(credentials)
+      const headers = handler.testHeaders ? handler.testHeaders(credentials) : undefined
+      const res = await this.proxyFetch(url, headers)
+
+      if (!res.ok) {
+        return { success: false, message: `${platformId} connection failed: ${res.data?.error?.message || 'Invalid credentials'}` }
+      }
+
+      // Special case for Google status
+      if (platformId === 'google' && res.data.status !== 'OK') {
+        return { success: false, message: `Google Error: ${res.data.status}` }
+      }
+
+      return { success: true, message: `${platformId} connected!` }
+    } catch (err) {
+      return { success: false, message: `Failed to connect to ${platformId}. Check credentials.` }
+    }
+  }
+
+  // Fetch reviews (Deduplicated)
   static async fetchReviews(platformId: string): Promise<any[]> {
     const platform = this.getPlatforms().find(p => p.id === platformId)
-    
-    if (!platform || !platform.connected) {
-      return []
-    }
+    if (!platform || !platform.connected) return []
 
-    const { credentials } = platform
+    const handler = this.platformHandlers[platformId]
+    if (!handler) return []
 
-    // Google Reviews
-    if (platformId === 'google') {
-      try {
-        const res = await this.proxyFetch(
-          `https://maps.googleapis.com/maps/api/place/details/json?place_id=${credentials.placeId}&fields=reviews&key=${credentials.apiKey}`
-        )
-        if (res.ok && res.data?.result?.reviews) {
-          return res.data.result.reviews.map((r: any) => ({
-            id: r.author_name + '-' + r.time,
-            content: r.text,
-            rating: r.rating,
-            author: r.author_name,
-            date: new Date(r.time * 1000).toISOString(),
-            platform: 'google'
-          }))
-        }
-      } catch (e) {
-        console.error('Error fetching Google reviews:', e)
+    try {
+      const url = handler.reviewsUrl(platform.credentials)
+      const headers = handler.reviewsHeaders ? handler.reviewsHeaders(platform.credentials) : undefined
+      const res = await this.proxyFetch(url, headers)
+
+      if (res.ok) {
+        // Extract data based on platform structure
+        let data = []
+        if (platformId === 'google') data = res.data?.result?.reviews || []
+        else if (platformId === 'yelp') data = res.data?.reviews || []
+        else if (platformId === 'facebook') data = res.data?.data || []
+        else if (platformId === 'tripadvisor') data = res.data?.data || []
+        else if (platformId === 'trustpilot') data = res.data?.reviews || []
+
+        return data.map((r: any) => handler.mapReview(r, platformId))
       }
-      return []
+    } catch (e) {
+      console.error(`Error fetching ${platformId} reviews:`, e)
     }
-
-    // Yelp Reviews
-    if (platformId === 'yelp') {
-      try {
-        const res = await this.proxyFetch(
-          `https://api.yelp.com/v3/businesses/${credentials.businessId}/reviews`,
-          { Authorization: `Bearer ${credentials.apiKey}` }
-        )
-        if (res.ok && res.data?.reviews) {
-          return res.data.reviews.map((r: any) => ({
-            id: r.id,
-            content: r.text,
-            rating: r.rating,
-            author: r.user.name,
-            date: r.time_created,
-            platform: 'yelp'
-          }))
-        }
-      } catch (e) {
-        console.error('Error fetching Yelp reviews:', e)
-      }
-      return []
-    }
-
-    // Facebook Reviews
-    if (platformId === 'facebook') {
-      try {
-        const res = await this.proxyFetch(
-          `https://graph.facebook.com/${credentials.pageId}/ratings?access_token=${credentials.pageAccessToken}&fields=reviewer_name,rating,review_text,created_time`
-        )
-        if (res.ok && res.data?.data) {
-          return res.data.data.map((r: any) => ({
-            id: r.id,
-            content: r.review_text,
-            rating: r.rating,
-            author: r.reviewer_name,
-            date: r.created_time,
-            platform: 'facebook'
-          }))
-        }
-      } catch (e) {
-        console.error('Error fetching Facebook reviews:', e)
-      }
-      return []
-    }
-
-    // TripAdvisor Reviews
-    if (platformId === 'tripadvisor') {
-      try {
-        const res = await this.proxyFetch(
-          `https://api.content.tripadvisor.com/api/v1/location/${credentials.locationId}/reviews?key=${credentials.apiKey}`
-        )
-        if (res.ok && res.data?.data) {
-          return res.data.data.map((r: any) => ({
-            id: r.id,
-            content: r.text,
-            rating: r.rating,
-            author: r.author,
-            date: r.publish_date,
-            platform: 'tripadvisor'
-          }))
-        }
-      } catch (e) {
-        console.error('Error fetching TripAdvisor reviews:', e)
-      }
-      return []
-    }
-
-    // Trustpilot Reviews
-    if (platformId === 'trustpilot') {
-      try {
-        const res = await this.proxyFetch(
-          `https://api.trustpilot.com/v1/business-units/${credentials.businessUnitId}/reviews?apikey=${credentials.apiKey}`
-        )
-        if (res.ok && res.data?.reviews) {
-          return res.data.reviews.map((r: any) => ({
-            id: r.id,
-            content: r.content,
-            rating: r.stars,
-            author: r.author.name,
-            date: r.createdAt,
-            platform: 'trustpilot'
-          }))
-        }
-      } catch (e) {
-        console.error('Error fetching Trustpilot reviews:', e)
-      }
-      return []
-    }
-
     return []
   }
 
