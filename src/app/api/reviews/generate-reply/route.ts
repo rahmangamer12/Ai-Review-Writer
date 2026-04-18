@@ -180,7 +180,10 @@ async function handler(request: NextRequest) {
         }
       },
       {
-        headers: getRateLimitHeaders(rateLimitResult)
+        headers: {
+          ...getRateLimitHeaders(rateLimitResult),
+          'Access-Control-Allow-Origin': '*',
+        }
       }
     )
 
@@ -206,6 +209,18 @@ async function handler(request: NextRequest) {
 }
 
 export const POST = withCSRFProtection(handler);
+
+// Handle OPTIONS for CORS preflight
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-csrf-token',
+    },
+  })
+}
 
 // GET - Get API status
 export async function GET() {
