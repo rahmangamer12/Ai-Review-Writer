@@ -403,6 +403,8 @@ export default function Navigation() {
                         : 'text-white/60 hover:text-white bg-white/5'
                     }`}
                     onClick={() => setMobileMenuOpen(false)}
+                    aria-label={`Go to ${item.label}`}
+                    title={item.description}
                   >
                     <item.icon className={`w-5 h-5 flex-shrink-0 ${isActive(item.href) ? 'text-purple-400' : ''}`} />
                     <span className="font-semibold">{item.label}</span>
@@ -544,6 +546,8 @@ export default function Navigation() {
                 style={{
                   backdropFilter: 'blur(10px)',
                 }}
+                aria-label={`Navigate to ${item.label}`}
+                title={item.description}
               >
                 {/* Background Gradient on Hover/Active */}
                 {(isActive(item.href) || isHovered === item.href) && (

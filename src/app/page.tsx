@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { auth } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
 import { ArrowRight, CheckCircle2, Star, Zap, Shield, ChevronRight, BarChart3, MessageSquare, Plus, Mail } from 'lucide-react'
 
 // Note: Next.js Server Component
@@ -7,7 +9,14 @@ export const metadata = {
   description: 'Manage, analyze, and instantly reply to your business reviews with AI. Save 10x your time and boost customer satisfaction effortlessly.',
 }
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const { userId } = await auth()
+  
+  // If user is already signed in, go straight to dashboard
+  if (userId) {
+    redirect('/dashboard')
+  }
+
   return (
     <div className="min-h-screen bg-[#030308] text-white overflow-hidden font-sans w-full max-w-[100vw] overflow-x-hidden selection:bg-violet-500/30">
       
