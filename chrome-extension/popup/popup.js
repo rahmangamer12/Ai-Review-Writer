@@ -61,37 +61,41 @@ const elements = {
   errorMessage: document.getElementById('errorMessage'),
 };
 
-// State
-let currentReview = null;
+// All scraped reviews
+let allReviews = [];
+let currentReviewIndex = 0;
 let currentPlatform = null;
 
 // Initialize
 async function init() {
-  // Get current tab
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   
   if (tab) {
     detectPlatform(tab.url);
     
-    // Try to scrape review from page
     try {
       const results = await chrome.scripting.executeScript({
         target: { tabId: tab.id },
-        func: scrapeReviewFromPage,
+        func: scrapeAllReviewsFromPage,
       });
       
       if (results && results[0] && results[0].result) {
-        const review = results[0].result;
-        if (review.found) {
-          displayReview(review);
+        allReviews = results[0].result;
+        console.log('[Popup] Found reviews:', allReviews.length);
+        
+        if (allReviews.length > 0) {
+          currentReviewIndex = 0;
+          displayReview(allReviews[0]);
+        } else {
+          showError('No reviews detected. Make sure reviews are loaded on the page.');
         }
       }
     } catch (error) {
       console.log('Could not scrape page:', error);
+      showError('Could not detect reviews. Try refreshing the page.');
     }
   }
   
-  // Load saved settings
   loadSettings();
 }
 
@@ -101,6 +105,8 @@ function detectPlatform(url) {
     { name: 'Google', pattern: /google\.com\/maps|business\.google/, class: 'platform-google' },
     { name: 'Facebook', pattern: /facebook\.com/, class: 'platform-facebook' },
     { name: 'Yelp', pattern: /yelp\.com/, class: 'platform-yelp' },
+    { name: 'TripAdvisor', pattern: /tripadvisor\.com/, class: 'platform-tripadvisor' },
+    { name: 'Trustpilot', pattern: /trustpilot\.com/, class: 'platform-trustpilot' },
   ];
   
   for (const platform of platforms) {
@@ -114,45 +120,141 @@ function detectPlatform(url) {
   }
   
   currentPlatform = 'other';
-  elements.platformContainer.innerHTML = '<span class="platform-badge platform-other">Navigate to Google, Facebook, or Yelp</span>';
+  elements.platformContainer.innerHTML = '<span class="platform-badge platform-other">Navigate to a review platform</span>';
 }
 
-// Scrape function to inject into page
-function scrapeReviewFromPage() {
-  // Google Maps Reviews
-  const googleReview = document.querySelector('[data-review-id]');
-  if (googleReview) {
-    const author = googleReview.querySelector('.d4r55')?.textContent || 
-                   googleReview.querySelector('[class*="author"]')?.textContent || 
-                   'Anonymous';
-    const ratingEl = googleReview.querySelector('[class*="kvMYJc"], [role="img"][aria-label*="star"]');
-    const rating = ratingEl ? parseInt(ratingEl.getAttribute('aria-label')) : 5;
-    const text = googleReview.querySelector('[class*="wiI7pd"], [data-review-id] span')?.textContent || '';
-    
-    if (text) {
-      return { found: true, author, rating, text, platform: 'google' };
-    }
+// Scrape ALL reviews from page
+function scrapeAllReviewsFromPage() {
+  const reviews = [];
+  const url = window.location.href;
+  
+  // Google Maps - multiple selectors
+  if (url.includes('google.com/maps') || url.includes('business.google')) {
+    const reviewEls = document.querySelectorAll('[data-review-id]');
+    reviewEls.forEach((el, index) => {
+      try {
+        const authorEl = el.querySelector('.d4r55, [class*="author"]');
+        const author = authorEl?.textContent?.trim() || el.querySelector('[class*="y"]')?.textContent?.trim() || `Reviewer ${index + 1}`;
+        
+        const ratingEl = el.querySelector('[class*="kvMYJc"], [role="img"][aria-label*="star"]');
+        let rating = 5;
+        if (ratingEl) {
+          const ariaLabel = ratingEl.getAttribute('aria-label') || '';
+          const match = ariaLabel.match(/(\d)/);
+          rating = match ? parseInt(match[1]) : 5;
+        }
+        
+        const textEl = el.querySelector('[class*="wiI7pd"], [class*="review-text"]');
+        const text = textEl?.textContent?.trim() || '';
+        
+        if (text && text.length > 5) {
+          reviews.push({
+            id: index,
+            author,
+            rating,
+            text: text.substring(0, 500),
+            platform: 'google'
+          });
+        }
+      } catch (e) {}
+    });
   }
   
-  // Facebook Reviews
-  const fbReview = document.querySelector('[role="article"]');
-  if (fbReview && window.location.href.includes('facebook')) {
-    const author = fbReview.querySelector('h3 a, strong')?.textContent || 'Anonymous';
-    const text = fbReview.querySelector('[dir="auto"]')?.textContent || '';
-    return { found: true, author, rating: 5, text, platform: 'facebook' };
+  // Facebook
+  if (url.includes('facebook.com')) {
+    const reviewEls = document.querySelectorAll('[role="article"]');
+    reviewEls.forEach((el, index) => {
+      try {
+        const text = el.querySelector('[dir="auto"]')?.textContent?.trim() || '';
+        if (text && text.length > 10) {
+          const author = el.querySelector('h3 a, strong')?.textContent?.trim() || `Reviewer ${index + 1}`;
+          reviews.push({
+            id: index,
+            author,
+            rating: 5,
+            text: text.substring(0, 500),
+            platform: 'facebook'
+          });
+        }
+      } catch (e) {}
+    });
   }
   
-  // Yelp Reviews
-  const yelpReview = document.querySelector('.review');
-  if (yelpReview) {
-    const author = yelpReview.querySelector('.user-display-name')?.textContent || 'Anonymous';
-    const ratingEl = yelpReview.querySelector('.i-stars');
-    const rating = ratingEl ? parseInt(ratingEl.className.match(/i-stars--(\d)-/)[1]) : 5;
-    const text = yelpReview.querySelector('.raw__09f24__T4Ezm')?.textContent || '';
-    return { found: true, author, rating, text, platform: 'yelp' };
+  // Yelp
+  if (url.includes('yelp.com')) {
+    const reviewEls = document.querySelectorAll('.review');
+    reviewEls.forEach((el, index) => {
+      try {
+        const author = el.querySelector('.user-display-name')?.textContent?.trim() || `Reviewer ${index + 1}`;
+        const ratingEl = el.querySelector('.i-stars');
+        let rating = 5;
+        if (ratingEl) {
+          const match = ratingEl.className?.match(/i-stars--(\d)-/);
+          rating = match ? parseInt(match[1]) : 5;
+        }
+        const text = el.querySelector('.raw__09f24__T4Ezm, [class*="comment"]')?.textContent?.trim() || '';
+        if (text && text.length > 5) {
+          reviews.push({
+            id: index,
+            author,
+            rating,
+            text: text.substring(0, 500),
+            platform: 'yelp'
+          });
+        }
+      } catch (e) {}
+    });
   }
   
-  return { found: false };
+  // TripAdvisor
+  if (url.includes('tripadvisor.com')) {
+    const reviewEls = document.querySelectorAll('.review-container');
+    reviewEls.forEach((el, index) => {
+      try {
+        const author = el.querySelector('.username, .memberOverlayLink')?.textContent?.trim() || `Reviewer ${index + 1}`;
+        const ratingEl = el.querySelector('.ui_bubble_rating');
+        let rating = 5;
+        if (ratingEl) {
+          const match = ratingEl.className?.match(/bubble_(\d\d)/);
+          rating = match ? parseInt(match[1]) / 10 : 5;
+        }
+        const text = el.querySelector('.prw_rup .partial_entry')?.textContent?.trim() || '';
+        if (text && text.length > 5) {
+          reviews.push({
+            id: index,
+            author,
+            rating,
+            text: text.substring(0, 500),
+            platform: 'tripadvisor'
+          });
+        }
+      } catch (e) {}
+    });
+  }
+  
+  // Trustpilot
+  if (url.includes('trustpilot.com')) {
+    const reviewEls = document.querySelectorAll('[data-review-id]');
+    reviewEls.forEach((el, index) => {
+      try {
+        const author = el.querySelector('[data-consumer-name]')?.textContent?.trim() || `Reviewer ${index + 1}`;
+        const ratingEl = el.querySelector('[data-rating]');
+        const rating = ratingEl ? parseInt(ratingEl.getAttribute('data-rating')) : 5;
+        const text = el.querySelector('[data-review-content]')?.textContent?.trim() || '';
+        if (text && text.length > 5) {
+          reviews.push({
+            id: index,
+            author,
+            rating,
+            text: text.substring(0, 500),
+            platform: 'trustpilot'
+          });
+        }
+      } catch (e) {}
+    });
+  }
+  
+  return reviews;
 }
 
 // Display detected review
@@ -163,6 +265,11 @@ function displayReview(review) {
   elements.reviewText.textContent = review.text.substring(0, 200) + (review.text.length > 200 ? '...' : '');
   elements.reviewSection.style.display = 'block';
   elements.generateBtn.disabled = false;
+  
+  // Add review count info
+  if (allReviews.length > 1) {
+    elements.reviewSection.innerHTML += `<p style="margin-top:10px;font-size:12px;color:#888;">Review ${currentReviewIndex + 1} of ${allReviews.length}</p>`;
+  }
 }
 
 // Generate AI reply
@@ -172,6 +279,8 @@ async function generateReply() {
   showLoading(true);
   hideError();
   
+  const reviewData = allReviews[currentReviewIndex] || currentReview;
+  
   try {
     const response = await fetch(`${API_BASE_URL}/api/reviews/generate-reply`, {
       method: 'POST',
@@ -179,9 +288,9 @@ async function generateReply() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        reviewText: currentReview.text,
-        rating: currentReview.rating,
-        authorName: currentReview.author,
+        reviewText: reviewData.text,
+        rating: reviewData.rating,
+        authorName: reviewData.author,
         platform: currentPlatform,
         tone: elements.toneSelect.value,
         language: elements.languageSelect.value,
@@ -191,64 +300,47 @@ async function generateReply() {
     const data = await response.json();
     
     if (data.success) {
-      const reply = data.data?.reply || data.reply;
+      const reply = data.reply || data.data?.reply;
       elements.aiReply.textContent = reply;
       elements.replySection.style.display = 'block';
       
-      // Auto-copy if enabled
       if (elements.autoCopy.checked) {
         await navigator.clipboard.writeText(reply);
-        showTempMessage('Reply copied to clipboard!');
+        showTempMessage('Reply copied!');
       }
-      
-      // Save to storage
-      saveReplyToHistory(currentReview, reply);
     } else {
-      // Use fallback template if API fails
-      const fallbackReply = getFallbackReply(currentReview.rating, elements.toneSelect.value, currentReview.author);
+      const fallbackReply = getFallbackReply(reviewData.rating, elements.toneSelect.value, reviewData.author);
       elements.aiReply.textContent = fallbackReply;
       elements.replySection.style.display = 'block';
-      showTempMessage('Using offline reply');
+      showTempMessage('Offline reply');
     }
   } catch (error) {
     console.error('Error:', error);
-    // Use fallback template for any error
-    const fallbackReply = getFallbackReply(currentReview.rating, elements.toneSelect.value, currentReview.author);
+    const fallbackReply = getFallbackReply(reviewData.rating, elements.toneSelect.value, reviewData.author);
     elements.aiReply.textContent = fallbackReply;
     elements.replySection.style.display = 'block';
-    showTempMessage('Offline mode - reply generated');
+    showTempMessage('Offline mode');
   } finally {
     showLoading(false);
   }
 }
 
-// Get fallback reply using templates
+// Get fallback reply
 function getFallbackReply(rating, tone, authorName) {
   const templates = FALLBACK_TEMPLATES;
   const modifiers = TONE_MODIFIERS;
   const name = authorName || 'there';
   
-  // Determine sentiment category
-  let sentiment = 'neutral';
-  if (rating >= 4) sentiment = 'positive';
-  else if (rating <= 2) sentiment = 'negative';
-  
-  // Get base template
+  let sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'neutral';
   const baseTemplate = templates[sentiment][Math.floor(Math.random() * templates[sentiment].length)];
   let reply = baseTemplate.replace(/{name}/g, name);
   
-  // Apply tone modifier if provided and exists
   if (modifiers[tone] && modifiers[tone][sentiment]) {
     const toneReply = modifiers[tone][sentiment].replace(/{name}/g, name);
-    // Mix base with tone
-    if (tone === 'professional') {
-      reply = toneReply;
-    } else if (tone === 'friendly') {
+    if (tone === 'professional' || tone === 'friendly' || tone === 'enthusiastic') {
       reply = toneReply;
     } else if (tone === 'apologetic') {
-      reply = `${toneReply} ${baseTemplate.replace(/{name}/g, name)}`;
-    } else if (tone === 'enthusiastic') {
-      reply = toneReply;
+      reply = toneReply + ' ' + baseTemplate.replace(/{name}/g, name);
     }
   }
   
@@ -296,22 +388,6 @@ function loadSettings() {
     if (data.tone) elements.toneSelect.value = data.tone;
     if (data.language) elements.languageSelect.value = data.language;
     if (data.autoCopy !== undefined) elements.autoCopy.checked = data.autoCopy;
-  });
-}
-
-// Save reply to history
-function saveReplyToHistory(review, reply) {
-  chrome.storage.local.get(['replyHistory'], (data) => {
-    const history = data.replyHistory || [];
-    history.unshift({
-      review: review.text.substring(0, 100),
-      reply,
-      platform: currentPlatform,
-      timestamp: Date.now(),
-    });
-    // Keep only last 50
-    if (history.length > 50) history.pop();
-    chrome.storage.local.set({ replyHistory: history });
   });
 }
 
