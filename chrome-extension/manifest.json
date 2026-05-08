@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AutoReview AI - Review Reply Assistant",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Generate AI-powered replies to Google, Facebook, and Yelp reviews with one click",
   "icons": {
     "16": "icons/icon16.png",
@@ -15,15 +15,13 @@
     "clipboardWrite"
   ],
   "host_permissions": [
-    "https://www.google.com/*",
-    "https://business.google.com/*",
-    "https://www.facebook.com/*",
-    "https://business.facebook.com/*",
-    "https://www.yelp.com/*",
-    "https://www.tripadvisor.com/*",
-    "https://www.trustpilot.com/*",
-    "https://autoreview-ai.com/*",
+    "https://*.google.com/*",
+    "https://*.facebook.com/*",
+    "https://*.yelp.com/*",
+    "https://*.tripadvisor.com/*",
+    "https://*.trustpilot.com/*",
     "https://ai-review-writer.vercel.app/*",
+    "https://autoreview-ai.com/*",
     "http://localhost:3000/*"
   ],
   "action": {
@@ -37,9 +35,10 @@
       "matches": [
         "https://www.google.com/maps/*",
         "https://business.google.com/*",
-        "https://www.facebook.com/*/reviews/*",
-        "https://business.facebook.com/*",
-        "https://www.yelp.com/*"
+        "https://www.facebook.com/*",
+        "https://www.yelp.com/*",
+        "https://www.tripadvisor.com/*",
+        "https://www.trustpilot.com/*"
       ],
       "js": ["content/scraper.js"],
       "css": ["content/styles.css"],

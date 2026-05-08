@@ -204,9 +204,12 @@ function scrapeTrustpilotReviews() {
 function addAIReplyButtons() {
   const reviews = scrapeReviews();
   
-  reviews.forEach(review => {
+  // Find all review containers
+  const reviewContainers = getAllReviewContainers();
+  
+  reviewContainers.forEach((container, index) => {
     // Check if button already exists
-    if (review.element.querySelector('.autoreview-ai-btn')) return;
+    if (container.querySelector('.autoreview-ai-btn')) return;
     
     const btn = document.createElement('button');
     btn.className = 'autoreview-ai-btn';
@@ -215,47 +218,149 @@ function addAIReplyButtons() {
       e.preventDefault();
       e.stopPropagation();
       
+      // Get review data from this container
+      const reviewData = getReviewFromContainer(container);
+      if (!reviewData || !reviewData.text) {
+        alert('Could not detect review. Please try opening the extension popup directly.');
+        return;
+      }
+      
       btn.textContent = '⏳ Generating...';
       btn.disabled = true;
       
       try {
-        const reply = await generateAIReply(review);
-        showReplyModal(review, reply);
+        const reply = await generateAIReply(reviewData);
+        showReplyModal(reviewData, reply);
       } catch (err) {
-        alert('Error generating reply. Please try again.');
+        console.error('Error:', err);
+        // Show fallback modal with manual input
+        showReplyModal(reviewData, getFallbackReply(reviewData.rating, reviewData.author));
       } finally {
         btn.innerHTML = '✨ AI Reply';
         btn.disabled = false;
       }
     };
     
-    review.element.appendChild(btn);
+    container.appendChild(btn);
   });
+}
+
+// Get all review containers - improved selectors
+function getAllReviewContainers() {
+  const containers = [];
+  
+  // Google Maps
+  document.querySelectorAll('[data-review-id]').forEach(el => containers.push(el));
+  
+  // Facebook
+  document.querySelectorAll('[role="article"]').forEach(el => {
+    if (el.querySelector('[dir="auto"]')) containers.push(el);
+  });
+  
+  // Yelp
+  document.querySelectorAll('.review').forEach(el => containers.push(el));
+  
+  // TripAdvisor
+  document.querySelectorAll('.review-container').forEach(el => containers.push(el));
+  
+  // Trustpilot
+  document.querySelectorAll('[data-review-id]').forEach(el => containers.push(el));
+  
+  return containers;
+}
+
+// Get review data from container element
+function getReviewFromContainer(container) {
+  const platform = PLATFORM;
+  let author = 'Customer';
+  let rating = 5;
+  let text = '';
+  
+  try {
+    if (platform === 'google') {
+      author = container.querySelector('.d4r55, [class*="author"]')?.textContent?.trim() || 'Customer';
+      const ratingEl = container.querySelector('[class*="kvMYJc"], [role="img"][aria-label*="star"]');
+      const ratingText = ratingEl?.getAttribute('aria-label') || '';
+      rating = parseInt(ratingText.match(/(\d)/)?.[1]) || 5;
+      text = container.querySelector('[class*="wiI7pd"]')?.textContent?.trim() || '';
+    } else if (platform === 'facebook') {
+      author = container.querySelector('h3 a, strong')?.textContent?.trim() || 'Customer';
+      text = container.querySelector('[dir="auto"]')?.textContent?.trim() || '';
+      rating = 5;
+    } else if (platform === 'yelp') {
+      author = container.querySelector('.user-display-name')?.textContent?.trim() || 'Customer';
+      const ratingEl = container.querySelector('.i-stars');
+      const ratingMatch = ratingEl?.className?.match(/i-stars--(\d)-/);
+      rating = ratingMatch ? parseInt(ratingMatch[1]) : 5;
+      text = container.querySelector('.raw__09f24__T4Ezm, [class*="comment"]')?.textContent?.trim() || '';
+    } else if (platform === 'tripadvisor') {
+      author = container.querySelector('.username, .memberOverlayLink')?.textContent?.trim() || 'Customer';
+      const ratingEl = container.querySelector('.ui_bubble_rating');
+      const ratingClass = ratingEl?.className?.match(/bubble_(\d\d)/);
+      rating = ratingClass ? parseInt(ratingClass[1]) / 10 : 5;
+      text = container.querySelector('.prw_rup .partial_entry')?.textContent?.trim() || '';
+    } else if (platform === 'trustpilot') {
+      author = container.querySelector('[data-consumer-name]')?.textContent?.trim() || 'Customer';
+      const ratingEl = container.querySelector('[data-rating]');
+      rating = parseInt(ratingEl?.getAttribute('data-rating')) || 5;
+      text = container.querySelector('[data-review-content]')?.textContent?.trim() || '';
+    }
+  } catch (e) {
+    console.error('Error getting review data:', e);
+  }
+  
+  return { author, rating, text, platform };
+}
+
+// Fallback reply templates
+function getFallbackReply(rating, authorName) {
+  const name = authorName || 'there';
+  const templates = {
+    positive: [
+      `Thank you ${name} for your wonderful review! We're thrilled you had such a great experience with us. Your feedback means the world to our team!`,
+      `We truly appreciate your kind words, ${name}! It was our pleasure to serve you, and we look forward to seeing you again soon!`,
+    ],
+    neutral: [
+      `Thank you, ${name}, for your feedback. We appreciate you taking the time to share your experience and are always looking for ways to improve.`,
+    ],
+    negative: [
+      `Hi ${name}, we sincerely apologize that your experience didn't meet your expectations. We'd love the opportunity to make this right. Please reach out to us directly so we can address your concerns.`,
+    ]
+  };
+  
+  const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'neutral';
+  const templateList = templates[sentiment];
+  return templateList[Math.floor(Math.random() * templateList.length)];
 }
 
 // Generate AI reply
 async function generateAIReply(review) {
-  const API_URL = 'http://localhost:3000/api/reviews/generate-reply';
-  // const API_URL = 'https://autoreview-ai.com/api/reviews/generate-reply';
+  // Use production URL
+  const API_URL = 'https://ai-review-writer.vercel.app/api/reviews/generate-reply';
   
-  const response = await fetch(API_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      reviewText: review.text,
-      rating: review.rating,
-      authorName: review.author,
-      platform: review.platform,
-      tone: 'friendly',
-      language: 'en',
-    }),
-  });
-  
-  const data = await response.json();
-  if (data.success) {
-    return data.data.reply;
+  try {
+    const response = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        reviewText: review.text,
+        rating: review.rating,
+        authorName: review.author,
+        platform: review.platform || 'google',
+        tone: 'friendly',
+        language: 'en',
+      }),
+    });
+    
+    const data = await response.json();
+    if (data.success) {
+      return data.reply || data.data?.reply || getFallbackReply(review.rating, review.author);
+    }
+    throw new Error(data.error || 'API error');
+  } catch (error) {
+    console.error('API Error:', error);
+    return getFallbackReply(review.rating, review.author);
   }
-  throw new Error(data.error);
 }
 
 // Show reply modal
