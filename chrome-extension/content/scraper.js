@@ -252,9 +252,6 @@ function scrapeTrustpilotReviews() {
 // Add AI Reply buttons to reviews
 function addAIReplyButtons() {
   const reviewContainers = getAllReviewContainers();
-  if (reviewContainers.length > 0) {
-    console.log('[AutoReview AI] Found containers:', reviewContainers.length);
-  }
   
   reviewContainers.forEach((container) => {
     // Check if button already exists (with more robust check)
@@ -273,16 +270,20 @@ function addAIReplyButtons() {
       e.preventDefault();
       e.stopPropagation();
       
-      btn.textContent = '⏳ Generating...';
+      // RE-SCRAPE FRESH ON CLICK to ensure we have the right review
+      const freshData = getReviewFromContainer(container);
+      if (!freshData.text || freshData.text.length < 5) return;
+
+      btn.textContent = '⏳ ...';
       btn.disabled = true;
       
       try {
-        const reply = await generateAIReply(reviewData);
-        showReplyModal(reviewData, reply);
+        const reply = await generateAIReply(freshData);
+        showReplyModal(freshData, reply);
       } catch (err) {
         console.error('Error:', err);
-        const fallbackReply = getFallbackReply(reviewData.rating, reviewData.author);
-        showReplyModal(reviewData, fallbackReply);
+        const fallbackReply = getFallbackReply(freshData.rating, freshData.author);
+        showReplyModal(freshData, fallbackReply);
       } finally {
         btn.innerHTML = '✨ AI Reply';
         btn.disabled = false;
@@ -434,7 +435,7 @@ async function generateAIReply(review, tone = 'friendly') {
   }
 }
 
-// Show reply modal
+// Show reply modal (Improved)
 function showReplyModal(review, reply) {
   const existing = document.getElementById('autoreview-modal');
   if (existing) existing.remove();
@@ -450,13 +451,13 @@ function showReplyModal(review, reply) {
       </div>
       <div class="autoreview-modal-body">
         <div class="autoreview-review-preview">
-          <strong>Original Review (${review.rating}⭐)</strong>
+          <strong>Review by ${review.author} (${review.rating}⭐)</strong>
           <p>${review.text.substring(0, 150)}${review.text.length > 150 ? '...' : ''}</p>
         </div>
         
         <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
           <label style="color: #a0aec0; font-size: 13px;">Tone:</label>
-          <select id="autoreview-tone-select" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px; padding: 4px 8px;">
+          <select id="autoreview-tone-select" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px; padding: 4px 8px; font-size: 12px;">
             <option value="friendly">Friendly</option>
             <option value="professional">Professional</option>
             <option value="apologetic">Apologetic</option>
@@ -466,45 +467,50 @@ function showReplyModal(review, reply) {
         </div>
 
         <div class="autoreview-reply-box">
-          <textarea id="autoreview-reply-text" rows="4">${reply}</textarea>
+          <textarea id="autoreview-reply-text" rows="5">${reply}</textarea>
         </div>
       </div>
       <div class="autoreview-modal-footer">
         <button class="autoreview-btn autoreview-btn-secondary autoreview-regenerate">🔄 Regenerate</button>
-        <button class="autoreview-btn autoreview-btn-primary autoreview-copy">📋 Copy</button>
+        <button class="autoreview-btn autoreview-btn-primary autoreview-copy">📋 Copy Reply</button>
       </div>
     </div>
   `;
   
   document.body.appendChild(modal);
   
-  // Event listeners
+  const textArea = modal.querySelector('#autoreview-reply-text');
+  const toneSelect = modal.querySelector('#autoreview-tone-select');
+  const regenBtn = modal.querySelector('.autoreview-regenerate');
+  const copyBtn = modal.querySelector('.autoreview-copy');
+
   modal.querySelector('.autoreview-close').onclick = () => modal.remove();
   modal.querySelector('.autoreview-modal-overlay').onclick = () => modal.remove();
   
-  modal.querySelector('.autoreview-copy').onclick = async () => {
-    const text = modal.querySelector('#autoreview-reply-text').value;
+  copyBtn.onclick = async () => {
     try {
-      await navigator.clipboard.writeText(text);
-      modal.querySelector('.autoreview-copy').textContent = '✅ Copied!';
+      await navigator.clipboard.writeText(textArea.value);
+      copyBtn.textContent = '✅ Copied!';
       setTimeout(() => {
-        const copyBtn = modal.querySelector('.autoreview-copy');
-        if (copyBtn) copyBtn.textContent = '📋 Copy';
+        if (copyBtn) copyBtn.textContent = '📋 Copy Reply';
       }, 2000);
     } catch (err) {
       console.error('Copy failed:', err);
     }
   };
   
-  modal.querySelector('.autoreview-regenerate').onclick = async () => {
-    const tone = modal.querySelector('#autoreview-tone-select').value;
-    modal.querySelector('.autoreview-regenerate').textContent = '⏳ ...';
+  regenBtn.onclick = async () => {
+    const tone = toneSelect.value;
+    regenBtn.textContent = '⏳ ...';
+    regenBtn.disabled = true;
     try {
       const newReply = await generateAIReply(review, tone);
-      modal.querySelector('#autoreview-reply-text').value = newReply;
+      textArea.value = newReply;
+    } catch (err) {
+      textArea.value = getFallbackReply(review.rating, review.author, tone);
     } finally {
-      const regenBtn = modal.querySelector('.autoreview-regenerate');
-      if (regenBtn) regenBtn.textContent = '🔄 Regenerate';
+      regenBtn.textContent = '🔄 Regenerate';
+      regenBtn.disabled = false;
     }
   };
 }
@@ -548,4 +554,3 @@ if (PLATFORM !== 'unknown') {
     subtree: true,
   });
 }
-
