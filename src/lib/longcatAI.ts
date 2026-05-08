@@ -294,7 +294,7 @@ Return ONLY the JSON object, no additional text.`;
     reviewText: string,
     rating: number,
     sentiment: string,
-    tone: "professional" | "friendly" | "apologetic" | "enthusiastic" = "friendly",
+    tone: "professional" | "friendly" | "apologetic" | "enthusiastic" | "desi" = "friendly",
     authorName: string = "there"
   ): Promise<{
     response: string;
@@ -306,6 +306,7 @@ Return ONLY the JSON object, no additional text.`;
         friendly: "warm and approachable, like talking to a friend",
         apologetic: "sincere and understanding, acknowledging concerns",
         enthusiastic: "energetic and grateful, showing genuine appreciation",
+        desi: "Desi style (Hinglish/Urdu-English mix), very warm, using terms like 'bhai', 'shukriya', and local cultural warmth",
       };
 
       const prompt = `Generate a ${tone} response to this customer review.
@@ -329,6 +330,7 @@ Return a JSON object with:
 - appropriateness_score: a number between 0 and 1
 
 Return ONLY the JSON object.`;
+
 
       const response = await this.chat(
         [
