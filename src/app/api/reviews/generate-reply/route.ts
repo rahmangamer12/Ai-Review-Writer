@@ -12,7 +12,7 @@ const generateReplySchema = z.object({
   rating: z.number().min(1).max(5).optional(),
   authorName: z.string().max(200).optional(),
   platform: z.enum(['google', 'facebook', 'yelp', 'tripadvisor', 'trustpilot', 'manual']).default('google'),
-  tone: z.enum(['professional', 'friendly', 'apologetic', 'enthusiastic']).default('friendly'),
+  tone: z.enum(['professional', 'friendly', 'apologetic', 'enthusiastic', 'desi']).default('friendly'),
   language: z.string().max(10).default('en'),
   replyText: z.string().max(5000).optional(),
   aiGenerated: z.boolean().default(false)
@@ -35,8 +35,22 @@ function getFallbackReply(rating: number, tone: string, authorName: string): str
       `Hi ${name}, we sincerely apologize that your experience didn't meet your expectations. We'd love the opportunity to make this right. Please reach out to us directly so we can address your concerns.`,
     ]
   };
+
+  const desiTemplates: Record<string, string[]> = {
+    positive: [
+      `Shukriya ${name} bhai! Aapka review parh kar bohat khushi hui. Hamari koshish hoti hai ke behtreen service dein. Dubara zaroor aaiye ga!`,
+      `Bohat bohat shukriya ${name}! Aapka feedback hamare liye bohat ahmiyat rakhta hai. Khush rahein!`,
+    ],
+    neutral: [
+      `Shukriya ${name}! Hum mazeed behtar karne ki koshish karein ge.`,
+    ],
+    negative: [
+      `Bohat afsos hua ${name} bhai aapka ye experience jaan kar. Hum maazrat khwah hain. Baraye meharbani hum se rabta karein taake hum isay theek kar sakein.`,
+    ]
+  };
   
-  const template = templates[sentiment][Math.floor(Math.random() * templates[sentiment].length)];
+  const templateList = tone === 'desi' ? (desiTemplates[sentiment] || templates[sentiment]) : templates[sentiment];
+  const template = templateList[Math.floor(Math.random() * templateList.length)];
   
   // Apply tone modifiers
   if (tone === 'professional') {
@@ -57,6 +71,7 @@ function getFallbackReply(rating: number, tone: string, authorName: string): str
   
   return template;
 }
+
 
 // POST - Generate AI reply or save existing reply
 async function handler(request: NextRequest) {

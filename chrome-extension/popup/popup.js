@@ -40,8 +40,14 @@ const TONE_MODIFIERS = {
     positive: "WOW! Thank you {name}! You made our day! Come back soon!",
     neutral: "Thanks for sharing, {name}! Every bit of feedback helps us improve!",
     negative: "Oh no! We're devastated, {name}! Please give us another chance!",
+  },
+  desi: {
+    positive: "Shukriya {name} bhai! Aapka review parh kar bohat khushi hui. Bohat bohat shukriya! ✨",
+    neutral: "Thanks for the feedback, {name}. Hum mazeed behtar karne ki koshish karein ge. Shukriya!",
+    negative: "Maazrat khwah hain {name} bhai. Humein dukh hua ke aapka experience acha nahi raha. Hum se rabta karein taake hum isay theek kar sakein. 🙏",
   }
 };
+
 
 // DOM Elements
 const elements = {
