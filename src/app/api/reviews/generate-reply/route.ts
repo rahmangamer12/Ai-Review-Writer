@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
 import { supabase } from '@/lib/supabase'
 import { longcatAI } from '@/lib/longcatAI'
 import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit'
@@ -19,28 +18,74 @@ const generateReplySchema = z.object({
   aiGenerated: z.boolean().default(false)
 })
 
+// Fallback templates for offline mode
+function getFallbackReply(rating: number, tone: string, authorName: string): string {
+  const name = authorName || 'there';
+  const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'neutral';
+  
+  const templates: Record<string, string[]> = {
+    positive: [
+      `Thank you ${name} for your wonderful review! We're thrilled you had such a great experience with us. Your feedback means the world to our team!`,
+      `We truly appreciate your kind words, ${name}! It was our pleasure to serve you, and we look forward to seeing you again soon!`,
+    ],
+    neutral: [
+      `Thank you, ${name}, for your feedback. We appreciate you taking the time to share your experience and are always looking for ways to improve.`,
+    ],
+    negative: [
+      `Hi ${name}, we sincerely apologize that your experience didn't meet your expectations. We'd love the opportunity to make this right. Please reach out to us directly so we can address your concerns.`,
+    ]
+  };
+  
+  const template = templates[sentiment][Math.floor(Math.random() * templates[sentiment].length)];
+  
+  // Apply tone modifiers
+  if (tone === 'professional') {
+    return sentiment === 'positive' 
+      ? `Thank you for your feedback. We look forward to serving you again.`
+      : sentiment === 'negative'
+      ? `We apologize for this experience. Please contact our management.`
+      : `Thank you for your feedback. We value your input.`;
+  } else if (tone === 'apologetic') {
+    return sentiment === 'negative'
+      ? `We're so sorry ${name}. This is not our standard. Please let us make it right.`
+      : template;
+  } else if (tone === 'enthusiastic') {
+    return sentiment === 'positive'
+      ? `WOW! Thank you ${name}! You made our day! Come back soon!`
+      : template;
+  }
+  
+  return template;
+}
+
 // POST - Generate AI reply or save existing reply
 async function handler(request: NextRequest) {
   try {
-    const { userId } = await auth()
-    if (!userId) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    // Try to get auth, but don't fail if not present - allow for Chrome extension
+    let userId: string | null = null;
+    try {
+      const { auth } = await import('@clerk/nextjs/server')
+      const authResult = await auth()
+      userId = authResult?.userId || null
+    } catch (e) {
+      // Auth not available, continue without user
     }
 
-    // Rate limiting - 10 AI requests per minute
-    const rateLimitResult = await rateLimit(userId, RATE_LIMITS.AI_GENERATION)
-
-    if (!rateLimitResult.success) {
-      return NextResponse.json(
-        {
-          error: rateLimitResult.message,
-          retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
-        },
-        {
-          status: 429,
-          headers: getRateLimitHeaders(rateLimitResult)
-        }
-      )
+    // Rate limiting - 10 AI requests per minute (skip for unauthenticated)
+    if (userId) {
+      const rateLimitResult = await rateLimit(userId, RATE_LIMITS.AI_GENERATION)
+      if (!rateLimitResult.success) {
+        return NextResponse.json(
+          {
+            error: rateLimitResult.message,
+            retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
+          },
+          {
+            status: 429,
+            headers: getRateLimitHeaders(rateLimitResult)
+          }
+        )
+      }
     }
 
     // Validate input
@@ -59,8 +104,11 @@ async function handler(request: NextRequest) {
       aiGenerated
     } = validated
 
-    // If replyText is provided, save it directly
+    // If replyText is provided, save it directly (requires auth)
     if (replyText !== undefined) {
+      if (!userId) {
+        return NextResponse.json({ error: 'Authentication required to save replies' }, { status: 401 })
+      }
       if (!reviewId) {
         return NextResponse.json({ error: 'Review ID required' }, { status: 400 })
       }
@@ -86,7 +134,6 @@ async function handler(request: NextRequest) {
 
       let result
       if (existingReply) {
-        // Update existing reply
         result = await (supabase
           .from('replies')
           .update({
@@ -99,7 +146,6 @@ async function handler(request: NextRequest) {
           .select()
           .single()
       } else {
-        // Insert new reply
         result = await (supabase
           .from('replies')
           .insert({
@@ -119,18 +165,22 @@ async function handler(request: NextRequest) {
       return NextResponse.json({ success: true, reply: result.data })
     }
 
-    // Otherwise, generate a new AI reply using REAL LongCat AI
+    // Otherwise, generate a new AI reply
     if (!reviewText || typeof reviewText !== 'string') {
       return NextResponse.json({ error: 'Review text is required' }, { status: 400 })
     }
 
-    console.log('[Generate Reply API] Using REAL LongCat AI to generate reply')
+    console.log('[Generate Reply API] Using LongCat AI to generate reply')
 
     // Analyze sentiment first
     let sentimentResult
     try {
-      sentimentResult = await longcatAI.analyzeSentiment(reviewText)
-      console.log('[Generate Reply API] Sentiment:', sentimentResult.sentiment)
+      if (longcatAI.hasApiKey()) {
+        sentimentResult = await longcatAI.analyzeSentiment(reviewText)
+        console.log('[Generate Reply API] Sentiment:', sentimentResult.sentiment)
+      } else {
+        throw new Error('No API key')
+      }
     } catch (e) {
       console.error('[Generate Reply API] Sentiment analysis failed, using fallback')
       sentimentResult = {
@@ -139,29 +189,25 @@ async function handler(request: NextRequest) {
       }
     }
 
-    // Generate reply using REAL AI
+    // Generate reply using AI or fallback
     let aiReply = ''
     try {
-      const result = await longcatAI.generateReviewResponse(
-        reviewText,
-        rating || 3,
-        sentimentResult.sentiment,
-        tone as any,
-        authorName || 'there'
-      )
-      aiReply = result.response
-      console.log('[Generate Reply API] AI Reply generated:', aiReply.substring(0, 100) + '...')
+      if (longcatAI.hasApiKey()) {
+        const result = await longcatAI.generateReviewResponse(
+          reviewText,
+          rating || 3,
+          sentimentResult.sentiment,
+          tone as any,
+          authorName || 'there'
+        )
+        aiReply = result.response
+        console.log('[Generate Reply API] AI Reply generated:', aiReply.substring(0, 100) + '...')
+      } else {
+        throw new Error('No API key')
+      }
     } catch (aiError) {
       console.error('[Generate Reply API] AI generation failed, using fallback:', aiError)
-      // Fallback to template-based reply
-      const name = authorName || 'there'
-      if ((rating || 3) >= 4) {
-        aiReply = `Thank you ${name} for your wonderful review! We're thrilled you had such a great experience with us. Your feedback means the world to our team!`
-      } else if ((rating || 3) === 3) {
-        aiReply = `Thank you ${name} for your feedback. We appreciate you taking the time to share your experience and are always looking for ways to improve.`
-      } else {
-        aiReply = `Hi ${name}, we sincerely apologize that your experience didn't meet your expectations. We'd love the opportunity to make this right. Please reach out to us directly so we can address your concerns.`
-      }
+      aiReply = getFallbackReply(rating || 3, tone, authorName || 'there')
     }
 
     return NextResponse.json(
@@ -176,12 +222,11 @@ async function handler(request: NextRequest) {
           platform,
           language,
           generated_at: new Date().toISOString(),
-          ai_provider: 'LongCat AI',
+          ai_provider: longcatAI.hasApiKey() ? 'LongCat AI' : 'Fallback',
         }
       },
       {
         headers: {
-          ...getRateLimitHeaders(rateLimitResult),
           'Access-Control-Allow-Origin': '*',
         }
       }
