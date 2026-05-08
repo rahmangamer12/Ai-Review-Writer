@@ -302,15 +302,23 @@
 
     <!-- Detected Review -->
     <div class="section" id="reviewSection" style="display: none;">
-      <div class="section-title">Detected Review</div>
+      <div class="section-title" style="display: flex; justify-content: space-between;">
+        <span>Detected Review</span>
+        <span id="reviewCounter" style="color: #667eea; font-weight: bold;">1 / 1</span>
+      </div>
       <div class="detected-review">
         <div class="review-header">
           <span class="reviewer-name" id="reviewerName">-</span>
           <span class="review-rating" id="reviewRating">-</span>
         </div>
-        <div class="review-text" id="reviewText">-</div>
+        <div class="review-text" id="reviewText" style="max-height: 100px; overflow-y: auto;">-</div>
+      </div>
+      <div style="display: flex; gap: 8px; margin-bottom: 15px;">
+        <button class="btn btn-secondary" id="prevReviewBtn" style="flex: 1; padding: 8px;">上 Prev</button>
+        <button class="btn btn-secondary" id="nextReviewBtn" style="flex: 1; padding: 8px;">下 Next</button>
       </div>
     </div>
+
 
     <!-- Settings -->
     <div class="section">
