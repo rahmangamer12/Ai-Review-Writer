@@ -2,6 +2,47 @@
 const API_BASE_URL = 'https://ai-review-writer.vercel.app'; 
 // 🏠 LOCAL: http://localhost:3000
 
+// Fallback templates for offline mode
+const FALLBACK_TEMPLATES = {
+  positive: [
+    "Thank you {name} for your wonderful review! We're thrilled you had such a great experience with us. Your feedback means the world to our team!",
+    "We truly appreciate your kind words, {name}! It was our pleasure to serve you, and we look forward to seeing you again soon!",
+    "Thank you so much, {name}! We're excited to hear you enjoyed your experience. Can't wait to welcome you back!",
+  ],
+  neutral: [
+    "Thank you, {name}, for your feedback. We appreciate you taking the time to share your experience and are always looking for ways to improve.",
+    "We value your input, {name}. Thank you for bringing this to our attention. We're committed to providing the best experience possible.",
+  ],
+  negative: [
+    "Hi {name}, we sincerely apologize that your experience didn't meet your expectations. We'd love the opportunity to make this right. Please reach out to us directly so we can address your concerns.",
+    "Dear {name}, we're sorry to hear about your experience. This is not the standard we strive for. Please contact us so we can make things better.",
+  ]
+};
+
+// Tone modifiers
+const TONE_MODIFIERS = {
+  professional: {
+    positive: "Thank you for your positive feedback. We appreciate your business and look forward to serving you again.",
+    neutral: "Thank you for your feedback. We will use this to improve our service.",
+    negative: "We apologize for this experience. Please contact our management team to resolve this issue.",
+  },
+  friendly: {
+    positive: "Yay! We're so happy you loved it, {name}! Can't wait to see you again!",
+    neutral: "Thanks for the feedback, {name}! We're always working to be even better!",
+    negative: "Oh no! We're so sorry, {name}. Let's fix this - reach out to us!",
+  },
+  apologetic: {
+    positive: "Thank you so much! We're sorry for any past issues - we're working hard to be better!",
+    neutral: "We truly appreciate your patience and feedback, {name}.",
+    negative: "We're so sorry, {name}. This shouldn't have happened. Please let us make it right.",
+  },
+  enthusiastic: {
+    positive: "WOW! Thank you {name}! You made our day! Come back soon!",
+    neutral: "Thanks for sharing, {name}! Every bit of feedback helps us improve!",
+    negative: "Oh no! We're devastated, {name}! Please give us another chance!",
+  }
+};
+
 // DOM Elements
 const elements = {
   platformContainer: document.getElementById('platformContainer'),
@@ -134,7 +175,9 @@ async function generateReply() {
   try {
     const response = await fetch(`${API_BASE_URL}/api/reviews/generate-reply`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+      },
       body: JSON.stringify({
         reviewText: currentReview.text,
         rating: currentReview.rating,
@@ -148,7 +191,7 @@ async function generateReply() {
     const data = await response.json();
     
     if (data.success) {
-      const reply = data.data.reply;
+      const reply = data.data?.reply || data.reply;
       elements.aiReply.textContent = reply;
       elements.replySection.style.display = 'block';
       
@@ -161,14 +204,55 @@ async function generateReply() {
       // Save to storage
       saveReplyToHistory(currentReview, reply);
     } else {
-      showError(data.error || 'Failed to generate reply');
+      // Use fallback template if API fails
+      const fallbackReply = getFallbackReply(currentReview.rating, elements.toneSelect.value, currentReview.author);
+      elements.aiReply.textContent = fallbackReply;
+      elements.replySection.style.display = 'block';
+      showTempMessage('Using offline reply');
     }
   } catch (error) {
     console.error('Error:', error);
-    showError('Network error. Please check your connection.');
+    // Use fallback template for any error
+    const fallbackReply = getFallbackReply(currentReview.rating, elements.toneSelect.value, currentReview.author);
+    elements.aiReply.textContent = fallbackReply;
+    elements.replySection.style.display = 'block';
+    showTempMessage('Offline mode - reply generated');
   } finally {
     showLoading(false);
   }
+}
+
+// Get fallback reply using templates
+function getFallbackReply(rating, tone, authorName) {
+  const templates = FALLBACK_TEMPLATES;
+  const modifiers = TONE_MODIFIERS;
+  const name = authorName || 'there';
+  
+  // Determine sentiment category
+  let sentiment = 'neutral';
+  if (rating >= 4) sentiment = 'positive';
+  else if (rating <= 2) sentiment = 'negative';
+  
+  // Get base template
+  const baseTemplate = templates[sentiment][Math.floor(Math.random() * templates[sentiment].length)];
+  let reply = baseTemplate.replace(/{name}/g, name);
+  
+  // Apply tone modifier if provided and exists
+  if (modifiers[tone] && modifiers[tone][sentiment]) {
+    const toneReply = modifiers[tone][sentiment].replace(/{name}/g, name);
+    // Mix base with tone
+    if (tone === 'professional') {
+      reply = toneReply;
+    } else if (tone === 'friendly') {
+      reply = toneReply;
+    } else if (tone === 'apologetic') {
+      reply = `${toneReply} ${baseTemplate.replace(/{name}/g, name)}`;
+    } else if (tone === 'enthusiastic') {
+      reply = toneReply;
+    }
+  }
+  
+  return reply;
 }
 
 // Show/hide loading
