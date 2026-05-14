@@ -215,25 +215,23 @@ async function handler(request: NextRequest) {
       }
     }
 
-    // Generate reply using AI or fallback
+    // Generate reply using AI
     let aiReply = ''
-    try {
-      if (longcatAI.hasApiKey()) {
-        const result = await longcatAI.generateReviewResponse(
-          reviewText,
-          rating || 3,
-          sentimentResult.sentiment,
-          tone as any,
-          authorName || 'there'
-        )
-        aiReply = result.response
-        console.log('[Generate Reply API] AI Reply generated:', aiReply.substring(0, 100) + '...')
-      } else {
-        throw new Error('No API key')
-      }
-    } catch (aiError) {
-      console.error('[Generate Reply API] AI generation failed, using fallback:', aiError)
-      aiReply = getFallbackReply(rating || 3, tone, authorName || 'there')
+    if (longcatAI.hasApiKey()) {
+      const result = await longcatAI.generateReviewResponse(
+        reviewText,
+        rating || 3,
+        sentimentResult.sentiment,
+        tone as any,
+        authorName || 'there'
+      )
+      aiReply = result.response
+      console.log('[Generate Reply API] AI Reply generated:', aiReply.substring(0, 100) + '...')
+    } else {
+      return NextResponse.json({ 
+        error: 'AI Service is not configured. Please contact the administrator.',
+        success: false 
+      }, { status: 503 })
     }
 
     return NextResponse.json(
@@ -248,7 +246,7 @@ async function handler(request: NextRequest) {
           platform,
           language,
           generated_at: new Date().toISOString(),
-          ai_provider: longcatAI.hasApiKey() ? 'LongCat AI' : 'Fallback',
+          ai_provider: 'LongCat AI',
         }
       },
       {
@@ -257,6 +255,7 @@ async function handler(request: NextRequest) {
         }
       }
     )
+
 
   } catch (error: unknown) {
     console.error('[Generate Reply API Error]:', error)

@@ -12,7 +12,6 @@ interface ReviewsTabProps {
   searchQuery: string
   setSearchQuery: (query: string) => void
   router: AppRouterInstance
-  setShowAIGenerator: (show: boolean) => void
 }
 
 export default function ReviewsTab({
@@ -20,8 +19,7 @@ export default function ReviewsTab({
   loading,
   searchQuery,
   setSearchQuery,
-  router,
-  setShowAIGenerator
+  router
 }: ReviewsTabProps) {
   // Ultra-fast Local Search Filter
   const filteredReviews = data?.recentReviews?.filter(r => {
@@ -45,12 +43,13 @@ export default function ReviewsTab({
             <Plus className="h-4 w-4" />
             <span>Add Review</span>
           </button>
-          <button onClick={() => setShowAIGenerator(true)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-xl bg-white/5 px-4 py-2.5 text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white transition-all active:scale-[0.98] border border-white/10">
+          <button onClick={() => router.push('/reviews/add')} className="flex-1 sm:flex-none flex items-center justify-center gap-2 rounded-xl bg-white/5 px-4 py-2.5 text-sm font-medium text-gray-300 hover:bg-white/10 hover:text-white transition-all active:scale-[0.98] border border-white/10">
             <Bot className="h-4 w-4" />
-            <span className="hidden sm:inline">Mock Data</span>
+            <span className="hidden sm:inline">AI Analysis</span>
           </button>
         </div>
       </div>
+
 
       {/* ─── REAL TIME SEARCH TOOL ─── */}
       <div className="relative w-full group">
@@ -139,17 +138,18 @@ export default function ReviewsTab({
             <>
               <h3 className="text-xl sm:text-2xl font-bold text-white mb-3">Your Inbox is Empty</h3>
               <p className="text-gray-400 max-w-md mx-auto mb-8 text-sm sm:text-base leading-relaxed">
-                No API keys yet? No problem. You can test the entire platform right now by manually adding a real text review without generating fake data.
+                Connect your platforms or add reviews manually to start generating AI-powered insights and replies.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <button onClick={() => router.push('/reviews/add')} className="w-full sm:w-auto rounded-xl bg-violet-600 px-8 py-3.5 text-sm font-semibold text-white hover:bg-violet-500 transition-all shadow-lg shadow-violet-600/20 hover:scale-105 active:scale-[0.98]">
                   Add Manual Review 
                 </button>
-                <button onClick={() => setShowAIGenerator(true)} className="w-full sm:w-auto rounded-xl bg-white/5 border border-white/10 px-8 py-3.5 text-sm font-medium text-gray-300 hover:bg-white/10 transition-all active:scale-[0.98]">
-                  Load Fake Reviews
+                <button onClick={() => router.push('/reviews/add')} className="w-full sm:w-auto rounded-xl bg-white/5 border border-white/10 px-8 py-3.5 text-sm font-medium text-gray-300 hover:bg-white/10 transition-all active:scale-[0.98]">
+                  Open AI Tools
                 </button>
               </div>
             </>
+
           )}
         </div>
       )}

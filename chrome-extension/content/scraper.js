@@ -282,8 +282,7 @@ function addAIReplyButtons() {
         showReplyModal(freshData, reply);
       } catch (err) {
         console.error('Error:', err);
-        const fallbackReply = getFallbackReply(freshData.rating, freshData.author);
-        showReplyModal(freshData, fallbackReply);
+        alert(`AI Error: ${err.message}. Please try again or check your API quota.`);
       } finally {
         btn.innerHTML = '✨ AI Reply';
         btn.disabled = false;
@@ -373,53 +372,6 @@ function getReviewFromContainer(container) {
   return { author, rating, text, platform };
 }
 
-// Fallback reply templates
-function getFallbackReply(rating, authorName, tone = 'friendly') {
-  const name = authorName || 'there';
-  const templates = {
-    positive: [
-      `Thank you ${name} for your wonderful review! We're thrilled you had such a great experience with us. Your feedback means the world to our team!`,
-      `We truly appreciate your kind words, ${name}! It was our pleasure to serve you, and we look forward to seeing you again soon!`,
-      `Thank you so much, ${name}! We're excited to hear you enjoyed your experience. Can't wait to welcome you back!`,
-      `Greatly appreciate the support, ${name}! We're so happy we could meet your expectations. See you next time!`,
-      `Thanks for the 5 stars, ${name}! We love hearing from happy customers. Enjoy!`,
-    ],
-    neutral: [
-      `Thank you, ${name}, for your feedback. We appreciate you taking the time to share your experience and are always looking for ways to improve.`,
-      `We value your input, ${name}. Thank you for bringing this to our attention. We're committed to providing the best experience possible.`,
-      `Thanks for sharing your thoughts, ${name}. We'll take this feedback into account as we continue to improve our service.`,
-    ],
-    negative: [
-      `Hi ${name}, we sincerely apologize that your experience didn't meet your expectations. We'd love the opportunity to make this right. Please reach out to us directly so we can address your concerns.`,
-      `Dear ${name}, we're sorry to hear about your experience. This is not the standard we strive for. Please contact us so we can make things better.`,
-      `We apologize for the inconvenience, ${name}. We are looking into this issue to ensure it doesn't happen again. Thank you for your patience.`,
-    ]
-  };
-
-  // Desi fallbacks
-  const desiTemplates = {
-    positive: [
-      `Shukriya ${name} bhai! Aapka review parh kar bohat khushi hui. Hamari koshish hoti hai ke behtreen service dein. Dubara zaroor aaiye ga!`,
-      `Bohat bohat shukriya ${name}! Aapka feedback hamare liye bohat ahmiyat rakhta hai. Khush rahein!`,
-      `JazakAllah ${name}! Aapka review parh kar maza aa gaya. Dubara jald aaiye ga!`,
-    ],
-    neutral: [
-      `Shukriya ${name}! Hum mazeed behtar karne ki koshish karein ge.`,
-      `Thanks for the feedback ${name}. Hum is par kaam karein ge.`,
-    ],
-    negative: [
-      `Bohat afsos hua ${name} bhai aapka ye experience jaan kar. Hum maazrat khwah hain. Baraye meharbani hum se rabta karein taake hum isay theek kar sakein.`,
-      `Maazrat ${name} bhai. Ye hamara standard nahi hai. Humein moqa dein taake hum isay theek kar sakein.`,
-    ]
-  };
-  
-  const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'neutral';
-  const activeTemplates = tone === 'desi' ? (desiTemplates[sentiment] || templates[sentiment]) : templates[sentiment];
-  
-  return activeTemplates[Math.floor(Math.random() * activeTemplates.length)];
-}
-
-
 // Generate AI reply
 async function generateAIReply(review, tone = 'friendly') {
   const API_URL = 'https://ai-review-writer.vercel.app/api/reviews/generate-reply';
@@ -440,12 +392,12 @@ async function generateAIReply(review, tone = 'friendly') {
     
     const data = await response.json();
     if (data.success) {
-      return data.reply || data.data?.reply || getFallbackReply(review.rating, review.author, tone);
+      return data.reply || data.data?.reply;
     }
     throw new Error(data.error || 'API error');
   } catch (error) {
     console.error('API Error:', error);
-    return getFallbackReply(review.rating, review.author, tone);
+    throw error;
   }
 }
 
@@ -521,7 +473,7 @@ function showReplyModal(review, reply) {
       const newReply = await generateAIReply(review, tone);
       textArea.value = newReply;
     } catch (err) {
-      textArea.value = getFallbackReply(review.rating, review.author, tone);
+      alert(`AI Error: ${err.message}. Could not regenerate.`);
     } finally {
       regenBtn.textContent = '🔄 Regenerate';
       regenBtn.disabled = false;

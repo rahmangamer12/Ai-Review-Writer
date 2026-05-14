@@ -31,11 +31,20 @@ const ALLOWED_MODELS = [
   'gemini-2.5-pro'
 ];
 
-// Input validation schema
+// Input validation schema with proper types
+const chatMessagePartSchema = z.object({
+  type: z.enum(['text', 'image_url', 'image']),
+  text: z.string().optional(),
+  image_url: z.object({
+    url: z.string().url()
+  }).optional(),
+  image: z.string().optional(),
+});
+
 const chatRequestSchema = z.object({
   messages: z.array(z.object({
     role: z.enum(['system', 'user', 'assistant', 'tool']),
-    content: z.union([z.string(), z.array(z.any())])
+    content: z.union([z.string(), z.array(chatMessagePartSchema)])
   })).min(1),
   model: z.enum(ALLOWED_MODELS as [string, ...string[]]).default('LongCat-Flash-Chat'),
   temperature: z.number().min(0).max(2).default(0.7)

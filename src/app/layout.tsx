@@ -97,7 +97,7 @@ export default function RootLayout({
             <ToastProvider>
             <div className="flex flex-col lg:flex-row min-h-[100dvh] max-w-[100vw] relative z-10" suppressHydrationWarning>
               <Navigation />
-              <main className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pt-[calc(57px+env(safe-area-inset-top))] lg:pt-0 pb-[calc(72px+env(safe-area-inset-bottom))] lg:pb-0 min-w-0 max-w-full lg:pl-64 xl:pl-72" suppressHydrationWarning>
+              <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar pt-[calc(57px+env(safe-area-inset-top))] lg:pt-0 pb-[calc(72px+env(safe-area-inset-bottom))] lg:pb-0 min-w-0 max-w-full lg:pl-64 xl:pl-72 outline-none" suppressHydrationWarning>
                 <div className="w-full min-h-full px-0 md:px-6 lg:px-8 max-w-full" suppressHydrationWarning>
                   {children}
                 </div>

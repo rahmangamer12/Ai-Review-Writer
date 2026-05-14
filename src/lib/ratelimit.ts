@@ -76,12 +76,42 @@ async function getUpstashLimiter() {
 interface MemEntry { count: number; resetTime: number }
 const memStore = new Map<string, MemEntry>()
 
+// Cleanup every 5 min (both dev and prod for memory fallback)
+// Prevents memory leak when Upstash is not configured
+const memCleanupInterval = setInterval(() => {
+  const now = Date.now()
+  let cleaned = 0
+  for (const [k, v] of memStore.entries()) {
+    if (v.resetTime < now) {
+      memStore.delete(k)
+      cleaned++
+    }
+  }
+  if (cleaned > 0 && process.env.NODE_ENV === 'development') {
+    console.log(`[RateLimit] Cleaned ${cleaned} expired entries. Remaining: ${memStore.size}`)
+  }
+}, 5 * 60 * 1000)
+
+// Prevent memory leak: limit max entries in memory fallback
+const MAX_MEM_ENTRIES = 10000
 function memCheck(
   key: string,
   limit: number,
   windowMs: number
 ): RateLimitResult {
   const now = Date.now()
+
+  // Prevent unbounded growth
+  if (memStore.size >= MAX_MEM_ENTRIES) {
+    // Remove oldest 20% of entries
+    const entries = Array.from(memStore.entries())
+    entries.sort((a, b) => a[1].resetTime - b[1].resetTime)
+    const toRemove = entries.slice(0, Math.floor(MAX_MEM_ENTRIES * 0.2))
+    for (const [k] of toRemove) {
+      memStore.delete(k)
+    }
+  }
+
   const entry = memStore.get(key)
 
   if (!entry || entry.resetTime < now) {
@@ -99,14 +129,15 @@ function memCheck(
   return { success: true, remaining: limit - entry.count, resetTime: entry.resetTime, limit }
 }
 
-// Cleanup every 5 min (dev only — Upstash handles this in prod)
-if (typeof process !== 'undefined' && process.env.NODE_ENV !== 'production') {
-  setInterval(() => {
-    const now = Date.now()
-    for (const [k, v] of memStore.entries()) {
-      if (v.resetTime < now) memStore.delete(k)
-    }
-  }, 5 * 60 * 1000)
+// Cleanup on process exit (for serverless environments)
+if (typeof process !== 'undefined') {
+  const signals = ['SIGINT', 'SIGTERM', 'beforeExit'] as const
+  for (const signal of signals) {
+    process.on(signal, () => {
+      clearInterval(memCleanupInterval)
+      memStore.clear()
+    })
+  }
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { supabase } from '@/lib/supabase';
 import { validateRedirect } from '@/lib/oauthSecurity';
+import { encryptSensitiveData } from '@/lib/encryption';
 
 export async function GET(request: NextRequest) {
   try {
@@ -67,14 +68,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Store tokens securely in database (never in localStorage or frontend)
+    // Store tokens securely in ENCRYPTED form (AES-256-GCM)
+    const encryptedAccessToken = encryptSensitiveData(tokens.access_token);
+    const encryptedRefreshToken = tokens.refresh_token
+      ? encryptSensitiveData(tokens.refresh_token)
+      : null;
+
     const { error: dbError } = await supabase
       .from('platform_credentials')
       .upsert({
         user_id: userId,
         platform: 'google',
-        access_token: tokens.access_token,
-        refresh_token: tokens.refresh_token, // This is critical!
+        access_token_encrypted: encryptedAccessToken,
+        refresh_token_encrypted: encryptedRefreshToken,
+        // Keep legacy fields for backward compatibility (will be migrated)
+        access_token: null,
+        refresh_token: null,
         expires_at: Date.now() + (tokens.expires_in * 1000),
         updated_at: new Date().toISOString(),
       }, {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { supabase } from '@/lib/supabase'
+import { decryptSensitiveData, encryptSensitiveData } from '@/lib/encryption'
 
 const MAX_REFRESH_ATTEMPTS = 3
 const REFRESH_COOLDOWN_MS = 5000 // 5 seconds
@@ -46,11 +47,25 @@ export async function POST(request: NextRequest) {
       }, { status: 429 })
     }
 
+    // Decrypt the refresh token before using it
+    const encryptedRefreshToken = credentials.refresh_token_encrypted || credentials.refresh_token;
+    if (!encryptedRefreshToken) {
+      return NextResponse.json({ error: 'No refresh token available', requiresReauth: true }, { status: 401 });
+    }
+
+    let refreshToken: string;
+    try {
+      refreshToken = decryptSensitiveData(encryptedRefreshToken);
+    } catch {
+      // Fallback: token might be plaintext (legacy)
+      refreshToken = encryptedRefreshToken;
+    }
+
     // Attempt refresh based on platform
     let newTokens = null
     let refreshError = null
 
-    if (platform === 'google' && credentials.refresh_token) {
+    if (platform === 'google' && refreshToken) {
       try {
         const response = await fetch('https://oauth2.googleapis.com/token', {
           method: 'POST',
@@ -58,7 +73,7 @@ export async function POST(request: NextRequest) {
           body: new URLSearchParams({
             client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
             client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
-            refresh_token: credentials.refresh_token,
+            refresh_token: refreshToken,
             grant_type: 'refresh_token',
           }),
         })
@@ -78,25 +93,29 @@ export async function POST(request: NextRequest) {
       // Update refresh attempt timestamp
       await supabase
         .from('platform_credentials')
-        .update({ 
+        .update({
           last_refresh_attempt: Date.now(),
           last_error: refreshError
         })
         .eq('user_id', userId)
         .eq('platform', platform)
 
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: refreshError,
         requiresReauth: true
       }, { status: 401 })
     }
 
     if (newTokens) {
-      // Update credentials with new tokens
+      // Encrypt new tokens before storing
+      const newEncryptedAccessToken = encryptSensitiveData(newTokens.access_token);
+
+      // Update credentials with new ENCRYPTED tokens
       await supabase
         .from('platform_credentials')
         .update({
-          access_token: newTokens.access_token,
+          access_token_encrypted: newEncryptedAccessToken,
+          access_token: null, // Clear legacy plaintext field
           expires_at: Date.now() + (newTokens.expires_in * 1000),
           last_refresh_attempt: null,
           last_error: null,

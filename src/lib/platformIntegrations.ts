@@ -309,10 +309,9 @@ export class PlatformIntegrationManager {
       const stored = localStorage.getItem(this.STORAGE_KEY)
       if (stored) {
         const parsed = JSON.parse(stored)
-        // Return platforms as-is (credentials stored in localStorage for demo)
-        // In production, credentials should be stored server-side only
         return parsed
       }
+
     } catch (error) {
       console.error('Error loading platforms:', error)
     }
@@ -345,8 +344,7 @@ export class PlatformIntegrationManager {
       const index = platforms.findIndex(p => p.id === platformId)
 
       if (index !== -1) {
-        // Store credentials as-is (for demo purposes)
-        // In production, credentials should be stored server-side with encryption
+        // Update connected platform
         platforms[index] = {
           ...platforms[index],
           credentials: credentials,
@@ -382,7 +380,7 @@ export class PlatformIntegrationManager {
           lastSync: status === 'connected' ? new Date().toISOString() : platforms[index].lastSync
         }
 
-        // Save platforms as-is (no encryption for demo)
+        // Save platforms
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(platforms))
       }
     } catch (error) {
@@ -516,16 +514,6 @@ export class PlatformIntegrationManager {
     }
 
     try {
-      // Demo/Test Mode Bypass
-      const isDemo = Object.values(credentials).some(v => 
-        v?.toString().toLowerCase().includes('demo_') || 
-        v?.toString().toLowerCase() === 'test'
-      )
-      
-      if (isDemo) {
-        return { success: true, message: `${platformId} connected (Demo Mode)!` }
-      }
-
       const url = handler.testUrl(credentials)
       const headers = handler.testHeaders ? handler.testHeaders(credentials) : undefined
       const res = await this.proxyFetch(url, headers)
@@ -533,6 +521,7 @@ export class PlatformIntegrationManager {
       if (!res.ok) {
         return { success: false, message: `${platformId} connection failed: ${res.data?.error?.message || 'Invalid credentials'}` }
       }
+
 
       // Special case for Google status
       if (platformId === 'google' && res.data.status !== 'OK') {
