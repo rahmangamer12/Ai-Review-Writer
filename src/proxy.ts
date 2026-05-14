@@ -69,7 +69,9 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
-// ─── Main Middleware ─────────────────────────────────────────────────────────
+// ─── Proxy (Next.js 16 renamed from Middleware) ─────────────────────────────
+// Next.js 16 deprecates middleware.ts in favor of proxy.ts
+// clerkMiddleware wraps our auth logic; we add security headers on top
 export default clerkMiddleware(async (auth, request: NextRequest) => {
   // Skip authentication for public routes
   if (isPublicRoute(request)) {
