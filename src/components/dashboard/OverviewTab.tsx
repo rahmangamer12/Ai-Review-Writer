@@ -16,7 +16,6 @@ interface OverviewTabProps {
   stats: AnalyticsData['stats']
   router: AppRouterInstance
   setActiveTab: (tab: string) => void
-  setShowAIGenerator: (show: boolean) => void
   runAgenticReview: () => Promise<void>
 }
 
@@ -26,7 +25,6 @@ export default function OverviewTab({
   stats,
   router,
   setActiveTab,
-  setShowAIGenerator,
   runAgenticReview
 }: OverviewTabProps) {
   return (
@@ -42,12 +40,12 @@ export default function OverviewTab({
       {/* Quick Actions */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mb-8">
         <h3 className="text-lg font-semibold text-white mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 gap-3 sm:gap-4">
           {[
             { title: 'Add Reviews', description: 'Import customer reviews manually', icon: Plus, color: 'blue', action: () => router.push('/reviews/add') },
-            { title: 'AI Review Generator', description: 'Generate test reviews with AI', icon: Bot, color: 'purple', action: () => setShowAIGenerator(true) },
             { title: 'Agentic Reviews', description: 'Auto-process reviews with AI', icon: Brain, color: 'emerald', action: () => runAgenticReview() },
           ].map((action, index) => (
+
             <motion.button
               key={action.title}
               whileHover={undefined}
@@ -115,12 +113,14 @@ export default function OverviewTab({
           ) : (
             <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-12 text-center">
               <MessageSquare className="mx-auto mb-4 h-12 w-12 text-gray-600" />
-              <button onClick={() => setShowAIGenerator(true)} className="rounded-lg bg-purple-600 px-6 py-3 font-medium text-white hover:bg-purple-500 active:scale-[0.98]">
-                <Bot className="mr-2 inline h-4 w-4" />
-                Generate Test Reviews
+              <h3 className="text-white font-medium mb-2">No reviews found</h3>
+              <p className="text-gray-500 mb-6 max-w-xs mx-auto">Connect your social platforms to start analyzing real customer feedback.</p>
+              <button onClick={() => router.push('/connect-platforms')} className="rounded-xl bg-violet-600 px-6 py-3 font-medium text-white hover:bg-violet-500 active:scale-[0.98] transition-all">
+                Connect Platforms
               </button>
             </div>
           )}
+
         </div>
       </motion.div>
     </div>

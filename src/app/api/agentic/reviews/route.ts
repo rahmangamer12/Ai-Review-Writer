@@ -67,28 +67,17 @@ export async function POST(req: NextRequest) {
 
         // Step 2: Generate AI reply with REAL AI
         let aiReply = ''
-        try {
-          console.log('[Agentic] Generating reply with LongCat AI...')
-          const result = await longcatAI.generateReviewResponse(
-            reviewText,
-            review.rating,
-            sentiment,
-            'friendly',
-            authorName
-          )
-          aiReply = result.response
-          console.log('[Agentic] AI Reply generated:', aiReply.substring(0, 80) + '...')
-        } catch (e) {
-          console.log('[Agentic] AI reply generation failed, using fallback')
-          // Fallback reply
-          if (review.rating >= 4) {
-            aiReply = `Thank you ${authorName} for your wonderful review! We're thrilled you had a great experience.`
-          } else if (review.rating === 3) {
-            aiReply = `Thank you ${authorName} for your feedback. We appreciate your input and are always working to improve.`
-          } else {
-            aiReply = `Hi ${authorName}, we sincerely apologize for your experience. Please contact us so we can make this right.`
-          }
-        }
+        console.log('[Agentic] Generating reply with LongCat AI...')
+        const result = await longcatAI.generateReviewResponse(
+          reviewText,
+          review.rating,
+          sentiment,
+          'friendly',
+          authorName
+        )
+        aiReply = result.response
+        console.log('[Agentic] AI Reply generated:', aiReply.substring(0, 80) + '...')
+
 
         // Step 3: Save reply to database
         console.log('[Agentic] Saving reply to database...')

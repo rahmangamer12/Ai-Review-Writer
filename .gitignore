@@ -30,7 +30,25 @@ yarn-error.log*
 .env*.local
 .env.production
 .env.backup
+.env*.backup
 # .env.example (NOT ignored, used as template)
+
+# Secret files
+*.key
+*.pem
+*.p12
+*.pfx
+secrets/
+.secrets/
+
+# Database dumps
+*.sql.dump
+*.dump
+*.backup
+
+# IDE
+.vscode/settings.json
+.idea/
 
 
 # vercel
@@ -52,3 +70,6 @@ motivation/
 **/MY_*.txt
 **/*_PRIVATE.txt
 **/*_PERSONAL.*
+
+# Sentry Config File
+.env.sentry-build-plugin

@@ -297,7 +297,7 @@ export default function PaymentMethodManager() {
           )}
 
           <p className="text-white/50 text-xs mt-4">
-            🔒 Your payment information is encrypted and secure. This is a demo - no real payment processing occurs.
+            🔒 Your payment information is encrypted and secure.
           </p>
         </motion.div>
       )}
@@ -383,7 +383,7 @@ export default function PaymentMethodManager() {
             <h5 className="text-white font-semibold mb-1">Secure Payment Processing</h5>
             <p className="text-white/60 text-sm">
               All payment information is encrypted using industry-standard SSL/TLS protocols. 
-              We never store your full card details. This demo uses local storage for demonstration purposes only.
+              We never store your full card details.
             </p>
           </div>
         </div>

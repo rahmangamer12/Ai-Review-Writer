@@ -101,163 +101,6 @@ const plans: SubscriptionPlan[] = [
   }
 ]
 
-// ─── Early Access Modal (shows when payment not yet configured) ───────────────
-function EarlyAccessModal({
-  planName,
-  onClose
-}: {
-  planName: string
-  onClose: () => void
-}) {
-  const [email, setEmail] = useState('')
-  const [submitted, setSubmitted] = useState(false)
-  const [submitting, setSubmitting] = useState(false)
-  const { user } = useUser()
-
-  useEffect(() => {
-    if (user?.primaryEmailAddress?.emailAddress) {
-      setEmail(user.primaryEmailAddress.emailAddress)
-    }
-  }, [user])
-
-  const handleNotify = async () => {
-    if (!email.trim() || !email.includes('@')) return
-    setSubmitting(true)
-    try {
-      // Save to waitlist API
-      await fetch('/api/waitlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, plan: planName })
-      })
-    } catch {}
-    setSubmitting(false)
-    setSubmitted(true)
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ scale: 0.88, opacity: 0, y: 20 }}
-        animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.92, opacity: 0, y: 10 }}
-        transition={{ type: 'spring', stiffness: 280, damping: 30 }}
-        className="relative w-full max-w-lg bg-[#0d0d1a] border border-white/10 rounded-3xl p-8 shadow-2xl overflow-hidden"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Gradient top bar */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-violet-500 via-cyan-500 to-pink-500 rounded-t-3xl" />
-
-        {/* Close */}
-        <button
-          onClick={onClose}
-          className="absolute top-5 right-5 p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/50 hover:text-white transition-colors"
-          aria-label="Close"
-        >
-          <X className="w-4 h-4" />
-        </button>
-
-        {!submitted ? (
-          <>
-            {/* Icon */}
-            <div className="w-16 h-16 bg-gradient-to-br from-violet-500/20 to-cyan-500/20 border border-violet-500/30 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <Bell className="w-8 h-8 text-violet-400" />
-            </div>
-
-            <h2 className="text-2xl font-bold text-white text-center mb-2">
-              Payments Launching Soon 🚀
-            </h2>
-            <p className="text-white/60 text-center text-sm mb-2">
-              You selected the <span className="text-violet-400 font-semibold capitalize">{planName}</span> plan.
-            </p>
-            <p className="text-white/50 text-center text-sm mb-8">
-              We're finalizing our payment integration. Enter your email and we'll notify you the moment it's live — plus get an exclusive early-bird discount!
-            </p>
-
-            {/* Email Input */}
-            <div className="space-y-3 mb-6">
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleNotify()}
-                  placeholder="your@email.com"
-                  className="w-full pl-11 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder:text-white/30 focus:outline-none focus:border-violet-500/60 focus:ring-2 focus:ring-violet-500/20 transition-all text-sm"
-                />
-              </div>
-              <button
-                onClick={handleNotify}
-                disabled={submitting || !email.trim()}
-                className="w-full py-3.5 bg-gradient-to-r from-violet-600 to-cyan-600 hover:from-violet-500 hover:to-cyan-500 text-white font-semibold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] shadow-lg shadow-violet-600/20"
-              >
-                {submitting ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    <Bell className="w-4 h-4" />
-                    Notify Me When It's Live
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Perks */}
-            <div className="grid grid-cols-3 gap-3 text-center">
-              {[
-                { icon: '🎁', label: 'Early-bird discount' },
-                { icon: '⚡', label: 'Priority access' },
-                { icon: '🔒', label: 'No spam, ever' },
-              ].map((item) => (
-                <div key={item.label} className="bg-white/[0.03] border border-white/[0.06] rounded-xl p-3">
-                  <div className="text-xl mb-1">{item.icon}</div>
-                  <div className="text-[10px] text-white/50">{item.label}</div>
-                </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          // Success State
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="text-center py-6"
-          >
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ type: 'spring', stiffness: 200, delay: 0.1 }}
-              className="w-20 h-20 bg-emerald-500/20 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto mb-6"
-            >
-              <CheckCircle2 className="w-10 h-10 text-emerald-400" />
-            </motion.div>
-            <h2 className="text-2xl font-bold text-white mb-2">You're on the list! 🎉</h2>
-            <p className="text-white/60 text-sm mb-2">
-              We'll email <span className="text-white font-medium">{email}</span> the moment payments go live.
-            </p>
-            <p className="text-white/40 text-xs mb-8">
-              You'll receive an exclusive early-bird offer on the {planName} plan.
-            </p>
-            <button
-              onClick={onClose}
-              className="px-6 py-3 bg-white/10 hover:bg-white/20 border border-white/20 text-white rounded-xl font-medium transition-all active:scale-[0.98]"
-            >
-              Back to Plans
-            </button>
-          </motion.div>
-        )}
-      </motion.div>
-    </motion.div>
-  )
-}
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function SubscriptionPage() {
   const router = useRouter()
@@ -267,8 +110,8 @@ export default function SubscriptionPage() {
   const [loading, setLoading] = useState<string | null>(null)
   const [currentCredits, setCurrentCredits] = useState<number>(0)
   const [error, setError] = useState<string | null>(null)
-  const [earlyAccessPlan, setEarlyAccessPlan] = useState<string | null>(null)
   const { warning: toastWarning } = useToast()
+
 
   useEffect(() => {
     async function fetchUserData() {
@@ -323,11 +166,6 @@ export default function SubscriptionPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        // Payment not configured → show Early Access modal
-        if (response.status === 503 || data.demo || data.earlyAccess) {
-          setEarlyAccessPlan(planId)
-          return
-        }
         throw new Error(data.error || 'Checkout failed')
       }
 
@@ -336,13 +174,13 @@ export default function SubscriptionPage() {
       } else {
         throw new Error('No checkout URL received')
       }
-    } catch {
-      // Network error or any other issue → show Early Access modal
-      setEarlyAccessPlan(planId)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Payment system unavailable')
     } finally {
       setLoading(null)
     }
   }
+
 
   const getYearlySavings = (monthlyPrice: number) => {
     return Math.round(monthlyPrice * 12 * 0.15)
@@ -357,16 +195,6 @@ export default function SubscriptionPage() {
 
   return (
     <div className="min-h-[100dvh] overflow-x-hidden w-full">
-      {/* Early Access Modal */}
-      <AnimatePresence>
-        {earlyAccessPlan && (
-          <EarlyAccessModal
-            planName={plans.find(p => p.id === earlyAccessPlan)?.name || earlyAccessPlan}
-            onClose={() => setEarlyAccessPlan(null)}
-          />
-        )}
-      </AnimatePresence>
-
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-primary/10 via-transparent to-transparent pointer-events-none" />
@@ -672,12 +500,6 @@ export default function SubscriptionPage() {
               className="px-6 py-3 bg-white/5 text-white rounded-xl font-medium hover:bg-white/10 transition-colors border border-white/20 active:scale-[0.98]"
             >
               Contact Support
-            </button>
-            <button
-              onClick={() => router.push('/schedule-call')}
-              className="px-6 py-3 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-xl font-medium hover:opacity-90 transition-opacity active:scale-[0.98]"
-            >
-              Schedule a Demo
             </button>
           </div>
         </motion.div>

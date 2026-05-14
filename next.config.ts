@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 const nextConfig: NextConfig = {
   // Enable strict mode
@@ -7,6 +8,10 @@ const nextConfig: NextConfig = {
   // Optimize images
   images: {
     unoptimized: true,
+    // Add image formats for better optimization
+    formats: ['image/avif', 'image/webp'],
+    // Cache images for 1 year
+    minimumCacheTTL: 31536000,
   },
 
   // Configure output directory
@@ -20,6 +25,61 @@ const nextConfig: NextConfig = {
 
   // Configure trailing slash behavior
   trailingSlash: false,
+
+  // Experimental optimizations
+  experimental: {
+    // Optimize package imports for faster builds
+    optimizePackageImports: [
+      'framer-motion',
+      'lucide-react',
+      '@react-three/fiber',
+      '@react-three/drei',
+      'three',
+      'zustand',
+    ],
+  },
+
+  // Webpack optimization
+  webpack: (config, { isServer }) => {
+    // Optimize Three.js bundle size
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        // Use smaller Three.js build
+        'three': 'three',
+      };
+    }
+
+    // Split chunks for better caching
+    config.optimization = {
+      ...config.optimization,
+      splitChunks: {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+            priority: 10,
+          },
+          three: {
+            test: /[\\/]node_modules[\\/](three|@react-three)[\\/]/,
+            name: 'three',
+            chunks: 'all',
+            priority: 20,
+          },
+          framer: {
+            test: /[\\/]node_modules[\\/]framer-motion[\\/]/,
+            name: 'framer',
+            chunks: 'all',
+            priority: 20,
+          },
+        },
+      },
+    };
+
+    return config;
+  },
 
   // Configure redirects if needed
   async redirects() {
@@ -62,11 +122,13 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://clerk.com https://*.clerk.accounts.dev https://challenges.cloudflare.com",
+              // NOTE: 'unsafe-inline' and 'unsafe-eval' needed for Clerk & Framer Motion
+              // TODO: Replace with nonces/hashes when Clerk supports it
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://clerk.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://va.vercel-scripts.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: https: blob:",
-              "connect-src 'self' https://api.longcat.chat https://*.supabase.co https://clerk.com https://*.clerk.accounts.dev https://api.lemonsqueezy.com wss://*.supabase.co",
+              "connect-src 'self' https://api.longcat.chat https://*.supabase.co https://clerk.com https://*.clerk.accounts.dev https://api.lemonsqueezy.com https://*.sentry.io https://generativelanguage.googleapis.com wss://*.supabase.co",
               "frame-src 'self' https://challenges.cloudflare.com https://*.clerk.accounts.dev",
               "worker-src 'self' blob:",
               "manifest-src 'self'",
@@ -74,6 +136,7 @@ const nextConfig: NextConfig = {
               "form-action 'self'",
               "object-src 'none'",
               "plugin-types 'none'",
+              "upgrade-insecure-requests",
             ].join('; '),
           },
           {
@@ -114,4 +177,42 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+// Sentry wrapper for source maps upload
+// Only enabled when SENTRY_DSN is set
+export default withSentryConfig(nextConfig, {
+  // For all available options, see:
+  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
+
+  org: "ai-review-writer",
+
+  project: "javascript-nextjs",
+
+  // Only print logs for uploading source maps in CI
+  silent: !process.env.CI,
+
+  // For all available options, see:
+  // https://docs.sentry.io/platforms/javascript/guides/nextjs/manual-setup/
+
+  // Upload a larger set of source maps for prettier stack traces (increases build time)
+  widenClientFileUpload: true,
+
+  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
+  // This can increase your server load as well as your hosting bill.
+  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
+  // side errors will fail.
+  tunnelRoute: "/monitoring",
+
+  webpack: {
+    // Enables automatic instrumentation of Vercel Cron Monitors. (Does not yet work with App Router route handlers.)
+    // See the following for more information:
+    // https://docs.sentry.io/product/crons/
+    // https://vercel.com/docs/cron-jobs
+    automaticVercelMonitors: true,
+
+    // Tree-shaking options for reducing bundle size
+    treeshake: {
+      // Automatically tree-shake Sentry logger statements to reduce bundle size
+      removeDebugLogging: true,
+    },
+  },
+});

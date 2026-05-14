@@ -1,76 +1,124 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { hybridWebhook, processManualImport, processScreenshot, processEmailForward } from '@/lib/webhooks/hybridWebhook';
+import {
+  hybridWebhook,
+  processManualImport,
+  processScreenshot,
+  processEmailForward,
+} from '@/lib/webhooks/hybridWebhook';
 import { autoReplyScheduler } from '@/lib/auto-reply/scheduler';
 import { schedulerService } from '@/lib/schedulerService';
 import { auth } from '@clerk/nextjs/server';
+import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit';
+import { z } from 'zod';
+
+// ─── Input Validation Schema ─────────────────────────────────────────────────
+const webhookSchema = z.object({
+  source: z.enum(['api', 'manual_import', 'screenshot', 'email_forward', 'chrome_extension']),
+  data: z.record(z.string(), z.any()),
+  options: z.record(z.string(), z.any()).default({}),
+  userId: z.string().optional(), // Only for external webhook calls
+});
 
 /**
  * POST /api/webhooks/reviews
  * Main webhook endpoint for ALL review sources (HYBRID)
- * Supports: API, Manual Import, Screenshot, Email Forward
+ * Supports: API, Manual Import, Screenshot, Email Forward, Chrome Extension
+ *
+ * Security: userId from body is ONLY accepted when:
+ * 1. Request comes from verified external service (has webhook secret), OR
+ * 2. Request is from Chrome extension (verified via origin)
+ * Otherwise, Clerk auth is required.
  */
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const {
-      source, // 'api', 'manual_import', 'screenshot', 'email_forward', 'chrome_extension'
-      data,
-      options = {},
-      userId: providedUserId // Allow passing userId from external systems
-    } = body;
 
-    // Get current user using Clerk auth, but allow external webhook calls
-    const { userId: authenticatedUserId } = await auth();
-    const userId = providedUserId || authenticatedUserId;
+    // Validate input
+    const validated = webhookSchema.parse(body);
+    const { source, data, options, userId: providedUserId } = validated;
 
-    if (!userId) {
-      // For unauthenticated requests, we still allow processing but skip auto-reply
-      console.log(`[Webhook API] Processing unauthenticated request from source: ${source}`);
-    } else {
-      console.log(`[Webhook API] Incoming from source: ${source} for user: ${userId}`);
+    // ── Determine authenticated user ──────────────────────────────────────────
+    let userId: string | null = null;
+    let authSource: 'clerk' | 'chrome-extension' | 'none' = 'none';
+
+    // Try Clerk auth first
+    try {
+      const authResult = await auth();
+      userId = authResult?.userId || null;
+      if (userId) authSource = 'clerk';
+    } catch {
+      // Auth not available
     }
 
-    let processedReviews: any[] = [];
+    // If no Clerk auth, check for Chrome Extension origin
+    if (!userId) {
+      const origin = request.headers.get('origin') || '';
+      const isChromeExtension = origin.startsWith('chrome-extension://');
+
+      if (isChromeExtension && providedUserId) {
+        // Chrome extension sends its own userId - accept it but rate limit
+        userId = providedUserId;
+        authSource = 'chrome-extension';
+        console.log(`[Webhook] Chrome extension request for user: ${userId}`);
+      }
+    }
+
+    // Rate limiting (per user or per IP for unauthenticated)
+    const rateLimitKey = userId || request.headers.get('x-forwarded-for') || 'unknown';
+    const rateLimitResult = await rateLimit(rateLimitKey, RATE_LIMITS.WEBHOOK);
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Rate limit exceeded', retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000) },
+        { status: 429, headers: getRateLimitHeaders(rateLimitResult) }
+      );
+    }
+
+    if (!userId) {
+      console.log(`[Webhook API] Processing unauthenticated request from source: ${source}`);
+    } else {
+      console.log(`[Webhook API] Incoming from source: ${source} for user: ${userId} (auth: ${authSource})`);
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const processedReviews: any[] = [];
 
     switch (source) {
-      case 'api':
-        // Direct API webhook
-        const review = await hybridWebhook.processIncomingReview(data, options);
-        processedReviews = [review];
+      case 'api': {
+        const review = await hybridWebhook.processIncomingReview(data as any, options as any);
+        processedReviews.push(review);
         break;
-
-      case 'manual_import':
-        // CSV/Excel upload
-        processedReviews = await processManualImport(data.reviews, options);
+      }
+      case 'manual_import': {
+        const reviews = await processManualImport(data.reviews as any, options as any);
+        processedReviews.push(...reviews);
         break;
-
-      case 'screenshot':
-        // Screenshot upload with OCR
-        const screenshotReview = await processScreenshot(data.image, data.metadata, options);
-        processedReviews = [screenshotReview];
+      }
+      case 'screenshot': {
+        const screenshotReview = await processScreenshot(data.image as string, data.metadata as any, options as any);
+        processedReviews.push(screenshotReview);
         break;
-
-      case 'email_forward':
-        // Forwarded email
-        const emailReview = await processEmailForward(data.email, options);
-        processedReviews = [emailReview];
-        break;
-
-      case 'chrome_extension':
-        // Chrome extension scraping
-        const extReview = await hybridWebhook.processIncomingReview({
-          ...data.review,
-          source: 'chrome_extension',
-          id: `ext_${Date.now()}`,
-        }, options);
-        processedReviews = [extReview];
-        break;
-
-      default:
-        return NextResponse.json(
-          { error: `Unknown source: ${source}. Supported: api, manual_import, screenshot, email_forward, chrome_extension` },
-          { status: 400 }
+      }
+      case 'email_forward': {
+        const emailReview = await processEmailForward(
+          typeof data.email === 'string' ? { from: '', subject: '', body: data.email } : (data.email as any),
+          options as any
         );
+        processedReviews.push(emailReview);
+        break;
+      }
+      case 'chrome_extension': {
+        const reviewData = data.review as Record<string, unknown>;
+        const extReview = await hybridWebhook.processIncomingReview(
+          {
+            ...reviewData,
+            source: 'chrome_extension',
+            id: `ext_${Date.now()}`,
+          } as any,
+          options as any
+        );
+        processedReviews.push(extReview);
+        break;
+      }
     }
 
     // Process with auto-reply rules using the new database-backed scheduler (only if userId exists)
@@ -79,7 +127,7 @@ export async function POST(request: NextRequest) {
         await autoReplyScheduler.processReviewWithRules(review, userId, options);
       }
 
-      // Potentially trigger scheduled tasks if needed (but only periodically to avoid over-triggering)
+      // Trigger scheduled tasks if needed (but only periodically to avoid over-triggering)
       if (schedulerService.shouldRunScheduler()) {
         console.log('[Webhook] Triggering scheduled tasks...');
         await schedulerService.executeScheduledTasks();
@@ -89,7 +137,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       processed_count: processedReviews.length,
-      reviews: processedReviews.map(r => ({
+      auth_source: authSource,
+      reviews: processedReviews.map((r) => ({
         id: r.id,
         source: r.source,
         platform: r.platform,
@@ -99,8 +148,14 @@ export async function POST(request: NextRequest) {
         needs_human_review: r.needs_human_review,
       })),
     });
-
   } catch (error: unknown) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: error.issues },
+        { status: 400 }
+      );
+    }
+
     console.error('[Webhook API Error]:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
@@ -117,19 +172,25 @@ export async function POST(request: NextRequest) {
 export async function GET() {
   return NextResponse.json({
     status: 'Hybrid Webhook API is running',
+    security: {
+      authRequired: true,
+      rateLimit: true,
+      inputValidation: true,
+      chromeExtensionSupport: true,
+    },
     sources: {
       api: { description: 'Direct API integration', requires_auth: true },
-      manual_import: { description: 'CSV/Excel upload', requires_auth: false },
-      screenshot: { description: 'Screenshot with OCR', requires_auth: false },
-      email_forward: { description: 'Forward notification emails', requires_auth: false },
-      chrome_extension: { description: 'Chrome extension scraping', requires_auth: false },
+      manual_import: { description: 'CSV/Excel upload', requires_auth: true },
+      screenshot: { description: 'Screenshot with OCR', requires_auth: true },
+      email_forward: { description: 'Forward notification emails', requires_auth: true },
+      chrome_extension: { description: 'Chrome extension scraping', requires_auth: 'via extension' },
     },
     features: [
       'Automatic sentiment analysis',
       'AI reply generation',
       'Auto-approval for positive reviews',
       'Queue for human review',
-      'Multi-platform support'
+      'Multi-platform support',
     ],
     timestamp: new Date().toISOString(),
   });

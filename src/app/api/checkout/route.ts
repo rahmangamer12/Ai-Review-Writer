@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { lemonSqueezy } from '@/lib/lemonsqueezy'
 import { auth } from '@clerk/nextjs/server'
+import { withCSRFProtection } from '@/lib/csrfProtection'
+import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit'
 
-export async function POST(request: NextRequest) {
+async function checkoutHandler(request: NextRequest) {
   try {
     const { userId } = await auth()
 
@@ -10,31 +12,39 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { plan, billingCycle, userEmail, userName } = await request.json()
+    // Rate limiting for checkout
+    const rateLimitResult = await rateLimit(userId, RATE_LIMITS.API_STANDARD)
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: rateLimitResult.message },
+        { status: 429, headers: getRateLimitHeaders(rateLimitResult) }
+      )
+    }
 
-    // Validate plan - accept all valid plan IDs
+    const body = await request.json()
+    const { plan, billingCycle, userEmail, userName } = body
+
+    // Validate plan
     if (!plan || !['starter', 'growth', 'business', 'professional', 'enterprise'].includes(plan)) {
       return NextResponse.json(
-        { error: 'Invalid plan selected', demo: true },
+        { error: 'Invalid plan selected' },
         { status: 400 }
       )
     }
 
     // Check if Lemon Squeezy is configured
     if (!lemonSqueezy.isConfigured()) {
-      console.log('Lemon Squeezy not configured - running in early access mode')
+      console.log('Lemon Squeezy not configured')
       
-      // Return earlyAccess flag so frontend shows waitlist modal
       return NextResponse.json(
         { 
-          error: 'Payment system not configured',
-          demo: true,
-          earlyAccess: true,
-          message: 'Add LEMONSQUEEZY_API_KEY to .env file for real payments'
+          error: 'Payment system is currently under maintenance. Please try again later.',
+          success: false
         },
         { status: 503 }
       )
     }
+
 
     // Create checkout session with Lemon Squeezy
     const checkout = await lemonSqueezy.createCheckout(plan, {
@@ -60,10 +70,13 @@ export async function POST(request: NextRequest) {
       checkoutId: checkout.id
     })
   } catch (error) {
-    // Silently handle error and return demo mode
+    console.error('Checkout error:', error)
     return NextResponse.json(
-      { error: 'Payment system not available', demo: true },
+      { error: 'Payment processing failed. Please try again.' },
       { status: 503 }
     )
   }
 }
+
+export const POST = withCSRFProtection(checkoutHandler)
+

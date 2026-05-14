@@ -71,7 +71,8 @@ export default async function LandingPage() {
           </div>
         </div>
 
-        {/* Dashboard Mockup */}
+        {/* Dashboard Preview */}
+
         <div className="w-full max-w-5xl mt-24 relative animate-fade-in-up animation-delay-500 group">
           <div className="absolute inset-0 bg-gradient-to-t from-[#030308] via-transparent to-transparent z-10" />
           <div className="relative rounded-2xl sm:rounded-[32px] overflow-hidden border border-white/10 bg-[#0c0c18] shadow-2xl p-2 sm:p-4 transition-transform duration-500 group-hover:scale-[1.02]">

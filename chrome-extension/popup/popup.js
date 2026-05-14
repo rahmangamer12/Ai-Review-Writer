@@ -272,7 +272,7 @@ async function generateReply() {
         platform: currentReview.platform || currentPlatform,
         tone: elements.toneSelect.value,
         language: elements.languageSelect.value,
-        nocache: Date.now() // Add timestamp to avoid caching
+        nocache: Date.now()
       }),
     });
     
@@ -288,41 +288,17 @@ async function generateReply() {
         showTempMessage('✅ Copied!');
       }
     } else {
-      throw new Error(data.error || 'Failed to generate');
+      throw new Error(data.error || data.details || 'API failed to generate reply');
     }
   } catch (error) {
     console.error('Error:', error);
-    const fallbackReply = getFallbackReply(currentReview.rating, elements.toneSelect.value, currentReview.author);
-    elements.aiReply.textContent = fallbackReply;
-    elements.replySection.style.display = 'block';
-    showTempMessage('AI Offline');
+    showError(`AI Error: ${error.message}. Please check your internet or API quota.`);
+    elements.replySection.style.display = 'none';
   } finally {
     showLoading(false);
   }
 }
 
-// Get fallback reply
-function getFallbackReply(rating, tone, authorName) {
-  const templates = FALLBACK_TEMPLATES;
-  const modifiers = TONE_MODIFIERS;
-  const name = authorName || 'there';
-  
-  let sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'neutral';
-  const baseTemplates = templates[sentiment];
-  const baseTemplate = baseTemplates[Math.floor(Math.random() * baseTemplates.length)];
-  let reply = baseTemplate.replace(/{name}/g, name);
-  
-  if (modifiers[tone] && modifiers[tone][sentiment]) {
-    const toneReply = modifiers[tone][sentiment].replace(/{name}/g, name);
-    if (tone === 'professional' || tone === 'friendly' || tone === 'enthusiastic') {
-      reply = toneReply;
-    } else if (tone === 'apologetic' || tone === 'desi') {
-      reply = toneReply + ' ' + reply;
-    }
-  }
-  
-  return reply;
-}
 
 // UI Helpers
 function showLoading(show) {

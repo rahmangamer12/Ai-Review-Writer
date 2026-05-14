@@ -1,7 +1,11 @@
 /**
  * Platform Connection Manager
  * Handles all platform connections with proper error handling
+ *
+ * SECURITY: All tokens are encrypted before storage using AES-256-GCM
  */
+
+import { encryptSensitiveData, decryptSensitiveData } from './encryption';
 
 export interface ConnectionResult {
   success: boolean;
