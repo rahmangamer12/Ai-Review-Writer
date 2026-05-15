@@ -79,7 +79,6 @@ export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState<'overview' | 'stats' | 'activity' | 'achievements' | 'settings'>('overview')
   const [editedProfile, setEditedProfile] = useState<Partial<UserProfile>>({})
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [reviewsData, setReviewsData] = useState<ReviewData[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { success: toastSuccess, error: toastError } = useToast()
@@ -562,7 +561,7 @@ export default function ProfilePage() {
                     </motion.button>
                     <motion.button
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => setShowUpgradeModal(true)}
+                      onClick={() => router.push('/subscription')}
                       className="px-6 py-3 bg-linear-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:shadow-lg transition-all flex items-center gap-2 active:scale-[0.98]"
                     >
                       <Zap className="w-4 h-4" />
@@ -1729,39 +1728,6 @@ export default function ProfilePage() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Upgrade Modal */}
-        <AnimatePresence>
-          {showUpgradeModal && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-6"
-              onClick={() => setShowUpgradeModal(false)}
-            >
-              <motion.div
-                initial={{ scale: 0.9, y: 20 }}
-                animate={{ scale: 1, y: 0 }}
-                exit={{ scale: 0.9, y: 20 }}
-                onClick={(e) => e.stopPropagation()}
-                className="glass-card border-2 border-primary/30 rounded-2xl p-8 max-w-md w-full"
-              >
-                <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-2xl font-bold text-white">Upgrade Your Plan</h2>
-                  <button onClick={() => setShowUpgradeModal(false)} className="text-white/70 hover:text-white text-2xl">&times;</button>
-                </div>
-                <p className="text-white/70 text-center mb-6">
-                  Visit the subscription page to view all available plans and upgrade options.
-                </p>
-                <div className="text-center">
-                  <a href="/subscription" className="px-8 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors inline-block">
-                    View Plans
-                  </a>
-                </div>
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
     </div>
     </PageTransition>
