@@ -3,17 +3,16 @@ import { createClient } from '@supabase/supabase-js'
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-// STRICT MODE: NO MOCK DATA - REAL CREDENTIALS REQUIRED
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('❌ MISSING SUPABASE CREDENTIALS!')
-  console.error('Please configure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your .env file.')
-  console.error('Get your credentials from: https://supabase.com > Your Project > Settings > API')
+// Helper function to check if Supabase is configured
+export const isSupabaseConfigured = () => {
+  return Boolean(supabaseUrl && supabaseAnonKey && supabaseUrl.includes('supabase.co'))
 }
 
-// Create REAL Supabase client - NO MOCK DATA ALLOWED
+// Create Supabase client - works even without credentials during build
+// Runtime calls should check isSupabaseConfigured() first
 export const supabase = createClient(
-  supabaseUrl,
-  supabaseAnonKey,
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder-key',
   {
     auth: {
       persistSession: true,
@@ -31,16 +30,8 @@ export const supabase = createClient(
   }
 )
 
-// Export auth for authentication
-export const { auth } = supabase
-
-// Helper function to check if Supabase is configured
-export const isSupabaseConfigured = () => {
-  return Boolean(supabaseUrl && supabaseAnonKey && supabaseUrl.includes('supabase.co'))
-}
-
-// Log configuration status
-if (typeof window === 'undefined') {
+// Log configuration status (only on server, skip during build)
+if (typeof window === 'undefined' && process.env.NEXT_PHASE !== 'phase-production-build') {
   console.log('🗄️ Supabase Configuration:')
   console.log(`   URL: ${supabaseUrl ? '✅ Set' : '❌ Missing'}`)
   console.log(`   Key: ${supabaseAnonKey ? '✅ Set' : '❌ Missing'}`)
