@@ -16,8 +16,7 @@ export default function ContactPage() {
   }
 
   const handleScheduleCall = () => {
-    // Demo mode - show alert
-    toastInfo('📅 Schedule a Call', 'This feature would open a calendar booking system.\nFor demo purposes, you can contact us at:\nsupport@autoreview-ai.com')
+    toastInfo('📅 Schedule a Call', 'To schedule a personalized walk-through or business integration call, please email us at support@autoreview-ai.com. Our team will get back to you within 24 hours.')
   }
 
   return (

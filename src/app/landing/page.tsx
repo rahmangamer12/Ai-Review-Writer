@@ -178,7 +178,7 @@ export default function LandingPage() {
                 className="w-full sm:w-auto px-8 py-4 border border-white/20 bg-white/5 text-white rounded-xl font-semibold text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-2"
               >
                 <Play className="w-5 h-5" />
-                Watch Demo
+                How it Works
               </motion.button>
             </div>
 
