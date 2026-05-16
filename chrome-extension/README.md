@@ -87,7 +87,7 @@ The extension connects to your AutoReview AI backend:
 ```javascript
 const API_BASE_URL = 'https://autoreview-ai.com';
 // For local testing:
-// const API_BASE_URL = 'http://localhost:3000';
+// Current production URL: https://ai-review-writer.vercel.app
 ```
 
 ### Building Icons

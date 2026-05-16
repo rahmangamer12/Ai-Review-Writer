@@ -100,22 +100,22 @@ export class TrustpilotReviewsAPI {
    */
   async authenticate(username: string, password: string): Promise<string> {
     try {
+      // Build headers object once — merge Content-Type and Authorization together
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      }
+      if (this.config.apiKey && this.config.apiSecret) {
+        headers['Authorization'] = `Basic ${Buffer.from(`${this.config.apiKey}:${this.config.apiSecret}`).toString('base64')}`
+      }
+
       const response = await fetch('https://api.trustpilot.com/v1/oauth/oauth-business-users-for-applications/accesstoken', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded'
-        },
+        headers,
         body: new URLSearchParams({
           grant_type: 'password',
           username: username,
           password: password
         }),
-        // Add basic auth
-        ...(this.config.apiKey && {
-          headers: {
-            'Authorization': `Basic ${Buffer.from(`${this.config.apiKey}:${this.config.apiSecret}`).toString('base64')}`
-          }
-        })
       })
 
       const data = await response.json()

@@ -19,6 +19,24 @@ const webhookSchema = z.object({
   userId: z.string().optional(), // Only for external webhook calls
 });
 
+function isVerifiedChromeExtension(request: NextRequest): boolean {
+  const origin = request.headers.get('origin') || '';
+  const extensionId = process.env.CHROME_EXTENSION_ID;
+  const extensionSecret = process.env.CHROME_EXTENSION_SHARED_SECRET;
+  const providedSecret = request.headers.get('x-autoreview-extension-secret');
+
+  if (extensionSecret && providedSecret === extensionSecret) return true;
+  if (!extensionId) return false;
+
+  return origin === `chrome-extension://${extensionId}`;
+}
+
+function isVerifiedWebhook(request: NextRequest): boolean {
+  const webhookSecret = process.env.REVIEWS_WEBHOOK_SECRET;
+  if (!webhookSecret) return false;
+  return request.headers.get('x-webhook-secret') === webhookSecret;
+}
+
 /**
  * POST /api/webhooks/reviews
  * Main webhook endpoint for ALL review sources (HYBRID)
@@ -50,17 +68,18 @@ export async function POST(request: NextRequest) {
       // Auth not available
     }
 
-    // If no Clerk auth, check for Chrome Extension origin
+    // If no Clerk auth, check for a verified Chrome extension request.
     if (!userId) {
-      const origin = request.headers.get('origin') || '';
-      const isChromeExtension = origin.startsWith('chrome-extension://');
-
-      if (isChromeExtension && providedUserId) {
-        // Chrome extension sends its own userId - accept it but rate limit
+      if (source === 'chrome_extension' && isVerifiedChromeExtension(request) && providedUserId) {
         userId = providedUserId;
         authSource = 'chrome-extension';
         console.log(`[Webhook] Chrome extension request for user: ${userId}`);
       }
+    }
+
+    if (!userId && source !== 'chrome_extension' && isVerifiedWebhook(request) && providedUserId) {
+      userId = providedUserId;
+      authSource = 'none';
     }
 
     // Rate limiting (per user or per IP for unauthenticated)
@@ -74,10 +93,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (!userId) {
-      console.log(`[Webhook API] Processing unauthenticated request from source: ${source}`);
-    } else {
-      console.log(`[Webhook API] Incoming from source: ${source} for user: ${userId} (auth: ${authSource})`);
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 });
     }
+
+    console.log(`[Webhook API] Incoming from source: ${source} for user: ${userId} (auth: ${authSource})`);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const processedReviews: any[] = [];

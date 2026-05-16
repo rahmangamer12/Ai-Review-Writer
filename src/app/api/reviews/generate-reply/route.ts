@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 import { longcatAI } from '@/lib/longcatAI'
 import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit'
+import { auth } from '@clerk/nextjs/server'
 import { z } from 'zod'
-import { withCSRFProtection } from '@/lib/csrfProtection'
 
 // Input validation schema
 const generateReplySchema = z.object({
@@ -17,6 +17,40 @@ const generateReplySchema = z.object({
   replyText: z.string().max(5000).optional(),
   aiGenerated: z.boolean().default(false)
 })
+
+function isVerifiedChromeExtension(request: NextRequest): boolean {
+  const origin = request.headers.get('origin') || ''
+  const extensionId = process.env.CHROME_EXTENSION_ID
+  const extensionSecret = process.env.CHROME_EXTENSION_SHARED_SECRET
+  const providedSecret = request.headers.get('x-autoreview-extension-secret')
+
+  if (extensionSecret && providedSecret === extensionSecret) return true
+  if (!extensionId) return false
+
+  return origin === `chrome-extension://${extensionId}`
+}
+
+function getCorsHeaders(request: NextRequest): Record<string, string> {
+  const origin = request.headers.get('origin') || ''
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  const allowedOrigins = new Set([
+    appUrl,
+    'https://ai-review-writer.vercel.app',
+    'https://autoreview-ai.com',
+  ].filter(Boolean) as string[])
+
+  const extensionId = process.env.CHROME_EXTENSION_ID
+  if (extensionId) allowedOrigins.add(`chrome-extension://${extensionId}`)
+
+  if (allowedOrigins.has(origin)) {
+    return {
+      'Access-Control-Allow-Origin': origin,
+      'Vary': 'Origin',
+    }
+  }
+
+  return {}
+}
 
 // Fallback templates for offline mode
 function getFallbackReply(rating: number, tone: string, authorName: string): string {
@@ -33,7 +67,7 @@ function getFallbackReply(rating: number, tone: string, authorName: string): str
     ],
     neutral: [
       `Thank you, ${name}, for your feedback. We appreciate you taking the time to share your experience and are always looking for ways to improve.`,
-      `We value your input, {name}. Thank you for bringing this to our attention. We're committed to providing the best experience possible.`,
+      `We value your input, ${name}. Thank you for bringing this to our attention. We're committed to providing the best experience possible.`,
       `Thanks for sharing your thoughts, ${name}. We'll take this feedback into account as we continue to improve our service.`,
     ],
     negative: [
@@ -87,31 +121,23 @@ function getFallbackReply(rating: number, tone: string, authorName: string): str
 // POST - Generate AI reply or save existing reply
 async function handler(request: NextRequest) {
   try {
-    // Try to get auth, but don't fail if not present - allow for Chrome extension
-    let userId: string | null = null;
-    try {
-      const { auth } = await import('@clerk/nextjs/server')
-      const authResult = await auth()
-      userId = authResult?.userId || null
-    } catch (e) {
-      // Auth not available, continue without user
-    }
+    const authResult = await auth().catch(() => ({ userId: null }))
+    const userId = authResult?.userId || null
+    const verifiedExtension = isVerifiedChromeExtension(request)
+    const rateLimitKey = userId || request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous'
 
-    // Rate limiting - 10 AI requests per minute (skip for unauthenticated)
-    if (userId) {
-      const rateLimitResult = await rateLimit(userId, RATE_LIMITS.AI_GENERATION)
-      if (!rateLimitResult.success) {
-        return NextResponse.json(
-          {
-            error: rateLimitResult.message,
-            retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
-          },
-          {
-            status: 429,
-            headers: getRateLimitHeaders(rateLimitResult)
-          }
-        )
-      }
+    const rateLimitResult = await rateLimit(rateLimitKey, RATE_LIMITS.AI_GENERATION)
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        {
+          error: rateLimitResult.message,
+          retryAfter: Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000)
+        },
+        {
+          status: 429,
+          headers: { ...getRateLimitHeaders(rateLimitResult), ...getCorsHeaders(request) }
+        }
+      )
     }
 
     // Validate input
@@ -129,6 +155,13 @@ async function handler(request: NextRequest) {
       replyText,
       aiGenerated
     } = validated
+
+    if (!userId && !verifiedExtension) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401, headers: getCorsHeaders(request) }
+      )
+    }
 
     // If replyText is provided, save it directly (requires auth)
     if (replyText !== undefined) {
@@ -215,23 +248,33 @@ async function handler(request: NextRequest) {
       }
     }
 
-    // Generate reply using AI
+    // Generate reply using AI with fallback templates
     let aiReply = ''
+    let usedFallback = false
     if (longcatAI.hasApiKey()) {
-      const result = await longcatAI.generateReviewResponse(
-        reviewText,
-        rating || 3,
-        sentimentResult.sentiment,
-        tone as any,
-        authorName || 'there'
-      )
-      aiReply = result.response
-      console.log('[Generate Reply API] AI Reply generated:', aiReply.substring(0, 100) + '...')
+      try {
+        const result = await longcatAI.generateReviewResponse(
+          reviewText,
+          rating || 3,
+          sentimentResult.sentiment,
+          tone as any,
+          authorName || 'there'
+        )
+        aiReply = result.response
+        console.log('[Generate Reply API] AI Reply generated:', aiReply.substring(0, 100) + '...')
+      } catch (aiError) {
+        console.warn('[Generate Reply API] AI generation failed, using fallback template:', aiError)
+        usedFallback = true
+      }
     } else {
-      return NextResponse.json({ 
-        error: 'AI Service is not configured. Please contact the administrator.',
-        success: false 
-      }, { status: 503 })
+      console.log('[Generate Reply API] No AI key configured, using fallback template')
+      usedFallback = true
+    }
+
+    // Use fallback template if AI failed or not configured
+    if (!aiReply) {
+      aiReply = getFallbackReply(rating || 3, tone, authorName || 'there')
+      usedFallback = true
     }
 
     return NextResponse.json(
@@ -246,12 +289,13 @@ async function handler(request: NextRequest) {
           platform,
           language,
           generated_at: new Date().toISOString(),
-          ai_provider: 'LongCat AI',
+          ai_provider: usedFallback ? 'Fallback Templates' : 'LongCat AI',
+          used_fallback: usedFallback,
         }
       },
       {
         headers: {
-          'Access-Control-Allow-Origin': '*',
+          ...getCorsHeaders(request),
         }
       }
     )
@@ -266,7 +310,10 @@ async function handler(request: NextRequest) {
         error: 'Invalid input',
         details: (error as any).issues || [],
         success: false
-      }, { status: 400 })
+      }, {
+        status: 400,
+        headers: getCorsHeaders(request),
+      })
     }
 
     const message = error instanceof Error ? error.message : 'Unknown error';
@@ -274,20 +321,25 @@ async function handler(request: NextRequest) {
       error: 'Failed to process request',
       details: message,
       success: false
-    }, { status: 500 })
+    }, {
+      status: 500,
+      headers: getCorsHeaders(request),
+    })
   }
 }
 
-export const POST = withCSRFProtection(handler);
+// Chrome extension access is limited to CHROME_EXTENSION_ID or
+// CHROME_EXTENSION_SHARED_SECRET. Normal app calls require Clerk auth.
+export const POST = handler;
 
 // Handle OPTIONS for CORS preflight
-export async function OPTIONS() {
+export async function OPTIONS(request: NextRequest) {
   return new NextResponse(null, {
     status: 204,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      ...getCorsHeaders(request),
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-csrf-token',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-csrf-token, x-autoreview-extension-secret',
     },
   })
 }

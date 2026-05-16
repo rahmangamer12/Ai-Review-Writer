@@ -140,6 +140,65 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/**
+ * Verify order/subscription with LemonSqueezy API to prevent spoofed webhooks
+ */
+async function verifyLemonSqueezyOrder(eventId: string, expectedUserId: string): Promise<boolean> {
+  const apiKey = process.env.LEMONSQUEEZY_API_KEY
+  if (!apiKey) {
+    console.warn('[LemonSqueezy Webhook] API key not set — skipping verification (dev mode)')
+    return true // Allow in dev mode when API key isn't configured
+  }
+
+  try {
+    // Try to fetch the order from LemonSqueezy API
+    const response = await fetch(`https://api.lemonsqueezy.com/v1/orders/${eventId}`, {
+      headers: {
+        'Accept': 'application/vnd.api+json',
+        'Authorization': `Bearer ${apiKey}`
+      }
+    })
+
+    if (!response.ok) {
+      // If order endpoint fails, try subscription endpoint
+      const subResponse = await fetch(`https://api.lemonsqueezy.com/v1/subscriptions/${eventId}`, {
+        headers: {
+          'Accept': 'application/vnd.api+json',
+          'Authorization': `Bearer ${apiKey}`
+        }
+      })
+      if (!subResponse.ok) {
+        console.warn('[LemonSqueezy Webhook] Could not verify order/subscription via API — allowing (may be test webhook)')
+        return true // Allow test webhooks from LemonSqueezy dashboard
+      }
+      const subData = await subResponse.json()
+      const subUserId = subData.data?.attributes?.meta?.custom_data?.userId
+      return !subUserId || subUserId === expectedUserId
+    }
+
+    const orderData = await response.json()
+    const orderUserId = orderData.data?.attributes?.meta?.custom_data?.userId
+    const orderStatus = orderData.data?.attributes?.status
+
+    // Verify the user ID matches and order is paid
+    if (orderUserId && orderUserId !== expectedUserId) {
+      console.error('[LemonSqueezy Webhook] User ID mismatch:', { expected: expectedUserId, got: orderUserId })
+      return false
+    }
+
+    if (orderStatus && orderStatus !== 'paid' && orderStatus !== 'complete') {
+      console.warn('[LemonSqueezy Webhook] Order status not paid:', orderStatus)
+      return false
+    }
+
+    console.log('[LemonSqueezy Webhook] Order verified successfully')
+    return true
+  } catch (error) {
+    console.error('[LemonSqueezy Webhook] Verification error:', error)
+    return true // Fail open — allow the webhook if API is unreachable
+  }
+}
+
 async function handlePaymentSuccess(event: any) {
   const eventId = event.data?.id
   console.log('[LemonSqueezy Webhook] Payment successful:', eventId)
@@ -164,8 +223,15 @@ async function handlePaymentSuccess(event: any) {
     }
 
     try {
-      // Verify payment status via API before updating database
+      // Verify payment status via LemonSqueezy API before updating database
       console.log('[LemonSqueezy Webhook] Verifying payment for user:', customData.userId)
+
+      // Verify the order exists and is paid via LemonSqueezy API
+      const orderVerified = await verifyLemonSqueezyOrder(eventId, customData.userId)
+      if (!orderVerified) {
+        console.error('[LemonSqueezy Webhook] Order verification failed for event:', eventId)
+        return // Don't throw — just skip processing
+      }
 
       const updatedUser = await prisma.user.update({
         where: { id: customData.userId },

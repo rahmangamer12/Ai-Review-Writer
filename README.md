@@ -54,7 +54,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [https://ai-review-writer.vercel.app](https://ai-review-writer.vercel.app) in your browser.
 
 ---
 
@@ -90,7 +90,7 @@ LEMONSQUEEZY_VARIANT_ENTERPRISE=variant_id
 RESEND_API_KEY=your_resend_key
 
 # App Settings
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+NEXT_PUBLIC_APP_URL=https://ai-review-writer.vercel.app
 NEXTAUTH_SECRET=your_nextauth_secret
 
 # Security

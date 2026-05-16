@@ -233,9 +233,51 @@ export default function ConnectPlatformsPage() {
     }
   }
 
+  const isOAuthPlatform = selectedPlatform === 'google' || selectedPlatform === 'facebook'
+
+  const handleOAuthConnect = async () => {
+    if (!selectedPlatform) return
+
+    setSaving(true)
+    setTestResult(null)
+
+    try {
+      const endpoint = selectedPlatform === 'google'
+        ? '/api/platforms/google/connect'
+        : '/api/platforms/facebook/connect'
+      const payload = selectedPlatform === 'google'
+        ? { clientId: formData.clientId, clientSecret: formData.clientSecret }
+        : { appId: formData.appId, appSecret: formData.appSecret }
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+      const result = await response.json()
+
+      if (!response.ok || !result.authUrl) {
+        throw new Error(result.message || result.error || 'Could not start OAuth connection')
+      }
+
+      window.location.href = result.authUrl
+    } catch (err) {
+      setTestResult({
+        success: false,
+        message: err instanceof Error ? err.message : 'OAuth connection failed. Please try again.',
+      })
+      setSaving(false)
+    }
+  }
+
   // Save platform configuration
   const handleSave = async () => {
     if (!selectedPlatform) return
+
+    if (selectedPlatform === 'google' || selectedPlatform === 'facebook') {
+      await handleOAuthConnect()
+      return
+    }
     
     setSaving(true)
     
@@ -664,7 +706,9 @@ export default function ConnectPlatformsPage() {
                             <span className="text-3xl">{platformDef.icon}</span>
                             <div>
                               <h3 className="text-white font-semibold">{platformDef.name}</h3>
-                              <p className="text-white/50 text-sm">API Configuration</p>
+                              <p className="text-white/50 text-sm">
+                                {isOAuthPlatform ? 'OAuth Configuration' : 'API Configuration'}
+                              </p>
                             </div>
                           </div>
                           <button
@@ -772,7 +816,7 @@ export default function ConnectPlatformsPage() {
                             ) : (
                               <>
                                 <Zap className="w-4 h-4" />
-                                Test Connection
+                                {isOAuthPlatform ? 'Check Credentials' : 'Test Connection'}
                               </>
                             )}
                           </button>
@@ -790,7 +834,7 @@ export default function ConnectPlatformsPage() {
                             ) : (
                               <>
                                 <CheckCircle className="w-4 h-4" />
-                                Save & Connect
+                                {isOAuthPlatform ? 'Connect with OAuth' : 'Save & Connect'}
                               </>
                             )}
                           </button>

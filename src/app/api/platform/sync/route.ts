@@ -1,10 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import prisma from '@/lib/db'
+import { z } from 'zod'
+import { withCSRFProtection } from '@/lib/csrfProtection'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(req: NextRequest) {
+const reviewSchema = z.object({
+  id: z.string().min(1).max(300),
+  content: z.string().max(5000).optional(),
+  text: z.string().max(5000).optional(),
+  rating: z.coerce.number().int().min(1).max(5).default(5),
+  author: z.string().max(200).optional(),
+  author_name: z.string().max(200).optional(),
+  date: z.string().max(100).optional(),
+  sentimentLabel: z.enum(['positive', 'negative', 'neutral']).optional(),
+})
+
+const syncSchema = z.object({
+  platformId: z.string().uuid(),
+  newReviews: z.array(reviewSchema).max(100),
+})
+
+function buildInternalReviewId(userId: string, platformId: string, externalId: string) {
+  return `${userId}:${platformId}:${externalId}`.slice(0, 500)
+}
+
+function parseSourceDate(value?: string) {
+  if (!value) return new Date()
+  const parsed = new Date(value)
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed
+}
+
+async function handler(req: NextRequest) {
   try {
     const { userId } = await auth()
     
@@ -12,36 +40,41 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { platformId, newReviews } = await req.json()
+    const body = await req.json()
+    const { platformId, newReviews } = syncSchema.parse(body)
 
-    if (!platformId || !newReviews || !Array.isArray(newReviews)) {
-      return NextResponse.json({ error: 'Missing platform data or reviews array' }, { status: 400 })
+    const platform = await prisma.connectedPlatform.findFirst({
+      where: { id: platformId, userId },
+      select: { id: true },
+    })
+
+    if (!platform) {
+      return NextResponse.json({ error: 'Platform not found' }, { status: 404 })
     }
 
-    // Convert frontend review schema to backend Prisma schema and Upsert 
-    // to prevent duplicate inserts of the same review on subsequent syncs
     let successCount = 0;
     for (const rw of newReviews) {
-      // Map properties. Default rating=5 if none, etc.
       try {
+        const internalReviewId = buildInternalReviewId(userId, platformId, rw.id)
+
         await prisma.review.upsert({
           where: {
-            id: rw.id // If rw.id is a string 'author-time', it replaces the uuid or we can just use the provided ID.
+            id: internalReviewId,
           },
           update: {
             content: rw.content || rw.text || '',
-            rating: rw.rating || 5,
+            rating: rw.rating,
             authorName: rw.author || rw.author_name || 'Anonymous',
-            sourceDate: rw.date ? new Date(rw.date) : new Date(),
+            sourceDate: parseSourceDate(rw.date),
           },
           create: {
-            id: rw.id, // we'll use their generated unique ID
-            userId: userId,
-            platformId: platformId,
+            id: internalReviewId,
+            userId,
+            platformId,
             authorName: rw.author || rw.author_name || 'Anonymous',
             content: rw.content || rw.text || '',
-            rating: rw.rating || 5,
-            sourceDate: rw.date ? new Date(rw.date) : new Date(),
+            rating: rw.rating,
+            sourceDate: parseSourceDate(rw.date),
             sentimentLabel: rw.sentimentLabel || 'neutral',
             status: 'pending'
           }
@@ -57,7 +90,12 @@ export async function POST(req: NextRequest) {
       message: `Successfully synced ${successCount} reviews from ${platformId}` 
     })
   } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Invalid sync payload', details: error.issues }, { status: 400 })
+    }
     console.error('Platform sync error:', error)
     return NextResponse.json({ error: error.message || 'Sync failed' }, { status: 500 })
   }
 }
+
+export const POST = withCSRFProtection(handler)

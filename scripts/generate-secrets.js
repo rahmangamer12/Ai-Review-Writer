@@ -19,7 +19,7 @@ console.log('');
 console.log(`ENCRYPTION_KEY=${generateSecret(32)}`);
 console.log(`SCHEDULER_SECRET=${generateSecret(32)}`);
 console.log(`ADMIN_KEY=${generateSecret(16)}`);
-console.log(`NEXTAUTH_SECRET=${generateSecret(32)}`);
+console.log(`CLERK_WEBHOOK_SECRET=whsec_${generateSecret(24)}`);
 console.log('');
 console.log('⚠️  NEVER commit these to git!');
 console.log('⚠️  Each value is randomly generated - run again for new secrets.');
