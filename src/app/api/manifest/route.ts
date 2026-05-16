@@ -7,7 +7,6 @@ const ALLOWED_ORIGINS = [
   process.env.NEXT_PUBLIC_APP_URL,
   'https://autoreview-ai.com',
   'https://ai-review-writer.vercel.app',
-  'http://localhost:3000',
 ].filter(Boolean) as string[];
 
 function getAllowedOrigin(requestOrigin: string | null): string {

@@ -92,8 +92,8 @@ export class LemonSqueezy {
             attributes: {
               product_options: {
                 enabled_variants: [parseInt(variantId)],
-                redirect_url: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/subscription/success?plan=${plan}`,
-                receipt_link_url: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/subscription/success?plan=${plan}`,
+                redirect_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://ai-review-writer.vercel.app'}/subscription/success?plan=${plan}`,
+                receipt_link_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://ai-review-writer.vercel.app'}/subscription/success?plan=${plan}`,
                 receipt_button_text: 'Return to Dashboard'
               },
               checkout_data: {

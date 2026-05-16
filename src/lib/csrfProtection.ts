@@ -26,7 +26,7 @@ export function validateCSRF(request: NextRequest): {
 
   // Get allowed origins from environment
   const allowedOrigins = [
-    process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+    process.env.NEXT_PUBLIC_APP_URL || 'https://ai-review-writer.vercel.app',
     `https://${host}`,
     `http://${host}`
   ]
@@ -41,8 +41,9 @@ export function validateCSRF(request: NextRequest): {
         // Allow same-origin
         if (allowedUrl.origin === originUrl.origin) return true
         
-        // Allow Chrome Extensions
-        if (originUrl.protocol === 'chrome-extension:') return true
+        // Allow specific Chrome Extension only (set CHROME_EXTENSION_ID in .env)
+        const allowedExtId = process.env.CHROME_EXTENSION_ID
+        if (allowedExtId && originUrl.protocol === 'chrome-extension:' && originUrl.host === allowedExtId) return true
         
         return false
       } catch {

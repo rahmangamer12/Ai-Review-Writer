@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { useToast } from '@/components/ui/Toast'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useUser } from '@clerk/nextjs'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { supabase } from '@/lib/supabase'
@@ -71,6 +72,7 @@ interface UserProfile {
 }
 
 export default function ProfilePage() {
+  const router = useRouter()
   const { user, isLoaded } = useUser()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)

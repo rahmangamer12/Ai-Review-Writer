@@ -15,6 +15,22 @@ function detectPlatform() {
   return 'unknown';
 }
 
+function createElement(tag, className, text) {
+  const element = document.createElement(tag);
+  if (className) element.className = className;
+  if (text !== undefined) element.textContent = text;
+  return element;
+}
+
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 // Scrape reviews based on platform
 function scrapeReviews() {
   const reviews = [];
@@ -263,7 +279,7 @@ function addAIReplyButtons() {
 
     const btn = document.createElement('button');
     btn.className = 'autoreview-ai-btn';
-    btn.innerHTML = '✨ AI Reply';
+    btn.textContent = 'AI Reply';
     btn.type = 'button';
     
     btn.onclick = async (e) => {
@@ -284,7 +300,7 @@ function addAIReplyButtons() {
         console.error('Error:', err);
         alert(`AI Error: ${err.message}. Please try again or check your API quota.`);
       } finally {
-        btn.innerHTML = '✨ AI Reply';
+        btn.textContent = 'AI Reply';
         btn.disabled = false;
       }
     };
@@ -372,33 +388,92 @@ function getReviewFromContainer(container) {
   return { author, rating, text, platform };
 }
 
-// Generate AI reply
+// Generate AI reply with fallback support
 async function generateAIReply(review, tone = 'friendly') {
-  const API_URL = 'https://ai-review-writer.vercel.app/api/reviews/generate-reply';
-  
-  try {
-    const response = await fetch(API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        reviewText: review.text,
-        rating: review.rating,
-        authorName: review.author,
-        platform: review.platform || 'google',
-        tone: tone,
-        language: tone === 'desi' ? 'ur' : 'en',
-      }),
-    });
-    
-    const data = await response.json();
-    if (data.success) {
-      return data.reply || data.data?.reply;
+  // Try multiple API endpoints for reliability
+  const API_URLS = [
+    'https://ai-review-writer.vercel.app/api/reviews/generate-reply',
+    'https://autoreview.ai/api/reviews/generate-reply',
+  ];
+
+  const payload = {
+    reviewText: review.text,
+    rating: review.rating,
+    authorName: review.author,
+    platform: review.platform || 'google',
+    tone: tone,
+    language: tone === 'desi' ? 'ur' : 'en',
+  };
+
+  // Try each endpoint in order
+  for (const API_URL of API_URLS) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        console.warn(`[AutoReview AI] ${API_URL} returned ${response.status}, trying next...`);
+        continue;
+      }
+
+      const data = await response.json();
+      if (data.success && data.reply) {
+        return data.reply;
+      }
+      if (data.success && data.data?.reply) {
+        return data.data.reply;
+      }
+    } catch (error) {
+      console.warn(`[AutoReview AI] ${API_URL} failed:`, error.message);
+      continue;
     }
-    throw new Error(data.error || 'API error');
-  } catch (error) {
-    console.error('API Error:', error);
-    throw error;
   }
+
+  // All endpoints failed — use fallback template
+  console.log('[AutoReview AI] All endpoints failed, using fallback template');
+  const name = review.author || 'there';
+  const sentiment = review.rating >= 4 ? 'positive' : review.rating <= 2 ? 'negative' : 'neutral';
+
+  const fallbackTemplates = {
+    positive: [
+      `Thank you ${name} for your wonderful review! We're thrilled you had such a great experience with us!`,
+      `We truly appreciate your kind words, ${name}! It was our pleasure to serve you.`,
+      `Thank you so much, ${name}! We're excited to hear you enjoyed your experience.`,
+    ],
+    neutral: [
+      `Thank you, ${name}, for your feedback. We appreciate you taking the time to share your experience.`,
+      `We value your input, ${name}. We're committed to providing the best experience possible.`,
+    ],
+    negative: [
+      `Hi ${name}, we sincerely apologize that your experience didn't meet your expectations. Please reach out to us directly.`,
+      `Dear ${name}, we're sorry to hear about your experience. Please contact us so we can make things better.`,
+    ],
+  };
+
+  const templates = fallbackTemplates[sentiment] || fallbackTemplates.neutral;
+  let template = templates[Math.floor(Math.random() * templates.length)];
+
+  // Apply tone modifiers
+  if (tone === 'desi') {
+    if (sentiment === 'positive') {
+      template = `Shukriya ${name} bhai! Aapka review parh kar bohat khushi hui. Bohat bohat shukriya! ✨`;
+    } else if (sentiment === 'negative') {
+      template = `Maazrat khwah hain ${name} bhai. Humein dukh hua. Hum se rabta karein taake hum isay theek kar sakein. 🙏`;
+    } else {
+      template = `Shukriya ${name}! Hum mazeed behtar karne ki koshish karein ge.`;
+    }
+  }
+
+  return template;
 }
 
 // Show reply modal (Improved)
@@ -408,7 +483,111 @@ function showReplyModal(review, reply) {
   
   const modal = document.createElement('div');
   modal.id = 'autoreview-modal';
-  modal.innerHTML = `
+  const safeAuthor = escapeHtml(review.author);
+  const safeRating = escapeHtml(review.rating);
+  const previewText = `${review.text.substring(0, 150)}${review.text.length > 150 ? '...' : ''}`;
+  const safePreviewText = escapeHtml(previewText);
+  const safeReply = escapeHtml(reply);
+  {
+    const overlay = createElement('div', 'autoreview-modal-overlay');
+    const content = createElement('div', 'autoreview-modal-content');
+    const header = createElement('div', 'autoreview-modal-header');
+    const title = createElement('h3', '', 'AI Generated Reply');
+    const closeBtn = createElement('button', 'autoreview-close', 'x');
+    closeBtn.type = 'button';
+
+    const body = createElement('div', 'autoreview-modal-body');
+    const preview = createElement('div', 'autoreview-review-preview');
+    preview.append(
+      createElement('strong', '', `Review by ${review.author} (${review.rating} stars)`),
+      createElement('p', '', previewText)
+    );
+
+    const toneRow = createElement('div');
+    toneRow.style.marginBottom = '15px';
+    toneRow.style.display = 'flex';
+    toneRow.style.alignItems = 'center';
+    toneRow.style.gap = '10px';
+
+    const toneLabel = createElement('label', '', 'Tone:');
+    toneLabel.style.color = '#a0aec0';
+    toneLabel.style.fontSize = '13px';
+
+    const toneSelect = document.createElement('select');
+    toneSelect.id = 'autoreview-tone-select';
+    toneSelect.style.background = 'rgba(255,255,255,0.1)';
+    toneSelect.style.border = '1px solid rgba(255,255,255,0.2)';
+    toneSelect.style.color = 'white';
+    toneSelect.style.borderRadius = '4px';
+    toneSelect.style.padding = '4px 8px';
+    toneSelect.style.fontSize = '12px';
+    [
+      ['friendly', 'Friendly'],
+      ['professional', 'Professional'],
+      ['apologetic', 'Apologetic'],
+      ['enthusiastic', 'Enthusiastic'],
+      ['desi', 'Desi Style'],
+    ].forEach(([value, label]) => {
+      const option = createElement('option', '', label);
+      option.value = value;
+      toneSelect.appendChild(option);
+    });
+
+    const replyBox = createElement('div', 'autoreview-reply-box');
+    const textArea = document.createElement('textarea');
+    textArea.id = 'autoreview-reply-text';
+    textArea.rows = 5;
+    textArea.value = reply;
+    replyBox.appendChild(textArea);
+
+    const footer = createElement('div', 'autoreview-modal-footer');
+    const regenBtn = createElement('button', 'autoreview-btn autoreview-btn-secondary autoreview-regenerate', 'Regenerate');
+    regenBtn.type = 'button';
+    const copyBtn = createElement('button', 'autoreview-btn autoreview-btn-primary autoreview-copy', 'Copy Reply');
+    copyBtn.type = 'button';
+
+    header.append(title, closeBtn);
+    toneRow.append(toneLabel, toneSelect);
+    body.append(preview, toneRow, replyBox);
+    footer.append(regenBtn, copyBtn);
+    content.append(header, body, footer);
+    modal.append(overlay, content);
+    document.body.appendChild(modal);
+
+    closeBtn.onclick = () => modal.remove();
+    overlay.onclick = () => modal.remove();
+
+    copyBtn.onclick = async () => {
+      try {
+        await navigator.clipboard.writeText(textArea.value);
+        copyBtn.textContent = 'Copied!';
+        setTimeout(() => {
+          if (copyBtn) copyBtn.textContent = 'Copy Reply';
+        }, 2000);
+      } catch (err) {
+        console.error('Copy failed:', err);
+      }
+    };
+
+    regenBtn.onclick = async () => {
+      const tone = toneSelect.value;
+      regenBtn.textContent = 'Generating...';
+      regenBtn.disabled = true;
+      try {
+        const newReply = await generateAIReply(review, tone);
+        textArea.value = newReply;
+      } catch (err) {
+        alert(`AI Error: ${err.message}. Could not regenerate.`);
+      } finally {
+        regenBtn.textContent = 'Regenerate';
+        regenBtn.disabled = false;
+      }
+    };
+
+    return;
+  }
+
+  modal.dataset.safeTemplate = `
     <div class="autoreview-modal-overlay"></div>
     <div class="autoreview-modal-content">
       <div class="autoreview-modal-header">
@@ -417,8 +596,8 @@ function showReplyModal(review, reply) {
       </div>
       <div class="autoreview-modal-body">
         <div class="autoreview-review-preview">
-          <strong>Review by ${review.author} (${review.rating}⭐)</strong>
-          <p>${review.text.substring(0, 150)}${review.text.length > 150 ? '...' : ''}</p>
+          <strong>Review by ${safeAuthor} (${safeRating} stars)</strong>
+          <p>${safePreviewText}</p>
         </div>
         
         <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
@@ -433,7 +612,7 @@ function showReplyModal(review, reply) {
         </div>
 
         <div class="autoreview-reply-box">
-          <textarea id="autoreview-reply-text" rows="5">${reply}</textarea>
+          <textarea id="autoreview-reply-text" rows="5">${safeReply}</textarea>
         </div>
       </div>
       <div class="autoreview-modal-footer">
@@ -497,12 +676,20 @@ function debouncedAddButtons() {
   timer = setTimeout(addAIReplyButtons, 500);
 }
 
-if (PLATFORM !== 'unknown') {
+function init() {
+  if (PLATFORM === 'unknown') {
+    console.log('[AutoReview AI] Unknown platform, content script not initialized');
+    return;
+  }
+
   console.log(`[AutoReview AI] Detected platform: ${PLATFORM}`);
-  
-  // Add buttons on page load
-  setTimeout(addAIReplyButtons, 2000);
-  
+
+  // Add buttons on page load (wait for page to settle)
+  setTimeout(addAIReplyButtons, 1500);
+
+  // Re-check periodically for dynamically loaded content
+  setInterval(addAIReplyButtons, 5000);
+
   // Watch for new reviews (infinite scroll)
   const observer = new MutationObserver((mutations) => {
     let shouldUpdate = false;
@@ -514,9 +701,16 @@ if (PLATFORM !== 'unknown') {
     }
     if (shouldUpdate) debouncedAddButtons();
   });
-  
+
   observer.observe(document.body, {
     childList: true,
     subtree: true,
   });
+}
+
+// Run initialization
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
 }

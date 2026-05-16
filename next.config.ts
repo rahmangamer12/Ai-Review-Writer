@@ -7,7 +7,6 @@ const nextConfig: NextConfig = {
 
   // Optimize images
   images: {
-    unoptimized: true,
     // Add image formats for better optimization
     formats: ['image/avif', 'image/webp'],
     // Cache images for 1 year
@@ -122,9 +121,8 @@ const nextConfig: NextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              // NOTE: 'unsafe-inline' and 'unsafe-eval' needed for Clerk & Framer Motion
-              // TODO: Replace with nonces/hashes when Clerk supports it
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://clerk.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://va.vercel-scripts.com",
+              // TODO: Replace 'unsafe-inline' with nonces/hashes once all third-party scripts support it.
+              "script-src 'self' 'unsafe-inline' https://clerk.com https://*.clerk.accounts.dev https://challenges.cloudflare.com https://va.vercel-scripts.com",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: https: blob:",

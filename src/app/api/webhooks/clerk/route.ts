@@ -86,6 +86,36 @@ export async function POST(req: Request) {
     }
   }
 
+  if (eventType === 'user.updated') {
+    const { id, email_addresses, first_name, last_name } = evt.data;
+
+    if (!id) {
+      return new Response('Error occurred -- missing data', { status: 400 });
+    }
+
+    try {
+      const userName = `${first_name || ''} ${last_name || ''}`.trim() || undefined
+      const userEmail = email_addresses?.[0]?.email_address
+
+      const updateData: Record<string, string> = {}
+      if (userEmail) updateData.email = userEmail
+      if (userName) updateData.name = userName
+
+      if (Object.keys(updateData).length > 0) {
+        await prisma.user.update({
+          where: { id },
+          data: updateData
+        })
+        console.log('[Clerk Webhook] User updated:', id)
+      }
+
+      return NextResponse.json({ message: 'User updated successfully' }, { status: 200 });
+    } catch (error) {
+      console.error('Error updating user in database', error);
+      return new Response('Error updating user', { status: 500 });
+    }
+  }
+
   if (eventType === 'user.deleted') {
     const { id } = evt.data;
 

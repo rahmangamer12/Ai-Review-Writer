@@ -225,6 +225,36 @@ CREATE POLICY "Users can insert own auto-reply rules" ON auto_reply_rules FOR IN
 CREATE POLICY "Users can update own auto-reply rules" ON auto_reply_rules FOR UPDATE
   USING (user_id = auth.uid());
 
+-- ── Notifications Table ──────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS notifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL,
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  type TEXT CHECK (type IN ('info', 'success', 'warning', 'error')) DEFAULT 'info',
+  read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
+CREATE INDEX IF NOT EXISTS idx_notifications_created_at ON notifications(created_at);
+
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view own notifications" ON notifications FOR SELECT
+  USING (user_id = auth.uid());
+
+CREATE POLICY "Users can insert own notifications" ON notifications FOR INSERT
+  WITH CHECK (user_id = auth.uid());
+
+CREATE POLICY "Users can update own notifications" ON notifications FOR UPDATE
+  USING (user_id = auth.uid());
+
+CREATE POLICY "Users can delete own notifications" ON notifications FOR DELETE
+  USING (user_id = auth.uid());
+
 -- Function to update analytics daily
 CREATE OR REPLACE FUNCTION update_daily_analytics()
 RETURNS void AS $$

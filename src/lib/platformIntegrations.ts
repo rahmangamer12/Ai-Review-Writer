@@ -33,30 +33,30 @@ export const platformDefinitions: Record<string, {
   google: {
     name: 'Google My Business',
     icon: '🔍',
-    description: 'Connect your Google My Business account to manage reviews from Google Search and Maps',
+    description: 'Connect Google Business Profile with your own OAuth Client ID and Secret',
     fields: [
       {
-        name: 'apiKey',
-        label: 'Google API Key',
+        name: 'clientId',
+        label: 'Google OAuth Client ID',
         type: 'password',
-        placeholder: 'AIzaSyCxxxxxxxxxxxxxxxxxxxxxxxx',
+        placeholder: 'xxxxx.apps.googleusercontent.com',
         required: true,
-        helpText: 'Get from Google Cloud Console > APIs & Services > Credentials'
+        helpText: 'Google Cloud Console > APIs & Services > Credentials > OAuth 2.0 Client IDs'
       },
       {
-        name: 'placeId',
-        label: 'Place ID',
-        type: 'text',
-        placeholder: 'ChIJxxxxxxxxxxxxxxxx',
+        name: 'clientSecret',
+        label: 'Google OAuth Client Secret',
+        type: 'password',
+        placeholder: 'GOCSPX-xxxxxxxxxxxxxxxx',
         required: true,
-        helpText: 'Find your Place ID using Google Place ID Finder'
+        helpText: 'Use the secret from the same OAuth Web Client. Add the app callback URL in Authorized redirect URIs.'
       },
       {
         name: 'businessName',
         label: 'Business Name',
         type: 'text',
         placeholder: 'Your Business Name',
-        required: true,
+        required: false,
         helpText: 'Exact name as it appears on Google'
       }
     ]
@@ -87,23 +87,31 @@ export const platformDefinitions: Record<string, {
   facebook: {
     name: 'Facebook',
     icon: '📘',
-    description: 'Connect your Facebook Business Page to manage reviews and recommendations',
+    description: 'Connect a Facebook Page with your own Meta App ID and App Secret',
     fields: [
       {
-        name: 'pageAccessToken',
-        label: 'Page Access Token',
-        type: 'password',
-        placeholder: 'EAAxxxxxxxxxx',
+        name: 'appId',
+        label: 'Facebook App ID',
+        type: 'text',
+        placeholder: '123456789012345',
         required: true,
-        helpText: 'Get from Facebook Developers > Graph API Explorer'
+        helpText: 'Meta Developers > Your App > Settings > Basic > App ID'
       },
       {
-        name: 'pageId',
-        label: 'Page ID',
-        type: 'text',
-        placeholder: '123456789',
+        name: 'appSecret',
+        label: 'Facebook App Secret',
+        type: 'password',
+        placeholder: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
         required: true,
-        helpText: 'Your Facebook Page numeric ID'
+        helpText: 'Meta Developers > Your App > Settings > Basic > App Secret. Add the callback URL in Facebook Login settings.'
+      },
+      {
+        name: 'pageName',
+        label: 'Page Name',
+        type: 'text',
+        placeholder: 'Your business page name',
+        required: false,
+        helpText: 'Optional label so you remember which page this connects.'
       }
     ]
   },
@@ -239,33 +247,35 @@ export class PlatformIntegrationManager {
     // Platform-specific validation
     switch (platformId) {
       case 'google':
-        if (!credentials.access_token?.trim()) {
-          return 'Google access_token is required'
+        if (!credentials.clientId?.trim()) {
+          return 'Google OAuth Client ID is required'
         }
-        if (credentials.access_token.length < 10) {
-          return 'Google access_token appears to be invalid (too short)'
+        if (!credentials.clientId.includes('.apps.googleusercontent.com')) {
+          return 'Google OAuth Client ID should end with .apps.googleusercontent.com'
         }
-        // Google refresh token can be empty for some flows, but warn if completely missing
-        if (!credentials.refresh_token?.trim()) {
-          console.warn('[Platform Integration] Google refresh_token is empty. Token refresh will fail after 24 hours.')
+        if (!credentials.clientSecret?.trim()) {
+          return 'Google OAuth Client Secret is required'
         }
         break
 
       case 'facebook':
-        if (!credentials.access_token?.trim()) {
-          return 'Facebook access_token is required'
+        if (!credentials.appId?.trim()) {
+          return 'Facebook App ID is required'
         }
-        if (credentials.access_token.length < 20) {
-          return 'Facebook access_token appears to be invalid (too short)'
+        if (!/^\d+$/.test(credentials.appId)) {
+          return 'Facebook App ID should be numeric'
+        }
+        if (!credentials.appSecret?.trim()) {
+          return 'Facebook App Secret is required'
         }
         break
 
       case 'yelp':
-        if (!credentials.access_token?.trim()) {
-          return 'Yelp access_token is required'
+        if (!credentials.apiKey?.trim()) {
+          return 'Yelp API key is required'
         }
-        if (credentials.access_token.length < 20) {
-          return 'Yelp access_token appears to be invalid (too short)'
+        if (credentials.apiKey.length < 20) {
+          return 'Yelp API key appears to be invalid (too short)'
         }
         break
 
@@ -501,6 +511,18 @@ export class PlatformIntegrationManager {
   // Test connection (Deduplicated)
   static async testConnection(platformId: string, credentials: Record<string, string>): Promise<{ success: boolean; message: string }> {
     if (typeof window === 'undefined') return { success: false, message: 'Loading...' }
+
+    if (platformId === 'google') {
+      const validationError = this.validateCredentials(platformId, credentials)
+      if (validationError) return { success: false, message: validationError }
+      return { success: true, message: 'Google OAuth credentials look valid. Click Connect to continue with Google.' }
+    }
+
+    if (platformId === 'facebook') {
+      const validationError = this.validateCredentials(platformId, credentials)
+      if (validationError) return { success: false, message: validationError }
+      return { success: true, message: 'Facebook App credentials look valid. Click Connect to continue with Facebook.' }
+    }
 
     const handler = this.platformHandlers[platformId]
     if (!handler) return { success: false, message: 'Unknown platform' }

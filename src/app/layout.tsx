@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     title: "AutoReview AI - Intelligent Reputation Management",
     description: "Connect your platforms and let our AI generate personalized, context-aware responses to your customer reviews instantly.",
     type: "website",
-    url: "https://autoreview.ai",
+    url: "https://ai-review-writer.vercel.app",
     siteName: "AutoReview AI"
   },
   twitter: {
@@ -109,7 +109,6 @@ export default function RootLayout({
           {/* Hydration Suppressor for browser extension attributes */}
           <HydrationSuppressor />
 
-          {/* Safe Hydration Fix - Replaces dangerouslySetInnerHTML script */}
           <HydrationFix />
 
           {/* AI Customer Support Chatbot - Floating Widget */}
