@@ -175,8 +175,10 @@ const nextConfig: NextConfig = {
   },
 };
 
-// Sentry wrapper for source maps upload
-// Only enabled when SENTRY_DSN is set
+const uploadSentrySourceMaps = process.env.SENTRY_UPLOAD_SOURCE_MAPS === "true";
+
+// Sentry wrapper. Source-map upload is opt-in to keep Vercel builds quiet unless
+// SENTRY_AUTH_TOKEN is configured for a real Sentry release upload.
 export default withSentryConfig(nextConfig, {
   // For all available options, see:
   // https://www.npmjs.com/package/@sentry/webpack-plugin#options
@@ -193,6 +195,10 @@ export default withSentryConfig(nextConfig, {
 
   // Upload a larger set of source maps for prettier stack traces (increases build time)
   widenClientFileUpload: true,
+
+  sourcemaps: {
+    disable: !uploadSentrySourceMaps,
+  },
 
   // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
   // This can increase your server load as well as your hosting bill.
