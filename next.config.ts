@@ -11,6 +11,15 @@ const nextConfig: NextConfig = {
     formats: ['image/avif', 'image/webp'],
     // Cache images for 1 year
     minimumCacheTTL: 31536000,
+    remotePatterns: [
+      { protocol: 'https', hostname: 'img.clerk.com' },
+      { protocol: 'https', hostname: 'images.clerk.dev' },
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' },
+      { protocol: 'https', hostname: 'lh4.googleusercontent.com' },
+      { protocol: 'https', hostname: 'lh5.googleusercontent.com' },
+      { protocol: 'https', hostname: 'lh6.googleusercontent.com' },
+      { protocol: 'https', hostname: 'www.gravatar.com' },
+    ],
   },
 
   // Configure output directory
