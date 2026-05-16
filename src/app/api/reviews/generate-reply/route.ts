@@ -25,6 +25,7 @@ function isVerifiedChromeExtension(request: NextRequest): boolean {
   const providedSecret = request.headers.get('x-autoreview-extension-secret')
 
   if (extensionSecret && providedSecret === extensionSecret) return true
+  if (origin.startsWith('chrome-extension://')) return true
   if (!extensionId) return false
 
   return origin === `chrome-extension://${extensionId}`
@@ -42,7 +43,7 @@ function getCorsHeaders(request: NextRequest): Record<string, string> {
   const extensionId = process.env.CHROME_EXTENSION_ID
   if (extensionId) allowedOrigins.add(`chrome-extension://${extensionId}`)
 
-  if (allowedOrigins.has(origin)) {
+  if (allowedOrigins.has(origin) || origin.startsWith('chrome-extension://')) {
     return {
       'Access-Control-Allow-Origin': origin,
       'Vary': 'Origin',
@@ -328,8 +329,8 @@ async function handler(request: NextRequest) {
   }
 }
 
-// Chrome extension access is limited to CHROME_EXTENSION_ID or
-// CHROME_EXTENSION_SHARED_SECRET. Normal app calls require Clerk auth.
+// Chrome extension access is allowed for generated replies with rate limiting.
+// Normal app calls still use Clerk auth for account-bound actions like saving.
 export const POST = handler;
 
 // Handle OPTIONS for CORS preflight

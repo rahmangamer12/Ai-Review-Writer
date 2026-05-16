@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useUser, useClerk } from '@clerk/nextjs'
@@ -337,9 +338,14 @@ export default function Navigation() {
       <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-2xl border-b border-white/5 px-4 h-[calc(57px+env(safe-area-inset-top))] flex items-end pb-3 max-w-[100vw]">
         <div className="w-full flex items-center justify-between">
           <Link href="/dashboard" className="flex items-center gap-2 min-h-[44px] active:scale-95 transition-transform">
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-pink-600 rounded-lg flex items-center justify-center shadow-lg shadow-purple-500/20">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
+            <Image
+              src="/app-logo.png"
+              alt="AutoReview AI"
+              width={32}
+              height={32}
+              className="w-8 h-8 rounded-lg object-cover shadow-lg shadow-purple-500/20"
+              priority
+            />
             <h1 className="text-lg font-bold text-white tracking-tight">AutoReview</h1>
           </Link>
           <div className="flex items-center gap-2">
@@ -524,9 +530,14 @@ export default function Navigation() {
           className="mb-8 flex-shrink-0"
         >
           <Link href="/dashboard" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center font-bold text-lg group-hover:scale-110 transition-transform duration-300">
-              AI
-            </div>
+            <Image
+              src="/app-logo.png"
+              alt="AutoReview AI"
+              width={40}
+              height={40}
+              className="w-10 h-10 rounded-xl object-cover shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-300"
+              priority
+            />
             <div>
               <h1 className="text-xl font-bold text-gradient">AutoReview</h1>
               <p className="text-xs text-white/60">Intelligent Review Management</p>

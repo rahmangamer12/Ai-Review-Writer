@@ -12,7 +12,7 @@
     }
 
     body {
-      width: 380px;
+      width: 420px;
       min-height: 500px;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
@@ -100,6 +100,26 @@
       line-height: 1.5;
       color: #cbd5e1;
       margin-bottom: 10px;
+    }
+
+    .review-tools {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .review-select,
+    .review-search {
+      width: 100%;
+      min-height: 36px;
+    }
+
+    .review-nav {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 15px;
     }
 
     .btn {
@@ -285,7 +305,7 @@
 </head>
 <body>
   <div class="header">
-    <h1>✨ AutoReview AI</h1>
+    <h1>AutoReview AI</h1>
     <p>AI-Powered Review Replies</p>
   </div>
 
@@ -303,8 +323,12 @@
     <!-- Detected Review -->
     <div class="section" id="reviewSection" style="display: none;">
       <div class="section-title" style="display: flex; justify-content: space-between;">
-        <span>Detected Review</span>
+        <span>Detected Reviews</span>
         <span id="reviewCounter" style="color: #667eea; font-weight: bold;">1 / 1</span>
+      </div>
+      <div class="review-tools">
+        <input class="review-search" id="reviewSearch" type="search" placeholder="Search reviewer or review text">
+        <select class="review-select" id="reviewSelect" aria-label="Select detected review"></select>
       </div>
       <div class="detected-review">
         <div class="review-header">
@@ -313,9 +337,9 @@
         </div>
         <div class="review-text" id="reviewText" style="max-height: 100px; overflow-y: auto;">-</div>
       </div>
-      <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-        <button class="btn btn-secondary" id="prevReviewBtn" style="flex: 1; padding: 8px;">上 Prev</button>
-        <button class="btn btn-secondary" id="nextReviewBtn" style="flex: 1; padding: 8px;">下 Next</button>
+      <div class="review-nav">
+        <button class="btn btn-secondary" id="prevReviewBtn" style="padding: 8px;">Prev</button>
+        <button class="btn btn-secondary" id="nextReviewBtn" style="padding: 8px;">Next</button>
       </div>
     </div>
 
@@ -364,20 +388,20 @@
       <div class="section-title">AI Generated Reply</div>
       <div class="ai-reply-box" id="aiReply"></div>
       <div style="margin-top: 10px;">
-        <button class="btn btn-secondary" id="regenerateBtn">🔄 Regenerate</button>
+        <button class="btn btn-secondary" id="regenerateBtn">Regenerate</button>
       </div>
     </div>
 
     <!-- Actions -->
     <div class="section" id="actionSection">
       <button class="btn btn-primary" id="generateBtn" disabled>
-        🔍 Detect Reviews on Page
+        Detect Reviews on Page
       </button>
     </div>
   </div>
 
   <div class="footer">
-    Powered by <a href="https://autoreview-ai.com" target="_blank">AutoReview AI</a>
+    Powered by <a href="https://ai-review-writer.vercel.app" target="_blank">AutoReview AI</a>
   </div>
 
   <script src="popup.js"></script>

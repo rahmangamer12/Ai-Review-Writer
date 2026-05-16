@@ -1,5 +1,5 @@
 // AutoReview AI - Popup Script
-// Version 1.1.1
+// Version 1.1.2
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 // Users can override this in popup settings; falls back to production URL
@@ -69,6 +69,8 @@ const elements = {
   reviewRating: document.getElementById('reviewRating'),
   reviewText: document.getElementById('reviewText'),
   reviewCounter: document.getElementById('reviewCounter'),
+  reviewSearch: document.getElementById('reviewSearch'),
+  reviewSelect: document.getElementById('reviewSelect'),
   prevReviewBtn: document.getElementById('prevReviewBtn'),
   nextReviewBtn: document.getElementById('nextReviewBtn'),
   toneSelect: document.getElementById('toneSelect'),
@@ -88,6 +90,7 @@ const elements = {
 
 // ─── State ─────────────────────────────────────────────────────────────────────
 let allReviews = [];
+let filteredReviews = [];
 let currentReviewIndex = 0;
 let currentPlatform = null;
 let currentReview = null;
@@ -118,6 +121,18 @@ function setupEventListeners() {
   }
   if (elements.nextReviewBtn) {
     elements.nextReviewBtn.addEventListener('click', nextReview);
+  }
+  if (elements.reviewSearch) {
+    elements.reviewSearch.addEventListener('input', applyReviewFilter);
+  }
+  if (elements.reviewSelect) {
+    elements.reviewSelect.addEventListener('change', () => {
+      const selectedIndex = Number(elements.reviewSelect.value);
+      if (Number.isFinite(selectedIndex) && filteredReviews[selectedIndex]) {
+        currentReviewIndex = selectedIndex;
+        displayReview(filteredReviews[currentReviewIndex]);
+      }
+    });
   }
   if (elements.toneSelect) {
     elements.toneSelect.addEventListener('change', saveSettings);
@@ -224,7 +239,7 @@ async function runDetection(tab) {
 
     if (allReviews.length > 0) {
       currentReviewIndex = 0;
-      displayReview(allReviews[0]);
+      applyReviewFilter();
     } else {
       showError('No reviews detected. Make sure reviews are loaded on the page, then try again.');
       if (elements.reviewSection) elements.reviewSection.style.display = 'none';
@@ -349,8 +364,12 @@ function displayReview(review) {
     elements.generateBtn.textContent = '✨ Generate AI Reply';
   }
 
-  if (allReviews.length > 0 && elements.reviewCounter) {
-    elements.reviewCounter.textContent = `${currentReviewIndex + 1} / ${allReviews.length}`;
+  if (filteredReviews.length > 0 && elements.reviewCounter) {
+    elements.reviewCounter.textContent = `${currentReviewIndex + 1} / ${filteredReviews.length}`;
+  }
+
+  if (elements.reviewSelect) {
+    elements.reviewSelect.value = String(currentReviewIndex);
   }
 
   if (elements.replySection) elements.replySection.style.display = 'none';
@@ -358,16 +377,52 @@ function displayReview(review) {
 }
 
 // ─── Navigation ────────────────────────────────────────────────────────────────
+function applyReviewFilter() {
+  const query = (elements.reviewSearch?.value || '').trim().toLowerCase();
+  filteredReviews = allReviews.filter((review) => {
+    if (!query) return true;
+    return `${review.author || ''} ${review.text || ''} ${review.platform || ''}`.toLowerCase().includes(query);
+  });
+
+  if (elements.reviewSelect) {
+    elements.reviewSelect.replaceChildren();
+    filteredReviews.forEach((review, index) => {
+      const option = document.createElement('option');
+      option.value = String(index);
+      const author = review.author || 'Customer';
+      const rating = review.rating ? `${review.rating} star` : 'review';
+      const preview = (review.text || '').replace(/\s+/g, ' ').slice(0, 70);
+      option.textContent = `${index + 1}. ${author} - ${rating}${preview ? ` - ${preview}` : ''}`;
+      elements.reviewSelect.appendChild(option);
+    });
+  }
+
+  if (filteredReviews.length === 0) {
+    currentReview = null;
+    if (elements.reviewSection) elements.reviewSection.style.display = 'block';
+    if (elements.reviewerName) elements.reviewerName.textContent = 'No match';
+    if (elements.reviewRating) elements.reviewRating.textContent = '-';
+    if (elements.reviewText) elements.reviewText.textContent = 'No detected reviews match your search.';
+    if (elements.reviewCounter) elements.reviewCounter.textContent = '0 / 0';
+    if (elements.generateBtn) elements.generateBtn.disabled = true;
+    if (elements.replySection) elements.replySection.style.display = 'none';
+    return;
+  }
+
+  currentReviewIndex = Math.min(currentReviewIndex, filteredReviews.length - 1);
+  displayReview(filteredReviews[currentReviewIndex]);
+}
+
 function nextReview() {
-  if (allReviews.length === 0) return;
-  currentReviewIndex = (currentReviewIndex + 1) % allReviews.length;
-  displayReview(allReviews[currentReviewIndex]);
+  if (filteredReviews.length === 0) return;
+  currentReviewIndex = (currentReviewIndex + 1) % filteredReviews.length;
+  displayReview(filteredReviews[currentReviewIndex]);
 }
 
 function prevReview() {
-  if (allReviews.length === 0) return;
-  currentReviewIndex = (currentReviewIndex - 1 + allReviews.length) % allReviews.length;
-  displayReview(allReviews[currentReviewIndex]);
+  if (filteredReviews.length === 0) return;
+  currentReviewIndex = (currentReviewIndex - 1 + filteredReviews.length) % filteredReviews.length;
+  displayReview(filteredReviews[currentReviewIndex]);
 }
 
 // ─── Generate AI Reply ────────────────────────────────────────────────────────
