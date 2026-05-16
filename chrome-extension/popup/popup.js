@@ -1,5 +1,5 @@
 // AutoReview AI - Popup Script
-// Version 1.1.2
+// Version 1.1.3
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 // Users can override this in popup settings; falls back to production URL

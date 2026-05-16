@@ -270,8 +270,7 @@ function addAIReplyButtons() {
   const reviewContainers = getAllReviewContainers();
   
   reviewContainers.forEach((container) => {
-    // Check if button already exists (with more robust check)
-    if (container.querySelector('.autoreview-ai-btn')) return;
+    if (container.dataset.autoreviewButtonAttached === 'true' || container.querySelector(':scope > .autoreview-ai-btn')) return;
     
     // Check if container is valid
     const reviewData = getReviewFromContainer(container);
@@ -281,6 +280,7 @@ function addAIReplyButtons() {
     btn.className = 'autoreview-ai-btn';
     btn.textContent = 'AI Reply';
     btn.type = 'button';
+    btn.setAttribute('aria-label', 'Generate AI reply for this review');
     
     btn.onclick = async (e) => {
       e.preventDefault();
@@ -313,6 +313,7 @@ function addAIReplyButtons() {
       } else {
         container.appendChild(btn);
       }
+      container.dataset.autoreviewButtonAttached = 'true';
     } catch (e) {
       console.log('[AutoReview AI] Could not append button:', e);
     }
@@ -338,6 +339,8 @@ function getAllReviewContainers() {
          if (!el.querySelector('.wiI7pd') && !el.className.includes('review')) return;
       }
       
+      const nestedReview = el.parentElement?.closest('[data-review-id], [role="article"], .review, .review-container');
+      if (nestedReview && nestedReview !== el) return;
       containerSet.add(el);
     });
   });
@@ -404,6 +407,19 @@ async function generateAIReply(review, tone = 'friendly') {
     tone: tone,
     language: tone === 'desi' ? 'ur' : 'en',
   };
+
+  try {
+    const data = await chrome.runtime.sendMessage({ action: 'generateAIReply', payload });
+    if (data?.success && data.reply) {
+      if (data.metadata?.used_fallback) {
+        console.warn('[AutoReview AI] Backend used fallback. Add/verify AI API key in Vercel for live AI replies.');
+      }
+      return data.reply;
+    }
+    throw new Error(data?.error || 'AI server did not return a reply');
+  } catch (error) {
+    console.warn('[AutoReview AI] Background AI request failed:', error.message);
+  }
 
   // Try each endpoint in order
   for (const API_URL of API_URLS) {
