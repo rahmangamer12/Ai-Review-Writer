@@ -255,7 +255,12 @@ function ReviewsContent() {
       if (!response.ok) throw new Error('Failed to generate reviews')
       
       const data = await response.json()
-      setGeneratedReviews(data.reviews)
+      setGeneratedReviews(data.reviews || [])
+      if (data.usedFallback) {
+        toastInfo('Generated sample reviews', 'AI key was not available, so realistic fallback samples were used.')
+      } else {
+        toastSuccess('AI reviews generated', `${data.reviews?.length || 0} reviews are ready to review.`)
+      }
     } catch (err) {
       console.error('AI Review Generation Error:', err)
       setError('Failed to generate reviews. Please check your AI API configuration and try again.')
@@ -267,7 +272,7 @@ function ReviewsContent() {
 
   const saveGeneratedReviews = async () => {
     try {
-      await Promise.all(
+      const responses = await Promise.all(
         generatedReviews.map(review =>
           fetch('/api/reviews/analyze', {
             method: 'POST',
@@ -282,9 +287,12 @@ function ReviewsContent() {
           })
         )
       )
+      const failed = responses.find(response => !response.ok)
+      if (failed) throw new Error('One or more reviews failed to save')
       setGeneratedReviews([])
       setShowAIGenerator(false)
       fetchReviews()
+      toastSuccess('Reviews saved', 'Generated reviews were added to your workspace.')
     } catch (err) {
       setError('Failed to save generated reviews')
     }
@@ -522,7 +530,7 @@ function ReviewsContent() {
         </div>
       </header>
 
-      <main className="relative z-10 w-full px-4 sm:px-6 lg:px-8 min-w-0 pb-[env(safe-area-inset-bottom)]">
+      <main className="relative z-10 mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8 min-w-0 pb-[env(safe-area-inset-bottom)]">
         {/* Agentic Mode Banner */}
         {agenticMode && (
           <motion.div
@@ -641,8 +649,8 @@ function ReviewsContent() {
 
         {/* Filters Bar */}
         <div className="mb-6 space-y-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative flex-1 min-w-0 max-w-md">
+          <div className="grid grid-cols-1 gap-3 sm:flex sm:flex-wrap sm:items-center">
+            <div className="relative w-full sm:flex-1 sm:min-w-[260px] sm:max-w-md">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
@@ -655,7 +663,7 @@ function ReviewsContent() {
 
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors ${
+              className={`flex w-full items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition-colors sm:w-auto ${
                 showFilters ? 'border-purple-500/50 bg-purple-500/10 text-purple-400' : 'border-white/10 bg-white/5 text-gray-400 hover:text-white'
               }`}
             >
@@ -669,7 +677,7 @@ function ReviewsContent() {
                 const [sortBy, sortOrder] = e.target.value.split('-')
                 setFilters({ ...filters, sortBy: sortBy as any, sortOrder: sortOrder as any })
               }}
-              className="rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-purple-500 focus:outline-none appearance-none cursor-pointer"
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white focus:border-purple-500 focus:outline-none appearance-none cursor-pointer sm:w-auto"
               style={{ color: 'white' }}
             >
               <option value="created_at-desc" style={{ backgroundColor: '#1a1a1f', color: 'white' }}>Newest First</option>
@@ -685,12 +693,12 @@ function ReviewsContent() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="flex flex-wrap gap-3 overflow-hidden"
+                className="grid grid-cols-1 gap-3 overflow-hidden sm:grid-cols-2 lg:flex lg:flex-wrap"
               >
                 <select
                   value={filters.status}
                   onChange={(e) => setFilters({ ...filters, status: e.target.value as any })}
-                  className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-purple-500 focus:outline-none"
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-purple-500 focus:outline-none lg:w-auto"
                   style={{ color: 'white' }}
                 >
                   <option value="all" style={{ backgroundColor: '#1a1a1f', color: 'white' }}>All Status</option>
@@ -702,7 +710,7 @@ function ReviewsContent() {
                 <select
                   value={filters.platform}
                   onChange={(e) => setFilters({ ...filters, platform: e.target.value })}
-                  className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-purple-500 focus:outline-none"
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-purple-500 focus:outline-none lg:w-auto"
                   style={{ color: 'white' }}
                 >
                   <option value="all" style={{ backgroundColor: '#1a1a1f', color: 'white' }}>All Platforms</option>
@@ -714,7 +722,7 @@ function ReviewsContent() {
                 <select
                   value={filters.sentiment}
                   onChange={(e) => setFilters({ ...filters, sentiment: e.target.value as any })}
-                  className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-purple-500 focus:outline-none"
+                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm text-white focus:border-purple-500 focus:outline-none lg:w-auto"
                   style={{ color: 'white' }}
                 >
                   <option value="all" style={{ backgroundColor: '#1a1a1f', color: 'white' }}>All Sentiments</option>
@@ -1053,7 +1061,7 @@ function ReviewsContent() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm p-0 sm:items-center sm:p-4"
             onClick={() => setShowAIGenerator(false)}
           >
             <motion.div
@@ -1061,7 +1069,7 @@ function ReviewsContent() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-3xl rounded-2xl border border-white/10 bg-[#0f0f14] p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+              className="w-full max-w-3xl rounded-t-3xl border border-white/10 bg-[#0f0f14] p-4 shadow-2xl max-h-[92dvh] overflow-y-auto sm:rounded-2xl sm:p-6"
             >
               <div className="mb-6 flex items-center justify-between">
                 <h3 className="text-xl font-bold text-white flex items-center gap-2">
@@ -1077,6 +1085,16 @@ function ReviewsContent() {
                 <>
                   <p className="text-gray-400 mb-6">Generate realistic test reviews using AI.</p>
                   <div className="space-y-4 mb-6">
+                    <div>
+                      <label className="mb-2 block text-sm text-gray-400">Business Type</label>
+                      <input
+                        type="text"
+                        value={aiConfig.businessType}
+                        onChange={(e) => setAiConfig({ ...aiConfig, businessType: e.target.value })}
+                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
+                        placeholder="restaurant, salon, car dealer..."
+                      />
+                    </div>
                     <div>
                       <label className="mb-2 block text-sm text-gray-400">Number of Reviews</label>
                       <input

@@ -27,6 +27,25 @@ function escapeHtml(value: unknown): string {
     .replace(/'/g, '&#39;');
 }
 
+function callbackPage(type: 'success' | 'error', title: string, message: string) {
+  const eventType = type === 'success' ? 'FACEBOOK_AUTH_SUCCESS' : 'FACEBOOK_AUTH_ERROR';
+  const target = type === 'success' ? '/reviews' : '/connect-platforms';
+  return new Response(
+    `<html><body style="font-family:system-ui;background:#0a0a0f;color:white;display:grid;place-items:center;min-height:100vh;text-align:center">
+      <main><h2>${escapeHtml(title)}</h2><p>${escapeHtml(message)}</p><p>Redirecting...</p></main>
+      <script>
+        if (window.opener) {
+          window.opener.postMessage({type:${jsString(eventType)},message:${jsString(message)},error:${jsString(message)}},'*');
+          setTimeout(()=>window.close(),1200);
+        } else {
+          setTimeout(()=>{ window.location.href=${jsString(target)}; },1200);
+        }
+      </script>
+    </body></html>`,
+    { status: 200, headers: { 'Content-Type': 'text/html' } }
+  );
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -157,6 +176,8 @@ async function processCallback(code: string, userId: string, appId: string, appS
     }
 
     console.log('[Facebook OAuth] Connected page:', page.name, 'for user:', userId);
+
+    return callbackPage('success', 'Facebook Connected!', `Connected page: ${page.name}. Open Reviews to sync and manage reviews.`);
 
     return new Response(
       `<html><body>

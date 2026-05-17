@@ -4,6 +4,29 @@ import { encryptSensitiveData } from '@/lib/encryption';
 
 export const dynamic = 'force-dynamic';
 
+function jsString(value: unknown): string {
+  return JSON.stringify(String(value ?? ''));
+}
+
+function callbackPage(type: 'success' | 'error', title: string, message: string) {
+  const eventType = type === 'success' ? 'GOOGLE_AUTH_SUCCESS' : 'GOOGLE_AUTH_ERROR';
+  const target = type === 'success' ? '/reviews' : '/connect-platforms';
+  return new Response(
+    `<html><body style="font-family:system-ui;background:#0a0a0f;color:white;display:grid;place-items:center;min-height:100vh;text-align:center">
+      <main><h2>${title}</h2><p>${message}</p><p>Redirecting...</p></main>
+      <script>
+        if (window.opener) {
+          window.opener.postMessage({type:${jsString(eventType)},message:${jsString(message)},error:${jsString(message)}},'*');
+          setTimeout(()=>window.close(),1200);
+        } else {
+          setTimeout(()=>{ window.location.href=${jsString(target)}; },1200);
+        }
+      </script>
+    </body></html>`,
+    { status: 200, headers: { 'Content-Type': 'text/html' } }
+  );
+}
+
 // Decode base64url state (not security-critical, just obfuscation)
 function decryptState(state: string): { userId: string; clientId: string; clientSecret: string } | null {
   try {
@@ -26,13 +49,7 @@ export async function GET(request: NextRequest) {
     if (error || !code || !state) {
       const errorMsg = errorDescription || error || 'Authorization failed';
       console.error('[Google OAuth] Error:', errorMsg);
-      return new Response(
-        `<html><body>
-          <script>window.opener?.postMessage({type:'GOOGLE_AUTH_ERROR',error:'${errorMsg}'},'*');window.close();</script>
-          <p>Google authorization failed. You can close this window.</p>
-        </body></html>`,
-        { status: 200, headers: { 'Content-Type': 'text/html' } }
-      );
+      return callbackPage('error', 'Google authorization failed', errorMsg);
     }
 
     // Decode state to get userId + clientId + clientSecret
@@ -43,26 +60,14 @@ export async function GET(request: NextRequest) {
       const serverClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
       if (!serverClientId || !serverClientSecret) {
-        return new Response(
-          `<html><body>
-            <script>window.opener?.postMessage({type:'GOOGLE_AUTH_ERROR',error:'Invalid state. Please try connecting again.'},'*');window.close();</script>
-            <p>Invalid session. Please try again.</p>
-          </body></html>`,
-          { status: 200, headers: { 'Content-Type': 'text/html' } }
-        );
+        return callbackPage('error', 'Invalid session', 'Invalid state. Please try connecting again.');
       }
 
       // Fallback: use Clerk auth for userId
       const { auth } = await import('@clerk/nextjs/server');
       const session = await auth();
       if (!session.userId) {
-        return new Response(
-          `<html><body>
-            <script>window.opener?.postMessage({type:'GOOGLE_AUTH_ERROR',error:'Not authenticated.'},'*');window.close();</script>
-            <p>Please sign in first.</p>
-          </body></html>`,
-          { status: 200, headers: { 'Content-Type': 'text/html' } }
-        );
+        return callbackPage('error', 'Please sign in first', 'Not authenticated.');
       }
 
       return processCallback(code, session.userId, serverClientId, serverClientSecret);
@@ -149,6 +154,7 @@ async function processCallback(code: string, userId: string, clientId: string, c
     }
 
     console.log('[Google OAuth] Connected for user:', userId);
+    return callbackPage('success', 'Google Connected!', 'Google connected successfully. Open Reviews to sync and manage reviews.');
 
     return new Response(
       `<html><body>
