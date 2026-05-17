@@ -28,20 +28,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AutoReview AI | Automate & Manage Reviews 10x Faster",
-  description: "Boost your business reputation with AutoReview AI. Automatically track, analyze, and reply to customer reviews across Google, Yelp, and Facebook using AI.",
+  title: "Ai Review Writer | Automate & Manage Reviews 10x Faster",
+  description: "Boost your business reputation with Ai Review Writer. Automatically track, analyze, and reply to customer reviews across Google, Yelp, and Facebook using AI.",
   keywords: ["review management", "AI auto reply", "reputation management", "customer reviews AI", "Google reviews software"],
-  authors: [{ name: "AutoReview AI Team" }],
+  authors: [{ name: "Ai Review Writer Team" }],
   openGraph: {
-    title: "AutoReview AI - Intelligent Reputation Management",
+    title: "Ai Review Writer - Intelligent Reputation Management",
     description: "Connect your platforms and let our AI generate personalized, context-aware responses to your customer reviews instantly.",
     type: "website",
     url: "https://ai-review-writer.vercel.app",
-    siteName: "AutoReview AI"
+    siteName: "Ai Review Writer"
   },
   twitter: {
     card: "summary_large_image",
-    title: "AutoReview AI | Smart Review Automation",
+    title: "Ai Review Writer | Smart Review Automation",
     description: "Manage your online reputation effortlessly with AI-powered review responses."
   }
 };
@@ -68,11 +68,11 @@ export default function RootLayout({
           
           <meta name="apple-mobile-web-app-capable" content="yes" />
           <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-          <meta name="apple-mobile-web-app-title" content="AutoReview AI" />
+          <meta name="apple-mobile-web-app-title" content="Ai Review Writer" />
           
           {/* Additional PWA meta tags for better device support */}
           <meta name="mobile-web-app-capable" content="yes" />
-          <meta name="application-name" content="AutoReview AI" />
+          <meta name="application-name" content="Ai Review Writer" />
           <meta name="msapplication-TileColor" content="#6366f1" />
           <meta name="msapplication-tap-highlight" content="no" />
           <meta name="full-screen" content="yes" />

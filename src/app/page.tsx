@@ -5,8 +5,8 @@ import { ArrowRight, CheckCircle2, Star, Zap, Shield, ChevronRight, BarChart3, M
 
 // Note: Next.js Server Component
 export const metadata = {
-  title: 'AutoReview AI | Automate Customer Review Responses',
-  description: 'Manage, analyze, and instantly reply to your business reviews with AI. Save 10x your time and boost customer satisfaction effortlessly.',
+  title: 'Ai Review Writer | Automate Customer Review Responses',
+  description: 'Ai Review Writer helps businesses manage, analyze, and instantly reply to customer reviews with AI.',
 }
 
 export default async function LandingPage() {
@@ -28,7 +28,7 @@ export default async function LandingPage() {
 
         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/[0.03] border border-white/10 text-sm mb-8 animate-fade-in-up backdrop-blur-md">
           <span className="flex h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span className="font-medium text-white/80 tracking-wide">AutoReview AI 2.0 is Live</span>
+          <span className="font-medium text-white/80 tracking-wide">Ai Review Writer is Live</span>
         </div>
 
         <h1 className="text-4xl sm:text-5xl lg:text-7xl font-extrabold tracking-tight mb-8 animate-fade-in-up animation-delay-100 max-w-4xl mx-auto leading-[1.1]">
@@ -41,7 +41,7 @@ export default async function LandingPage() {
         </h1>
 
         <p className="text-lg sm:text-xl text-white/60 mb-10 max-w-2xl mx-auto animate-fade-in-up animation-delay-200 leading-relaxed">
-          The all-in-one AI platform to track, analyze, and instantly reply to customer reviews across Google, Yelp, and Facebook.
+          Ai Review Writer is an all-in-one AI platform to track, analyze, and instantly reply to customer reviews across Google, Yelp, and Facebook.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up animation-delay-300 w-full sm:w-auto">
@@ -238,7 +238,7 @@ export default async function LandingPage() {
               <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-cyan-600 rounded-lg flex items-center justify-center shadow-lg shadow-violet-500/20">
                 <Zap className="w-4 h-4 text-white" />
               </div>
-              AutoReview
+              Ai Review Writer
             </Link>
             <p className="text-white/40 text-sm leading-relaxed max-w-xs">
               Automating reputation management for businesses worldwide with advanced AI.
@@ -256,8 +256,8 @@ export default async function LandingPage() {
             <h4 className="font-semibold mb-4 text-white">Company</h4>
             <ul className="space-y-3 text-sm text-white/40">
               <li><Link href="/contact" className="hover:text-white transition-colors">Contact Us</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-              <li><Link href="#" className="hover:text-white transition-colors">Terms of Service</Link></li>
+              <li><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></li>
             </ul>
           </div>
           <div className="col-span-2 md:col-span-1">
