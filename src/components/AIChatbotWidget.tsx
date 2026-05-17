@@ -30,6 +30,16 @@ const SARAH_PROFILE = {
   status: 'Powered by LongCat AI'
 }
 
+function SarahAvatar({ className = '' }: { className?: string }) {
+  return (
+    <img
+      src="/app-logo.png"
+      alt="Sarah AI"
+      className={`h-full w-full rounded-full object-cover ${className}`}
+    />
+  )
+}
+
 // System prompt to make AI behave like Sarah
 const SYSTEM_PROMPT = `You are Sarah, the God-Tier AI Assistant for "AutoReview AI" platform. 
 You possess absolute, expert-level knowledge of everything related to AutoReview AI—our platform imports, manages, and automatically replies to reviews from Google, Yelp, Facebook, etc., and uses LongCat AI to save businesses hours of work daily. Our plans: Free ($0), Starter ($10/m), Pro ($19/m), Enterprise ($39/m).
@@ -150,6 +160,7 @@ export default function AIChatbot() {
           isTyping: false // Never show typing for old history
         }))
         if (hydrated.length > 0) {
+          setMessages(hydrated)
           setHasStarted(true)
         }
       } catch (e) {
@@ -450,7 +461,7 @@ export default function AIChatbot() {
         >
           <span className="font-semibold text-xs sm:text-sm md:text-base pointer-events-none" suppressHydrationWarning>Ask Sarah</span>
           <div className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 bg-white/20 rounded-full flex items-center justify-center text-lg sm:text-xl md:text-2xl backdrop-blur-sm pointer-events-none" suppressHydrationWarning>
-            {SARAH_PROFILE.avatar}
+            <SarahAvatar />
           </div>
         </motion.button>
       </div>
@@ -480,7 +491,7 @@ export default function AIChatbot() {
                     <div className="flex items-center gap-2 sm:gap-3">
                       <div className="relative">
                         <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-xl border-2 border-white/30 backdrop-blur-sm">
-                          {SARAH_PROFILE.avatar}
+                          <SarahAvatar />
                         </div>
                         <motion.span 
                           animate={{ 
@@ -610,7 +621,7 @@ export default function AIChatbot() {
                               : 'bg-gray-200 dark:bg-gray-700'
                           }`}>
                             {msg.role === 'assistant' ? (
-                              <span className="text-sm">{SARAH_PROFILE.avatar}</span>
+                              <SarahAvatar />
                             ) : (
                               <User className="w-3.5 h-3.5 text-gray-600 dark:text-gray-300" />
                             )}
@@ -677,7 +688,7 @@ export default function AIChatbot() {
                       {isLoading && (
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
                           <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
-                            <span className="text-sm">{SARAH_PROFILE.avatar}</span>
+                            <SarahAvatar />
                           </div>
                           <div className="bg-white dark:bg-gray-800 px-5 py-3.5 rounded-2xl rounded-tl-none border border-gray-100 dark:border-white/5 shadow-sm">
                             <div className="flex items-center gap-3">
@@ -710,7 +721,7 @@ export default function AIChatbot() {
                 </div>
 
                 {/* Quick Questions */}
-                {messages.length < 5 && messages.length > 0 && !isLoading && (
+                {messages.filter(m => m.role === 'user').length === 0 && messages.length > 0 && !isLoading && (
                   <div className="px-3 py-2 bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-white/5">
                     <p className="text-gray-400 text-[10px] mb-2 font-medium">Popular questions:</p>
                     <div className="flex flex-wrap gap-2 max-w-full overflow-x-auto pb-1 no-scrollbar">

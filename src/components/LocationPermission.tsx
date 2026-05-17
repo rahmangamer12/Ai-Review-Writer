@@ -80,10 +80,7 @@ export default function LocationPermission({
     if (address?.country) {
       return address.country
     }
-    if (location.latitude && location.longitude) {
-      return `${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}`
-    }
-    return 'Location detected'
+    return 'Nearby area detected'
   }
 
   // Get status icon and colors based on permission state
@@ -237,7 +234,7 @@ export default function LocationPermission({
               </motion.div>
             )}
 
-            {/* Granted State - Show coordinates if no address */}
+            {/* Granted State - Hide raw coordinates if no address */}
             {permission === 'granted' && !address && location.latitude && location.longitude && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -246,13 +243,13 @@ export default function LocationPermission({
               >
                 <div className="flex items-center gap-2 text-emerald-400 text-[10px] sm:text-sm mb-1.5 sm:mb-2">
                   <Navigation className="w-3.5 h-3.5 sm:w-4 h-4" />
-                  <span className="font-medium">Location Detected</span>
+                  <span className="font-medium">Nearby Area Detected</span>
                 </div>
                 <p className="text-white text-base sm:text-lg font-semibold">
-                  {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+                  Location name is being resolved
                 </p>
                 <p className="text-white/50 text-[10px] sm:text-xs mt-0.5 sm:mt-1">
-                  Coordinates detected successfully
+                  Use Update to refresh the place name.
                 </p>
               </motion.div>
             )}
@@ -432,7 +429,7 @@ export default function LocationPermission({
                 <div className="p-3 bg-white/5 rounded-xl">
                   <p className="text-white/40 text-xs mb-1">Coordinates</p>
                   <p className="text-white font-mono text-sm">
-                    {location.latitude?.toFixed(6)}, {location.longitude?.toFixed(6)}
+                    Hidden for privacy
                   </p>
                 </div>
 

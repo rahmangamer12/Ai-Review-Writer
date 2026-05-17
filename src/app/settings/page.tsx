@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useSyncExternalStore } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageSquare, LayoutDashboard, Database, Shield, Zap, Globe, Link as LinkIcon, Bell, Bot, Settings as SettingsIcon, AlertCircle, CheckCircle2, RefreshCcw, ExternalLink, Save, FileText, ScrollText } from 'lucide-react'
@@ -9,6 +9,7 @@ import CreditManager from '@/components/CreditManager'
 import PageTransition from '@/components/transitions/PageTransition'
 import LocationPermission from '@/components/LocationPermission'
 import NotificationManager from '@/components/NotificationManager'
+import PaymentMethodManager from '@/components/PaymentMethodManager'
 
 function useHydrated() {
   const [hydrated, setHydrated] = useState(false)
@@ -66,6 +67,8 @@ interface Settings {
   discordIntegration: boolean
   webhookUrl: string
   webhookSecret: string
+  slackWebhookUrl: string
+  discordWebhookUrl: string
   apiKey: string
   moderationLevel: 'strict' | 'moderate' | 'relaxed'
   businessName: string
@@ -91,6 +94,8 @@ const defaultSettings: Settings = {
   discordIntegration: false,
   webhookUrl: '',
   webhookSecret: '',
+  slackWebhookUrl: '',
+  discordWebhookUrl: '',
   apiKey: '',
   moderationLevel: 'moderate',
   businessName: 'Your Business',
@@ -110,6 +115,7 @@ export default function SettingsPage() {
   const [saved, setSaved] = useState(false)
   const [activeTab, setActiveTab] = useState<TabType>('general')
   const [currentPlan, setCurrentPlan] = useState<string>('free')
+  const [integrationNotice, setIntegrationNotice] = useState<string | null>(null)
 
   useEffect(() => {
     if (!hydrated) return
@@ -138,6 +144,26 @@ export default function SettingsPage() {
     }
   }
 
+  const testIntegration = async (destination: 'webhook' | 'slack' | 'discord') => {
+    const url = destination === 'slack' ? settings.slackWebhookUrl : destination === 'discord' ? settings.discordWebhookUrl : settings.webhookUrl
+    if (!url) {
+      setIntegrationNotice(`Add a ${destination} webhook URL first.`)
+      return
+    }
+    setIntegrationNotice('Sending test payload...')
+    try {
+      const response = await fetch('/api/integrations/test-webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, secret: settings.webhookSecret, destination }),
+      })
+      const result = await response.json().catch(() => ({}))
+      setIntegrationNotice(result.message || result.error || (response.ok ? 'Test sent successfully.' : 'Test failed.'))
+    } catch {
+      setIntegrationNotice('Test failed. Check the webhook URL and try again.')
+    }
+  }
+
   if (!hydrated) return null
 
   return (
@@ -153,12 +179,13 @@ export default function SettingsPage() {
           {/* Tabs */}
           <div className="flex overflow-x-auto pb-4 gap-2 sm:gap-4 mb-4 sm:mb-8 hide-scrollbar snap-x">
             <div className="flex gap-2 sm:gap-4 snap-start">
-              <TabButton tab="general" label="General" icon="⚙️" activeTab={activeTab} onClick={setActiveTab} />
-              <TabButton tab="credits" label="Credits" icon="💎" activeTab={activeTab} onClick={setActiveTab} />
-              <TabButton tab="notifications" label="Notifications" icon="🔔" activeTab={activeTab} onClick={setActiveTab} />
-              <TabButton tab="ai" label="AI Settings" icon="🤖" activeTab={activeTab} onClick={setActiveTab} />
-              <TabButton tab="integrations" label="Integrations" icon="🔌" activeTab={activeTab} onClick={setActiveTab} />
-              <TabButton tab="advanced" label="Advanced" icon="🔧" activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="general" label="General" icon="Set" activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="credits" label="Credits" icon="Cr" activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="notifications" label="Notifications" icon="Bell" activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="ai" label="AI Settings" icon="AI" activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="integrations" label="Integrations" icon="Plug" activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="billing" label="Billing" icon="Card" activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="advanced" label="Advanced" icon="Adv" activeTab={activeTab} onClick={setActiveTab} />
             </div>
           </div>
 
@@ -185,7 +212,7 @@ export default function SettingsPage() {
                         <select
                           value={settings.businessType}
                           onChange={(e) => setSettings({ ...settings, businessType: e.target.value })}
-                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:border-primary transition-colors"
+                          className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white text-sm focus:outline-none focus:border-primary transition-colors [&>option]:bg-[#0f0f18] [&>option]:text-white"
                         >
                           <option value="Restaurant">Restaurant</option>
                           <option value="E-commerce">E-commerce</option>
@@ -223,7 +250,41 @@ export default function SettingsPage() {
               </div>
             )}
 
-            {activeTab === 'credits' && <CreditManager />}
+            {activeTab === 'credits' && (
+              <div className="space-y-6">
+                <div className="relative overflow-hidden rounded-3xl border border-cyan-400/20 bg-gradient-to-r from-cyan-500/15 via-blue-500/10 to-violet-500/15 p-6 sm:p-8">
+                  <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-[0.25em] text-cyan-200/80">Payments</p>
+                      <h3 className="mt-2 text-2xl font-black text-white sm:text-3xl">Upgrade Plan</h3>
+                      <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/65">
+                        Checkout integration is being connected. Plan upgrades are visible now, and direct card payments will open here when the payment provider keys are live.
+                      </p>
+                    </div>
+                    <Link
+                      href="/subscription"
+                      className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3 text-sm font-black text-slate-950 shadow-lg shadow-cyan-500/20 transition-all hover:bg-cyan-50"
+                    >
+                      Open Upgrade Plans
+                    </Link>
+                  </div>
+                </div>
+                <CreditManager />
+              </div>
+            )}
+
+            {activeTab === 'billing' && (
+              <div className="space-y-6">
+                <div className="rounded-3xl border border-violet-400/20 bg-violet-500/10 p-6 sm:p-8">
+                  <p className="text-xs font-black uppercase tracking-[0.25em] text-violet-200/80">Billing Setup</p>
+                  <h3 className="mt-2 text-2xl font-black text-white">Payment Method</h3>
+                  <p className="mt-2 text-sm text-white/60">
+                    Add your payment provider API keys in production to enable checkout. Until then users see a clear coming-soon notice instead of a broken flow.
+                  </p>
+                </div>
+                <PaymentMethodManager />
+              </div>
+            )}
             
             {activeTab === 'notifications' && <NotificationManager />}
 
@@ -401,10 +462,15 @@ export default function SettingsPage() {
                         </div>
                       </div>
                       <div className="pt-4">
-                        <button className="w-full py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-500/25">
+                        <button onClick={() => testIntegration('webhook')} className="w-full py-4 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-500/25">
                           Transmit Test Payload
                         </button>
                       </div>
+                      {integrationNotice && (
+                        <div className="rounded-xl border border-indigo-500/20 bg-indigo-500/10 px-4 py-3 text-xs text-indigo-100">
+                          {integrationNotice}
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -430,6 +496,12 @@ export default function SettingsPage() {
                         </div>
                         <ToggleSwitch enabled={settings.slackIntegration} onChange={(v) => setSettings({ ...settings, slackIntegration: v })} />
                       </div>
+                      {settings.slackIntegration && (
+                        <div className="flex gap-2">
+                          <input value={settings.slackWebhookUrl} onChange={(e) => setSettings({ ...settings, slackWebhookUrl: e.target.value })} placeholder="Slack webhook URL" className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-emerald-400" />
+                          <button onClick={() => testIntegration('slack')} className="rounded-xl bg-emerald-500 px-4 text-sm font-bold text-white">Test</button>
+                        </div>
+                      )}
 
                       <div className="flex items-center justify-between p-5 bg-black/40 rounded-2xl border border-white/5 hover:border-indigo-500/30 transition-all group">
                         <div className="flex items-center gap-4">
@@ -441,6 +513,12 @@ export default function SettingsPage() {
                         </div>
                         <ToggleSwitch enabled={settings.discordIntegration} onChange={(v) => setSettings({ ...settings, discordIntegration: v })} />
                       </div>
+                      {settings.discordIntegration && (
+                        <div className="flex gap-2">
+                          <input value={settings.discordWebhookUrl} onChange={(e) => setSettings({ ...settings, discordWebhookUrl: e.target.value })} placeholder="Discord webhook URL" className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none focus:border-indigo-400" />
+                          <button onClick={() => testIntegration('discord')} className="rounded-xl bg-indigo-500 px-4 text-sm font-bold text-white">Test</button>
+                        </div>
+                      )}
 
                       <div className="pt-4">
                         <p className="text-[10px] text-emerald-400/60 font-bold uppercase tracking-widest text-center">
@@ -551,7 +629,7 @@ export default function SettingsPage() {
                         <select
                           value={settings.dataRetentionDays}
                           onChange={(e) => setSettings({ ...settings, dataRetentionDays: parseInt(e.target.value) })}
-                          className="w-full px-5 py-4 bg-black/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-emerald-500 transition-all text-sm font-bold pr-10 appearance-none shadow-inner"
+                          className="w-full px-5 py-4 bg-black/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-emerald-500 transition-all text-sm font-bold pr-10 appearance-none shadow-inner [&>option]:bg-[#0f0f18] [&>option]:text-white"
                         >
                           <option value="30">30 Days (Strict Compliance)</option>
                           <option value="90">90 Days (Industry Standard)</option>
@@ -677,7 +755,7 @@ export default function SettingsPage() {
           <div className="mt-8 flex justify-end gap-4">
             <button onClick={handleReset} className="px-6 py-3 glass text-white/70 hover:text-white rounded-lg">Reset</button>
             <button onClick={handleSave} className="px-8 py-3 bg-primary text-white rounded-lg font-bold">
-              {saved ? '✓ Saved!' : '💾 Save Settings'}
+              {saved ? 'Saved!' : 'Save Settings'}
             </button>
           </div>
         </div>

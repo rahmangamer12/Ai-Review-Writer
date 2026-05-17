@@ -11,6 +11,7 @@ export default function CreditManager() {
   const [usageHistory, setUsageHistory] = useState<CreditUsage[]>([])
   const [plan, setPlan] = useState('free')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
+  const [notice, setNotice] = useState<string | null>(null)
 
   useEffect(() => {
     async function fetchUserData() {
@@ -74,7 +75,7 @@ export default function CreditManager() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center">
-                <span className="text-2xl">💎</span>
+                <span className="text-sm font-black">AI</span>
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-white">AI Credits</h3>
@@ -100,8 +101,8 @@ export default function CreditManager() {
               </motion.div>
             </div>
             <div className="flex justify-between mt-2">
-              <span className="text-white/60 text-sm">Credits Used: {getPlanCredits() - credits}</span>
-              <span className="text-white/60 text-sm">Resets: 1st of month</span>
+              <span className="text-white/40 text-sm">{creditPercentage.toFixed(0)}% used</span>
+              <span className="text-white/40 text-sm">{credits} credits left</span>
             </div>
           </div>
 
@@ -130,7 +131,7 @@ export default function CreditManager() {
       >
         <div className="flex items-center gap-4 mb-6">
           <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-            <span>📊</span>
+            <span>Usage</span>
           </div>
           <div>
             <h3 className="text-xl font-bold text-white">Recent Usage</h3>
@@ -150,7 +151,7 @@ export default function CreditManager() {
               >
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center">
-                    <span className="text-sm">-</span>
+                    <span className="text-xs font-black text-red-300">AI</span>
                   </div>
                   <div>
                     <p className="text-white font-medium">
@@ -169,7 +170,7 @@ export default function CreditManager() {
         ) : (
           <div className="text-center py-8">
             <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-3xl">📊</span>
+              <span className="text-sm font-black">Usage</span>
             </div>
             <p className="text-white/60 mb-2">No usage history yet</p>
             <p className="text-white/40 text-sm">Start using AI features to track your credit usage</p>
@@ -186,7 +187,7 @@ export default function CreditManager() {
       >
         <div className="flex items-center gap-4 mb-6">
           <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-            <span>🎁</span>
+            <span>Pkg</span>
           </div>
           <div>
             <h3 className="text-xl font-bold text-white">Credit Packages</h3>
@@ -217,16 +218,22 @@ export default function CreditManager() {
                 <div className="text-2xl font-bold text-cyan-400 mb-4">${pkg.price}</div>
                 <button
                   onClick={() => {
-                    alert('🚀 Credit Purchase Coming Soon!\n\nWe are working on adding direct credit purchase functionality. For now, please upgrade your plan to get more credits.\n\nThank you for your patience!')
+                    setNotice('Credit purchases are coming soon. The payment method is being connected; for now, use Upgrade Plan to add more monthly credits.')
+                    setTimeout(() => setNotice(null), 5000)
                   }}
-                  className="w-full px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white rounded-lg hover:from-cyan-600 hover:to-cyan-700 transition-all font-medium"
+                  className="w-full px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-600 text-white rounded-lg hover:from-cyan-400 hover:to-blue-500 transition-all font-bold shadow-lg shadow-cyan-500/20"
                 >
-                  Purchase
+                  Purchase Package
                 </button>
               </div>
             </motion.div>
           ))}
         </div>
+        {notice && (
+          <div className="mt-5 rounded-xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+            {notice}
+          </div>
+        )}
       </motion.div>
 
       {/* Upgrade Modal */}
@@ -245,7 +252,7 @@ export default function CreditManager() {
           >
             <div className="text-center">
               <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl">⚠️</span>
+                <span className="text-3xl">!</span>
               </div>
               <h3 className="text-2xl font-bold text-white mb-2">Low Credits</h3>
               <p className="text-white/60 mb-6">

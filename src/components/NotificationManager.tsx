@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Bell,
@@ -78,11 +78,19 @@ export default function NotificationManager({ className = '' }: NotificationMana
     weeklySummaries: true
   })
 
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('autoreview-notification-settings')
+      if (saved) setNotificationSettings(prev => ({ ...prev, ...JSON.parse(saved) }))
+    } catch {}
+  }, [])
+
   const toggleSetting = (key: keyof typeof notificationSettings) => {
-    setNotificationSettings(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }))
+    setNotificationSettings(prev => {
+      const next = { ...prev, [key]: !prev[key] }
+      localStorage.setItem('autoreview-notification-settings', JSON.stringify(next))
+      return next
+    })
   }
 
   const handleEnableNotifications = useCallback(async () => {
@@ -411,13 +419,14 @@ export default function NotificationManager({ className = '' }: NotificationMana
               </div>
               <button
                 onClick={() => toggleSetting('reviewAlerts')}
-                className={`w-10 h-5 rounded-full relative transition-all duration-200 ${
+                aria-pressed={notificationSettings.reviewAlerts}
+                className={`w-14 h-8 rounded-full relative transition-all duration-200 border ${
                   notificationSettings.reviewAlerts
-                    ? 'bg-emerald-500'
-                    : 'bg-white/20'
+                    ? 'bg-emerald-500 border-emerald-300/30'
+                    : 'bg-white/10 border-white/10'
                 }`}
               >
-                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all duration-200 ${
+                <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all duration-200 shadow-sm ${
                   notificationSettings.reviewAlerts ? 'right-1' : 'left-1'
                 }`} />
               </button>
@@ -432,13 +441,14 @@ export default function NotificationManager({ className = '' }: NotificationMana
               </div>
               <button
                 onClick={() => toggleSetting('aiUpdates')}
-                className={`w-10 h-5 rounded-full relative transition-all duration-200 ${
+                aria-pressed={notificationSettings.aiUpdates}
+                className={`w-14 h-8 rounded-full relative transition-all duration-200 border ${
                   notificationSettings.aiUpdates
-                    ? 'bg-emerald-500'
-                    : 'bg-white/20'
+                    ? 'bg-emerald-500 border-emerald-300/30'
+                    : 'bg-white/10 border-white/10'
                 }`}
               >
-                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all duration-200 ${
+                <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all duration-200 shadow-sm ${
                   notificationSettings.aiUpdates ? 'right-1' : 'left-1'
                 }`} />
               </button>
@@ -453,13 +463,14 @@ export default function NotificationManager({ className = '' }: NotificationMana
               </div>
               <button
                 onClick={() => toggleSetting('creditWarnings')}
-                className={`w-10 h-5 rounded-full relative transition-all duration-200 ${
+                aria-pressed={notificationSettings.creditWarnings}
+                className={`w-14 h-8 rounded-full relative transition-all duration-200 border ${
                   notificationSettings.creditWarnings
-                    ? 'bg-emerald-500'
-                    : 'bg-white/20'
+                    ? 'bg-emerald-500 border-emerald-300/30'
+                    : 'bg-white/10 border-white/10'
                 }`}
               >
-                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all duration-200 ${
+                <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all duration-200 shadow-sm ${
                   notificationSettings.creditWarnings ? 'right-1' : 'left-1'
                 }`} />
               </button>
@@ -474,13 +485,14 @@ export default function NotificationManager({ className = '' }: NotificationMana
               </div>
               <button
                 onClick={() => toggleSetting('weeklySummaries')}
-                className={`w-10 h-5 rounded-full relative transition-all duration-200 ${
+                aria-pressed={notificationSettings.weeklySummaries}
+                className={`w-14 h-8 rounded-full relative transition-all duration-200 border ${
                   notificationSettings.weeklySummaries
-                    ? 'bg-emerald-500'
-                    : 'bg-white/20'
+                    ? 'bg-emerald-500 border-emerald-300/30'
+                    : 'bg-white/10 border-white/10'
                 }`}
               >
-                <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all duration-200 ${
+                <div className={`absolute top-1 w-6 h-6 bg-white rounded-full transition-all duration-200 shadow-sm ${
                   notificationSettings.weeklySummaries ? 'right-1' : 'left-1'
                 }`} />
               </button>
