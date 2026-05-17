@@ -4,7 +4,7 @@ import prisma from '@/lib/db'
 import { z } from 'zod'
 
 // Input validation schemas
-const reviewIdSchema = z.string().uuid()
+const reviewIdSchema = z.string().min(1).max(500)
 const createReviewSchema = z.object({
   content: z.string().min(1).max(5000),
   rating: z.number().min(1).max(5),
@@ -14,7 +14,7 @@ const createReviewSchema = z.object({
   sentiment_label: z.enum(['positive', 'neutral', 'negative']).optional()
 })
 const updateReviewSchema = z.object({
-  reviewId: z.string().uuid(),
+  reviewId: reviewIdSchema,
   status: z.enum(['pending', 'approved', 'rejected'])
 })
 

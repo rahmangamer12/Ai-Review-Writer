@@ -65,7 +65,7 @@ export default function Dashboard() {
   const [isOffline, setIsOffline] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const { toast, success: toastSuccess, info: toastInfo } = useToast()
+  const { toast, success: toastSuccess, info: toastInfo, error: toastError } = useToast()
 
   // Prevent hydration mismatch
   useEffect(() => {
@@ -234,6 +234,73 @@ export default function Dashboard() {
     }
   }
 
+  const updateReviewStatus = async (reviewId: string, status: 'approved' | 'rejected') => {
+    try {
+      const response = await fetch('/api/reviews/analyze', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reviewId, status }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error || 'Could not update review')
+      }
+
+      toastSuccess('Review updated', `Review marked as ${status}.`)
+      await fetchAnalytics()
+    } catch (err) {
+      toastError('Update failed', err instanceof Error ? err.message : 'Please try again.')
+    }
+  }
+
+  const deleteReview = async (reviewId: string) => {
+    if (!confirm('Delete this review?')) return
+
+    try {
+      const response = await fetch(`/api/reviews/analyze?id=${encodeURIComponent(reviewId)}`, {
+        method: 'DELETE',
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error || 'Could not delete review')
+      }
+
+      toastSuccess('Review deleted', 'The review was removed from your workspace.')
+      await fetchAnalytics()
+    } catch (err) {
+      toastError('Delete failed', err instanceof Error ? err.message : 'Please try again.')
+    }
+  }
+
+  const editReviewReply = async (reviewId: string, currentReply: string) => {
+    const replyText = window.prompt('Edit saved reply:', currentReply)
+    if (replyText === null) return
+
+    try {
+      const response = await fetch('/api/reviews/generate-reply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reviewId,
+          replyText: replyText.trim(),
+          aiGenerated: false,
+        }),
+      })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error || 'Could not save reply')
+      }
+
+      toastSuccess('Reply saved', 'The review reply was updated.')
+      await fetchAnalytics()
+    } catch (err) {
+      toastError('Save failed', err instanceof Error ? err.message : 'Please try again.')
+    }
+  }
+
 
   const exportData = (format: 'csv' | 'json' | 'pdf') => {
     setShowExportModal(false)
@@ -344,6 +411,9 @@ export default function Dashboard() {
               searchQuery={searchQuery} 
               setSearchQuery={setSearchQuery} 
               router={router} 
+              onDeleteReview={deleteReview}
+              onUpdateStatus={updateReviewStatus}
+              onEditReply={editReviewReply}
                
             />
           )}

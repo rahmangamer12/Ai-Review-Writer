@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import prisma from '@/lib/db'
-import { supabase } from '@/lib/supabase'
 import { longcatAI } from '@/lib/longcatAI'
 
 export const dynamic = 'force-dynamic'
@@ -43,38 +42,37 @@ export async function GET(req: NextRequest) {
       return NextResponse.json(buildEmptyResponse(), { status: 200 })
     }
 
-    // 3. Fetch reviews from Supabase (with pagination limit)
+    // 3. Fetch reviews from Prisma, the app's canonical review store.
     let allReviews: any[] = []
     try {
-      const { data, error } = await supabase
-        .from('reviews')
-        .select('*')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(5000) // Safety limit to prevent memory issues
+      const reviews = await prisma.review.findMany({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+        take: 5000,
+        include: { platform: { select: { platformType: true } } },
+      })
 
-      if (error) {
-        console.error('[Analytics API] Supabase error fetching reviews:', error)
-        return NextResponse.json(buildEmptyResponse(), { status: 200 })
-      }
-
-      allReviews = data || []
+      allReviews = reviews.map((review) => ({
+        id: review.id,
+        user_id: review.userId,
+        platform_id: review.platformId,
+        platform: review.platform?.platformType || 'manual',
+        reviewer_name: review.authorName,
+        author_name: review.authorName,
+        review_text: review.content,
+        content: review.content,
+        rating: review.rating,
+        sentiment_label: review.sentimentLabel,
+        status: review.status,
+        ai_reply_text: review.aiReplyText,
+        created_at: review.createdAt.toISOString(),
+        updated_at: review.updatedAt.toISOString(),
+        source_date: review.sourceDate.toISOString(),
+      }))
       console.log(`[Analytics API] Found ${allReviews.length} reviews for user ${userId}`)
     } catch (e) {
       console.error('[Analytics API] Error fetching reviews:', e)
       return NextResponse.json(buildEmptyResponse(), { status: 200 })
-    }
-
-    // 4. Fetch replies from Supabase
-    let allReplies: any[] = []
-    try {
-      const { data: repliesData } = await supabase
-        .from('replies')
-        .select('*')
-        .limit(5000)
-      allReplies = repliesData || []
-    } catch (e) {
-      console.warn('[Analytics API] Could not fetch replies:', e)
     }
 
     // 5. Filter reviews within time range
@@ -86,7 +84,7 @@ export async function GET(req: NextRequest) {
     // ── Core Stats ──────────────────────────────────────────────────────────
     const totalReviews = allReviews.length
     const pendingReviews = allReviews.filter(r => r.status === 'pending').length
-    const repliedReviews = allReviews.filter(r => r.status === 'approved' || r.status === 'AI_replied').length
+    const repliedReviews = allReviews.filter(r => r.status === 'approved' || r.status === 'AI_replied' || Boolean(r.ai_reply_text)).length
     const rejectedReviews = allReviews.filter(r => r.status === 'rejected').length
     const avgRating = totalReviews > 0
       ? allReviews.reduce((acc, r) => acc + (r.rating || 0), 0) / totalReviews
@@ -94,8 +92,8 @@ export async function GET(req: NextRequest) {
     const responseRate = totalReviews > 0 ? (repliedReviews / totalReviews) * 100 : 0
 
     // Count AI-generated replies
-    const aiGeneratedReplies = allReplies.filter(r => r.ai_generated === true).length
-    const editedReplies = allReplies.filter(r => r.is_edited_by_human === true).length
+    const aiGeneratedReplies = allReviews.filter(r => Boolean(r.ai_reply_text)).length
+    const editedReplies = allReviews.filter(r => r.status === 'approved' && Boolean(r.ai_reply_text)).length
 
     // ── Sentiment Distribution ───────────────────────────────────────────────
     const sentimentDistribution = {
@@ -179,10 +177,22 @@ export async function GET(req: NextRequest) {
       content: r.review_text || r.content || '',
       rating: r.rating,
       authorName: r.reviewer_name || r.author_name || 'Anonymous',
+      reviewer_name: r.reviewer_name || r.author_name || 'Anonymous',
+      author_name: r.reviewer_name || r.author_name || 'Anonymous',
+      review_text: r.review_text || r.content || '',
       status: r.status,
       sentimentLabel: r.sentiment_label,
+      sentiment_label: r.sentiment_label,
       createdAt: r.created_at,
+      created_at: r.created_at,
       platform: r.platform,
+      reply: r.ai_reply_text
+        ? {
+            id: r.id,
+            reply_text: r.ai_reply_text,
+            ai_generated: true,
+          }
+        : null,
     }))
 
     // ── Generate AI Insights ────────────────────────────────────────────────

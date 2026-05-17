@@ -119,7 +119,15 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
             </div>
 
             <p className="text-xs text-gray-500 mt-4">
-              If this problem persists, please contact support.
+              If this problem persists, please contact{' '}
+              <a href="mailto:rahman.mac.apple@gamil.com?cc=abdulmoto656@gmail.com" className="text-purple-300 hover:text-purple-200 underline">
+                rahman.mac.apple@gamil.com
+              </a>
+              {' '}or{' '}
+              <a href="mailto:abdulmoto656@gmail.com" className="text-purple-300 hover:text-purple-200 underline">
+                abdulmoto656@gmail.com
+              </a>
+              .
             </p>
           </div>
         </div>

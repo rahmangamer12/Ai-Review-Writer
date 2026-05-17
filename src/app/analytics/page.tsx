@@ -110,7 +110,7 @@ function AnalyticsPage() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
-      const res = await fetch(`/api/stats-overview?days=${timeRange}`).catch(() => null)
+      const res = await fetch(`/api/data-hub?days=${timeRange}`, { cache: 'no-store' }).catch(() => null)
       
       if (!res || !res.ok) {
         const emptyData: AnalyticsData = {

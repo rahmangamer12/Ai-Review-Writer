@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Plus, Bot, Search, X, Star, MessageSquare } from 'lucide-react'
+import { Plus, Bot, Search, X, Star, MessageSquare, CheckCircle, Trash2, Edit3, XCircle } from 'lucide-react'
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import { AnalyticsData } from './types'
 import { PlatformIcon } from './DashboardCharts'
@@ -12,6 +12,9 @@ interface ReviewsTabProps {
   searchQuery: string
   setSearchQuery: (query: string) => void
   router: AppRouterInstance
+  onDeleteReview?: (id: string) => Promise<void>
+  onUpdateStatus?: (id: string, status: 'approved' | 'rejected') => Promise<void>
+  onEditReply?: (id: string, currentReply: string) => Promise<void>
 }
 
 export default function ReviewsTab({
@@ -19,7 +22,10 @@ export default function ReviewsTab({
   loading,
   searchQuery,
   setSearchQuery,
-  router
+  router,
+  onDeleteReview,
+  onUpdateStatus,
+  onEditReply
 }: ReviewsTabProps) {
   // Ultra-fast Local Search Filter
   const filteredReviews = data?.recentReviews?.filter(r => {
@@ -119,6 +125,42 @@ export default function ReviewsTab({
               </div>
               <div className="mt-4 sm:mt-5 p-3 sm:p-4 bg-white/[0.02] rounded-xl border border-white/5">
                 <p className="text-sm sm:text-[15px] text-gray-300 leading-relaxed whitespace-pre-wrap">{review.review_text || review.content}</p>
+              </div>
+              {review.reply?.reply_text && (
+                <div className="mt-3 rounded-xl border border-violet-500/20 bg-violet-500/10 p-3 sm:p-4">
+                  <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-violet-300">Saved AI Reply</p>
+                  <p className="text-sm text-violet-100/80 leading-relaxed whitespace-pre-wrap">{review.reply.reply_text}</p>
+                </div>
+              )}
+              <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-white/5 pt-4">
+                <button
+                  onClick={() => onUpdateStatus?.(review.id, 'approved')}
+                  className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300 transition-all hover:bg-emerald-500/20 active:scale-[0.98]"
+                >
+                  <CheckCircle className="h-4 w-4" />
+                  Approve
+                </button>
+                <button
+                  onClick={() => onUpdateStatus?.(review.id, 'rejected')}
+                  className="inline-flex items-center gap-2 rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-300 transition-all hover:bg-rose-500/20 active:scale-[0.98]"
+                >
+                  <XCircle className="h-4 w-4" />
+                  Reject
+                </button>
+                <button
+                  onClick={() => onEditReply?.(review.id, review.reply?.reply_text || '')}
+                  className="inline-flex items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-300 transition-all hover:bg-blue-500/20 active:scale-[0.98]"
+                >
+                  <Edit3 className="h-4 w-4" />
+                  Edit Reply
+                </button>
+                <button
+                  onClick={() => onDeleteReview?.(review.id)}
+                  className="ml-auto inline-flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-300 transition-all hover:bg-red-500/20 active:scale-[0.98]"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete
+                </button>
               </div>
             </motion.div>
           ))}
