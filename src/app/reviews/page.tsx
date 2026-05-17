@@ -346,27 +346,20 @@ function ReviewsContent() {
     }
   }
 
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
-
   const deleteReview = async (reviewId: string) => {
-    // Replace confirm() with state-based flow
-    setPendingDeleteId(reviewId)
-  }
+    const confirmed = window.confirm('Delete this review? This action cannot be undone.')
+    if (!confirmed) return
 
-  const confirmDelete = async () => {
-    if (!pendingDeleteId) return
     try {
-      const response = await fetch(`/api/reviews/analyze?id=${encodeURIComponent(pendingDeleteId)}`, { method: 'DELETE' })
+      const response = await fetch(`/api/reviews/analyze?id=${encodeURIComponent(reviewId)}`, { method: 'DELETE' })
       if (!response.ok) {
         const data = await response.json().catch(() => null)
         throw new Error(data?.error || 'Could not delete review')
       }
       toastSuccess('Review deleted', 'The review has been removed.')
       fetchReviews()
-    } catch (err) {
-      toastError('Delete failed', 'Could not delete the review. Please try again.')
-    } finally {
-      setPendingDeleteId(null)
+    } catch (err: unknown) {
+      toastError('Delete failed', err instanceof Error ? err.message : 'Could not delete the review. Please try again.')
     }
   }
 
