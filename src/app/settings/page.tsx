@@ -3,7 +3,7 @@
 import { useState, useEffect, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageSquare, LayoutDashboard, Database, Shield, Zap, Globe, Link as LinkIcon, Bell, Bot, Settings as SettingsIcon, AlertCircle, CheckCircle2, RefreshCcw, ExternalLink, Save } from 'lucide-react'
+import { MessageSquare, LayoutDashboard, Database, Shield, Zap, Globe, Link as LinkIcon, Bell, Bot, Settings as SettingsIcon, AlertCircle, CheckCircle2, RefreshCcw, ExternalLink, Save, FileText, ScrollText } from 'lucide-react'
 import { PlatformIntegrationManager } from '@/lib/platformIntegrations'
 import CreditManager from '@/components/CreditManager'
 import PageTransition from '@/components/transitions/PageTransition'
@@ -567,6 +567,30 @@ export default function SettingsPage() {
                         <p className="text-[11px] text-emerald-100/60 leading-relaxed font-medium">
                           Data is encrypted at rest using AES-256-GCM. AutoReview AI maintains strict GDPR and CCPA compliance. We never monetize your customer data.
                         </p>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <Link
+                          href="/privacy"
+                          className="group rounded-2xl border border-emerald-500/20 bg-emerald-500/10 p-4 transition-all hover:border-emerald-400/50 hover:bg-emerald-500/15"
+                        >
+                          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-400/10 text-emerald-300 transition-transform group-hover:scale-105">
+                            <FileText className="h-5 w-5" />
+                          </div>
+                          <p className="text-sm font-black text-white">Privacy Policy</p>
+                          <p className="mt-1 text-[11px] font-medium leading-relaxed text-emerald-100/55">OAuth, AI processing, data deletion, and security details.</p>
+                        </Link>
+
+                        <Link
+                          href="/terms"
+                          className="group rounded-2xl border border-blue-500/20 bg-blue-500/10 p-4 transition-all hover:border-blue-400/50 hover:bg-blue-500/15"
+                        >
+                          <div className="mb-3 flex h-10 w-10 items-center justify-center rounded-xl border border-blue-400/20 bg-blue-400/10 text-blue-300 transition-transform group-hover:scale-105">
+                            <ScrollText className="h-5 w-5" />
+                          </div>
+                          <p className="text-sm font-black text-white">Terms of Service</p>
+                          <p className="mt-1 text-[11px] font-medium leading-relaxed text-blue-100/55">Usage rules, AI responsibility, billing, and platform limits.</p>
+                        </Link>
                       </div>
                     </div>
                   </div>
