@@ -22,6 +22,31 @@ function normalizePlatforms(platforms: string[] | string | undefined) {
   return platforms?.trim() || 'Not specified'
 }
 
+async function ensureUser(userId: string, email: string, name: string) {
+  const existing = await prisma.user.findUnique({ where: { id: userId } })
+  if (existing) return existing
+
+  try {
+    return await prisma.user.create({
+      data: {
+        id: userId,
+        email,
+        name,
+      },
+    })
+  } catch (error: any) {
+    if (error?.code !== 'P2002') throw error
+
+    return prisma.user.create({
+      data: {
+        id: userId,
+        email: `${userId}@setup.local`,
+        name,
+      },
+    })
+  }
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { userId } = await auth()
@@ -52,18 +77,7 @@ export async function POST(req: NextRequest) {
     const requestLabel = data.requestType === 'managed' ? 'Managed Setup' : 'Video Call Support'
     const platforms = normalizePlatforms(data.platforms)
 
-    await prisma.user.upsert({
-      where: { id: userId },
-      update: {
-        email: userEmail,
-        name: userName,
-      },
-      create: {
-        id: userId,
-        email: userEmail,
-        name: userName,
-      },
-    })
+    await ensureUser(userId, userEmail, userName)
 
     await prisma.notification.create({
       data: {
@@ -95,7 +109,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error: 'Server error',
-        message: 'Request submit nahi ho saki. Please thori der baad try karein.',
+        message: 'The request could not be submitted. Please try again later.',
       },
       { status: 500 }
     )

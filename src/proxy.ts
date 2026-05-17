@@ -48,6 +48,7 @@ const isProtectedRoute = createRouteMatcher([
   '/api/checkout(.*)',
   '/api/scheduler(.*)',
   '/api/agentic(.*)',
+  '/api/setup-request(.*)',
   '/chrome-extension(.*)',
   '/extension(.*)',
   '/chat(.*)',

@@ -405,7 +405,7 @@ export default function ConnectPlatformsPage() {
       const result = await response.json().catch(() => ({}))
 
       if (!response.ok) {
-        throw new Error(result.message || result.error || 'Request submit nahi ho saki. Please try again.')
+        throw new Error(result.message || result.error || 'The request could not be submitted. Please try again.')
       }
 
       form.reset()
@@ -415,7 +415,7 @@ export default function ConnectPlatformsPage() {
       setState({
         submitting: false,
         succeeded: false,
-        error: error instanceof Error ? error.message : 'Request submit nahi ho saki. Please try again.',
+        error: error instanceof Error ? error.message : 'The request could not be submitted. Please try again.',
       })
     }
   }
