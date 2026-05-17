@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { supabase } from '@/lib/supabase'
+import prisma from '@/lib/db'
 import { longcatAI } from '@/lib/longcatAI'
 
 // POST - Run agentic review processing with REAL AI
@@ -14,20 +14,18 @@ export async function POST(req: NextRequest) {
 
     console.log('[Agentic] Starting REAL AI agentic review processing for user:', userId)
 
-    // Build and execute the query in one statement to avoid TypeScript issues
-    const pendingReviewsResponse = await supabase
-      .from('reviews')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('status', 'pending')
-      .limit(10)
-
-    const { data: pendingReviews, error: fetchError } = pendingReviewsResponse
-
-    if (fetchError) {
-      console.error('[Agentic] Fetch error:', fetchError)
-      return NextResponse.json({ error: fetchError.message }, { status: 500 })
+    if (!longcatAI.hasApiKey()) {
+      return NextResponse.json({
+        error: 'LONGCAT_AI_API_KEY is not configured. Agentic mode needs a real AI key to process reviews.',
+      }, { status: 400 })
     }
+
+    const pendingReviews = await prisma.review.findMany({
+      where: { userId, status: 'pending' },
+      orderBy: { createdAt: 'desc' },
+      take: 10,
+      include: { platform: { select: { platformType: true } } },
+    })
 
     console.log('[Agentic] Found pending reviews:', pendingReviews?.length || 0)
 
@@ -48,8 +46,8 @@ export async function POST(req: NextRequest) {
       try {
         console.log('[Agentic] Processing review:', review.id)
         
-        const reviewText = review.review_text || review.content || ''
-        const authorName = review.reviewer_name || review.author_name || 'there'
+        const reviewText = review.content || ''
+        const authorName = review.authorName || 'there'
         
         // Step 1: Analyze sentiment with REAL AI
         let sentiment = 'neutral'
@@ -79,39 +77,19 @@ export async function POST(req: NextRequest) {
         console.log('[Agentic] AI Reply generated:', aiReply.substring(0, 80) + '...')
 
 
-        // Step 3: Save reply to database
-        console.log('[Agentic] Saving reply to database...')
-        const { error: replyError } = await supabase.from('replies').insert({
-          review_id: review.id,
-          reply_text: aiReply,
-          ai_generated: true,
-          status: 'draft',
-          created_at: new Date().toISOString(),
+        await prisma.review.update({
+          where: { id: review.id },
+          data: {
+            sentimentLabel: sentiment,
+            aiReplyText: aiReply,
+            status: 'AI_replied',
+          },
         })
-
-        if (replyError) {
-          console.error('[Agentic] Reply save error:', replyError)
-        }
-
-        // Step 4: Update review with sentiment and status
-        console.log('[Agentic] Updating review status...')
-        const { error: updateError } = await supabase
-          .from('reviews')
-          .update({
-            sentiment_label: sentiment,
-            status: 'approved', // Auto-approve after generating reply
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', review.id)
-
-        if (updateError) {
-          console.error('[Agentic] Review update error:', updateError)
-        }
 
         processedReviews.push({
           id: review.id,
           author_name: authorName,
-          platform: review.platform,
+          platform: review.platform?.platformType || 'manual',
           rating: review.rating,
           content: reviewText,
           sentiment_label: sentiment,
@@ -152,26 +130,21 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const pendingCountResponse = await supabase
-      .from('reviews')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('status', 'pending')
-
-    const { count: pendingCount, error: pendingError } = pendingCountResponse
-
-    const processedTodayResponse = await supabase
-      .from('reviews')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId)
-      .eq('status', 'approved')
-      .gte('updated_at', new Date(Date.now() - 86400000).toISOString())
-
-    const { count: processedToday, error: processedError } = processedTodayResponse
+    const since = new Date(Date.now() - 86400000)
+    const [pendingCount, processedToday] = await Promise.all([
+      prisma.review.count({ where: { userId, status: 'pending' } }),
+      prisma.review.count({
+        where: {
+          userId,
+          status: 'AI_replied',
+          updatedAt: { gte: since },
+        },
+      }),
+    ])
 
     return NextResponse.json({
-      pending: pendingCount || 0,
-      processedToday: processedToday || 0,
+      pending: pendingCount,
+      processedToday,
       ai_provider: 'LongCat AI'
     })
   } catch (error: unknown) {

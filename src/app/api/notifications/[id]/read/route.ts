@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { supabase } from '@/lib/supabase'
+import prisma from '@/lib/db'
 
 // POST - Mark notification as read
 export async function POST(
@@ -16,15 +16,19 @@ export async function POST(
 
     const { id } = await params
 
-    const { error } = await (supabase
-      .from('notifications')
-      .update({ read: true, updated_at: new Date().toISOString() }) )
-      .eq('id', id)
-      .eq('user_id', userId)
+    const existing = await prisma.notification.findFirst({
+      where: { id, userId },
+      select: { id: true },
+    })
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (!existing) {
+      return NextResponse.json({ error: 'Notification not found' }, { status: 404 })
     }
+
+    await prisma.notification.update({
+      where: { id },
+      data: { read: true },
+    })
 
     return NextResponse.json({ success: true })
   } catch (error: unknown) {

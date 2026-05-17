@@ -1,6 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { supabase } from '@/lib/supabase'
+import prisma from '@/lib/db'
+
+function normalizeNotification(notification: any) {
+  return {
+    id: notification.id,
+    user_id: notification.userId,
+    title: notification.title,
+    message: notification.message,
+    type: notification.type,
+    read: notification.read,
+    created_at: notification.createdAt?.toISOString?.() || notification.createdAt,
+    updated_at: notification.updatedAt?.toISOString?.() || notification.updatedAt,
+  }
+}
 
 // GET - Fetch user notifications
 export async function GET(req: NextRequest) {
@@ -11,19 +24,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { data: notifications, error } = await (supabase
-      .from('notifications')
-      .select('*') )
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(50)
+    const notifications = await prisma.notification.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    })
 
-    if (error) {
-      console.error('Notifications error:', error)
-      return NextResponse.json({ error: 'Failed to fetch notifications', details: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json(notifications || [])
+    return NextResponse.json(notifications.map(normalizeNotification))
   } catch (error: unknown) {
     console.error('Notifications API error:', error)
     return NextResponse.json({ error: 'Server error fetching notifications' }, { status: 500 })
@@ -42,23 +49,17 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const { title, message, type = 'info' } = body
 
-    const { data, error } = await (supabase
-      .from('notifications')
-      .insert({
-        user_id: userId,
+    const data = await prisma.notification.create({
+      data: {
+        userId,
         title,
         message,
         type,
         read: false,
-      }) )
-      .select()
-      .single()
+      },
+    })
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json(data)
+    return NextResponse.json(normalizeNotification(data))
   } catch (error: unknown) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }

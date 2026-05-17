@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { supabase } from '@/lib/supabase'
+import prisma from '@/lib/db'
 import { decryptSensitiveData, encryptSensitiveData } from '@/lib/encryption'
 
 const MAX_REFRESH_ATTEMPTS = 3
@@ -22,25 +22,23 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Platform required' }, { status: 400 })
     }
 
-    // Get current credentials
-    const { data: credentials, error: dbError } = await supabase
-      .from('platform_credentials')
-      .select('*')
-      .eq('user_id', userId)
-      .eq('platform', platform)
-      .single()
+    const connectedPlatform = await prisma.connectedPlatform.findFirst({
+      where: { userId, platformType: platform },
+    })
 
-    if (dbError || !credentials) {
+    if (!connectedPlatform) {
       return NextResponse.json({ error: 'No credentials found for this platform' }, { status: 404 })
     }
 
+    const credentials = (connectedPlatform.credentials || {}) as Record<string, any>
+
     // Check if refresh is needed
-    if (credentials.expires_at && Date.now() < credentials.expires_at - 60000) {
+    if (credentials.expiresAt && Date.now() < credentials.expiresAt - 60000) {
       return NextResponse.json({ message: 'Token still valid' })
     }
 
     // Check cooldown to prevent infinite loops
-    const lastRefreshAttempt = credentials.last_refresh_attempt || 0
+    const lastRefreshAttempt = credentials.lastRefreshAttempt || 0
     if (Date.now() - lastRefreshAttempt < REFRESH_COOLDOWN_MS) {
       return NextResponse.json({ 
         error: 'Rate limited. Please wait before retrying.' 
@@ -48,7 +46,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Decrypt the refresh token before using it
-    const encryptedRefreshToken = credentials.refresh_token_encrypted || credentials.refresh_token;
+    const encryptedRefreshToken = credentials.refreshTokenEncrypted;
     if (!encryptedRefreshToken) {
       return NextResponse.json({ error: 'No refresh token available', requiresReauth: true }, { status: 401 });
     }
@@ -90,15 +88,17 @@ export async function POST(request: NextRequest) {
     }
 
     if (refreshError) {
-      // Update refresh attempt timestamp
-      await supabase
-        .from('platform_credentials')
-        .update({
-          last_refresh_attempt: Date.now(),
-          last_error: refreshError
-        })
-        .eq('user_id', userId)
-        .eq('platform', platform)
+      await prisma.connectedPlatform.update({
+        where: { id: connectedPlatform.id },
+        data: {
+          status: 'error',
+          credentials: {
+            ...credentials,
+            lastRefreshAttempt: Date.now(),
+            lastError: refreshError,
+          },
+        },
+      })
 
       return NextResponse.json({
         error: refreshError,
@@ -110,19 +110,20 @@ export async function POST(request: NextRequest) {
       // Encrypt new tokens before storing
       const newEncryptedAccessToken = encryptSensitiveData(newTokens.access_token);
 
-      // Update credentials with new ENCRYPTED tokens
-      await supabase
-        .from('platform_credentials')
-        .update({
-          access_token_encrypted: newEncryptedAccessToken,
-          access_token: null, // Clear legacy plaintext field
-          expires_at: Date.now() + (newTokens.expires_in * 1000),
-          last_refresh_attempt: null,
-          last_error: null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('user_id', userId)
-        .eq('platform', platform)
+      await prisma.connectedPlatform.update({
+        where: { id: connectedPlatform.id },
+        data: {
+          status: 'connected',
+          credentials: {
+            ...credentials,
+            accessTokenEncrypted: newEncryptedAccessToken,
+            expiresAt: Date.now() + (newTokens.expires_in * 1000),
+            lastRefreshAttempt: null,
+            lastError: null,
+          },
+          lastSyncedAt: new Date(),
+        },
+      })
 
       return NextResponse.json({ 
         success: true, 

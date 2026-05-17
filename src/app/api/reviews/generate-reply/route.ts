@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
 import { longcatAI } from '@/lib/longcatAI'
 import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit'
 import { auth } from '@clerk/nextjs/server'
@@ -177,79 +176,30 @@ async function handler(request: NextRequest) {
       const prismaReview = await prisma.review.findFirst({
         where: { id: reviewId, userId },
         select: { id: true, status: true },
-      }).catch(() => null)
+      })
 
-      if (prismaReview) {
-        const updated = await prisma.review.update({
-          where: { id: reviewId },
-          data: {
-            aiReplyText: replyText,
-            status: aiGenerated ? 'AI_replied' : prismaReview.status,
-          },
-        })
-
-        return NextResponse.json({
-          success: true,
-          reply: {
-            review_id: updated.id,
-            reply_text: updated.aiReplyText,
-            ai_generated: aiGenerated,
-            is_edited_by_human: !aiGenerated,
-            updated_at: updated.updatedAt.toISOString(),
-          },
-        })
-      }
-
-      // Verify review belongs to user
-      const { data: existing } = await (supabase
-        .from('reviews')
-        .select('id') )
-        .eq('id', reviewId)
-        .eq('user_id', userId)
-        .single()
-
-      if (!existing) {
+      if (!prismaReview) {
         return NextResponse.json({ error: 'Review not found' }, { status: 404 })
       }
 
-      // Check if reply exists
-      const { data: existingReply } = await (supabase
-        .from('replies')
-        .select('id') )
-        .eq('review_id', reviewId)
-        .single()
+      const updated = await prisma.review.update({
+        where: { id: reviewId },
+        data: {
+          aiReplyText: replyText,
+          status: aiGenerated ? 'AI_replied' : prismaReview.status,
+        },
+      })
 
-      let result
-      if (existingReply) {
-        result = await (supabase
-          .from('replies')
-          .update({
-            reply_text: replyText,
-            ai_generated: aiGenerated,
-            is_edited_by_human: !aiGenerated,
-            updated_at: new Date().toISOString(),
-          }) )
-          .eq('id', existingReply.id)
-          .select()
-          .single()
-      } else {
-        result = await (supabase
-          .from('replies')
-          .insert({
-            review_id: reviewId,
-            reply_text: replyText,
-            ai_generated: aiGenerated,
-            is_edited_by_human: !aiGenerated,
-          }) )
-          .select()
-          .single()
-      }
-
-      if (result.error) {
-        return NextResponse.json({ error: result.error.message }, { status: 500 })
-      }
-
-      return NextResponse.json({ success: true, reply: result.data })
+      return NextResponse.json({
+        success: true,
+        reply: {
+          review_id: updated.id,
+          reply_text: updated.aiReplyText,
+          ai_generated: aiGenerated,
+          is_edited_by_human: !aiGenerated,
+          updated_at: updated.updatedAt.toISOString(),
+        },
+      })
     }
 
     // Otherwise, generate a new AI reply
