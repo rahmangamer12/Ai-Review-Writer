@@ -93,36 +93,7 @@ export const MODELS: AIModel[] = [
   //   supportsVision: true,
   //   supportsThinking: false
   // }, // Disabled - LongCat API returns "json format error"
-  {
-    id: 'gemini-2.0-flash',
-    name: 'Gemini 2.0 Flash',
-    shortName: 'Flash 2.0',
-    iconName: 'Globe',
-    description: 'Advanced Google multimodal AI. Faster and more reliable than 1.5. Analyzes text, PDFs, and files perfectly. Supports live web search!',
-    badge: 'VISION (FREE)',
-    badgeColor: 'blue',
-    quality: 95,
-    speed: 'Ultra Fast',
-    context: '1M',
-    contextTokens: 1048576,
-    supportsVision: true,
-    supportsThinking: false
-  },
-  {
-    id: 'gemini-2.5-pro',
-    name: 'Gemini 2.5 Pro',
-    shortName: 'Pro 2.5',
-    iconName: 'Brain',
-    description: 'Elite Google AI with complex reasoning and high-fidelity multimodal understanding. Best for deep analysis.',
-    badge: 'ELITE (PRO)',
-    badgeColor: 'purple',
-    quality: 98,
-    speed: 'High Quality',
-    context: '2M',
-    contextTokens: 2097152,
-    supportsVision: true,
-    supportsThinking: true
-  }
+  // Gemini models are hidden until quota/API access is stable in production.
 ]
 
 export const MODEL_GROUPS = {
@@ -136,10 +107,7 @@ export const MODEL_GROUPS = {
     'LongCat-Flash-Thinking',
     'LongCat-Flash-Thinking-2601'
   ] as const,
-  vision: [
-    'gemini-2.0-flash',
-    'gemini-2.5-pro'
-  ] as const
+  vision: [] as const
 }
 
 export const getModelById = (id: string): AIModel | undefined => {

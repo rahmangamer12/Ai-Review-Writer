@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth, currentUser } from '@clerk/nextjs/server';
+import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/db';
 import { createOpenAI } from '@ai-sdk/openai';
-import { createGoogleGenerativeAI } from '@ai-sdk/google';
 import { streamText, tool } from 'ai';
 import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit';
 import { z } from 'zod';
@@ -16,19 +15,12 @@ const longcat = createOpenAI({
   baseURL: 'https://api.longcat.chat/openai/v1',
 });
 
-// Configure Google Generative AI (Free Tier Multimodal Model)
-const google = createGoogleGenerativeAI({
-  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
-});
-
 // Allowed models for security
 const ALLOWED_MODELS = [
   'LongCat-Flash-Chat',
   'LongCat-Flash-Thinking',
   'LongCat-Flash-Thinking-2601',
-  'LongCat-Flash-Lite',
-  'gemini-2.0-flash',
-  'gemini-2.5-pro'
+  'LongCat-Flash-Lite'
 ];
 
 // Input validation schema with proper types
@@ -91,14 +83,7 @@ async function handler(request: NextRequest) {
 
     const { messages, model: selectedModel, temperature } = validated;
 
-    // Check if LongCat or Google is available depending on model
-    if (selectedModel.startsWith('gemini') && !process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-      return NextResponse.json(
-        { error: 'Google Gemini models are currently unavailable. Please check your API key.' },
-        { status: 503 }
-      );
-    }
-    if (!selectedModel.startsWith('gemini') && !process.env.LONGCAT_AI_API_KEY) {
+    if (!process.env.LONGCAT_AI_API_KEY) {
       return NextResponse.json(
         { error: 'AI models are currently unavailable. Please check your API key.' },
         { status: 503 }
@@ -116,9 +101,7 @@ async function handler(request: NextRequest) {
       );
     }
 
-    const provider = selectedModel.startsWith('gemini') 
-      ? google(selectedModel) 
-      : longcat.chat(selectedModel);
+    const provider = longcat.chat(selectedModel);
 
     const currentPromptCount = (userDb as any).promptCount ?? 0;
     const currentCredits = (userDb as any).aiCredits ?? 0;

@@ -186,9 +186,11 @@ export default function ChatInput({
           <div className="flex items-end gap-1 sm:gap-1.5 lg:gap-2 p-1.5 sm:p-2">
             {/* File Upload Button */}
             <button
+              type="button"
               onClick={() => fileInputRef.current?.click()}
+              disabled={disabled || isLoading || !activeModel?.supportsVision}
               className="p-2 sm:p-2.5 lg:p-3 bg-white/[0.03] hover:bg-white/[0.08] rounded-lg sm:rounded-xl text-white/50 hover:text-white transition-colors shrink-0"
-              title="Attach files"
+              title={activeModel?.supportsVision ? 'Attach files' : 'File analysis is temporarily unavailable'}
             >
               <Paperclip className="w-4 h-4 sm:w-4.5 sm:h-4.5 lg:w-5 lg:h-5" />
             </button>
@@ -217,6 +219,7 @@ export default function ChatInput({
 
             {/* Voice Button */}
             <button
+              type="button"
               onClick={onVoice}
               className={`p-2 sm:p-2.5 lg:p-3 rounded-lg sm:rounded-xl transition-all shrink-0 ${
                 isVoiceActive
@@ -230,6 +233,7 @@ export default function ChatInput({
 
             {/* Send Button */}
             <button
+              type="button"
               onClick={() => onSend()}
               disabled={!canSend}
               className={`p-2 sm:p-2.5 lg:p-3 rounded-lg sm:rounded-xl transition-all shrink-0 ${

@@ -61,6 +61,12 @@ export default function ChatPage() {
   const messages = useMemo(() => currentSession?.messages || [], [currentSession])
   const activeModel = useMemo(() => getModelById(selectedModel), [selectedModel])
 
+  const shouldGenerateTitle = useCallback((session?: ChatSession) => {
+    if (!session) return true
+    const normalizedTitle = session.title.trim().toLowerCase()
+    return session.messages.length === 0 || normalizedTitle === 'new chat' || normalizedTitle === 'new conversation'
+  }, [])
+
   // --- 4. CALLBACKS ---
   const addNotification = useCallback((text: string, type: Notification['type'] = 'success') => {
     const id = uuidv4()
@@ -130,22 +136,43 @@ export default function ChatPage() {
     } catch (err) {}
   }, [currentSessionId])
 
+  const generateAndSaveTitle = useCallback(async (sessionId: string, firstMessage: string) => {
+    try {
+      const response = await fetch('/api/chat/title', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: firstMessage }),
+      })
+      const data = await response.json().catch(() => ({}))
+      const title = typeof data.title === 'string' && data.title.trim()
+        ? data.title.trim()
+        : firstMessage.slice(0, 42).trim() || 'New Chat'
+
+      setSessions(prev => prev.map(s => s.id === sessionId ? { ...s, title } : s))
+      await fetch('/api/chat/sessions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sessionId, title })
+      })
+    } catch (err) {
+      console.warn('Failed to generate chat title:', err)
+    }
+  }, [])
+
   const handleSend = useCallback(async (overrideText?: string) => {
     const text = (overrideText || input).trim()
     if ((!text && uploadedFiles.length === 0) || isLoading) return
 
-    // Auto-switch to Vision model if files are uploaded
-    if (uploadedFiles.length > 0 && selectedModel !== 'gemini-2.0-flash') {
-      setSelectedModel('gemini-2.0-flash')
-      addNotification('Switched to Gemini 2.0 Flash for file analysis', 'success')
+    if (uploadedFiles.length > 0 && !activeModel?.supportsVision) {
+      addNotification('File analysis is temporarily unavailable while vision models are under maintenance.', 'warning')
+      return
     }
 
     let sId = currentSessionId || uuidv4()
-    let isNewSession = false
+    const titleNeedsAi = !currentSessionId || shouldGenerateTitle(currentSession)
 
     if (!currentSessionId) {
-      isNewSession = true
-      const chatTitle = text?.slice(0, 50) || 'New Conversation'
+      const chatTitle = 'New Chat'
       const newSession: ChatSession = { id: sId, title: chatTitle, date: new Date().toISOString(), messages: [], isPinned: false }
 
       // Save new session to backend first
@@ -183,6 +210,9 @@ export default function ChatPage() {
     const aiMsg: Message = { id: aiId, role: 'assistant', content: '', timestamp: new Date(), model: activeModel?.name, isTyping: true }
 
     setSessions(prev => prev.map(s => s.id === sId ? { ...s, messages: [...s.messages, userMsg, aiMsg] } : s))
+    if (text && titleNeedsAi) {
+      generateAndSaveTitle(sId, text)
+    }
     setInput('')
     setUploadedFiles([]) // Clear uploaded files
     setIsLoading(true)
@@ -250,7 +280,7 @@ export default function ChatPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [input, uploadedFiles, isLoading, currentSessionId, messages, selectedModel, activeModel, addNotification])
+  }, [input, uploadedFiles, isLoading, currentSessionId, currentSession, messages, selectedModel, activeModel, shouldGenerateTitle, generateAndSaveTitle, addNotification])
 
   const handleVoice = useCallback(async () => {
     if (isVoiceActive) {
@@ -263,33 +293,73 @@ export default function ChatPage() {
       addNotification('Voice input not supported in this browser. Try Chrome.', 'error')
       return
     }
-    // Request mic permission explicitly
-    try {
-      await navigator.mediaDevices.getUserMedia({ audio: true })
-    } catch (err) {
-      addNotification('Microphone access denied. Please enable it in browser settings.', 'error')
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      addNotification('Microphone access is unavailable on this browser or connection.', 'error')
       return
     }
+
+    let stream: MediaStream | null = null
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    } catch (err: any) {
+      const message = err?.name === 'NotAllowedError'
+        ? 'Microphone permission is blocked. Enable microphone access in browser settings.'
+        : err?.name === 'NotFoundError'
+          ? 'No microphone was found on this device.'
+          : 'Microphone access failed. Please check browser permissions.'
+      addNotification(message, 'error')
+      return
+    } finally {
+      stream?.getTracks().forEach(track => track.stop())
+    }
+
     const rec = new SpeechRecognition()
-    rec.lang = 'en-US'
-    rec.interimResults = false
+    rec.lang = navigator.language || 'en-US'
+    rec.interimResults = true
+    rec.continuous = false
     rec.maxAlternatives = 1
-    rec.onstart = () => setIsVoiceActive(true)
+    let finalTranscript = ''
+    rec.onstart = () => {
+      setIsVoiceActive(true)
+      addNotification('Listening...', 'info')
+    }
     rec.onresult = (e: any) => {
-      const transcript = e.results[0][0].transcript
-      setInput(prev => prev ? prev + ' ' + transcript : transcript)
+      let interimTranscript = ''
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const transcript = e.results[i][0].transcript
+        if (e.results[i].isFinal) finalTranscript += transcript
+        else interimTranscript += transcript
+      }
+
+      const transcript = (finalTranscript || interimTranscript).trim()
+      if (transcript) {
+        setInput(prev => {
+          const base = prev.replace(/\s+\[listening\.\.\.\]$/i, '').trim()
+          return base ? `${base} ${transcript}` : transcript
+        })
+      }
     }
     rec.onerror = (e: any) => {
       console.warn('Voice error:', e.error)
-      addNotification(
-        e.error === 'not-allowed' ? 'Microphone access denied.' : 'Voice recognition failed. Try again.',
-        'error'
-      )
+      const message = e.error === 'not-allowed'
+        ? 'Microphone permission is blocked. Enable it in browser settings.'
+        : e.error === 'no-speech'
+          ? 'No speech detected. Try speaking closer to the microphone.'
+          : e.error === 'audio-capture'
+            ? 'Microphone was not detected.'
+            : 'Voice recognition failed. Please try again.'
+      addNotification(message, 'error')
       setIsVoiceActive(false)
     }
     rec.onend = () => setIsVoiceActive(false)
     recognitionRef.current = rec
-    rec.start()
+    try {
+      rec.start()
+    } catch (err) {
+      setIsVoiceActive(false)
+      addNotification('Voice recognition could not start. Please try again.', 'error')
+    }
   }, [isVoiceActive, addNotification])
 
   // --- 5. EFFECTS ---
@@ -386,7 +456,7 @@ export default function ChatPage() {
       />
 
       <main className="flex-1 flex flex-col min-w-0 w-full relative z-10">
-        <header className="shrink-0 h-16 lg:h-20 border-b border-white/5 flex items-center justify-between px-4 lg:px-8 bg-[#08080f]/80 backdrop-blur-2xl sticky top-0 z-40">
+        <header className="fixed lg:sticky top-[50px] lg:top-0 left-0 right-0 lg:left-auto lg:right-auto shrink-0 h-16 lg:h-20 border-b border-white/5 flex items-center justify-between px-4 lg:px-8 bg-[#08080f]/95 backdrop-blur-2xl z-[60]">
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2.5 bg-white/5 rounded-xl flex items-center justify-center border border-white/5 active:scale-95 transition-all">
               <PanelLeft className="w-5 h-5 text-white/70" />
@@ -445,9 +515,14 @@ export default function ChatPage() {
             </div>
           </div>
         </header>
+        <div className="h-16 shrink-0 lg:hidden" />
 
         <div className="flex-1 overflow-y-auto custom-scrollbar px-2 sm:px-4 lg:px-12 pb-[180px] sm:pb-[150px] md:pb-[110px] lg:pb-16">
           <div className="max-w-4xl mx-auto w-full py-8">
+            <div className="mb-6 rounded-2xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-xs sm:text-sm text-amber-100">
+              <span className="font-semibold text-amber-300">Maintenance notice:</span>{' '}
+              Some AI models may be unavailable after May 28 while provider migration is completed. The app will stay online, but model responses may be limited from May 28 to May 30.
+            </div>
             <ChatMessages
               messages={messages}
               isLoading={isLoading}
