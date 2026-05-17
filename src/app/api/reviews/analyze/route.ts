@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
-import { supabase } from '@/lib/supabase'
+import { auth, currentUser } from '@clerk/nextjs/server'
+import prisma from '@/lib/db'
 import { z } from 'zod'
 
 // Input validation schemas
@@ -17,6 +17,46 @@ const updateReviewSchema = z.object({
   reviewId: z.string().uuid(),
   status: z.enum(['pending', 'approved', 'rejected'])
 })
+
+function normalizeReview(review: any) {
+  const platform = review.platform?.platformType || review.platformType || 'manual'
+
+  return {
+    id: review.id,
+    user_id: review.userId,
+    platform_id: review.platformId,
+    platform,
+    author_name: review.authorName,
+    reviewer_name: review.authorName,
+    content: review.content,
+    review_text: review.content,
+    rating: review.rating,
+    sentiment_label: review.sentimentLabel,
+    status: review.status,
+    source_date: review.sourceDate?.toISOString?.() || review.sourceDate,
+    created_at: review.createdAt?.toISOString?.() || review.createdAt,
+    updated_at: review.updatedAt?.toISOString?.() || review.updatedAt,
+    reply: review.aiReplyText
+      ? {
+          review_id: review.id,
+          reply_text: review.aiReplyText,
+          ai_generated: true,
+        }
+      : null,
+  }
+}
+
+async function ensureUser(userId: string) {
+  const clerkUser = await currentUser().catch(() => null)
+  const email = clerkUser?.emailAddresses?.[0]?.emailAddress || `${userId}@autoreview.local`
+  const name = clerkUser?.fullName || clerkUser?.firstName || null
+
+  await prisma.user.upsert({
+    where: { id: userId },
+    update: { email, name },
+    create: { id: userId, email, name },
+  })
+}
 
 // GET - Analyze a single review or get review details
 export async function GET(req: NextRequest) {
@@ -37,25 +77,16 @@ export async function GET(req: NextRequest) {
     // Validate UUID format
     const validatedId = reviewIdSchema.parse(reviewId)
 
-    const { data: review, error } = await (supabase
-      .from('reviews')
-      .select('*') )
-      .eq('id', validatedId)
-      .eq('user_id', userId)
-      .single()
+    const review = await prisma.review.findFirst({
+      where: { id: validatedId, userId },
+      include: { platform: { select: { platformType: true } } },
+    })
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
+    if (!review) {
+      return NextResponse.json({ error: 'Review not found' }, { status: 404 })
     }
 
-    // Get reply if exists
-    const { data: reply } = await (supabase
-      .from('replies')
-      .select('*') )
-      .eq('review_id', validatedId)
-      .single()
-
-    return NextResponse.json({ ...review, reply })
+    return NextResponse.json(normalizeReview(review))
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ZodError') {
       return NextResponse.json({ error: 'Invalid review ID format', details: (error as any).issues || [] }, { status: 400 })
@@ -74,37 +105,81 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json()
+    if (Array.isArray(body?.reviews)) {
+      const reviewItems = body.reviews
+      const total = reviewItems.length
+      const averageRating = total
+        ? reviewItems.reduce((sum: number, review: any) => sum + Number(review.rating || 0), 0) / total
+        : 0
+      const sentimentCounts = reviewItems.reduce((counts: Record<string, number>, review: any) => {
+        const sentiment = review.sentiment_label || review.sentimentLabel || getSentimentFromRating(Number(review.rating || 3))
+        counts[sentiment] = (counts[sentiment] || 0) + 1
+        return counts
+      }, {})
+      const needsAttention = reviewItems.filter((review: any) => Number(review.rating || 0) <= 2).length
+
+      return NextResponse.json({
+        total_reviews: total,
+        average_rating: Number(averageRating.toFixed(1)),
+        sentiment_breakdown: sentimentCounts,
+        needs_attention: needsAttention,
+        insights: [
+          total === 0
+            ? 'No reviews available yet. Connect a platform or generate sample reviews to start analysis.'
+            : `Average rating is ${averageRating.toFixed(1)} across ${total} reviews.`,
+          needsAttention > 0
+            ? `${needsAttention} low-rating reviews need a priority response.`
+            : 'No urgent low-rating reviews found.',
+        ],
+      })
+    }
+
     const validated = createReviewSchema.parse(body)
+
+    await ensureUser(userId)
 
     const {
       content,
       rating,
       author_name,
-      author_email,
-      platform,
+      platform: platformType,
       sentiment_label
     } = validated
 
-    const { data: review, error } = await (supabase
-      .from('reviews')
-      .insert({
-        user_id: userId,
-        review_text: content,
+    const connectedPlatform = await prisma.connectedPlatform.upsert({
+      where: {
+        userId_platformType: {
+          userId,
+          platformType,
+        },
+      },
+      update: {
+        status: 'connected',
+        updatedAt: new Date(),
+      },
+      create: {
+        userId,
+        platformType,
+        status: 'connected',
+        credentials: { source: 'manual_review_generator' },
+      },
+    })
+
+    const review = await prisma.review.create({
+      data: {
+        userId,
+        platformId: connectedPlatform.id,
+        authorName: author_name?.trim() || 'Anonymous Customer',
+        content,
         rating,
-        reviewer_name: author_name,
-        reviewer_email: author_email,
-        platform,
-        sentiment_label: sentiment_label || getSentimentFromRating(rating),
+        sentimentLabel: sentiment_label || getSentimentFromRating(rating),
         status: 'pending',
-      }) )
-      .select()
-      .single()
+        sourceDate: new Date(),
+      },
+      include: { platform: { select: { platformType: true } } },
+    })
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json(review)
+    return NextResponse.json(normalizeReview(review))
   } catch (error: unknown) { const message = error instanceof Error ? error.message : "Unknown error"; return NextResponse.json({ error: message }, { status: 500 })
   }
 }
@@ -123,30 +198,22 @@ export async function PATCH(req: NextRequest) {
 
     const { reviewId, status } = validated
 
-    // Verify review belongs to user
-    const { data: existing } = await (supabase
-      .from('reviews')
-      .select('id') )
-      .eq('id', reviewId)
-      .eq('user_id', userId)
-      .single()
+    const existing = await prisma.review.findFirst({
+      where: { id: reviewId, userId },
+      select: { id: true },
+    })
 
     if (!existing) {
       return NextResponse.json({ error: 'Review not found' }, { status: 404 })
     }
 
-    const { data: review, error } = await (supabase
-      .from('reviews')
-      .update({ status, updated_at: new Date().toISOString() }) )
-      .eq('id', reviewId)
-      .select()
-      .single()
+    const review = await prisma.review.update({
+      where: { id: reviewId },
+      data: { status },
+      include: { platform: { select: { platformType: true } } },
+    })
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
-
-    return NextResponse.json(review)
+    return NextResponse.json(normalizeReview(review))
   } catch (error: unknown) { const message = error instanceof Error ? error.message : "Unknown error"; return NextResponse.json({ error: message }, { status: 500 })
   }
 }
@@ -170,30 +237,16 @@ export async function DELETE(req: NextRequest) {
     // Validate UUID format
     const validatedId = reviewIdSchema.parse(reviewId)
 
-    // Verify review belongs to user
-    const { data: existing } = await (supabase
-      .from('reviews')
-      .select('id') )
-      .eq('id', validatedId)
-      .eq('user_id', userId)
-      .single()
+    const existing = await prisma.review.findFirst({
+      where: { id: validatedId, userId },
+      select: { id: true },
+    })
 
     if (!existing) {
       return NextResponse.json({ error: 'Review not found' }, { status: 404 })
     }
 
-    // Delete replies first (cascade should handle this but being explicit)
-    await (supabase.from('replies').delete() ).eq('review_id', validatedId)
-
-    // Delete review
-    const { error } = await (supabase
-      .from('reviews')
-      .delete() )
-      .eq('id', validatedId)
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 })
-    }
+    await prisma.review.delete({ where: { id: validatedId } })
 
     return NextResponse.json({ success: true })
   } catch (error: unknown) {

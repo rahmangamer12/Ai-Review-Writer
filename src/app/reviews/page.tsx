@@ -385,7 +385,7 @@ function ReviewsContent() {
     if (!selectedReview || !replyText.trim()) return
     
     try {
-      await fetch('/api/reviews/generate-reply', {
+      const response = await fetch('/api/reviews/generate-reply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -394,13 +394,19 @@ function ReviewsContent() {
           aiGenerated: true,
         }),
       })
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error || 'Failed to save reply')
+      }
       
       setShowReplyModal(false)
       setReplyText('')
       setSelectedReview(null)
       fetchReviews()
+      toastSuccess('Reply saved', 'AI reply was saved to this review.')
     } catch (err) {
-      setError('Failed to save reply')
+      setError(err instanceof Error ? err.message : 'Failed to save reply')
     }
   }
 

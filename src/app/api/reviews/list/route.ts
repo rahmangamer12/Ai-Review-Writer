@@ -4,6 +4,34 @@ import prisma from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
+function normalizeReview(review: any) {
+  const platform = review.platform?.platformType || 'manual'
+
+  return {
+    id: review.id,
+    user_id: review.userId,
+    platform_id: review.platformId,
+    platform,
+    author_name: review.authorName,
+    reviewer_name: review.authorName,
+    content: review.content,
+    review_text: review.content,
+    rating: review.rating,
+    sentiment_label: review.sentimentLabel,
+    status: review.status,
+    source_date: review.sourceDate?.toISOString?.() || review.sourceDate,
+    created_at: review.createdAt?.toISOString?.() || review.createdAt,
+    updated_at: review.updatedAt?.toISOString?.() || review.updatedAt,
+    reply: review.aiReplyText
+      ? {
+          review_id: review.id,
+          reply_text: review.aiReplyText,
+          ai_generated: true,
+        }
+      : null,
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
     let userId: string | null = null
@@ -36,7 +64,7 @@ export async function GET(req: NextRequest) {
     }
     
     if (platformParam && platformParam !== 'all') {
-      whereClause.platformId = platformParam
+      whereClause.platform = { platformType: platformParam }
     }
 
     if (search && search.trim()) {
@@ -64,20 +92,21 @@ export async function GET(req: NextRequest) {
           orderBy: orderByClause,
           skip,
           take,
+          include: { platform: { select: { platformType: true } } },
         }),
         prisma.review.count({
           where: whereClause,
         }),
         prisma.review.findMany({
           where: { userId },
-          select: { platformId: true },
+          select: { platform: { select: { platformType: true } } },
           distinct: ['platformId']
         })
       ])
       
-      reviews = dbResult[0] || []
+      reviews = (dbResult[0] || []).map(normalizeReview)
       count = dbResult[1] || 0
-      platforms = (dbResult[2] || []).map((p: any) => p.platformId).filter(Boolean)
+      platforms = (dbResult[2] || []).map((p: any) => p.platform?.platformType).filter(Boolean)
     } catch (e) {
       console.warn("Prisma failed to fetch reviews, database might be empty or unreachable.", e)
       // Return gracefully if DB fails (e.g., during build or when tables don't exist yet)

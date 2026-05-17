@@ -149,6 +149,7 @@ export default function ConnectPlatformsPage() {
   const [platforms, setPlatforms] = useState<PlatformConfig[]>([])
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null)
   const [formData, setFormData] = useState<Record<string, string>>({})
+  const [credentialMode, setCredentialMode] = useState<'platform' | 'custom'>('platform')
   const [testing, setTesting] = useState(false)
   const [saving, setSaving] = useState(false)
   const [showHelp, setShowHelp] = useState<string | null>(null)
@@ -190,6 +191,7 @@ export default function ConnectPlatformsPage() {
     if (platform) {
       setSelectedPlatform(platformId)
       setFormData(platform.credentials || {})
+      setCredentialMode('platform')
       setTestResult(null)
     }
   }
@@ -221,10 +223,10 @@ export default function ConnectPlatformsPage() {
     setTestResult(null)
     
     try {
-      if (isOAuthPlatform && !hasOAuthFormCredentials) {
+      if (isOAuthPlatform && !usesCustomOAuthCredentials) {
         setTestResult({
           success: true,
-          message: 'No keys entered here. The app will use your Vercel environment OAuth keys when you click Connect.',
+          message: 'Simple OAuth selected. The app will use your Vercel environment OAuth keys when you click Connect.',
         })
         return
       }
@@ -247,6 +249,7 @@ export default function ConnectPlatformsPage() {
     : selectedPlatform === 'facebook'
       ? Boolean(formData.appId?.trim() && formData.appSecret?.trim())
       : false
+  const usesCustomOAuthCredentials = isOAuthPlatform && credentialMode === 'custom' && hasOAuthFormCredentials
 
   const handleOAuthConnect = async () => {
     if (!selectedPlatform) return
@@ -259,8 +262,14 @@ export default function ConnectPlatformsPage() {
         ? '/api/platforms/google/connect'
         : '/api/platforms/facebook/connect'
       const payload = selectedPlatform === 'google'
-        ? { clientId: formData.clientId?.trim() || undefined, clientSecret: formData.clientSecret?.trim() || undefined }
-        : { appId: formData.appId?.trim() || undefined, appSecret: formData.appSecret?.trim() || undefined }
+        ? {
+            clientId: usesCustomOAuthCredentials ? formData.clientId?.trim() : undefined,
+            clientSecret: usesCustomOAuthCredentials ? formData.clientSecret?.trim() : undefined,
+          }
+        : {
+            appId: usesCustomOAuthCredentials ? formData.appId?.trim() : undefined,
+            appSecret: usesCustomOAuthCredentials ? formData.appSecret?.trim() : undefined,
+          }
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -728,6 +737,7 @@ export default function ConnectPlatformsPage() {
                             onClick={() => {
                               setSelectedPlatform(null)
                               setFormData({})
+                              setCredentialMode('platform')
                               setTestResult(null)
                             }}
                             className="text-white/40 hover:text-white transition-colors"
@@ -739,19 +749,50 @@ export default function ConnectPlatformsPage() {
                         {/* Form Fields */}
                         <div className="space-y-4">
                           {isOAuthPlatform && (
-                            <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-4">
-                              <p className="text-sm font-medium text-cyan-200">Two connection options</p>
-                              <p className="mt-1 text-xs leading-relaxed text-cyan-100/70">
-                                Leave these fields empty to use your platform OAuth keys from Vercel env, or enter the user's own keys to connect with their app.
+                            <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-4">
+                              <div className="grid grid-cols-2 gap-2 rounded-xl bg-black/20 p-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setCredentialMode('platform')
+                                    setTestResult(null)
+                                  }}
+                                  className={`rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
+                                    credentialMode === 'platform'
+                                      ? 'bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-500/20'
+                                      : 'text-cyan-100/70 hover:text-white'
+                                  }`}
+                                >
+                                  Simple OAuth
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setCredentialMode('custom')
+                                    setTestResult(null)
+                                  }}
+                                  className={`rounded-lg px-3 py-2 text-xs font-semibold transition-all ${
+                                    credentialMode === 'custom'
+                                      ? 'bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-500/20'
+                                      : 'text-cyan-100/70 hover:text-white'
+                                  }`}
+                                >
+                                  Use My Keys
+                                </button>
+                              </div>
+                              <p className="mt-3 text-xs leading-relaxed text-cyan-100/75">
+                                {credentialMode === 'platform'
+                                  ? 'Best for your SaaS: users select their Google/Facebook account and your Vercel OAuth keys handle the connection.'
+                                  : 'Advanced option: the user can connect through their own Google/Facebook app credentials.'}
                               </p>
                             </div>
                           )}
-                          {platformDef.fields.map((field: PlatformCredentialField) => (
+                          {(!isOAuthPlatform || credentialMode === 'custom') && platformDef.fields.map((field: PlatformCredentialField) => (
                             <div key={field.name}>
                               <label className="flex items-center justify-between text-white text-sm font-medium mb-2">
                                 <span>{field.label}</span>
                                 {field.required && !isOAuthPlatform && <span className="text-red-400 text-xs">Required</span>}
-                                {field.required && isOAuthPlatform && <span className="text-cyan-300 text-xs">Optional if env is set</span>}
+                                {field.required && isOAuthPlatform && <span className="text-cyan-300 text-xs">Required for custom mode</span>}
                               </label>
                               <div className="relative">
                                 <input

@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { longcatAI } from '@/lib/longcatAI'
 import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit'
 import { auth } from '@clerk/nextjs/server'
+import prisma from '@/lib/db'
 import { z } from 'zod'
 
 // Input validation schema
@@ -171,6 +172,32 @@ async function handler(request: NextRequest) {
       }
       if (!reviewId) {
         return NextResponse.json({ error: 'Review ID required' }, { status: 400 })
+      }
+
+      const prismaReview = await prisma.review.findFirst({
+        where: { id: reviewId, userId },
+        select: { id: true, status: true },
+      }).catch(() => null)
+
+      if (prismaReview) {
+        const updated = await prisma.review.update({
+          where: { id: reviewId },
+          data: {
+            aiReplyText: replyText,
+            status: aiGenerated ? 'AI_replied' : prismaReview.status,
+          },
+        })
+
+        return NextResponse.json({
+          success: true,
+          reply: {
+            review_id: updated.id,
+            reply_text: updated.aiReplyText,
+            ai_generated: aiGenerated,
+            is_edited_by_human: !aiGenerated,
+            updated_at: updated.updatedAt.toISOString(),
+          },
+        })
       }
 
       // Verify review belongs to user
