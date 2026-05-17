@@ -73,8 +73,8 @@ const TypingIndicator = () => (
     exit={{ opacity: 0, y: 5 }}
     className="flex gap-2 sm:gap-3"
   >
-    <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-lg sm:rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg shadow-violet-600/20 shrink-0">
-      <Sparkles className="w-4 h-4 sm:w-4.5 sm:h-4.5 lg:w-5 lg:h-5 text-white" />
+    <div className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 rounded-lg sm:rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center shadow-lg shadow-violet-600/20 shrink-0 overflow-hidden">
+      <img src="/app-logo.png" alt="AutoReview" className="w-5 h-5 sm:w-6 sm:h-6 object-contain" />
     </div>
     <div className="flex items-center gap-2 sm:gap-2.5 bg-white/[0.05] px-3 sm:px-4 lg:px-5 py-2.5 sm:py-3 lg:py-4 rounded-xl sm:rounded-2xl border border-white/[0.08]">
       <div className="flex gap-1 items-center">
@@ -265,9 +265,9 @@ export default function ChatMessages({
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
-          className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-2xl sm:rounded-3xl lg:rounded-[36px] bg-gradient-to-br from-violet-600 via-indigo-600 to-fuchsia-600 flex items-center justify-center mb-4 sm:mb-5 lg:mb-6 shadow-2xl shadow-violet-600/20 will-change-transform"
+          className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-2xl sm:rounded-3xl lg:rounded-[36px] bg-white/[0.06] border border-white/10 flex items-center justify-center mb-4 sm:mb-5 lg:mb-6 shadow-2xl shadow-violet-600/20 will-change-transform overflow-hidden"
         >
-          <Sparkles className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-white" />
+          <img src="/app-logo.png" alt="AutoReview" className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 object-contain" />
         </motion.div>
         <motion.h2
           initial={{ y: 10, opacity: 0 }}
@@ -334,12 +334,12 @@ export default function ChatMessages({
             <div className={`shrink-0 w-7 h-7 sm:w-9 sm:h-9 lg:w-11 lg:h-11 rounded-lg sm:rounded-xl lg:rounded-[18px] flex items-center justify-center text-xs sm:text-sm font-bold border shadow-lg ${
               msg.role === 'user'
                 ? 'bg-gradient-to-br from-slate-700 to-slate-800 border-white/10 text-white'
-                : 'bg-gradient-to-br from-violet-600 via-indigo-600 to-fuchsia-600 border-white/10 text-white shadow-violet-600/20'
+                : 'bg-white/[0.06] border-white/10 text-white shadow-violet-600/20 overflow-hidden'
             }`}>
               {msg.role === 'user' ? (
                 <User className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
               ) : (
-                <Bot className="w-3.5 h-3.5 sm:w-4 sm:h-4 lg:w-5 lg:h-5" />
+                <img src="/app-logo.png" alt="AutoReview" className="w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 object-contain" />
               )}
             </div>
 

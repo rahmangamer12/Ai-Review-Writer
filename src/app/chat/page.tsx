@@ -130,11 +130,20 @@ export default function ChatPage() {
           date: s.date || s.createdAt || new Date().toISOString(),
           messages: s.messages.map((m: any) => ({ ...m, timestamp: new Date(m.createdAt || m.timestamp) }))
         }))
-        setSessions(hydrated)
-        if (hydrated.length > 0 && !currentSessionId) setCurrentSessionId(hydrated[0].id)
+        setSessions(prev => {
+          const localById = new Map(prev.map(session => [session.id, session]))
+          return hydrated.map((serverSession: ChatSession) => {
+            const localSession = localById.get(serverSession.id)
+            if (localSession && localSession.messages.length > serverSession.messages.length) {
+              return { ...serverSession, ...localSession }
+            }
+            return serverSession
+          })
+        })
+        setCurrentSessionId(prev => prev || hydrated[0]?.id || null)
       }
     } catch (err) {}
-  }, [currentSessionId])
+  }, [])
 
   const generateAndSaveTitle = useCallback(async (sessionId: string, firstMessage: string) => {
     try {
@@ -319,25 +328,20 @@ export default function ChatPage() {
     rec.interimResults = true
     rec.continuous = false
     rec.maxAlternatives = 1
-    let finalTranscript = ''
+    const startingInput = input.trim()
     rec.onstart = () => {
       setIsVoiceActive(true)
       addNotification('Listening...', 'info')
     }
     rec.onresult = (e: any) => {
-      let interimTranscript = ''
-      for (let i = e.resultIndex; i < e.results.length; i++) {
-        const transcript = e.results[i][0].transcript
-        if (e.results[i].isFinal) finalTranscript += transcript
-        else interimTranscript += transcript
+      const transcriptParts: string[] = []
+      for (let i = 0; i < e.results.length; i++) {
+        transcriptParts.push(e.results[i][0].transcript)
       }
 
-      const transcript = (finalTranscript || interimTranscript).trim()
+      const transcript = transcriptParts.join(' ').replace(/\s+/g, ' ').trim()
       if (transcript) {
-        setInput(prev => {
-          const base = prev.replace(/\s+\[listening\.\.\.\]$/i, '').trim()
-          return base ? `${base} ${transcript}` : transcript
-        })
+        setInput(startingInput ? `${startingInput} ${transcript}` : transcript)
       }
     }
     rec.onerror = (e: any) => {
@@ -360,7 +364,7 @@ export default function ChatPage() {
       setIsVoiceActive(false)
       addNotification('Voice recognition could not start. Please try again.', 'error')
     }
-  }, [isVoiceActive, addNotification])
+  }, [isVoiceActive, input, addNotification])
 
   // --- 5. EFFECTS ---
   useEffect(() => {

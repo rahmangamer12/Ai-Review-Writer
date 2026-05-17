@@ -141,8 +141,8 @@ export default function ChatSidebar({
       <div className="p-3 sm:p-4 lg:p-5 border-b border-white/5">
         <div className="flex items-center justify-between mb-3 sm:mb-4">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-9 sm:w-10 h-9 sm:h-10 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center shadow-lg">
-              <Sparkles className="w-4 sm:w-5 h-4 sm:h-5" />
+            <div className="w-9 sm:w-10 h-9 sm:h-10 rounded-xl bg-white/[0.06] border border-white/10 flex items-center justify-center shadow-lg overflow-hidden">
+              <img src="/app-logo.png" alt="AutoReview" className="w-6 h-6 object-contain" />
             </div>
             <div>
               <h1 className="text-sm sm:text-base font-bold">Sarah AI</h1>
@@ -290,7 +290,7 @@ export default function ChatSidebar({
 
       {/* Profile Section */}
       <div className={`p-2 sm:p-3 lg:p-4 border-t border-white/5 bg-[#0a0a12] shrink-0 overflow-y-auto max-h-[50vh] ${isMobile ? 'pb-[calc(3.5rem+env(safe-area-inset-bottom))]' : ''}`}>
-        <div className="p-2.5 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl bg-white/[0.03] border border-white/8">
+        <div className="p-2.5 sm:p-3 lg:p-4 rounded-xl sm:rounded-2xl bg-[#151522] border border-white/10 shadow-lg">
           <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
             {userData?.imageUrl ? (
               <img 
@@ -309,7 +309,7 @@ export default function ChatSidebar({
             </div>
             <button
               onClick={() => window.location.href = '/settings'}
-              className="p-1.5 sm:p-2 rounded-lg hover:bg-white/10 text-white/40 hover:text-white transition-colors active:scale-[0.98]"
+              className="p-1.5 sm:p-2 rounded-lg bg-white/[0.04] hover:bg-white/10 text-white/60 hover:text-white transition-colors active:scale-[0.98]"
             >
               <Settings className="w-3.5 sm:w-4 h-3.5 sm:h-4" />
             </button>
@@ -328,13 +328,13 @@ export default function ChatSidebar({
           <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
             <button
               onClick={() => window.location.href = '/subscription'}
-              className="py-1.5 sm:py-2 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg text-[10px] sm:text-xs font-semibold hover:from-violet-500 hover:to-indigo-500 transition-all active:scale-[0.98]"
+              className="py-1.5 sm:py-2 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-lg text-[10px] sm:text-xs font-semibold text-white hover:from-violet-500 hover:to-indigo-500 transition-all active:scale-[0.98] shadow-sm"
             >
               Upgrade
             </button>
             <button
               onClick={() => window.location.href = '/'}
-              className="py-1.5 sm:py-2 bg-white/[0.05] rounded-lg text-[10px] sm:text-xs font-medium text-white/50 hover:bg-white/[0.1] transition-all flex items-center justify-center gap-1 active:scale-[0.98]"
+              className="py-1.5 sm:py-2 bg-white/[0.09] rounded-lg text-[10px] sm:text-xs font-medium text-white/70 hover:bg-white/[0.14] hover:text-white transition-all flex items-center justify-center gap-1 active:scale-[0.98]"
             >
               <LogOut className="w-3 sm:w-3.5 h-3 sm:h-3.5" />
               Exit
