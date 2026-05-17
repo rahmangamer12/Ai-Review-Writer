@@ -15,12 +15,15 @@ const ReactMarkdown = dynamic(() => import('react-markdown'), { ssr: false })
 interface ChatMessagesProps {
   messages: Message[]
   isLoading: boolean
+  loadingModelName?: string
+  loadingSeconds?: number
   onRetry?: (messageId: string) => void
   onCopy?: (text: string) => void
   onSpeak?: (text: string) => void
   onStopSpeaking?: () => void
   isSpeaking: boolean
   onReaction?: (messageId: string, reaction: 'like' | 'dislike') => void
+  onQuickPrompt?: (prompt: string) => void
 }
 
 const CodeBlock = memo(({ language, children }: { language: string; children: string }) => {
@@ -66,7 +69,7 @@ CodeBlock.displayName = 'CodeBlock'
 
 // ✅ FIXED: TypingIndicator — standalone component, only shown via isLoading prop from parent
 // Dots bounce sequentially with proper animation delays
-const TypingIndicator = () => (
+const TypingIndicator = ({ modelName, seconds = 0 }: { modelName?: string; seconds?: number }) => (
   <motion.div
     initial={{ opacity: 0, y: 10 }}
     animate={{ opacity: 1, y: 0 }}
@@ -93,9 +96,14 @@ const TypingIndicator = () => (
           />
         ))}
       </div>
-      <span className="text-[10px] sm:text-xs text-white/40 ml-1 font-medium whitespace-nowrap">
-        Sarah is thinking...
-      </span>
+      <div className="flex flex-col min-w-0">
+        <span className="text-[10px] sm:text-xs text-white/70 font-semibold whitespace-nowrap">
+          Sarah is thinking
+        </span>
+        <span className="text-[9px] sm:text-[10px] text-white/35 whitespace-nowrap">
+          {modelName || 'AI model'} · {seconds}s
+        </span>
+      </div>
     </div>
   </motion.div>
 )
@@ -178,12 +186,15 @@ const MarkdownComponents = {
 export default function ChatMessages({
   messages,
   isLoading,
+  loadingModelName,
+  loadingSeconds = 0,
   onRetry,
   onCopy,
   onSpeak,
   onStopSpeaking,
   isSpeaking,
-  onReaction
+  onReaction,
+  onQuickPrompt
 }: ChatMessagesProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [showCopied, setShowCopied] = useState<string | null>(null)
@@ -281,9 +292,9 @@ export default function ChatMessages({
           initial={{ y: 10, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.3, duration: 0.4 }}
-          className="text-white/40 text-sm sm:text-base mb-6 sm:mb-8"
+          className="text-white/50 text-sm sm:text-base mb-6 sm:mb-8 max-w-xl"
         >
-          Welcome! How can I help you today?
+          Ask Sarah to write replies, explain analytics, plan platform setup, or help with any business task.
         </motion.p>
 
         {/* Quick Actions */}
@@ -358,7 +369,7 @@ export default function ChatMessages({
                   <span className="whitespace-nowrap">{msg.role === 'user' ? 'You' : 'Sarah AI'}</span>
                 </span>
                 <span className="text-white/20 hidden xs:inline">•</span>
-                <span className="text-white/30 whitespace-nowrap hidden xs:inline">{formatTime(msg.timestamp)}</span>
+                <span className="text-white/35 whitespace-nowrap">{formatTime(msg.timestamp)}</span>
                 {msg.model && msg.role === 'assistant' && (
                   <>
                     <span className="text-white/20 hidden sm:inline">•</span>
@@ -538,7 +549,7 @@ export default function ChatMessages({
 
       {/* ✅ FIXED: Standalone typing indicator — only shows during isLoading, not per-message */}
       <AnimatePresence>
-        {isLoading && <TypingIndicator />}
+        {isLoading && <TypingIndicator modelName={loadingModelName} seconds={loadingSeconds} />}
       </AnimatePresence>
 
       <div ref={messagesEndRef} className="h-2 sm:h-4" />

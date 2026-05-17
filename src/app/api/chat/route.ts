@@ -146,14 +146,19 @@ CRITICAL INSTRUCTIONS FOR YOU:
     };
 
     const modelMessages = [godTierPrompt, ...formattedMessages.filter((m: any) => m.role !== 'system')];
+    const maxOutputTokens = selectedModel.includes('Thinking')
+      ? 1200
+      : selectedModel.includes('Lite')
+        ? 900
+        : 1400;
 
     const result = streamText({
       model: provider,
       messages: modelMessages,
       temperature,
-      maxOutputTokens: 2000, // Reduced for faster responses
+      maxOutputTokens,
       // @ts-ignore
-      maxSteps: 5,
+      maxSteps: 2,
       tools: {
         // @ts-ignore
         getCurrentTime: tool({

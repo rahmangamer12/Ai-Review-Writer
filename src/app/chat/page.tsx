@@ -34,6 +34,8 @@ export default function ChatPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedModel, setSelectedModel] = useState('LongCat-Flash-Lite') // Fastest model for instant responses
   const [isLoading, setIsLoading] = useState(false)
+  const [loadingStartedAt, setLoadingStartedAt] = useState<number | null>(null)
+  const [loadingSeconds, setLoadingSeconds] = useState(0)
   const [isVoiceActive, setIsVoiceActive] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)
   const speechSynthRef = useRef<SpeechSynthesisUtterance | null>(null)
@@ -225,6 +227,8 @@ export default function ChatPage() {
     setInput('')
     setUploadedFiles([]) // Clear uploaded files
     setIsLoading(true)
+    setLoadingStartedAt(Date.now())
+    setLoadingSeconds(0)
 
     try {
       // Build API message with actual content (text or multimodal)
@@ -288,6 +292,8 @@ export default function ChatPage() {
       setSessions(prev => prev.map(s => s.id === sId ? { ...s, messages: s.messages.map(m => m.id === aiId ? { ...m, content: 'Failed to connect. Please try again.', isTyping: false } : m) } : s))
     } finally {
       setIsLoading(false)
+      setLoadingStartedAt(null)
+      setLoadingSeconds(0)
     }
   }, [input, uploadedFiles, isLoading, currentSessionId, currentSession, messages, selectedModel, activeModel, shouldGenerateTitle, generateAndSaveTitle, addNotification])
 
@@ -390,6 +396,14 @@ export default function ChatPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, isLoading])
+
+  useEffect(() => {
+    if (!loadingStartedAt) return
+    const interval = window.setInterval(() => {
+      setLoadingSeconds(Math.max(0, Math.floor((Date.now() - loadingStartedAt) / 1000)))
+    }, 1000)
+    return () => window.clearInterval(interval)
+  }, [loadingStartedAt])
 
   // --- 6. RENDER ---
   if (!isMounted || !isLoaded) {
@@ -530,6 +544,8 @@ export default function ChatPage() {
             <ChatMessages
               messages={messages}
               isLoading={isLoading}
+              loadingModelName={activeModel?.name}
+              loadingSeconds={loadingSeconds}
               onRetry={() => handleSend()}
               onCopy={(t) => navigator.clipboard.writeText(t)}
               onSpeak={(t) => {
@@ -540,6 +556,7 @@ export default function ChatPage() {
                 setIsSpeaking(false)
               }}
               isSpeaking={isSpeaking}
+              onQuickPrompt={(prompt) => handleSend(prompt)}
             />
             <div ref={messagesEndRef} className="h-1" />
           </div>

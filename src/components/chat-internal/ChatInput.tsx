@@ -261,7 +261,9 @@ export default function ChatInput({
                 <span className="truncate max-w-[60px] xs:max-w-[80px] sm:max-w-[120px] lg:max-w-none">{activeModel?.name || 'Select Model'}</span>
               </button>
               <span className="hidden xs:inline">•</span>
-              <span className="hidden xs:inline truncate">Enter to send</span>
+              <span className="hidden xs:inline truncate">
+                {activeModel?.id.includes('Thinking') ? 'Deep thinking may take longer' : 'Enter to send'}
+              </span>
             </div>
             <div className="flex items-center gap-1 shrink-0">
               <Sparkles className="w-2.5 h-2.5 text-violet-400" />
