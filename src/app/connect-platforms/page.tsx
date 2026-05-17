@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, useEffect, useSyncExternalStore, useRef } from 'react'
+import { useState, useEffect, useRef, type FormEvent } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
-import { useForm, ValidationError } from '@formspree/react'
 import PageTransition from '@/components/transitions/PageTransition'
 import { 
   ArrowLeft, 
@@ -133,6 +132,18 @@ const testimonials = [
   }
 ]
 
+type SetupFormState = {
+  submitting: boolean
+  succeeded: boolean
+  error: string | null
+}
+
+const initialSetupFormState: SetupFormState = {
+  submitting: false,
+  succeeded: false,
+  error: null,
+}
+
 export default function ConnectPlatformsPage() {
   const router = useRouter()
   const { user, isLoaded } = useUser()
@@ -158,10 +169,10 @@ export default function ConnectPlatformsPage() {
   
   // Managed setup states
   const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([])
-  const [managedFormState, handleManagedSubmit] = useForm("xreqgero")
+  const [managedFormState, setManagedFormState] = useState<SetupFormState>(initialSetupFormState)
   
   // Video call states
-  const [videoFormState, handleVideoSubmit] = useForm("xreqgero")
+  const [videoFormState, setVideoFormState] = useState<SetupFormState>(initialSetupFormState)
   const [hydrated, setHydrated] = useState(false)
   useEffect(() => {
     setHydrated(true)
@@ -342,6 +353,75 @@ export default function ConnectPlatformsPage() {
         : [...prev, platformId]
     )
   }
+
+  const scrollToSetupMode = (targetMode: 'self' | 'managed' | 'video') => {
+    setSetupMode(targetMode)
+
+    window.requestAnimationFrame(() => {
+      setTimeout(() => {
+        const targetRef = targetMode === 'managed'
+          ? managedFormRef
+          : targetMode === 'video'
+            ? videoFormRef
+            : selfSetupRef
+
+        targetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 180)
+    })
+  }
+
+  const submitSetupRequest = async (
+    event: FormEvent<HTMLFormElement>,
+    requestType: 'managed' | 'video'
+  ) => {
+    event.preventDefault()
+
+    if (requestType === 'managed' && selectedPlatforms.length === 0) {
+      setManagedFormState({
+        submitting: false,
+        succeeded: false,
+        error: 'Please select at least one platform.',
+      })
+      return
+    }
+
+    const setState = requestType === 'managed' ? setManagedFormState : setVideoFormState
+    const form = event.currentTarget
+    const formData = new FormData(form)
+    const payload = Object.fromEntries(formData.entries())
+
+    setState({ submitting: true, succeeded: false, error: null })
+
+    try {
+      const response = await fetch('/api/setup-request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...payload,
+          requestType,
+          platforms: requestType === 'managed' ? selectedPlatforms : payload.platforms,
+        }),
+      })
+      const result = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        throw new Error(result.message || result.error || 'Request submit nahi ho saki. Please try again.')
+      }
+
+      form.reset()
+      if (requestType === 'managed') setSelectedPlatforms([])
+      setState({ submitting: false, succeeded: true, error: null })
+    } catch (error) {
+      setState({
+        submitting: false,
+        succeeded: false,
+        error: error instanceof Error ? error.message : 'Request submit nahi ho saki. Please try again.',
+      })
+    }
+  }
+
+  const handleManagedSubmit = (event: FormEvent<HTMLFormElement>) => submitSetupRequest(event, 'managed')
+  const handleVideoSubmit = (event: FormEvent<HTMLFormElement>) => submitSetupRequest(event, 'video')
 
   // Get status color
   const getStatusColor = (status: PlatformConfig['status']) => {
@@ -530,24 +610,7 @@ export default function ConnectPlatformsPage() {
                 <motion.div
                   key={option.id}
                   whileHover={undefined}
-                  onClick={() => {
-                    const targetMode = option.id as 'self' | 'managed' | 'video';
-                    setSetupMode(targetMode);
-
-                    // Wait for DOM to update, then scroll
-                    setTimeout(() => {
-                      let targetRef = null;
-                      if (targetMode === 'self') targetRef = selfSetupRef;
-                      else if (targetMode === 'managed') targetRef = managedFormRef;
-                      else if (targetMode === 'video') targetRef = videoFormRef;
-
-                      if (targetRef?.current) {
-                        const yOffset = -100;
-                        const y = targetRef.current.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                        window.scrollTo({top: y, behavior: 'smooth'});
-                      }
-                    }, 300); // Increased delay for DOM stability
-                  }}
+                  onClick={() => scrollToSetupMode(option.id as 'self' | 'managed' | 'video')}
                   className={`glass-card border-2 ${
                     setupMode === option.id
                       ? getSetupOptionColor(option.color)
@@ -615,7 +678,7 @@ export default function ConnectPlatformsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+                className="grid grid-cols-1 lg:grid-cols-3 gap-8 scroll-mt-28"
               >
                 {/* Platform Grid */}
                 <div className="lg:col-span-2">
@@ -977,7 +1040,7 @@ export default function ConnectPlatformsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="max-w-4xl mx-auto"
+                className="max-w-4xl mx-auto scroll-mt-28"
                 ref={managedFormRef}
               >
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -995,6 +1058,11 @@ export default function ConnectPlatformsPage() {
                       </div>
 
                       <form onSubmit={handleManagedSubmit} className="space-y-4">
+                        {managedFormState.error && (
+                          <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                            {managedFormState.error}
+                          </div>
+                        )}
                         <div>
                           <label className="flex items-center gap-2 text-white text-sm font-medium mb-2">
                             <User className="w-4 h-4" />
@@ -1007,7 +1075,6 @@ export default function ConnectPlatformsPage() {
                             placeholder="Enter your full name"
                             className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-cyan-500 transition-all"
                           />
-                          <ValidationError prefix="Name" field="name" errors={managedFormState.errors} className="text-red-400 text-sm mt-1" />
                         </div>
 
                         <div>
@@ -1022,7 +1089,6 @@ export default function ConnectPlatformsPage() {
                             placeholder="Enter your email"
                             className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-cyan-500 transition-all"
                           />
-                          <ValidationError prefix="Email" field="email" errors={managedFormState.errors} className="text-red-400 text-sm mt-1" />
                         </div>
 
                         <div>
@@ -1037,7 +1103,6 @@ export default function ConnectPlatformsPage() {
                             placeholder="Enter your business name"
                             className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-cyan-500 transition-all"
                           />
-                          <ValidationError prefix="Business" field="business" errors={managedFormState.errors} className="text-red-400 text-sm mt-1" />
                         </div>
 
                         <div>
@@ -1199,7 +1264,7 @@ export default function ConnectPlatformsPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="max-w-4xl mx-auto"
+                className="max-w-4xl mx-auto scroll-mt-28"
                 ref={videoFormRef}
               >
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -1217,6 +1282,11 @@ export default function ConnectPlatformsPage() {
                       </div>
 
                       <form onSubmit={handleVideoSubmit} className="space-y-4">
+                        {videoFormState.error && (
+                          <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                            {videoFormState.error}
+                          </div>
+                        )}
                         <div>
                           <label className="flex items-center gap-2 text-white text-sm font-medium mb-2">
                             <User className="w-4 h-4" />
@@ -1229,7 +1299,6 @@ export default function ConnectPlatformsPage() {
                             placeholder="Enter your full name"
                             className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-purple-500 transition-all"
                           />
-                          <ValidationError prefix="Name" field="name" errors={videoFormState.errors} className="text-red-400 text-sm mt-1" />
                         </div>
 
                         <div>
@@ -1244,7 +1313,6 @@ export default function ConnectPlatformsPage() {
                             placeholder="Enter your email"
                             className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-purple-500 transition-all"
                           />
-                          <ValidationError prefix="Email" field="email" errors={videoFormState.errors} className="text-red-400 text-sm mt-1" />
                         </div>
 
                         <div>
@@ -1259,7 +1327,6 @@ export default function ConnectPlatformsPage() {
                             placeholder="Enter your business name"
                             className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-purple-500 transition-all"
                           />
-                          <ValidationError prefix="Business" field="business" errors={videoFormState.errors} className="text-red-400 text-sm mt-1" />
                         </div>
 
                         <div>
@@ -1415,11 +1482,11 @@ export default function ConnectPlatformsPage() {
                         Have questions before scheduling? Contact our support team.
                       </p>
                       <a 
-                        href="mailto:support@autoreview.ai" 
+                        href="mailto:rahman.mac.apple@gamil.com,abdulmoto656@gmail.com" 
                         className="flex items-center gap-2 text-cyan-400 hover:text-cyan-300 transition-colors text-sm"
                       >
                         <Mail className="w-4 h-4" />
-                        support@autoreview.ai
+                        rahman.mac.apple@gamil.com / abdulmoto656@gmail.com
                       </a>
                     </div>
                   </div>
