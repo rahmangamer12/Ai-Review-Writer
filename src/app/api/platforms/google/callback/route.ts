@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
 import { encryptSensitiveData } from '@/lib/encryption';
+import prisma from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -123,26 +123,46 @@ async function processCallback(code: string, userId: string, clientId: string, c
       ? encryptSensitiveData(tokens.refresh_token)
       : null;
 
-    const { error: dbError } = await supabase
-      .from('platform_credentials')
-      .upsert({
-        user_id: userId,
-        platform: 'google',
-        access_token_encrypted: encryptedAccessToken,
-        refresh_token_encrypted: encryptedRefreshToken,
-        // Keep legacy fields for backward compatibility
-        access_token: null,
-        refresh_token: null,
-        metadata: {
-          client_id: clientId,
+    try {
+      await prisma.user.upsert({
+        where: { id: userId },
+        update: {},
+        create: {
+          id: userId,
+          email: `${userId}@autoreview.local`,
         },
-        expires_at: Date.now() + (tokens.expires_in * 1000),
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: 'user_id,platform'
       });
 
-    if (dbError) {
+      await prisma.connectedPlatform.upsert({
+        where: {
+          userId_platformType: {
+            userId,
+            platformType: 'google',
+          },
+        },
+        update: {
+          status: 'connected',
+          credentials: {
+            accessTokenEncrypted: encryptedAccessToken,
+            refreshTokenEncrypted: encryptedRefreshToken,
+            clientId,
+            expiresAt: Date.now() + (tokens.expires_in * 1000),
+          },
+          lastSyncedAt: new Date(),
+        },
+        create: {
+          userId,
+          platformType: 'google',
+          status: 'connected',
+          credentials: {
+            accessTokenEncrypted: encryptedAccessToken,
+            refreshTokenEncrypted: encryptedRefreshToken,
+            clientId,
+            expiresAt: Date.now() + (tokens.expires_in * 1000),
+          },
+        },
+      });
+    } catch (dbError) {
       console.error('[Google OAuth] DB error:', dbError);
       return new Response(
         `<html><body>

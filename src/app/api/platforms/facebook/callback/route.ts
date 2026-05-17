@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
 import { encryptSensitiveData } from '@/lib/encryption';
+import prisma from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -146,25 +146,48 @@ async function processCallback(code: string, userId: string, appId: string, appS
     const encryptedUserAccessToken = encryptSensitiveData(accessToken);
     const encryptedPageAccessToken = encryptSensitiveData(page.access_token);
 
-    // Store credentials in Supabase
-    const { error: dbError } = await supabase
-      .from('platform_credentials')
-      .upsert({
-        user_id: userId,
-        platform: 'facebook',
-        access_token: null,
-        refresh_token: null,
-        access_token_encrypted: encryptedUserAccessToken,
-        refresh_token_encrypted: encryptedPageAccessToken,
-        metadata: {
-          page_id: page.id,
-          page_name: page.name,
-          app_id: appId, // Store user's App ID for future use
+    try {
+      await prisma.user.upsert({
+        where: { id: userId },
+        update: {},
+        create: {
+          id: userId,
+          email: `${userId}@autoreview.local`,
         },
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'user_id,platform' });
+      });
 
-    if (dbError) {
+      await prisma.connectedPlatform.upsert({
+        where: {
+          userId_platformType: {
+            userId,
+            platformType: 'facebook',
+          },
+        },
+        update: {
+          status: 'connected',
+          credentials: {
+            userAccessTokenEncrypted: encryptedUserAccessToken,
+            pageAccessTokenEncrypted: encryptedPageAccessToken,
+            pageId: page.id,
+            pageName: page.name,
+            appId,
+          },
+          lastSyncedAt: new Date(),
+        },
+        create: {
+          userId,
+          platformType: 'facebook',
+          status: 'connected',
+          credentials: {
+            userAccessTokenEncrypted: encryptedUserAccessToken,
+            pageAccessTokenEncrypted: encryptedPageAccessToken,
+            pageId: page.id,
+            pageName: page.name,
+            appId,
+          },
+        },
+      });
+    } catch (dbError) {
       console.error('[Facebook OAuth] DB error:', dbError);
       return new Response(
         `<html><body>
