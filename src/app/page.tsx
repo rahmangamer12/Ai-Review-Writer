@@ -152,15 +152,21 @@ export default async function LandingPage() {
       <section className="py-20 border-y border-white/5 bg-[#05050A]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <p className="text-white/40 text-sm tracking-widest uppercase font-semibold mb-8">
-            Trusted by 5,000+ modern teams
+            Built for real customer review workflows
           </p>
-          <div className="flex flex-wrap justify-center gap-12 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
-            {/* Abstract placeholders for logos */}
-            <div className="text-xl font-black italic tracking-tighter">Acme Corp</div>
-            <div className="text-xl font-black tracking-widest">GLOBAL</div>
-            <div className="text-xl font-black font-serif">Vanguard</div>
-            <div className="text-xl font-black lowercase tracking-tight">nexus.</div>
-            <div className="text-xl font-bold uppercase">Stratos</div>
+          <div className="grid grid-cols-1 gap-4 text-left sm:grid-cols-3">
+            <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-5">
+              <h3 className="mb-2 font-bold text-white">Connect or import</h3>
+              <p className="text-sm leading-relaxed text-white/50">Bring in reviews from connected platforms or add real customer reviews manually.</p>
+            </div>
+            <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-5">
+              <h3 className="mb-2 font-bold text-white">Analyze and draft</h3>
+              <p className="text-sm leading-relaxed text-white/50">Generate AI replies and sentiment insights from saved review content.</p>
+            </div>
+            <div className="rounded-2xl border border-white/5 bg-white/[0.03] p-5">
+              <h3 className="mb-2 font-bold text-white">Manage every review</h3>
+              <p className="text-sm leading-relaxed text-white/50">Approve, edit, reject, delete, and track your reviews in one workspace.</p>
+            </div>
           </div>
         </div>
       </section>
@@ -168,36 +174,36 @@ export default async function LandingPage() {
       {/* ─── Testimonials ──────────────────────────────────────────────────────── */}
       <section className="py-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center max-w-3xl mx-auto mb-16">
-          <h2 className="text-3xl sm:text-4xl font-bold mb-4">Loved by Founders</h2>
+          <h2 className="text-3xl sm:text-4xl font-bold mb-4">Production Principles</h2>
           <p className="text-white/50 text-lg">Don’t just take our word for it.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {[
             {
-              name: "Alex Rivera",
-              role: "Owner, Cloud Coffee",
-              text: "We went from spending 5 hours a week managing Yelp reviews to literally 5 minutes. The AI responses are scarily good.",
-              avatar: "A"
+              name: "Human review",
+              role: "Before publishing",
+              text: "AI replies are saved as drafts inside your workspace so you can review, edit, approve, or delete them before using them publicly.",
+              avatar: "1"
             },
             {
-              name: "Sarah Chen",
-              role: "Marketing Dir. at TechFlow",
-              text: "The sentiment analysis caught a sudden dip in customer satisfaction 3 days before our team would have noticed manually. Lifesaver.",
-              avatar: "S"
+              name: "Real sources",
+              role: "No seeded customer data",
+              text: "The dashboard is designed to show saved platform reviews and manually entered customer reviews, not made-up activity.",
+              avatar: "2"
             },
             {
-              name: "Marcus Johnson",
-              role: "Founder, Apex Auto",
-              text: "Finally an AI tool that actually sounds like a human being wrote it. Our customers love the fast, detailed replies.",
-              avatar: "M"
+              name: "Owner control",
+              role: "Full management",
+              text: "You can manage review status, edit saved replies, remove reviews, and refresh analytics from the same authenticated account.",
+              avatar: "3"
             }
           ].map((test, i) => (
             <div key={i} className="bg-gradient-to-b from-[#0c0c18] to-[#08080f] border border-white/5 p-8 rounded-[24px]">
               <div className="flex gap-1 mb-6">
                 {[1, 2, 3, 4, 5].map(star => <Star key={star} className="w-4 h-4 text-amber-400 fill-amber-400" />)}
               </div>
-              <p className="text-white/80 text-lg leading-relaxed mb-8">"{test.text}"</p>
+              <p className="text-white/80 text-lg leading-relaxed mb-8">{test.text}</p>
               <div className="flex items-center gap-4 mt-auto">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-600 to-cyan-600 flex items-center justify-center font-bold text-lg">
                   {test.avatar}
@@ -218,7 +224,7 @@ export default async function LandingPage() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10 bg-[#0c0c18] border border-white/10 p-12 sm:p-20 rounded-[40px] shadow-2xl">
           <h2 className="text-4xl sm:text-5xl font-extrabold mb-6">Ready to Supercharge Your Reviews?</h2>
           <p className="text-white/60 text-lg mb-10 max-w-2xl mx-auto">
-            Join thousands of businesses already using AutoReview AI to save time and win more customers.
+            Start with your real customer reviews, then use AI to respond faster and manage reputation from one workspace.
           </p>
           <Link 
             href="/subscription" 

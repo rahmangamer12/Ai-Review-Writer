@@ -145,7 +145,7 @@ export default function LandingPage() {
               className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full text-purple-300 text-sm mb-8"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Trusted by 10,000+ businesses worldwide</span>
+              <span>Built for real customer review workflows</span>
             </motion.div>
 
             {/* Main Heading */}

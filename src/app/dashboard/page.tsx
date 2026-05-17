@@ -216,7 +216,11 @@ export default function Dashboard() {
     if (agenticProcessing) return
     setAgenticProcessing(true)
     try {
-      const response = await fetch('/api/agentic/reviews', { method: 'POST' })
+      const response = await fetch('/api/agentic/reviews', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ autoApprove: false }),
+      })
       const result = await response.json()
       if (result.processed > 0) {
         toastSuccess(`Processed ${result.processed} reviews`, 'Agentic AI has replied to pending reviews.')

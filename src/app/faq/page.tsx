@@ -125,8 +125,8 @@ const faqData: FAQ[] = [
         a: "Email support is available 24/7 with typical response times under 24 hours. Enterprise customers get priority support with faster response times."
       },
       {
-        q: "Can I schedule a demo?",
-        a: "Absolutely! Visit our Schedule a Call page to book a personalized demo with our team. We'll walk you through all features and answer your questions."
+        q: "Can I schedule a walkthrough?",
+        a: "Absolutely! Visit our Schedule a Call page to book a personalized product walkthrough with our team. We'll walk you through all features and answer your questions."
       }
     ]
   }

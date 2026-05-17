@@ -249,7 +249,7 @@ export default function OnboardingPage() {
                     <div>
                       <h3 className="text-lg font-semibold text-white mb-2">Test Review Generate Karein</h3>
                       <p className="text-white/70">
-                        Reviews page pe &quot;Generate Test Review&quot; button se test reviews banayein aur AI ko action mein dekhein
+                        Reviews page par real customer reviews add karein ya platform connect karke AI replies manage karein
                       </p>
                     </div>
                   </div>

@@ -13,6 +13,8 @@ export async function POST(req: NextRequest) {
     }
 
     console.log('[Agentic] Starting REAL AI agentic review processing for user:', userId)
+    const body = await req.json().catch(() => ({}))
+    const autoApprove = body?.autoApprove === true
 
     if (!longcatAI.hasApiKey()) {
       return NextResponse.json({
@@ -82,7 +84,7 @@ export async function POST(req: NextRequest) {
           data: {
             sentimentLabel: sentiment,
             aiReplyText: aiReply,
-            status: 'AI_replied',
+            status: autoApprove ? 'approved' : 'AI_replied',
           },
         })
 
@@ -95,7 +97,7 @@ export async function POST(req: NextRequest) {
           sentiment_label: sentiment,
           sentiment_score: sentimentScore,
           ai_reply: aiReply,
-          status: 'processed',
+          status: autoApprove ? 'approved' : 'AI_replied',
         })
         
         console.log('[Agentic] Review processed successfully:', review.id)

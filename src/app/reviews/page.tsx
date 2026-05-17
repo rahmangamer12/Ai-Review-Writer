@@ -9,7 +9,7 @@ import {
   MessageSquare, Star, Search, Filter, Plus, ArrowLeft,
   CheckCircle, XCircle, Clock, Sparkles, Trash2, Edit3,
   ChevronLeft, ChevronRight, RefreshCw, Send, X, ThumbsUp,
-  ThumbsDown, AlertCircle, Bot, Wand2, Brain, Play, Pause,
+  ThumbsDown, AlertCircle, Brain, Play, Pause,
   CheckCircle2, Settings2, MoreVertical, LayoutGrid, List,
   TrendingUp, Zap, Globe, Facebook, MapPin, Instagram,
   BarChart3, PieChart, Activity, FilterX, Download, Upload,
@@ -26,7 +26,7 @@ interface Review {
   content?: string
   platform: string
   sentiment_label: 'positive' | 'negative' | 'neutral' | null
-  status: 'pending' | 'approved' | 'rejected'
+  status: 'pending' | 'approved' | 'rejected' | 'AI_replied'
   created_at: string
   updated_at: string
   reply?: {
@@ -45,17 +45,6 @@ interface ReviewFilters {
   search: string
   sortBy: 'created_at' | 'rating' | 'updated_at'
   sortOrder: 'desc' | 'asc'
-}
-
-interface GeneratedReview {
-  id: string
-  author_name: string
-  platform: string
-  rating: number
-  content: string
-  sentiment_label: string
-  ai_reply: string
-  status: string
 }
 
 // Platform icon component
@@ -128,17 +117,6 @@ function ReviewsContent() {
   useEffect(() => {
     setMounted(true)
   }, [])
-  
-  // AI Generator State
-  const [showAIGenerator, setShowAIGenerator] = useState(false)
-  const [aiConfig, setAiConfig] = useState({
-    count: 5,
-    platform: 'google',
-    ratingRange: 'mixed',
-    businessType: 'restaurant',
-  })
-  const [generatingReviews, setGeneratingReviews] = useState(false)
-  const [generatedReviews, setGeneratedReviews] = useState<GeneratedReview[]>([])
   
   // Agentic State
   const [agenticMode, setAgenticMode] = useState(false)
@@ -242,62 +220,6 @@ function ReviewsContent() {
     }
   }, [filters.search, userId])
 
-  // Generate AI Reviews
-  const generateAIReviews = async () => {
-    setGeneratingReviews(true)
-    try {
-      const response = await fetch('/api/reviews/generate-test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(aiConfig),
-      })
-      
-      if (!response.ok) throw new Error('Failed to generate reviews')
-      
-      const data = await response.json()
-      setGeneratedReviews(data.reviews || [])
-      if (data.usedFallback) {
-        toastInfo('Generated sample reviews', 'AI key was not available, so realistic fallback samples were used.')
-      } else {
-        toastSuccess('AI reviews generated', `${data.reviews?.length || 0} reviews are ready to review.`)
-      }
-    } catch (err) {
-      console.error('AI Review Generation Error:', err)
-      setError('Failed to generate reviews. Please check your AI API configuration and try again.')
-      setGeneratedReviews([])
-    } finally {
-      setGeneratingReviews(false)
-    }
-  }
-
-  const saveGeneratedReviews = async () => {
-    try {
-      const responses = await Promise.all(
-        generatedReviews.map(review =>
-          fetch('/api/reviews/analyze', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              content: review.content,
-              rating: review.rating,
-              author_name: review.author_name,
-              platform: review.platform,
-              sentiment_label: review.sentiment_label,
-            }),
-          })
-        )
-      )
-      const failed = responses.find(response => !response.ok)
-      if (failed) throw new Error('One or more reviews failed to save')
-      setGeneratedReviews([])
-      setShowAIGenerator(false)
-      fetchReviews()
-      toastSuccess('Reviews saved', 'Generated reviews were added to your workspace.')
-    } catch (err) {
-      setError('Failed to save generated reviews')
-    }
-  }
-
   // Run Agentic Review
   const runAgenticReview = async () => {
     if (agenticProcessing) return
@@ -308,7 +230,8 @@ function ReviewsContent() {
     try {
       const response = await fetch('/api/agentic/reviews', { 
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ autoApprove: autoReplyEnabled })
       })
       
       const result = await response.json()
@@ -433,7 +356,11 @@ function ReviewsContent() {
   const confirmDelete = async () => {
     if (!pendingDeleteId) return
     try {
-      await fetch(`/api/reviews/analyze?id=${pendingDeleteId}`, { method: 'DELETE' })
+      const response = await fetch(`/api/reviews/analyze?id=${encodeURIComponent(pendingDeleteId)}`, { method: 'DELETE' })
+      if (!response.ok) {
+        const data = await response.json().catch(() => null)
+        throw new Error(data?.error || 'Could not delete review')
+      }
       toastSuccess('Review deleted', 'The review has been removed.')
       fetchReviews()
     } catch (err) {
@@ -448,6 +375,7 @@ function ReviewsContent() {
       pending: { icon: Clock, color: 'bg-amber-500/20 text-amber-400', label: 'Pending' },
       approved: { icon: CheckCircle, color: 'bg-emerald-500/20 text-emerald-400', label: 'Approved' },
       rejected: { icon: XCircle, color: 'bg-rose-500/20 text-rose-400', label: 'Rejected' },
+      AI_replied: { icon: CheckCircle, color: 'bg-blue-500/20 text-blue-400', label: 'AI Replied' },
     }
     const config = configs[status as keyof typeof configs]
     const Icon = config.icon
@@ -772,30 +700,19 @@ function ReviewsContent() {
               <p className="text-xl text-gray-400 mb-10 max-w-xl mx-auto">
                 {filters.search || filters.status !== 'all' || filters.platform !== 'all'
                   ? "We couldn't find any reviews matching your current filters. Try adjusting them to see more results."
-                  : "You haven't collected any reviews yet. Connect a platform or generate test data to get started."}
+                  : "You haven't collected any real reviews yet. Connect a platform or add a customer review manually to get started."}
               </p>
               
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 {!(filters.search || filters.status !== 'all' || filters.platform !== 'all') && (
-                  <>
-                    <button
-                      onClick={() => setShowAIGenerator(true)}
-                      className="group relative overflow-hidden rounded-xl bg-purple-600 px-8 py-4 font-semibold text-white transition-all hover:scale-105 hover:shadow-[0_0_30px_rgba(168,85,247,0.4)] block w-full sm:w-auto"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 opacity-0 transition-opacity group-hover:opacity-100" />
-                      <span className="relative flex items-center justify-center gap-2">
-                        <Bot className="w-5 h-5" /> AI Generator
-                      </span>
-                    </button>
-                    <button
-                      onClick={() => router.push('/connect-platforms')}
-                      className="group rounded-xl border border-white/10 bg-white/5 px-8 py-4 font-semibold text-white transition-all hover:bg-white/10 hover:border-white/20 block w-full sm:w-auto"
-                    >
-                      <span className="flex items-center justify-center gap-2 text-gray-300 group-hover:text-white">
-                        <Globe className="w-5 h-5 text-blue-400" /> Connect Platforms
-                      </span>
-                    </button>
-                  </>
+                  <button
+                    onClick={() => router.push('/connect-platforms')}
+                    className="group rounded-xl border border-white/10 bg-white/5 px-8 py-4 font-semibold text-white transition-all hover:bg-white/10 hover:border-white/20 block w-full sm:w-auto"
+                  >
+                    <span className="flex items-center justify-center gap-2 text-gray-300 group-hover:text-white">
+                      <Globe className="w-5 h-5 text-blue-400" /> Connect Platforms
+                    </span>
+                  </button>
                 )}
                 <button
                   onClick={() => router.push('/reviews/add')}
@@ -1060,139 +977,6 @@ function ReviewsContent() {
         )}
       </AnimatePresence>
 
-      {/* AI Generator Modal */}
-      <AnimatePresence>
-        {showAIGenerator && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm p-0 sm:items-center sm:p-4"
-            onClick={() => setShowAIGenerator(false)}
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-3xl rounded-t-3xl border border-white/10 bg-[#0f0f14] p-4 shadow-2xl max-h-[92dvh] overflow-y-auto sm:rounded-2xl sm:p-6"
-            >
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Bot className="h-6 w-6 text-purple-400" />
-                  AI Review Generator
-                </h3>
-                <button onClick={() => setShowAIGenerator(false)} className="rounded-lg p-2 text-gray-400 hover:bg-white/5 hover:text-white">
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              {!generatedReviews.length ? (
-                <>
-                  <p className="text-gray-400 mb-6">Generate realistic test reviews using AI.</p>
-                  <div className="space-y-4 mb-6">
-                    <div>
-                      <label className="mb-2 block text-sm text-gray-400">Business Type</label>
-                      <input
-                        type="text"
-                        value={aiConfig.businessType}
-                        onChange={(e) => setAiConfig({ ...aiConfig, businessType: e.target.value })}
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
-                        placeholder="restaurant, salon, car dealer..."
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-sm text-gray-400">Number of Reviews</label>
-                      <input
-                        type="number"
-                        min={1}
-                        max={20}
-                        value={aiConfig.count}
-                        onChange={(e) => setAiConfig({ ...aiConfig, count: parseInt(e.target.value) || 5 })}
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-sm text-gray-400">Platform</label>
-                      <select
-                        value={aiConfig.platform}
-                        onChange={(e) => setAiConfig({ ...aiConfig, platform: e.target.value })}
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
-                      >
-                        <option value="google">Google</option>
-                        <option value="facebook">Facebook</option>
-                        <option value="yelp">Yelp</option>
-                        <option value="trustpilot">Trustpilot</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-sm text-gray-400">Rating Range</label>
-                      <select
-                        value={aiConfig.ratingRange}
-                        onChange={(e) => setAiConfig({ ...aiConfig, ratingRange: e.target.value })}
-                        className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-white"
-                      >
-                        <option value="mixed">Mixed (1-5 stars)</option>
-                        <option value="5">5 Stars Only</option>
-                        <option value="4">4 Stars Only</option>
-                      </select>
-                    </div>
-                  </div>
-                  <button
-                    onClick={generateAIReviews}
-                    disabled={generatingReviews}
-                    className="w-full rounded-xl bg-purple-600 py-4 font-medium text-white hover:bg-purple-500 disabled:opacity-50"
-                  >
-                    {generatingReviews ? (
-                      <><RefreshCw className="mr-2 inline h-5 w-5 animate-spin" /> Generating...</>
-                    ) : (
-                      <><Wand2 className="mr-2 inline h-5 w-5" /> Generate {aiConfig.count} AI Reviews</>
-                    )}
-                  </button>
-                </>
-              ) : (
-                <>
-                  <p className="text-emerald-400 mb-4 flex items-center gap-2">
-                    <CheckCircle2 className="h-5 w-5" />
-                    Generated {generatedReviews.length} reviews
-                  </p>
-                  <div className="space-y-3 mb-6 max-h-96 overflow-y-auto">
-                    {generatedReviews.map((review) => (
-                      <div key={review.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium text-white">{review.author_name}</span>
-                          <div className="flex items-center gap-2">
-                            <div className="flex">
-                              {[...Array(5)].map((_, i) => (
-                                <Star key={i} className={`h-3 w-3 ${i < review.rating ? 'fill-yellow-500 text-yellow-500' : 'text-gray-700'}`} />
-                              ))}
-                            </div>
-                            <span className={`text-xs ${review.sentiment_label === 'positive' ? 'text-emerald-400' : review.sentiment_label === 'negative' ? 'text-rose-400' : 'text-amber-400'}`}>
-                              {review.sentiment_label}
-                            </span>
-                          </div>
-                        </div>
-                        <p className="text-sm text-gray-400 mb-2">{review.content}</p>
-                        <p className="text-xs text-purple-400">AI Reply: {review.ai_reply}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="flex gap-3">
-                    <button onClick={() => setGeneratedReviews([])} className="flex-1 rounded-xl border border-white/10 bg-white/5 py-3 font-medium text-gray-400 hover:text-white">
-                      Regenerate
-                    </button>
-                    <button onClick={saveGeneratedReviews} className="flex-1 rounded-xl bg-purple-600 py-3 font-medium text-white hover:bg-purple-500">
-                      <Send className="mr-2 inline h-4 w-4" />
-                      Save All Reviews
-                    </button>
-                  </div>
-                </>
-              )}
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* AI Insights Modal */}
       <AnimatePresence>
         {showAIInsights && aiInsights && (
@@ -1226,7 +1010,7 @@ function ReviewsContent() {
                     <TrendingUp className="h-5 w-5 text-emerald-400" />
                     <h4 className="font-medium text-white">Top Sentiment</h4>
                   </div>
-                  <p className="text-emerald-400 capitalize">{aiInsights.topSentiment}</p>
+                  <p className="text-emerald-400 capitalize">{aiInsights.topSentiment || 'neutral'}</p>
                 </div>
 
                 <div className="rounded-xl border border-white/10 bg-white/5 p-4">
@@ -1234,7 +1018,7 @@ function ReviewsContent() {
                     <Clock className="h-5 w-5 text-blue-400" />
                     <h4 className="font-medium text-white">Average Response Time</h4>
                   </div>
-                  <p className="text-blue-400">{aiInsights.avgResponseTime}</p>
+                  <p className="text-blue-400">{aiInsights.avgResponseTime || 'Based on saved review status'}</p>
                 </div>
 
                 <div className="rounded-xl border border-white/10 bg-white/5 p-4">
@@ -1243,7 +1027,7 @@ function ReviewsContent() {
                     <h4 className="font-medium text-white">Areas for Improvement</h4>
                   </div>
                   <ul className="space-y-1">
-                    {aiInsights.improvementAreas.map((area: string, i: number) => (
+                    {(aiInsights.improvementAreas || []).map((area: string, i: number) => (
                       <li key={i} className="text-amber-400 text-sm flex items-center gap-2">
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
                         {area}
@@ -1258,7 +1042,7 @@ function ReviewsContent() {
                     <h4 className="font-medium text-white">AI Recommendations</h4>
                   </div>
                   <ul className="space-y-1">
-                    {aiInsights.recommendations.map((rec: string, i: number) => (
+                    {(aiInsights.recommendations || []).map((rec: string, i: number) => (
                       <li key={i} className="text-purple-400 text-sm flex items-center gap-2">
                         <Check className="h-3 w-3" />
                         {rec}

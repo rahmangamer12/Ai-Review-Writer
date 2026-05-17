@@ -117,15 +117,34 @@ export async function POST(req: NextRequest) {
         return counts
       }, {})
       const needsAttention = reviewItems.filter((review: any) => Number(review.rating || 0) <= 2).length
+      const topSentiment = Object.entries(sentimentCounts)
+        .sort((a, b) => Number(b[1]) - Number(a[1]))[0]?.[0] || 'neutral'
+      const lowRatingCount = reviewItems.filter((review: any) => Number(review.rating || 0) <= 3).length
 
       return NextResponse.json({
         total_reviews: total,
         average_rating: Number(averageRating.toFixed(1)),
         sentiment_breakdown: sentimentCounts,
         needs_attention: needsAttention,
+        topSentiment,
+        avgResponseTime: total ? 'Based on saved reply status' : 'No saved reviews yet',
+        improvementAreas: [
+          lowRatingCount > 0
+            ? `${lowRatingCount} reviews are 3 stars or below and need follow-up.`
+            : 'No low-rating pattern detected in the current review set.',
+          needsAttention > 0
+            ? 'Prioritize 1-2 star reviews before running broad AI replies.'
+            : 'Keep monitoring new incoming reviews for urgent issues.',
+        ],
+        recommendations: [
+          total === 0
+            ? 'Connect a real review platform or add a customer review manually.'
+            : 'Respond to pending reviews first, then review AI suggestions before publishing.',
+          'Use platform filters to compare Google, Facebook, and manual review performance.',
+        ],
         insights: [
           total === 0
-            ? 'No reviews available yet. Connect a platform or generate sample reviews to start analysis.'
+            ? 'No reviews available yet. Connect a platform or add real customer reviews manually to start analysis.'
             : `Average rating is ${averageRating.toFixed(1)} across ${total} reviews.`,
           needsAttention > 0
             ? `${needsAttention} low-rating reviews need a priority response.`

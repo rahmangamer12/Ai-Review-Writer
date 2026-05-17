@@ -249,7 +249,7 @@ export default function PermissionManager() {
     }
   }
 
-  // Simulate receiving a notification (for demo)
+  // Send a local browser notification to verify permission behavior.
   const simulateNotification = () => {
     if (typeof window === 'undefined') return
     

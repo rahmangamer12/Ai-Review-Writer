@@ -294,9 +294,9 @@ export default function ContactPage() {
             </div>
             
             <div>
-              <h3 className="text-white font-semibold mb-2">Can I schedule a demo?</h3>
+              <h3 className="text-white font-semibold mb-2">Can I schedule a walkthrough?</h3>
               <p className="text-white/70 text-sm">
-                Absolutely! Use the &quot;Schedule a Call&quot; button to book a personalized demo of our platform.
+                Absolutely! Use the &quot;Schedule a Call&quot; button to book a personalized product walkthrough of our platform.
               </p>
             </div>
             

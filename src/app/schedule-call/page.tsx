@@ -234,7 +234,7 @@ export default function ScheduleCallPage() {
                     <span className="text-primary text-sm">✓</span>
                   </div>
                   <p className="text-white/70 text-sm">
-                    Live demo of AutoReview AI features
+                    Live product walkthrough of AutoReview AI features
                   </p>
                 </li>
                 <li className="flex items-start gap-3">

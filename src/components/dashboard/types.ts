@@ -35,7 +35,7 @@ export interface AnalyticsData {
     content?: string
     platform: string
     sentiment_label: 'positive' | 'negative' | 'neutral' | null
-    status: 'pending' | 'approved' | 'rejected'
+    status: 'pending' | 'approved' | 'rejected' | 'AI_replied'
     created_at: string
     reply?: {
       id: string
