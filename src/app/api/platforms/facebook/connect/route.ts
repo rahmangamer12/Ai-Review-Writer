@@ -11,18 +11,20 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { appId, appSecret } = body;
+    const resolvedAppId = appId || process.env.NEXT_PUBLIC_FACEBOOK_APP_ID;
+    const resolvedAppSecret = appSecret || process.env.FACEBOOK_APP_SECRET;
 
-    if (!appId || !appSecret) {
+    if (!resolvedAppId || !resolvedAppSecret) {
       return NextResponse.json({
         error: 'Missing credentials',
-        message: 'Facebook App ID and App Secret are required',
+        message: 'Facebook App ID and App Secret are required. Add them in Vercel env or enter them on this page.',
         setupUrl: 'https://developers.facebook.com/apps',
       }, { status: 400 });
     }
 
     // Validate by making a test call to Facebook Graph API
     try {
-      const testUrl = `https://graph.facebook.com/v18.0/${encodeURIComponent(appId)}?fields=id,name&access_token=${encodeURIComponent(`${appId}|${appSecret}`)}`;
+      const testUrl = `https://graph.facebook.com/v18.0/${encodeURIComponent(resolvedAppId)}?fields=id,name&access_token=${encodeURIComponent(`${resolvedAppId}|${resolvedAppSecret}`)}`;
       const testRes = await fetch(testUrl, { signal: AbortSignal.timeout(10000) });
       const testData = await testRes.json();
 
@@ -41,11 +43,15 @@ export async function POST(request: NextRequest) {
     const redirectUri = `${appUrl}/api/platforms/facebook/callback`;
 
     // Encode userId + appId + appSecret into state (base64 encrypted)
-    const stateData = Buffer.from(JSON.stringify({ userId, appId, appSecret })).toString('base64url');
+    const stateData = Buffer.from(JSON.stringify({
+      userId,
+      appId: resolvedAppId,
+      appSecret: resolvedAppSecret,
+    })).toString('base64url');
 
     // Generate OAuth URL with user's credentials
     const authUrl = new URL('https://www.facebook.com/v18.0/dialog/oauth');
-    authUrl.searchParams.set('client_id', appId);
+    authUrl.searchParams.set('client_id', resolvedAppId);
     authUrl.searchParams.set('redirect_uri', redirectUri);
     authUrl.searchParams.set('scope', 'pages_read_engagement,pages_manage_posts');
     authUrl.searchParams.set('state', stateData);
@@ -53,7 +59,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       authUrl: authUrl.toString(),
-      message: 'Facebook OAuth URL generated. Save your App ID & Secret in settings for future use.',
+      message: appId && appSecret
+        ? 'Facebook OAuth URL generated with user credentials.'
+        : 'Facebook OAuth URL generated with platform environment credentials.',
     });
   } catch (error: unknown) {
     return NextResponse.json({

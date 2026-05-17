@@ -11,11 +11,13 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json();
     const { clientId, clientSecret } = body;
+    const resolvedClientId = clientId || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
+    const resolvedClientSecret = clientSecret || process.env.GOOGLE_CLIENT_SECRET;
 
-    if (!clientId || !clientSecret) {
+    if (!resolvedClientId || !resolvedClientSecret) {
       return NextResponse.json({
         error: 'Missing credentials',
-        message: 'Google Client ID and Client Secret are required',
+        message: 'Google Client ID and Client Secret are required. Add them in Vercel env or enter them on this page.',
         setupUrl: 'https://console.cloud.google.com/apis/credentials',
       }, { status: 400 });
     }
@@ -24,7 +26,11 @@ export async function POST(request: NextRequest) {
     const redirectUri = `${appUrl}/api/platforms/google/callback`;
 
     // Encode userId + clientId + clientSecret into state
-    const stateData = Buffer.from(JSON.stringify({ userId, clientId, clientSecret })).toString('base64url');
+    const stateData = Buffer.from(JSON.stringify({
+      userId,
+      clientId: resolvedClientId,
+      clientSecret: resolvedClientSecret,
+    })).toString('base64url');
 
     const scopes = [
       'https://www.googleapis.com/auth/business.manage',
@@ -33,7 +39,7 @@ export async function POST(request: NextRequest) {
     ];
 
     const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
-    authUrl.searchParams.set('client_id', clientId);
+    authUrl.searchParams.set('client_id', resolvedClientId);
     authUrl.searchParams.set('redirect_uri', redirectUri);
     authUrl.searchParams.set('response_type', 'code');
     authUrl.searchParams.set('scope', scopes.join(' '));
@@ -44,7 +50,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       authUrl: authUrl.toString(),
-      message: 'Google OAuth URL generated. Save your Client ID & Secret in settings for future use.',
+      message: clientId && clientSecret
+        ? 'Google OAuth URL generated with user credentials.'
+        : 'Google OAuth URL generated with platform environment credentials.',
     });
   } catch (error: unknown) {
     return NextResponse.json({

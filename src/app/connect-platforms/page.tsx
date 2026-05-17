@@ -221,6 +221,14 @@ export default function ConnectPlatformsPage() {
     setTestResult(null)
     
     try {
+      if (isOAuthPlatform && !hasOAuthFormCredentials) {
+        setTestResult({
+          success: true,
+          message: 'No keys entered here. The app will use your Vercel environment OAuth keys when you click Connect.',
+        })
+        return
+      }
+
       const result = await PlatformIntegrationManager.testConnection(selectedPlatform, formData)
       setTestResult(result)
     } catch (err) {
@@ -234,6 +242,11 @@ export default function ConnectPlatformsPage() {
   }
 
   const isOAuthPlatform = selectedPlatform === 'google' || selectedPlatform === 'facebook'
+  const hasOAuthFormCredentials = selectedPlatform === 'google'
+    ? Boolean(formData.clientId?.trim() && formData.clientSecret?.trim())
+    : selectedPlatform === 'facebook'
+      ? Boolean(formData.appId?.trim() && formData.appSecret?.trim())
+      : false
 
   const handleOAuthConnect = async () => {
     if (!selectedPlatform) return
@@ -246,8 +259,8 @@ export default function ConnectPlatformsPage() {
         ? '/api/platforms/google/connect'
         : '/api/platforms/facebook/connect'
       const payload = selectedPlatform === 'google'
-        ? { clientId: formData.clientId, clientSecret: formData.clientSecret }
-        : { appId: formData.appId, appSecret: formData.appSecret }
+        ? { clientId: formData.clientId?.trim() || undefined, clientSecret: formData.clientSecret?.trim() || undefined }
+        : { appId: formData.appId?.trim() || undefined, appSecret: formData.appSecret?.trim() || undefined }
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -725,11 +738,20 @@ export default function ConnectPlatformsPage() {
 
                         {/* Form Fields */}
                         <div className="space-y-4">
+                          {isOAuthPlatform && (
+                            <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/10 p-4">
+                              <p className="text-sm font-medium text-cyan-200">Two connection options</p>
+                              <p className="mt-1 text-xs leading-relaxed text-cyan-100/70">
+                                Leave these fields empty to use your platform OAuth keys from Vercel env, or enter the user's own keys to connect with their app.
+                              </p>
+                            </div>
+                          )}
                           {platformDef.fields.map((field: PlatformCredentialField) => (
                             <div key={field.name}>
                               <label className="flex items-center justify-between text-white text-sm font-medium mb-2">
                                 <span>{field.label}</span>
-                                {field.required && <span className="text-red-400 text-xs">Required</span>}
+                                {field.required && !isOAuthPlatform && <span className="text-red-400 text-xs">Required</span>}
+                                {field.required && isOAuthPlatform && <span className="text-cyan-300 text-xs">Optional if env is set</span>}
                               </label>
                               <div className="relative">
                                 <input
