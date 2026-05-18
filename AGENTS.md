@@ -61,6 +61,15 @@ Plus flow when needed:
 - Use `specplus-reverse-engineer` before changing legacy or unclear flows.
 - Use `specplus-taskstoissues` only when GitHub issue preparation is requested.
 
+Claude project skills are available in `.claude/skills/` for Claude Code users:
+
+- `speckit-plus-autoreview`
+- `autoreview-real-data-audit`
+- `autoreview-security-review`
+- `autoreview-ui-polish`
+- `autoreview-extension-workflow`
+- `autoreview-release-verify`
+
 ## Token Optimization And Context Engineering
 
 Use less context deliberately:

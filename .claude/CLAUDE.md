@@ -95,6 +95,19 @@ SpecKit Plus adds:
 - Reverse-engineering workflow before changing legacy behavior.
 - Task-to-issue preparation when GitHub issue tracking is requested.
 
+### Claude Project Skills
+
+Project skills live in `.claude/skills/<skill-name>/SKILL.md`. Claude Code can load them automatically from their descriptions or the user can invoke them directly with `/skill-name`.
+
+Installed project skills:
+
+- `speckit-plus-autoreview`: spec, plan, tasks, ADR, PHR, and reverse-engineering workflow.
+- `autoreview-real-data-audit`: finds demo/fake/local-only behavior and maps it to real sources.
+- `autoreview-security-review`: checks auth, ownership, billing, OAuth, secrets, and unsafe storage.
+- `autoreview-ui-polish`: improves responsive SaaS UI with icons and honest states.
+- `autoreview-extension-workflow`: Chrome extension review scraping and AI reply workflow.
+- `autoreview-release-verify`: manual release verification before commit/push/deploy.
+
 ### Step 1: Discovery
 
 Read the existing code before deciding. Identify:
