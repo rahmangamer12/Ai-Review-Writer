@@ -1,187 +1,124 @@
 {
-  "name": "AutoReview AI Agent",
-  "version": "1.0.0",
-  "description": "Intelligent SaaS platform for automated customer review management",
-  "agent_type": "agentic_ai_system",
+  "name": "AutoReview AI Engineering Skills",
+  "version": "2.0.0",
+  "description": "Project-specific capability map for building AutoReview AI with spec-driven development.",
+  "project": {
+    "type": "SaaS review management platform",
+    "domain": "AI-assisted review import, analytics, reply generation, profile management, platform integrations, Chrome extension workflows",
+    "primary_app_url": "https://ai-review-writer.vercel.app",
+    "current_stack": {
+      "frontend": ["Next.js 16 App Router", "React 19", "TypeScript", "Tailwind CSS", "Framer Motion", "lucide-react"],
+      "backend": ["Next.js Route Handlers", "Prisma", "PostgreSQL", "Clerk Auth"],
+      "ai": ["LongCat AI", "Google Generative AI where configured", "AI SDK patterns where used"],
+      "payments": ["LemonSqueezy checkout and webhooks"],
+      "security": ["CSRF protection", "rate limiting", "encrypted credentials", "server-side auth checks"],
+      "extension": ["Chrome extension Manifest V3", "content scripts", "background worker", "popup UI"],
+      "deployment": ["Vercel", "PWA assets", "Sentry optional"]
+    }
+  },
+  "spec_driven_development": {
+    "required_before_code": true,
+    "spec_location": "specs/",
+    "workflow": [
+      "Define the user problem and success metric.",
+      "Write the feature spec before implementation.",
+      "List acceptance criteria in Given/When/Then format.",
+      "Map data contracts, API routes, environment variables, and permissions.",
+      "Identify security, privacy, performance, mobile, and production risks.",
+      "Implement only what the spec covers.",
+      "Verify against acceptance criteria with typecheck, build, and focused manual checks.",
+      "Update the spec when behavior changes."
+    ],
+    "definition_of_ready": [
+      "User goal is clear.",
+      "Affected pages/components/API routes are named.",
+      "Real data source is identified.",
+      "Acceptance criteria are testable.",
+      "No demo/local-only behavior is accepted unless explicitly marked as development-only."
+    ],
+    "definition_of_done": [
+      "Feature works with real authenticated user data.",
+      "No raw secrets, payment details, or OAuth tokens are stored client-side.",
+      "Empty states are honest and non-demo.",
+      "Mobile and desktop layouts are usable.",
+      "TypeScript passes.",
+      "Production build passes for release-level changes.",
+      "Git diff contains no unrelated rewrites."
+    ]
+  },
   "capabilities": [
     {
-      "name": "analyze_sentiment",
-      "description": "Analyzes text sentiment and emotion with detailed classification",
-      "parameters": {
-        "text": "string (required)",
-        "language": "string (optional, auto-detected)"
-      },
-      "returns": {
-        "sentiment": "Positive|Negative|Neutral",
-        "emotion": "Happy|Angry|Disappointed|Excited|Frustrated|Calm",
-        "confidence": "number (0-1)",
-        "topics": "array of strings"
-      },
-      "examples": [
-        "This product is amazing! I love it so much!",
-        "Terrible service, will never buy again",
-        "It's okay, nothing special but works fine"
-      ]
+      "name": "review_reply_generation",
+      "purpose": "Generate high-quality replies to customer reviews with the correct tone, language, and business context.",
+      "inputs": ["review text", "rating", "author name", "platform", "tone", "business context"],
+      "outputs": ["reply text", "confidence metadata", "human review recommendation"],
+      "implementation": ["src/app/api/reviews/generate-reply/route.ts", "src/lib/longcatAI.ts", "src/app/reviews/page.tsx"]
     },
     {
-      "name": "detect_language",
-      "description": "Detects the language and script of the input text",
-      "parameters": {
-        "text": "string (required)"
-      },
-      "returns": {
-        "language": "English|Urdu|Roman_Urdu",
-        "script": "Latin|Arabic|Mixed",
-        "confidence": "number (0-1)"
-      },
-      "examples": [
-        "This is great",
-        "یہ بہت اچھا ہے",
-        "Ye bohat acha hai"
-      ]
+      "name": "real_profile_data",
+      "purpose": "Render user profile, stats, platforms, activity, avatar, and achievements from Clerk plus Prisma.",
+      "inputs": ["Clerk user", "Prisma User", "Prisma Review", "Prisma ConnectedPlatform"],
+      "outputs": ["profile DTO", "real activity timeline", "computed achievements"],
+      "implementation": ["src/app/api/user/profile/route.ts", "src/app/api/user/profile/avatar/route.ts", "src/app/profile/page.tsx"]
     },
     {
-      "name": "draft_reply",
-      "description": "Generates contextually appropriate replies based on review analysis",
-      "parameters": {
-        "review_context": "object (required)",
-        "tone": "string (Professional|Friendly|Desi/Casual)",
-        "language": "string (English|Urdu|Roman_Urdu)",
-        "sentiment": "string (from analyze_sentiment)",
-        "rating": "number (1-5)"
-      },
-      "returns": {
-        "reply": "string",
-        "tone_used": "string",
-        "language": "string",
-        "appropriateness_score": "number (0-1)",
-        "needs_human_review": "boolean"
-      },
-      "examples": [
-        {
-          "review": "Great product, fast delivery!",
-          "tone": "Friendly",
-          "expected_reply": "Hey! Thanks for the love! We're thrilled you enjoyed the product and our speedy delivery. 🎉"
-        }
-      ]
+      "name": "secure_billing_flow",
+      "purpose": "Route users to LemonSqueezy checkout without collecting raw card details in the app.",
+      "inputs": ["plan id", "billing cycle", "authenticated user"],
+      "outputs": ["checkout URL", "webhook subscription update"],
+      "implementation": ["src/app/api/checkout/route.ts", "src/components/PaymentMethodManager.tsx", "src/app/subscription/page.tsx", "src/app/api/webhooks/lemonsqueezy/route.ts"]
     },
     {
-      "name": "auto_approve_check",
-      "description": "Determines if a review reply requires human approval",
-      "parameters": {
-        "rating": "number (1-5)",
-        "sentiment": "string (from analyze_sentiment)",
-        "emotion": "string (from analyze_sentiment)",
-        "has_abusive_language": "boolean",
-        "confidence_score": "number (0-1)"
-      },
-      "returns": {
-        "auto_approve": "boolean",
-        "reason": "string",
-        "risk_level": "Low|Medium|High",
-        "recommended_action": "Publish|Draft|Reject"
-      },
-      "rules": [
-        "4-5 stars + Positive sentiment = Auto approve",
-        "1-2 stars + Negative sentiment = Needs approval",
-        "Any abusive language = Needs approval",
-        "Low confidence (< 0.7) = Needs approval"
-      ]
+      "name": "platform_integrations",
+      "purpose": "Connect and sync review platforms using OAuth or user-supplied credentials.",
+      "inputs": ["platform", "OAuth code or credentials", "authenticated user"],
+      "outputs": ["ConnectedPlatform record", "imported Review records", "sync status"],
+      "implementation": ["src/app/connect-platforms/page.tsx", "src/app/api/platforms/**", "src/lib/platformIntegrations.ts"]
     },
     {
-      "name": "detect_abusive_language",
-      "description": "Identifies potentially inappropriate or abusive content",
-      "parameters": {
-        "text": "string (required)",
-        "language": "string (optional)"
-      },
-      "returns": {
-        "has_abusive_content": "boolean",
-        "severity": "None|Mild|Moderate|Severe",
-        "flagged_words": "array of strings",
-        "confidence": "number (0-1)"
-      }
-    },
-    {
-      "name": "extract_topics",
-      "description": "Identifies key topics and themes in customer reviews",
-      "parameters": {
-        "text": "string (required)",
-        "context": "string (optional, product/service info)"
-      },
-      "returns": {
-        "topics": "array of objects",
-        "main_topic": "string",
-        "confidence": "number (0-1)"
-      }
-    },
-    {
-      "name": "learn_from_feedback",
-      "description": "Improves future responses based on human edits and feedback",
-      "parameters": {
-        "original_reply": "string",
-        "human_edited_reply": "string",
-        "review_context": "object",
-        "feedback_type": "string (edit|approve|reject)"
-      },
-      "returns": {
-        "learning_applied": "boolean",
-        "patterns_identified": "array of strings",
-        "improvement_suggestions": "array of strings"
-      }
-    },
-    {
-      "name": "generate_dashboard_insights",
-      "description": "Creates analytics insights for the 3D dashboard visualization",
-      "parameters": {
-        "reviews_data": "array of review objects",
-        "time_period": "string (day|week|month|quarter)",
-        "metrics_requested": "array of strings"
-      },
-      "returns": {
-        "sentiment_distribution": "object",
-        "trending_topics": "array of strings",
-        "performance_metrics": "object",
-        "recommendations": "array of strings"
-      }
+      "name": "chrome_extension_review_flow",
+      "purpose": "Detect reviews in supported web pages and generate replies from the web app backend.",
+      "inputs": ["current tab DOM", "review cards", "authenticated/configured app URL"],
+      "outputs": ["review list", "generated reply", "copy or insert action"],
+      "implementation": ["chrome-extension/manifest.json", "chrome-extension/content/scraper.js", "chrome-extension/popup/popup.html"]
     }
   ],
-  "workflow_rules": [
-    {
-      "rule": "High Confidence Auto-Reply",
-      "condition": "rating >= 4 AND sentiment === 'Positive' AND confidence >= 0.8",
-      "action": "auto_reply_and_publish",
-      "priority": "High"
-    },
-    {
-      "rule": "Low Confidence Draft",
-      "condition": "rating <= 2 OR sentiment === 'Negative' OR confidence < 0.7",
-      "action": "create_draft_needs_approval",
-      "priority": "Medium"
-    },
-    {
-      "rule": "Abusive Content Flag",
-      "condition": "has_abusive_language === true",
-      "action": "flag_for_human_review",
-      "priority": "Critical"
-    },
-    {
-      "rule": "Multi-language Detection",
-      "condition": "language !== 'English'",
-      "action": "apply_language_specific_processing",
-      "priority": "Medium"
-    }
+  "engineering_rules": [
+    "Prefer Prisma and server-side API routes for production data.",
+    "Use Clerk auth in every user-specific API route.",
+    "Use zod or equivalent validation for external input.",
+    "Do not introduce new Supabase-backed behavior unless it is part of a migration spec.",
+    "Do not store card numbers, CVV, OAuth secrets, access tokens, or platform credentials in localStorage.",
+    "Use lucide-react icons instead of emoji/text placeholders in product UI.",
+    "Use honest empty states instead of fake demo data.",
+    "Keep fallback templates clearly marked as offline/error fallback, never as primary production behavior.",
+    "Run npx tsc --noEmit before finishing code changes.",
+    "Run npm run build before release, routing, auth, billing, or schema changes."
   ],
-  "integration_points": [
-    "OpenAI GPT-4 for text generation",
-    "Supabase for data storage",
-    "Vercel AI SDK for streaming responses",
-    "React Three Fiber for 3D visualizations"
-  ],
-  "performance_requirements": {
-    "response_time": "< 2 seconds for sentiment analysis",
-    "batch_processing": "100 reviews/minute",
-    "accuracy_threshold": ">= 85% for sentiment detection",
-    "language_support": "English, Urdu, Roman Urdu"
+  "quality_gates": {
+    "security": [
+      "Auth check present",
+      "User ownership enforced",
+      "No secret in client bundle",
+      "No raw payment storage",
+      "CSRF/rate-limit considered for mutation endpoints"
+    ],
+    "data": [
+      "Source of truth documented",
+      "Empty state is real",
+      "No Math.random stats",
+      "No demo rows unless inside docs/examples only"
+    ],
+    "ui": [
+      "Responsive at mobile and desktop",
+      "No text overflow",
+      "Icons used for compact controls",
+      "Accessible labels for icon-only actions"
+    ],
+    "verification": [
+      "Typecheck passes",
+      "Build passes when production surface changes",
+      "Relevant API/page manually checked or reason documented"
+    ]
   }
 }
