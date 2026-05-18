@@ -55,6 +55,28 @@ AutoReview AI is a SaaS application for businesses that need to import, analyze,
 
 Use this workflow for features, refactors, integrations, billing, security, profile, reviews, analytics, platform connections, AI behavior, and extension changes.
 
+### Installed Spec Kit Tooling
+
+GitHub Spec Kit is installed locally through `uv`:
+
+```powershell
+uv tool install specify-cli --from git+https://github.com/github/spec-kit.git@v0.8.7
+```
+
+The repo contains a checked-in Spec Kit scaffold:
+
+- `AGENTS.md`
+- `.specify/memory/constitution.md`
+- `.specify/templates/`
+- `.specify/scripts/powershell/`
+- `.agents/skills/speckit-*`
+- `.agents/skills/context-engineering`
+- `.agents/skills/autoreview-real-data`
+- `specs/README.md`
+- `specs/context-engineering.md`
+
+If the `specify init` command hangs on Windows, use the checked-in scaffold and skills directly. The templates are already installed.
+
 ### Step 1: Discovery
 
 Read the existing code before deciding. Identify:

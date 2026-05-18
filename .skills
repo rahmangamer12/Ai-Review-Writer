@@ -17,9 +17,25 @@
     }
   },
   "spec_driven_development": {
+    "tooling": {
+      "name": "GitHub Spec Kit",
+      "cli": "specify",
+      "install_command": "uv tool install specify-cli --from git+https://github.com/github/spec-kit.git@v0.8.7",
+      "repo_files": [
+        ".specify/memory/constitution.md",
+        ".specify/templates/",
+        ".specify/scripts/powershell/",
+        ".agents/skills/speckit-*",
+        ".agents/skills/context-engineering",
+        ".agents/skills/autoreview-real-data",
+        "AGENTS.md",
+        "specs/"
+      ]
+    },
     "required_before_code": true,
     "spec_location": "specs/",
     "workflow": [
+      "Start by reading AGENTS.md and only the relevant spec.",
       "Define the user problem and success metric.",
       "Write the feature spec before implementation.",
       "List acceptance criteria in Given/When/Then format.",
@@ -44,6 +60,35 @@
       "TypeScript passes.",
       "Production build passes for release-level changes.",
       "Git diff contains no unrelated rewrites."
+    ]
+  },
+  "context_engineering": {
+    "goal": "Use the smallest useful context while preserving correctness.",
+    "load_order": [
+      "AGENTS.md",
+      ".specify/memory/constitution.md",
+      "Relevant specs/[feature]/ files",
+      "Contracts/data-model only if needed",
+      "Target source files by focused line range"
+    ],
+    "avoid": [
+      "node_modules",
+      ".next",
+      "package-lock.json unless dependency issue",
+      "tsconfig.tsbuildinfo",
+      "full build logs",
+      ".env values"
+    ],
+    "search_first_commands": [
+      "rg --files",
+      "rg -n \"keyword\" src chrome-extension prisma",
+      "rg -n \"demo|sample|fake|Math.random|localStorage|supabase\" src"
+    ],
+    "agent_behavior": [
+      "Summarize files read and decisions.",
+      "Do not reread files without a reason.",
+      "Prefer specs and contracts over broad source inspection.",
+      "Keep implementation scoped to acceptance criteria."
     ]
   },
   "capabilities": [
