@@ -26,12 +26,23 @@ Official Spec Kit CLI is installed with:
 uv tool install specify-cli --from git+https://github.com/github/spec-kit.git@v0.8.7
 ```
 
+SpecKit Plus is also installed with:
+
+```powershell
+uv tool install specifyplus
+```
+
+On PowerShell, use `specifyplus` instead of `sp` because `sp` is also a built-in alias for `Set-ItemProperty`.
+
 This repo contains:
 
 - `.specify/memory/constitution.md`
+- `.specify/memory/constitutionplus.md`
+- `.specify/memory/command-rules.md`
 - `.specify/templates/`
 - `.specify/scripts/powershell/`
 - `.agents/skills/speckit-*`
+- `.agents/skills/specplus-*`
 - `specs/README.md`
 
 Recommended flow:
@@ -42,6 +53,13 @@ Recommended flow:
 4. Use `speckit-tasks` skill to create task list.
 5. Use `speckit-implement` skill to implement.
 6. Verify with typecheck/build.
+
+Plus flow when needed:
+
+- Use `specplus-adr` for durable architecture decisions.
+- Use `specplus-phr` for meaningful prompt/work history.
+- Use `specplus-reverse-engineer` before changing legacy or unclear flows.
+- Use `specplus-taskstoissues` only when GitHub issue preparation is requested.
 
 ## Token Optimization And Context Engineering
 

@@ -18,14 +18,18 @@
   },
   "spec_driven_development": {
     "tooling": {
-      "name": "GitHub Spec Kit",
-      "cli": "specify",
-      "install_command": "uv tool install specify-cli --from git+https://github.com/github/spec-kit.git@v0.8.7",
+      "name": "GitHub Spec Kit + SpecKit Plus",
+      "cli": "specify and specifyplus",
+      "install_command": "uv tool install specify-cli --from git+https://github.com/github/spec-kit.git@v0.8.7 && uv tool install specifyplus",
+      "powershell_note": "Use specifyplus instead of sp because sp is a PowerShell alias for Set-ItemProperty.",
       "repo_files": [
         ".specify/memory/constitution.md",
+        ".specify/memory/constitutionplus.md",
+        ".specify/memory/command-rules.md",
         ".specify/templates/",
         ".specify/scripts/powershell/",
         ".agents/skills/speckit-*",
+        ".agents/skills/specplus-*",
         ".agents/skills/context-engineering",
         ".agents/skills/autoreview-real-data",
         "AGENTS.md",
@@ -44,6 +48,12 @@
       "Implement only what the spec covers.",
       "Verify against acceptance criteria with typecheck, build, and focused manual checks.",
       "Update the spec when behavior changes."
+    ],
+    "plus_workflow": [
+      "Use specplus-adr for durable architecture decisions.",
+      "Use specplus-phr for meaningful work history and handoff.",
+      "Use specplus-reverse-engineer before replacing legacy or unclear behavior.",
+      "Use specplus-taskstoissues only when issue preparation is requested."
     ],
     "definition_of_ready": [
       "User goal is clear.",

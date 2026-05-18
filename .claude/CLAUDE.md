@@ -63,19 +63,37 @@ GitHub Spec Kit is installed locally through `uv`:
 uv tool install specify-cli --from git+https://github.com/github/spec-kit.git@v0.8.7
 ```
 
+SpecKit Plus is also installed locally:
+
+```powershell
+uv tool install specifyplus
+```
+
+Use `specifyplus` on PowerShell. The short `sp` command conflicts with PowerShell's built-in `Set-ItemProperty` alias.
+
 The repo contains a checked-in Spec Kit scaffold:
 
 - `AGENTS.md`
 - `.specify/memory/constitution.md`
+- `.specify/memory/constitutionplus.md`
+- `.specify/memory/command-rules.md`
 - `.specify/templates/`
 - `.specify/scripts/powershell/`
 - `.agents/skills/speckit-*`
+- `.agents/skills/specplus-*`
 - `.agents/skills/context-engineering`
 - `.agents/skills/autoreview-real-data`
 - `specs/README.md`
 - `specs/context-engineering.md`
 
 If the `specify init` command hangs on Windows, use the checked-in scaffold and skills directly. The templates are already installed.
+
+SpecKit Plus adds:
+
+- ADR workflow for durable architecture decisions.
+- Prompt History Records for meaningful work traceability.
+- Reverse-engineering workflow before changing legacy behavior.
+- Task-to-issue preparation when GitHub issue tracking is requested.
 
 ### Step 1: Discovery
 
