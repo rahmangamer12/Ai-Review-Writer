@@ -3,7 +3,7 @@
 import { useState, useEffect, type ReactNode } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageSquare, LayoutDashboard, Database, Shield, Zap, Globe, Link as LinkIcon, Bell, Bot, Settings as SettingsIcon, AlertCircle, CheckCircle2, RefreshCcw, ExternalLink, Save, FileText, ScrollText, CreditCard, Plug, SlidersHorizontal, Gem } from 'lucide-react'
+import { MessageSquare, LayoutDashboard, Database, Shield, Zap, Globe, Link as LinkIcon, Bell, Bot, Settings as SettingsIcon, AlertCircle, CheckCircle2, RefreshCcw, ExternalLink, Save, FileText, ScrollText, CreditCard, Plug, SlidersHorizontal, Gem, Search, Star, BookOpen, Plane, HeartHandshake } from 'lucide-react'
 import { PlatformIntegrationManager } from '@/lib/platformIntegrations'
 import CreditManager from '@/components/CreditManager'
 import PageTransition from '@/components/transitions/PageTransition'
@@ -53,6 +53,24 @@ function ToggleSwitch({ enabled, onChange }: { enabled: boolean; onChange: (valu
       />
     </button>
   )
+}
+
+function PlatformIcon({ id }: { id: string }) {
+  const className = "h-6 w-6"
+  switch (id) {
+    case 'google':
+      return <Search className={className} />
+    case 'yelp':
+      return <Star className={className} />
+    case 'facebook':
+      return <BookOpen className={className} />
+    case 'tripadvisor':
+      return <Plane className={className} />
+    case 'trustpilot':
+      return <HeartHandshake className={className} />
+    default:
+      return <Globe className={className} />
+  }
 }
 
 interface Settings {
@@ -386,10 +404,10 @@ export default function SettingsPage() {
                       
                       <div className="flex items-start justify-between mb-6">
                         <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shadow-inner ${
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner ${
                             platform.connected ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5'
                           }`}>
-                            {platform.icon}
+                            <PlatformIcon id={platform.id} />
                           </div>
                           <div>
                             <h4 className="text-white font-bold text-base tracking-wide">{platform.name}</h4>

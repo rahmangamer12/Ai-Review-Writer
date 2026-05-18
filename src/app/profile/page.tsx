@@ -9,7 +9,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import PageTransition from '@/components/transitions/PageTransition'
 import PermissionManager from '@/components/PermissionManager'
-import { Camera, CreditCard, TrendingUp, Award, Target, Zap, BarChart3, Users, MessageSquare, Star, Calendar, Clock, Globe, MapPin, Mail, Phone, Briefcase, Edit2, Save, X, CheckCircle, ArrowUpRight, Activity, Heart, ThumbsUp, Settings, Bell, MapPinned } from 'lucide-react'
+import { Camera, CreditCard, TrendingUp, Award, Target, Zap, BarChart3, Users, MessageSquare, Star, Calendar, Clock, Globe, MapPin, Mail, Phone, Briefcase, Edit2, Save, X, CheckCircle, ArrowUpRight, Activity, Heart, ThumbsUp, Settings, Bell, MapPinned, Search, BookOpen, Plane, HeartHandshake } from 'lucide-react'
 
 interface ReviewData {
   rating?: number
@@ -83,6 +83,24 @@ export default function ProfilePage() {
   const [reviewsData, setReviewsData] = useState<ReviewData[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { success: toastSuccess, error: toastError } = useToast()
+
+  const renderPlatformIcon = (platformKey: string) => {
+    const className = "h-7 w-7"
+    switch (platformKey) {
+      case 'google':
+        return <Search className={className} />
+      case 'yelp':
+        return <Star className={className} />
+      case 'facebook':
+        return <BookOpen className={className} />
+      case 'tripadvisor':
+        return <Plane className={className} />
+      case 'trustpilot':
+        return <HeartHandshake className={className} />
+      default:
+        return <Globe className={className} />
+    }
+  }
 
   const loadProfile = useCallback(async () => {
     if (!user) return
@@ -1012,11 +1030,11 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
                     {(() => {
                       const platforms = [
-                        { name: 'Google', icon: 'G', key: 'google', color: 'from-blue-500 to-blue-600' },
-                        { name: 'Yelp', icon: 'Y', key: 'yelp', color: 'from-red-500 to-red-600' },
-                        { name: 'Facebook', icon: 'F', key: 'facebook', color: 'from-blue-600 to-blue-700' },
-                        { name: 'TripAdvisor', icon: 'T', key: 'tripadvisor', color: 'from-green-500 to-green-600' },
-                        { name: 'Trustpilot', icon: 'Tp', key: 'trustpilot', color: 'from-teal-500 to-teal-600' }
+                        { name: 'Google', key: 'google', color: 'from-blue-500 to-blue-600' },
+                        { name: 'Yelp', key: 'yelp', color: 'from-red-500 to-red-600' },
+                        { name: 'Facebook', key: 'facebook', color: 'from-blue-600 to-blue-700' },
+                        { name: 'TripAdvisor', key: 'tripadvisor', color: 'from-green-500 to-green-600' },
+                        { name: 'Trustpilot', key: 'trustpilot', color: 'from-teal-500 to-teal-600' }
                       ]
                       
                       // Calculate real stats per platform
@@ -1054,7 +1072,7 @@ export default function ProfilePage() {
                           }`}
                         >
                           <div className="text-center">
-                            <div className="text-4xl mb-2">{platform.icon}</div>
+                            <div className="mb-3 flex justify-center text-white">{renderPlatformIcon(platform.key)}</div>
                             <h3 className="text-white font-semibold mb-3">{platform.name}</h3>
                             {platform.reviews > 0 ? (
                               <>
