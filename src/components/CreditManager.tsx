@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useUser } from '@clerk/nextjs'
 import { type CreditUsage } from '@/lib/credits'
+import { AlertTriangle, BarChart3, Bot, Gem, Package } from 'lucide-react'
 
 export default function CreditManager() {
   const { user, isLoaded } = useUser()
@@ -75,7 +76,7 @@ export default function CreditManager() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center">
-                <span className="text-sm font-black">AI</span>
+                <Gem className="h-6 w-6 text-white" />
               </div>
               <div>
                 <h3 className="text-2xl font-bold text-white">AI Credits</h3>
@@ -131,7 +132,7 @@ export default function CreditManager() {
       >
         <div className="flex items-center gap-4 mb-6">
           <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
-            <span>Usage</span>
+            <BarChart3 className="h-5 w-5 text-purple-300" />
           </div>
           <div>
             <h3 className="text-xl font-bold text-white">Recent Usage</h3>
@@ -151,7 +152,7 @@ export default function CreditManager() {
               >
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-8 bg-red-500/20 rounded-lg flex items-center justify-center">
-                    <span className="text-xs font-black text-red-300">AI</span>
+                    <Bot className="h-4 w-4 text-red-300" />
                   </div>
                   <div>
                     <p className="text-white font-medium">
@@ -170,7 +171,7 @@ export default function CreditManager() {
         ) : (
           <div className="text-center py-8">
             <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <span className="text-sm font-black">Usage</span>
+              <BarChart3 className="h-8 w-8 text-white/50" />
             </div>
             <p className="text-white/60 mb-2">No usage history yet</p>
             <p className="text-white/40 text-sm">Start using AI features to track your credit usage</p>
@@ -187,7 +188,7 @@ export default function CreditManager() {
       >
         <div className="flex items-center gap-4 mb-6">
           <div className="w-10 h-10 bg-emerald-500/20 rounded-lg flex items-center justify-center">
-            <span>Pkg</span>
+            <Package className="h-5 w-5 text-emerald-300" />
           </div>
           <div>
             <h3 className="text-xl font-bold text-white">Credit Packages</h3>
@@ -252,7 +253,7 @@ export default function CreditManager() {
           >
             <div className="text-center">
               <div className="w-16 h-16 bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-3xl">!</span>
+                <AlertTriangle className="h-8 w-8 text-amber-300" />
               </div>
               <h3 className="text-2xl font-bold text-white mb-2">Low Credits</h3>
               <p className="text-white/60 mb-6">

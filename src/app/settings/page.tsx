@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
-import { MessageSquare, LayoutDashboard, Database, Shield, Zap, Globe, Link as LinkIcon, Bell, Bot, Settings as SettingsIcon, AlertCircle, CheckCircle2, RefreshCcw, ExternalLink, Save, FileText, ScrollText } from 'lucide-react'
+import { MessageSquare, LayoutDashboard, Database, Shield, Zap, Globe, Link as LinkIcon, Bell, Bot, Settings as SettingsIcon, AlertCircle, CheckCircle2, RefreshCcw, ExternalLink, Save, FileText, ScrollText, CreditCard, Plug, SlidersHorizontal, Gem } from 'lucide-react'
 import { PlatformIntegrationManager } from '@/lib/platformIntegrations'
 import CreditManager from '@/components/CreditManager'
 import PageTransition from '@/components/transitions/PageTransition'
@@ -21,7 +21,7 @@ function useHydrated() {
 
 type TabType = 'general' | 'credits' | 'notifications' | 'location' | 'billing' | 'ai' | 'integrations' | 'advanced' | 'legal'
 
-function TabButton({ tab, label, icon, activeTab, onClick }: { tab: TabType; label: string; icon: string; activeTab: TabType; onClick: (t: TabType) => void }) {
+function TabButton({ tab, label, icon, activeTab, onClick }: { tab: TabType; label: string; icon: ReactNode; activeTab: TabType; onClick: (t: TabType) => void }) {
   return (
     <button
       onClick={() => onClick(tab)}
@@ -31,7 +31,7 @@ function TabButton({ tab, label, icon, activeTab, onClick }: { tab: TabType; lab
           : 'glass text-white/70 hover:text-white hover:bg-white/10'
       }`}
     >
-      <span className="text-lg md:text-xl">{icon}</span>
+      <span className="flex h-5 w-5 items-center justify-center">{icon}</span>
       <span className="font-medium">{label}</span>
     </button>
   )
@@ -179,13 +179,13 @@ export default function SettingsPage() {
           {/* Tabs */}
           <div className="flex overflow-x-auto pb-4 gap-2 sm:gap-4 mb-4 sm:mb-8 hide-scrollbar snap-x">
             <div className="flex gap-2 sm:gap-4 snap-start">
-              <TabButton tab="general" label="General" icon="Set" activeTab={activeTab} onClick={setActiveTab} />
-              <TabButton tab="credits" label="Credits" icon="Cr" activeTab={activeTab} onClick={setActiveTab} />
-              <TabButton tab="notifications" label="Notifications" icon="Bell" activeTab={activeTab} onClick={setActiveTab} />
-              <TabButton tab="ai" label="AI Settings" icon="AI" activeTab={activeTab} onClick={setActiveTab} />
-              <TabButton tab="integrations" label="Integrations" icon="Plug" activeTab={activeTab} onClick={setActiveTab} />
-              <TabButton tab="billing" label="Billing" icon="Card" activeTab={activeTab} onClick={setActiveTab} />
-              <TabButton tab="advanced" label="Advanced" icon="Adv" activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="general" label="General" icon={<SettingsIcon className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="credits" label="Credits" icon={<Gem className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="notifications" label="Notifications" icon={<Bell className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="ai" label="AI Settings" icon={<Bot className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="integrations" label="Integrations" icon={<Plug className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="billing" label="Billing" icon={<CreditCard className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
+              <TabButton tab="advanced" label="Advanced" icon={<SlidersHorizontal className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
             </div>
           </div>
 

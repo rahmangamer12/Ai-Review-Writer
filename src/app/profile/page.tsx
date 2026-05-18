@@ -260,22 +260,12 @@ export default function ProfilePage() {
 
   const getPlanColor = (plan: string) => {
     const colors = {
-      free: 'Free',
-      starter: 'Start',
-      professional: 'Pro',
-      enterprise: 'Ent'
+      free: 'text-gray-400',
+      starter: 'text-blue-400',
+      professional: 'text-purple-400',
+      enterprise: 'text-yellow-400'
     }
     return colors[plan as keyof typeof colors] || 'text-gray-400'
-  }
-
-  const getPlanIcon = (plan: string) => {
-    const icons = {
-      free: 'Free',
-      starter: 'Start',
-      professional: 'Pro',
-      enterprise: 'Ent'
-    }
-    return icons[plan as keyof typeof icons] || 'Free'
   }
 
   return (
@@ -366,7 +356,7 @@ export default function ProfilePage() {
                     
                     <div className="flex flex-wrap gap-3">
                       <div className="flex items-center gap-2 px-3 py-1.5 glass rounded-lg">
-                        <span className="text-xl">{getPlanIcon(profile.plan)}</span>
+                        <CreditCard className={`h-4 w-4 ${getPlanColor(profile.plan)}`} />
                         <span className={`font-semibold capitalize ${getPlanColor(profile.plan)}`}>
                           {profile.plan} Plan
                         </span>
