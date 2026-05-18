@@ -208,11 +208,11 @@ export async function GET(req: NextRequest) {
       } catch (e) {
         console.error('[Analytics AI Error]:', e)
         insights = {
-          summary: "AI analysis indicates stable growth in positive sentiment. Customer engagement is peaking during midweek cycles.",
+          summary: "AI insights are temporarily unavailable. The dashboard is still showing real review metrics from the database.",
           improvement_suggestions: [
-            "Accelerate response time for neutral reviews to convert to positive",
-            "Leverage high-quality service mentions in marketing collateral",
-            "Implement automated triggers for review platform syncs"
+            "Review pending customer feedback first.",
+            "Check provider/API configuration if AI insights keep failing.",
+            "Use the Reviews page to generate replies for individual reviews."
           ]
         }
       }

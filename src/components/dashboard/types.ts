@@ -1,5 +1,5 @@
 /**
- * Dashboard Types — shared across all dashboard components
+ * Dashboard types shared across all dashboard components.
  */
 
 export interface AnalyticsData {

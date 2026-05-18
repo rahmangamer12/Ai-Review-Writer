@@ -347,9 +347,9 @@ export default function Dashboard() {
     <div className="min-h-[100dvh] text-white overflow-x-hidden w-full">
       {/* Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-pink-600/5 rounded-full blur-3xl" />
+        <div className="absolute inset-0 bg-[#08080d]" />
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:44px_44px]" />
+        <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-violet-950/25 to-transparent" />
       </div>
 
       {/* Mobile Tabs */}
@@ -406,6 +406,7 @@ export default function Dashboard() {
               setActiveTab={setActiveTab} 
                
               runAgenticReview={runAgenticReview} 
+              agenticProcessing={agenticProcessing}
             />
           )}
           {activeTab === 'reviews' && (

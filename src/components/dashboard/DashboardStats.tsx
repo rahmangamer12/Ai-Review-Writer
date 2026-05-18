@@ -38,14 +38,14 @@ export const ModernStatCard = ({ title, value, subtitle, icon: Icon, trend, tren
       transition={{ delay, duration: 0.5 }}
       className={`relative overflow-hidden rounded-xl sm:rounded-2xl border bg-gradient-to-br ${colorClasses[color]} p-4 transition-all duration-300 hover:shadow-2xl touch-enhanced`}
     >
-      <div className={`absolute -right-10 -top-10 h-32 w-32 rounded-full bg-${color}-500/20 blur-3xl`} />
+      <div className={`absolute inset-x-0 top-0 h-px ${colorClasses[color] || colorClasses.purple}`} />
 
       <div className="relative z-10">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-2">
           <div className={`rounded-lg sm:rounded-xl ${colorClasses[color] || colorClasses.purple} p-2 border`}>
             <Icon className={`h-5 w-5 ${iconColorClasses[color] || iconColorClasses.purple}`} />
           </div>
-          {trend && (
+          {trend && trendValue && (
             <div className={`flex items-center gap-1 rounded-full px-2 py-1 text-xs sm:text-sm font-medium ${
               trend === 'up' ? 'bg-emerald-500/20 text-emerald-400' :
               trend === 'down' ? 'bg-rose-500/20 text-rose-400' :

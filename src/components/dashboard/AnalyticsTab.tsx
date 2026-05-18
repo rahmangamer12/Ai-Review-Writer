@@ -29,6 +29,15 @@ interface AnalyticsTabProps {
   router: AppRouterInstance
 }
 
+const insightColorClasses: Record<string, { bg: string; icon: string }> = {
+  emerald: { bg: 'bg-emerald-500/20', icon: 'text-emerald-400' },
+  amber: { bg: 'bg-amber-500/20', icon: 'text-amber-400' },
+  purple: { bg: 'bg-purple-500/20', icon: 'text-purple-400' },
+  rose: { bg: 'bg-rose-500/20', icon: 'text-rose-400' },
+  blue: { bg: 'bg-blue-500/20', icon: 'text-blue-400' },
+  cyan: { bg: 'bg-cyan-500/20', icon: 'text-cyan-400' },
+}
+
 export default function AnalyticsTab({
   data,
   loading,
@@ -133,8 +142,8 @@ export default function AnalyticsTab({
                     className="rounded-xl border border-white/10 bg-white/5 p-4"
                   >
                     <div className="flex items-center justify-between mb-3">
-                      <div className={`rounded-lg bg-${insight.color}-500/20 p-2`}>
-                        <insight.icon className={`h-4 w-4 text-${insight.color}-400`} />
+                      <div className={`rounded-lg ${insightColorClasses[insight.color]?.bg || insightColorClasses.purple.bg} p-2`}>
+                        <insight.icon className={`h-4 w-4 ${insightColorClasses[insight.color]?.icon || insightColorClasses.purple.icon}`} />
                       </div>
                       <div className={`flex items-center gap-1 text-xs ${
                         insight.trend === 'up' ? 'text-emerald-400' :
@@ -163,11 +172,11 @@ export default function AnalyticsTab({
                   <ul className="space-y-2 text-sm text-gray-300">
                     <li className="flex items-start gap-2">
                       <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                      Your response rate is above industry average
+                      Response rate is calculated from reviews that have saved replies.
                     </li>
                     <li className="flex items-start gap-2">
                       <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                      AI-generated replies have 85% approval rate
+                      AI reply count only includes replies saved on real review records.
                     </li>
                   </ul>
                 </div>
