@@ -146,7 +146,7 @@ export async function processManualImport(
   for (const review of reviews) {
     const platform = (review.platform as 'google' | 'facebook' | 'yelp' | 'tripadvisor' | 'trustpilot' | 'other') || 'google';
     const incoming: IncomingReview = {
-      id: `manual_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      id: `manual_${crypto.randomUUID()}`,
       source: 'manual_import',
       platform: platform,
       author: review.author || 'Anonymous',
@@ -259,9 +259,8 @@ function generateSecureToken(length: number): string {
 }
 
 async function simulateOCR(imageBase64: string): Promise<string> {
-  // In production: Use Tesseract.js or Google Vision API
-  // For demo: return placeholder
-  return "OCR extraction would happen here. In production, use Tesseract.js or similar.";
+  // OCR is intentionally disabled until a real OCR provider is configured.
+  return "";
 }
 
 function parseReviewText(text: string): { author?: string; rating?: number; text: string } {

@@ -7,7 +7,6 @@ import { useUser } from '@clerk/nextjs'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { supabase } from '@/lib/supabase'
 import PageTransition from '@/components/transitions/PageTransition'
 import PermissionManager from '@/components/PermissionManager'
 import { Camera, CreditCard, TrendingUp, Award, Target, Zap, BarChart3, Users, MessageSquare, Star, Calendar, Clock, Globe, MapPin, Mail, Phone, Briefcase, Edit2, Save, X, CheckCircle, ArrowUpRight, Activity, Heart, ThumbsUp, Settings, Bell, MapPinned } from 'lucide-react'
@@ -90,73 +89,24 @@ export default function ProfilePage() {
 
     try {
       setLoading(true)
-      
-      const response = await fetch('/api/user/me')
+
+      const response = await fetch('/api/user/profile')
       const text = await response.text()
-      
+
       const isJson = text.trim().startsWith('{') || text.trim().startsWith('[')
       if (!isJson) {
         setLoading(false)
         return
       }
-      
+
       const userData = JSON.parse(text)
-      
-      if (!userData.planType) {
+      if (!userData.profile) {
         setLoading(false)
         return
       }
-      
-      // Fetch reviews data for stats
-      type SupabaseResult<T> = { data: T | null; error: Error | null }
-      const { data: reviews } = await (supabase.from('reviews').select('*') as unknown as Promise<SupabaseResult<ReviewData[]>>)
-      const { data: replies } = await (supabase.from('replies').select('*') as unknown as Promise<SupabaseResult<ReplyData[]>>)
-      setReviewsData(reviews || [])
-      
-      // Calculate real stats
-      const totalReviews = reviews?.length || 0
-      const totalReplies = replies?.length || 0
-      const avgRating = totalReviews > 0 
-        ? (reviews || []).reduce((sum: number, r: ReviewData) => sum + (r.rating || 0), 0) / totalReviews 
-        : 0
-      const responseRate = totalReviews > 0 ? (totalReplies / totalReviews) * 100 : 0
-      
-      const newProfile: UserProfile = {
-        id: user.id,
-        email: user.emailAddresses[0]?.emailAddress || '',
-        full_name: user.fullName || user.firstName || 'User',
-        avatar_url: user.imageUrl || null,
-        bio: userData.bio || 'AI-powered review management expert',
-        location: userData.location || '',
-        phone: userData.phone || '',
-        website: userData.website || '',
-        company: userData.company || '',
-        role: userData.role || '',
-        industry: userData.industry || 'Business Services',
-        plan: (userData.planType?.toLowerCase() as any) || 'free',
-        credits: userData.aiCredits || 0,
-        joined_date: user.createdAt?.toISOString() || new Date().toISOString(),
-        preferences: userData.preferences || {
-          theme: 'dark',
-          language: 'english',
-          notifications: true,
-          autoReply: true,
-          selectedPersona: 'friendly'
-        },
-        stats: {
-          total_reviews: totalReviews,
-          reviews_this_month: 0, // Could be calculated
-          avg_rating: Number(avgRating.toFixed(1)),
-          response_rate: Number(responseRate.toFixed(1)),
-          avg_response_time: 15,
-          total_replies: totalReplies,
-          platforms_connected: 0,
-          satisfaction_score: totalReviews === 0 ? 0 : Math.min(100, Math.max(0, Math.floor(avgRating * 20 + responseRate * 0.2)))
-        },
-        achievements: [], // Could be fetched
-        activity: generateActivityLog([], [], totalReviews, totalReplies)
-      }
-      
+
+      const newProfile: UserProfile = userData.profile
+      setReviewsData(userData.reviews || [])
       setProfile(newProfile)
       setEditedProfile(newProfile)
     } catch (error) {
@@ -165,99 +115,11 @@ export default function ProfilePage() {
       setLoading(false)
     }
   }, [user])
-
   useEffect(() => {
     if (isLoaded && user) {
       loadProfile()
     }
   }, [isLoaded, user, loadProfile])
-
-  const generateActivityLog = (reviews: ReviewData[], replies: ReplyData[], totalReviews: number, totalReplies: number) => {
-    const activities = []
-    const now = Date.now()
-
-    // Add recent review activities based on actual data
-    if (totalReviews > 0) {
-      activities.push({
-        id: 'activity-1',
-        type: 'review_received',
-        description: `Received ${Math.min(totalReviews, 5)} new reviews`,
-        timestamp: new Date(now - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
-        icon: '📝'
-      })
-    }
-
-    if (totalReplies > 0) {
-      activities.push({
-        id: 'activity-2',
-        type: 'reply_sent',
-        description: `Replied to ${Math.min(totalReplies, 3)} customer reviews`,
-        timestamp: new Date(now - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
-        icon: '💬'
-      })
-    }
-
-    // Add platform connection activity
-    const connectedPlatforms = ['google', 'yelp', 'facebook', 'tripadvisor', 'trustpilot']
-      .filter(platform => localStorage.getItem(`connected-${platform}`) === 'true')
-    
-    if (connectedPlatforms.length > 0) {
-      activities.push({
-        id: 'activity-3',
-        type: 'platform_connected',
-        description: `Connected ${connectedPlatforms.length} review platform${connectedPlatforms.length > 1 ? 's' : ''}`,
-        timestamp: new Date(now - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
-        icon: '🔌'
-      })
-    }
-
-    // Add AI usage activity
-    if (totalReplies > 5) {
-      activities.push({
-        id: 'activity-4',
-        type: 'ai_generated',
-        description: `Generated ${totalReplies} AI-powered responses`,
-        timestamp: new Date(now - 48 * 60 * 60 * 1000).toISOString(), // 2 days ago
-        icon: '🤖'
-      })
-    }
-
-    // Add achievement unlock activity
-    if (totalReviews >= 10) {
-      activities.push({
-        id: 'activity-5',
-        type: 'achievement',
-        description: 'Unlocked "Quick Responder" achievement',
-        timestamp: new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
-        icon: '🏆'
-      })
-    }
-
-    // Add profile update activity
-    activities.push({
-      id: 'activity-6',
-      type: 'profile_updated',
-      description: 'Updated profile information',
-      timestamp: new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days ago
-      icon: '👤'
-    })
-
-    // Add account creation activity
-    activities.push({
-      id: 'activity-8',
-      type: 'account_created',
-      description: 'Joined AutoReview AI',
-      timestamp: user?.createdAt?.toISOString() || new Date(now - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      icon: '🎉'
-    })
-
-    // Sort by timestamp (most recent first) and return top 20
-    return activities.sort((a, b) => 
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    ).slice(0, 20)
-  }
-
-
 
   const handleSaveProfile = async () => {
     if (!user || !profile) return
@@ -265,12 +127,15 @@ export default function ProfilePage() {
     setSaving(true)
     try {
       const updatedProfile = { ...profile, ...editedProfile }
-      
-      // Save to localStorage
-      const profileKey = `autoreview-profile-${user.id}`
-      localStorage.setItem(profileKey, JSON.stringify(updatedProfile))
-      
-      setProfile(updatedProfile)
+      const response = await fetch('/api/user/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updatedProfile),
+      })
+
+      if (!response.ok) throw new Error('Profile save failed')
+
+      await loadProfile()
       setEditing(false)
       toastSuccess('Profile updated!', 'Your profile has been saved successfully.')
     } catch (error) {
@@ -287,11 +152,17 @@ export default function ProfilePage() {
 
     setUploadingAvatar(true)
     try {
-      // Create a URL for the uploaded image
-      const imageUrl = URL.createObjectURL(file)
-      
-      setEditedProfile(prev => ({ ...prev, avatar_url: imageUrl }))
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      const formData = new FormData()
+      formData.append('file', file)
+      const response = await fetch('/api/user/profile/avatar', {
+        method: 'POST',
+        body: formData,
+      })
+      const result = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(result.error || 'Avatar upload failed')
+
+      setEditedProfile(prev => ({ ...prev, avatar_url: result.imageUrl }))
+      setProfile(prev => prev ? { ...prev, avatar_url: result.imageUrl } : prev)
       toastSuccess('Avatar updated!', 'Your profile photo has been updated.')
     } catch (error) {
       console.error('Error uploading avatar:', error)
@@ -389,22 +260,22 @@ export default function ProfilePage() {
 
   const getPlanColor = (plan: string) => {
     const colors = {
-      free: 'text-gray-400',
-      starter: 'text-blue-400',
-      professional: 'text-purple-400',
-      enterprise: 'text-yellow-400'
+      free: 'Free',
+      starter: 'Start',
+      professional: 'Pro',
+      enterprise: 'Ent'
     }
     return colors[plan as keyof typeof colors] || 'text-gray-400'
   }
 
   const getPlanIcon = (plan: string) => {
     const icons = {
-      free: '🆓',
-      starter: '🚀',
-      professional: '💼',
-      enterprise: '👑'
+      free: 'Free',
+      starter: 'Start',
+      professional: 'Pro',
+      enterprise: 'Ent'
     }
-    return icons[plan as keyof typeof icons] || '🆓'
+    return icons[plan as keyof typeof icons] || 'Free'
   }
 
   return (
@@ -963,7 +834,7 @@ export default function ProfilePage() {
                         <p className="text-white/60 text-xs">{achievement.description}</p>
                         {achievement.date && (
                           <p className="text-emerald-400 text-xs mt-2">
-                            ✓ Unlocked {new Date(achievement.date).toLocaleDateString()}
+                            Unlocked {new Date(achievement.date).toLocaleDateString()}
                           </p>
                         )}
                       </motion.div>
@@ -1151,20 +1022,20 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
                     {(() => {
                       const platforms = [
-                        { name: 'Google', icon: '🔍', key: 'google', color: 'from-blue-500 to-blue-600' },
-                        { name: 'Yelp', icon: '⭐', key: 'yelp', color: 'from-red-500 to-red-600' },
-                        { name: 'Facebook', icon: '📘', key: 'facebook', color: 'from-blue-600 to-blue-700' },
-                        { name: 'TripAdvisor', icon: '✈️', key: 'tripadvisor', color: 'from-green-500 to-green-600' },
-                        { name: 'Trustpilot', icon: '💚', key: 'trustpilot', color: 'from-teal-500 to-teal-600' }
+                        { name: 'Google', icon: 'G', key: 'google', color: 'from-blue-500 to-blue-600' },
+                        { name: 'Yelp', icon: 'Y', key: 'yelp', color: 'from-red-500 to-red-600' },
+                        { name: 'Facebook', icon: 'F', key: 'facebook', color: 'from-blue-600 to-blue-700' },
+                        { name: 'TripAdvisor', icon: 'T', key: 'tripadvisor', color: 'from-green-500 to-green-600' },
+                        { name: 'Trustpilot', icon: 'Tp', key: 'trustpilot', color: 'from-teal-500 to-teal-600' }
                       ]
                       
                       // Calculate real stats per platform
                       const platformStats = platforms.map(platform => {
-                        const isConnected = localStorage.getItem(`connected-${platform.key}`) === 'true'
                         const platformReviews = (reviewsData || []).filter((r: ReviewData) => 
                           (r as { platform?: string }).platform?.toLowerCase() === platform.key
                         )
                         const reviewCount = platformReviews.length
+                        const isConnected = reviewCount > 0
                         const avgRating = reviewCount > 0
                           ? platformReviews.reduce((sum: number, r: ReviewData) => sum + (r.rating || 0), 0) / reviewCount
                           : 0
@@ -1175,7 +1046,7 @@ export default function ProfilePage() {
                           rating: Number(avgRating.toFixed(1)),
                           isConnected,
                           responseRate: reviewCount > 0 
-                            ? Math.floor((Math.random() * 30) + 70)
+                            ? Math.round((platformReviews.filter((r: any) => r.ai_reply_text || r.status === 'AI_replied').length / reviewCount) * 100)
                             : 0
                         }
                       })
@@ -1313,7 +1184,7 @@ export default function ProfilePage() {
                           <div key={index} className={`p-4 glass rounded-lg ${data.isCurrentMonth ? 'ring-2 ring-primary/50' : ''}`}>
                             <p className="text-white/60 text-xs mb-2">
                               {data.month}
-                              {data.isCurrentMonth && <span className="ml-1 text-primary">●</span>}
+                              {data.isCurrentMonth && <span className="ml-1 text-primary">Current</span>}
                             </p>
                             
                             {/* Bar chart visualization */}
@@ -1384,7 +1255,7 @@ export default function ProfilePage() {
                               </div>
                               <p className="text-2xl font-bold text-white mb-1">{avgResponseTime}m</p>
                               <span className="text-xs text-purple-400">
-                                {responseTimeStatus} • Target: &lt;30m
+                                {responseTimeStatus} / Target: &lt;30m
                               </span>
                             </div>
                             
@@ -1438,7 +1309,7 @@ export default function ProfilePage() {
 
                   {profile.stats.total_reviews === 0 ? (
                     <div className="text-center py-12">
-                      <div className="text-6xl mb-4">📊</div>
+                      <Activity className="w-14 h-14 text-cyan-400 mx-auto mb-4" />
                       <h3 className="text-xl font-semibold text-white mb-2">No Activity Yet</h3>
                       <p className="text-white/60 mb-6">
                         Start managing reviews to see your activity timeline here.
@@ -1453,76 +1324,37 @@ export default function ProfilePage() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {/* Generate sample activity based on stats */}
-                      {[
-                        {
-                          id: '1',
-                          type: 'review',
-                          description: `Received ${profile.stats.reviews_this_month} new reviews this month`,
-                          timestamp: new Date().toISOString(),
-                          icon: '📬',
-                          color: 'cyan'
-                        },
-                        {
-                          id: '2',
-                          type: 'reply',
-                          description: `Sent ${profile.stats.total_replies} AI-powered replies`,
-                          timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-                          icon: '🤖',
-                          color: 'purple'
-                        },
-                        {
-                          id: '3',
-                          type: 'achievement',
-                          description: 'Unlocked new achievement badge',
-                          timestamp: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-                          icon: '🏆',
-                          color: 'yellow'
-                        },
-                        {
-                          id: '4',
-                          type: 'rating',
-                          description: `Maintained ${profile.stats.avg_rating.toFixed(1)} average rating`,
-                          timestamp: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-                          icon: '⭐',
-                          color: 'yellow'
-                        },
-                        {
-                          id: '5',
-                          type: 'platform',
-                          description: `Connected ${profile.stats.platforms_connected} review platforms`,
-                          timestamp: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-                          icon: '🔌',
-                          color: 'emerald'
-                        }
-                      ].map((activity, index) => (
-                        <motion.div
-                          key={activity.id}
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="flex items-start gap-4 p-4 glass rounded-lg hover:bg-white/5 transition-all"
-                        >
-                          <div className={`w-12 h-12 bg-${activity.color}-500/20 rounded-xl flex items-center justify-center shrink-0`}>
-                            <span className="text-2xl">{activity.icon}</span>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-white font-medium mb-1">{activity.description}</p>
-                            <p className="text-white/60 text-sm">
-                              {new Date(activity.timestamp).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                                year: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                              })}
-                            </p>
-                          </div>
-                          <button className="px-3 py-1.5 glass rounded-lg text-white/70 hover:text-white text-sm transition-colors">
-                            View
-                          </button>
-                        </motion.div>
-                      ))}
+                      {profile.activity.map((activity, index) => {
+                        const colorClass = activity.type === 'reply_saved' ? 'bg-purple-500/20 text-purple-300' : activity.type === 'platform_connected' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-cyan-500/20 text-cyan-300'
+                        return (
+                          <motion.div
+                            key={activity.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="flex items-start gap-4 p-4 glass rounded-lg hover:bg-white/5 transition-all"
+                          >
+                            <div className={`w-12 h-12 ${colorClass} rounded-xl flex items-center justify-center shrink-0`}>
+                              {activity.type === 'reply_saved' ? <MessageSquare className="w-5 h-5" /> : activity.type === 'platform_connected' ? <Globe className="w-5 h-5" /> : <Star className="w-5 h-5" />}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white font-medium mb-1">{activity.description}</p>
+                              <p className="text-white/60 text-sm">
+                                {new Date(activity.timestamp).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit'
+                                })}
+                              </p>
+                            </div>
+                            <Link href={activity.type === 'platform_connected' ? '/connect-platforms' : '/reviews'} className="px-3 py-1.5 glass rounded-lg text-white/70 hover:text-white text-sm transition-colors">
+                              View
+                            </Link>
+                          </motion.div>
+                        )
+                      })}
                     </div>
                   )}
                 </motion.div>
