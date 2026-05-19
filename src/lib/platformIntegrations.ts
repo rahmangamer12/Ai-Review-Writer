@@ -32,7 +32,7 @@ export const platformDefinitions: Record<string, {
 }> = {
   google: {
     name: 'Google My Business',
-    icon: '🔍',
+    icon: 'G',
     description: 'Connect Google Business Profile with your own OAuth Client ID and Secret',
     fields: [
       {
@@ -63,7 +63,7 @@ export const platformDefinitions: Record<string, {
   },
   yelp: {
     name: 'Yelp',
-    icon: '⭐',
+    icon: 'Y',
     description: 'Connect your Yelp business page to manage reviews and respond to customers',
     fields: [
       {
@@ -86,7 +86,7 @@ export const platformDefinitions: Record<string, {
   },
   facebook: {
     name: 'Facebook',
-    icon: '📘',
+    icon: 'F',
     description: 'Connect a Facebook Page with your own Meta App ID and App Secret',
     fields: [
       {
@@ -117,7 +117,7 @@ export const platformDefinitions: Record<string, {
   },
   tripadvisor: {
     name: 'TripAdvisor',
-    icon: '✈️',
+    icon: 'TA',
     description: 'Connect your TripAdvisor listing to manage reviews for hotels and restaurants',
     fields: [
       {
@@ -140,7 +140,7 @@ export const platformDefinitions: Record<string, {
   },
   trustpilot: {
     name: 'Trustpilot',
-    icon: '💚',
+    icon: 'TP',
     description: 'Connect your Trustpilot business account to manage reviews and responses',
     fields: [
       {
@@ -208,8 +208,10 @@ export class PlatformIntegrationManager {
     const limits: Record<string, number> = {
       'free': 2,
       'starter': 5,
-      'professional': 100, // Unlimited
-      'enterprise': 100 // Unlimited
+      'growth': 100,
+      'business': 100,
+      'professional': 100,
+      'enterprise': 100
     }
     return limits[plan] || 2
   }
@@ -231,6 +233,8 @@ export class PlatformIntegrationManager {
     const limits: Record<string, string> = {
       'free': 'Free plan: Max 2 platforms. Upgrade for more!',
       'starter': 'Starter plan: Max 5 platforms. Upgrade for unlimited!',
+      'growth': 'Connected platforms: Unlimited',
+      'business': 'Connected platforms: Unlimited',
       'professional': 'Connected platforms: Unlimited',
       'enterprise': 'Connected platforms: Unlimited'
     }
@@ -280,10 +284,10 @@ export class PlatformIntegrationManager {
         break
 
       case 'trustpilot':
-        if (!credentials.api_key?.trim()) {
+        if (!credentials.apiKey?.trim()) {
           return 'Trustpilot API key is required'
         }
-        if (credentials.api_key.length < 10) {
+        if (credentials.apiKey.length < 10) {
           return 'Trustpilot API key appears to be invalid (too short)'
         }
         break

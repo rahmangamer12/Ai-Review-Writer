@@ -101,7 +101,6 @@ const plans: SubscriptionPlan[] = [
   }
 ]
 
-// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function SubscriptionPage() {
   const router = useRouter()
   const { user, isLoaded } = useUser()
@@ -301,7 +300,7 @@ export default function SubscriptionPage() {
               >
                 {plan.popular && (
                   <div className="absolute top-0 left-0 right-0 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-center py-2 text-xs font-bold tracking-wide z-10">
-                    ⭐ MOST POPULAR
+                    MOST POPULAR
                   </div>
                 )}
 
@@ -464,12 +463,12 @@ export default function SubscriptionPage() {
                 a: 'Yes! You can upgrade or downgrade your plan at any time. When upgrading, you\'ll get immediate access to new features and credits.'
               },
               {
-                q: 'When will payments go live?',
-                a: 'Very soon! Sign up for early access notifications and you\'ll be the first to know — plus receive an exclusive early-bird discount.'
+                q: 'What do I need for payments to work?',
+                a: 'Add Lemon Squeezy API key, store ID, webhook secret, and the variant ID for each paid plan in Vercel. Checkout will open through Lemon Squeezy and payment methods are validated there.'
               },
               {
                 q: 'What is your refund policy?',
-                a: 'We offer a 30-day money-back guarantee. If you\'re not satisfied, contact us within 30 days for a full refund — no questions asked.'
+                a: 'We offer a 30-day money-back guarantee. If you are not satisfied, contact support within 30 days for a full refund.'
               }
             ].map((faq, index) => (
               <motion.div

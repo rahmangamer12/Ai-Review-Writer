@@ -1,19 +1,16 @@
-// Lemon Squeezy Payment Integration
+// Lemon Squeezy payment integration.
 // Docs: https://docs.lemonsqueezy.com/help/webhooks
 // API: https://docs.lemonsqueezy.com/api
+
+type PaidPlan = 'starter' | 'growth' | 'business'
 
 interface LemonSqueezyConfig {
   apiKey: string
   storeId: string
-  variantIds: {
-    starter: string
-    professional: string
-    enterprise: string
-  }
+  variantIds: Record<PaidPlan, string>
 }
 
 interface CheckoutOptions {
-  variantId: string
   userEmail?: string
   userName?: string
   customData?: Record<string, unknown>
@@ -35,116 +32,117 @@ export class LemonSqueezy {
       storeId: process.env.LEMONSQUEEZY_STORE_ID || '',
       variantIds: {
         starter: process.env.LEMONSQUEEZY_VARIANT_STARTER || '',
-        professional: process.env.LEMONSQUEEZY_VARIANT_PROFESSIONAL || '',
-        enterprise: process.env.LEMONSQUEEZY_VARIANT_ENTERPRISE || ''
-      }
+        growth: process.env.LEMONSQUEEZY_VARIANT_GROWTH || process.env.LEMONSQUEEZY_VARIANT_PROFESSIONAL || '',
+        business: process.env.LEMONSQUEEZY_VARIANT_BUSINESS || process.env.LEMONSQUEEZY_VARIANT_ENTERPRISE || '',
+      },
     }
   }
 
-  // Check if Lemon Squeezy is properly configured
   isConfigured(): boolean {
-    const configured = !!(
-      this.config.apiKey &&
-      this.config.storeId &&
-      this.config.variantIds.starter
-    )
-    
+    const hasAnyVariant = Object.values(this.config.variantIds).some(Boolean)
+    const configured = Boolean(this.config.apiKey && this.config.storeId && hasAnyVariant)
+
     if (!configured) {
-      console.log('⚠️ Lemon Squeezy not configured. Missing:', {
-        apiKey: !!this.config.apiKey,
-        storeId: !!this.config.storeId,
-        starter: !!this.config.variantIds.starter
+      console.log('Lemon Squeezy is not configured', {
+        apiKey: Boolean(this.config.apiKey),
+        storeId: Boolean(this.config.storeId),
+        configuredVariants: Object.entries(this.config.variantIds)
+          .filter(([, value]) => Boolean(value))
+          .map(([key]) => key),
       })
     }
-    
+
     return configured
   }
 
-  // Create a checkout session
-  async createCheckout(
-    plan: 'starter' | 'professional' | 'enterprise', 
-    options: Partial<CheckoutOptions> = {}
-  ): Promise<Checkout | null> {
+  getMissingForPlan(plan: PaidPlan): string[] {
+    const missing: string[] = []
+    if (!this.config.apiKey) missing.push('LEMONSQUEEZY_API_KEY')
+    if (!this.config.storeId) missing.push('LEMONSQUEEZY_STORE_ID')
+    if (!this.config.variantIds[plan]) {
+      missing.push(`LEMONSQUEEZY_VARIANT_${plan.toUpperCase()}`)
+    }
+    if (!process.env.LEMONSQUEEZY_WEBHOOK_SECRET) missing.push('LEMONSQUEEZY_WEBHOOK_SECRET')
+    return missing
+  }
+
+  async createCheckout(plan: PaidPlan, options: CheckoutOptions = {}): Promise<Checkout | null> {
     if (!this.isConfigured()) {
-      console.error('❌ Lemon Squeezy is not configured. Please add API keys to .env')
+      console.error('Lemon Squeezy is not configured. Add API keys and variant IDs to your environment.')
       return null
     }
 
     const variantId = this.config.variantIds[plan]
     if (!variantId) {
-      console.error(`❌ Variant ID for ${plan} plan not found in env`)
+      console.error(`Variant ID for ${plan} plan not found in env`)
       return null
     }
 
     try {
-      console.log('🍋 Creating Lemon Squeezy checkout for plan:', plan)
-      
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ai-review-writer.vercel.app'
       const response = await fetch(`${this.baseUrl}/checkouts`, {
         method: 'POST',
         headers: {
-          'Accept': 'application/vnd.api+json',
+          Accept: 'application/vnd.api+json',
           'Content-Type': 'application/vnd.api+json',
-          'Authorization': `Bearer ${this.config.apiKey}`
+          Authorization: `Bearer ${this.config.apiKey}`,
         },
         body: JSON.stringify({
           data: {
             type: 'checkouts',
             attributes: {
               product_options: {
-                enabled_variants: [parseInt(variantId)],
-                redirect_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://ai-review-writer.vercel.app'}/subscription/success?plan=${plan}`,
-                receipt_link_url: `${process.env.NEXT_PUBLIC_APP_URL || 'https://ai-review-writer.vercel.app'}/subscription/success?plan=${plan}`,
-                receipt_button_text: 'Return to Dashboard'
+                enabled_variants: [Number(variantId)],
+                redirect_url: `${appUrl}/subscription/success?plan=${plan}`,
+                receipt_link_url: `${appUrl}/subscription/success?plan=${plan}`,
+                receipt_button_text: 'Return to Dashboard',
               },
               checkout_data: {
                 email: options.userEmail,
                 name: options.userName,
-                custom: options.customData
+                custom: options.customData,
               },
-              expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString() // 30 min expiry
+              expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
             },
             relationships: {
               store: {
                 data: {
                   type: 'stores',
-                  id: this.config.storeId
-                }
+                  id: this.config.storeId,
+                },
               },
               variant: {
                 data: {
                   type: 'variants',
-                  id: variantId
-                }
-              }
-            }
-          }
-        })
+                  id: variantId,
+                },
+              },
+            },
+          },
+        }),
       })
 
       if (!response.ok) {
-        const error = await response.json()
-        console.error('❌ Lemon Squeezy API error:', error)
+        const error = await response.json().catch(() => null)
+        console.error('Lemon Squeezy API error:', error || response.statusText)
         return null
       }
 
       const data = await response.json()
-      console.log('✅ Checkout created:', data.data.id)
-      
       return {
         id: data.data.id,
         url: data.data.attributes.url,
-        expires_at: data.data.attributes.expires_at
+        expires_at: data.data.attributes.expires_at,
       }
     } catch (error) {
-      console.error('❌ Error creating checkout:', error)
+      console.error('Error creating checkout:', error)
       return null
     }
   }
 
-  // Verify webhook signature
   verifyWebhook(signature: string, payload: string): boolean {
     if (!process.env.LEMONSQUEEZY_WEBHOOK_SECRET) {
-      console.error('❌ LEMONSQUEEZY_WEBHOOK_SECRET not configured')
+      console.error('LEMONSQUEEZY_WEBHOOK_SECRET not configured')
       return false
     }
 
@@ -153,37 +151,29 @@ export class LemonSqueezy {
       const hmac = crypto.createHmac('sha256', process.env.LEMONSQUEEZY_WEBHOOK_SECRET)
       hmac.update(payload)
       const digest = hmac.digest('hex')
-      
-      const isValid = signature === digest
-      if (!isValid) {
-        console.error('❌ Webhook signature mismatch')
-      }
-      
-      return isValid
+      const signatureBuffer = Buffer.from(signature, 'hex')
+      const digestBuffer = Buffer.from(digest, 'hex')
+
+      if (signatureBuffer.length !== digestBuffer.length) return false
+      return crypto.timingSafeEqual(signatureBuffer, digestBuffer)
     } catch (error) {
-      console.error('❌ Error verifying webhook:', error)
+      console.error('Error verifying webhook:', error)
       return false
     }
   }
 
-  // Get subscription details
   async getSubscription(subscriptionId: string) {
-    if (!this.isConfigured()) {
-      return null
-    }
+    if (!this.isConfigured()) return null
 
     try {
       const response = await fetch(`${this.baseUrl}/subscriptions/${subscriptionId}`, {
         headers: {
-          'Accept': 'application/vnd.api+json',
-          'Authorization': `Bearer ${this.config.apiKey}`
-        }
+          Accept: 'application/vnd.api+json',
+          Authorization: `Bearer ${this.config.apiKey}`,
+        },
       })
 
-      if (!response.ok) {
-        return null
-      }
-
+      if (!response.ok) return null
       return await response.json()
     } catch (error) {
       console.error('Error fetching subscription:', error)
@@ -191,19 +181,16 @@ export class LemonSqueezy {
     }
   }
 
-  // Cancel subscription
   async cancelSubscription(subscriptionId: string) {
-    if (!this.isConfigured()) {
-      return false
-    }
+    if (!this.isConfigured()) return false
 
     try {
       const response = await fetch(`${this.baseUrl}/subscriptions/${subscriptionId}`, {
         method: 'DELETE',
         headers: {
-          'Accept': 'application/vnd.api+json',
-          'Authorization': `Bearer ${this.config.apiKey}`
-        }
+          Accept: 'application/vnd.api+json',
+          Authorization: `Bearer ${this.config.apiKey}`,
+        },
       })
 
       return response.ok
@@ -213,27 +200,21 @@ export class LemonSqueezy {
     }
   }
 
-  // Get customer subscriptions
   async getCustomerSubscriptions(email: string) {
-    if (!this.isConfigured()) {
-      return []
-    }
+    if (!this.isConfigured()) return []
 
     try {
       const response = await fetch(
         `${this.baseUrl}/subscriptions?filter[store_id]=${this.config.storeId}&filter[user_email]=${encodeURIComponent(email)}`,
         {
           headers: {
-            'Accept': 'application/vnd.api+json',
-            'Authorization': `Bearer ${this.config.apiKey}`
-          }
+            Accept: 'application/vnd.api+json',
+            Authorization: `Bearer ${this.config.apiKey}`,
+          },
         }
       )
 
-      if (!response.ok) {
-        return []
-      }
-
+      if (!response.ok) return []
       const data = await response.json()
       return data.data || []
     } catch (error) {
@@ -243,5 +224,4 @@ export class LemonSqueezy {
   }
 }
 
-// Export singleton instance
 export const lemonSqueezy = new LemonSqueezy()

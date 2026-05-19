@@ -53,72 +53,6 @@ function getCorsHeaders(request: NextRequest): Record<string, string> {
   return {}
 }
 
-// Fallback templates for offline mode
-function getFallbackReply(rating: number, tone: string, authorName: string): string {
-  const name = authorName || 'there';
-  const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'neutral';
-  
-  const templates: Record<string, string[]> = {
-    positive: [
-      `Thank you ${name} for your wonderful review! We're thrilled you had such a great experience with us. Your feedback means the world to our team!`,
-      `We truly appreciate your kind words, ${name}! It was our pleasure to serve you, and we look forward to seeing you again soon!`,
-      `Thank you so much, ${name}! We're excited to hear you enjoyed your experience. Can't wait to welcome you back!`,
-      `Greatly appreciate the support, ${name}! We're so happy we could meet your expectations. See you next time!`,
-      `Thanks for the 5 stars, ${name}! We love hearing from happy customers. Enjoy!`,
-    ],
-    neutral: [
-      `Thank you, ${name}, for your feedback. We appreciate you taking the time to share your experience and are always looking for ways to improve.`,
-      `We value your input, ${name}. Thank you for bringing this to our attention. We're committed to providing the best experience possible.`,
-      `Thanks for sharing your thoughts, ${name}. We'll take this feedback into account as we continue to improve our service.`,
-    ],
-    negative: [
-      `Hi ${name}, we sincerely apologize that your experience didn't meet your expectations. We'd love the opportunity to make this right. Please reach out to us directly so we can address your concerns.`,
-      `Dear ${name}, we're sorry to hear about your experience. This is not the standard we strive for. Please contact us so we can make things better.`,
-      `We apologize for the inconvenience, ${name}. We are looking into this issue to ensure it doesn't happen again. Thank you for your patience.`,
-    ]
-  };
-
-  const desiTemplates: Record<string, string[]> = {
-    positive: [
-      `Shukriya ${name} bhai! Aapka review parh kar bohat khushi hui. Hamari koshish hoti hai ke behtreen service dein. Dubara zaroor aaiye ga!`,
-      `Bohat bohat shukriya ${name}! Aapka feedback hamare liye bohat ahmiyat rakhta hai. Khush rahein!`,
-      `JazakAllah ${name}! Aapka review parh kar maza aa gaya. Dubara jald aaiye ga!`,
-    ],
-    neutral: [
-      `Shukriya ${name}! Hum mazeed behtar karne ki koshish karein ge.`,
-      `Thanks for the feedback ${name}. Hum is par kaam karein ge.`,
-    ],
-    negative: [
-      `Bohat afsos hua ${name} bhai aapka ye experience jaan kar. Hum maazrat khwah hain. Baraye meharbani hum se rabta karein taake hum isay theek kar sakein.`,
-      `Maazrat ${name} bhai. Ye hamara standard nahi hai. Humein moqa dein taake hum isay theek kar sakein.`,
-    ]
-  };
-  
-  const templateList = tone === 'desi' ? (desiTemplates[sentiment] || templates[sentiment]) : templates[sentiment];
-  const template = templateList[Math.floor(Math.random() * templateList.length)];
-  
-  // Apply tone modifiers
-  if (tone === 'professional') {
-    return sentiment === 'positive' 
-      ? `Thank you for your feedback, ${name}. We look forward to serving you again.`
-      : sentiment === 'negative'
-      ? `We apologize for this experience, ${name}. Please contact our management.`
-      : `Thank you for your feedback, ${name}. We value your input.`;
-  } else if (tone === 'apologetic') {
-    return sentiment === 'negative'
-      ? `We're so sorry ${name}. This is not our standard. Please let us make it right.`
-      : template;
-  } else if (tone === 'enthusiastic') {
-    return sentiment === 'positive'
-      ? `WOW! Thank you ${name}! You made our day! Come back soon!`
-      : template;
-  }
-  
-  return template;
-}
-
-
-
 // POST - Generate AI reply or save existing reply
 async function handler(request: NextRequest) {
   try {
@@ -219,40 +153,44 @@ async function handler(request: NextRequest) {
         throw new Error('No API key')
       }
     } catch (e) {
-      console.error('[Generate Reply API] Sentiment analysis failed, using fallback')
+      console.error('[Generate Reply API] Sentiment analysis failed, using rating heuristic')
       sentimentResult = {
         sentiment: (rating || 3) >= 4 ? 'positive' : (rating || 3) <= 2 ? 'negative' : 'neutral',
         confidence: 0.8
       }
     }
 
-    // Generate reply using AI with fallback templates
-    let aiReply = ''
-    let usedFallback = false
-    if (longcatAI.hasApiKey()) {
-      try {
-        const result = await longcatAI.generateReviewResponse(
-          reviewText,
-          rating || 3,
-          sentimentResult.sentiment,
-          tone as any,
-          authorName || 'there'
-        )
-        aiReply = result.response
-        console.log('[Generate Reply API] AI Reply generated:', aiReply.substring(0, 100) + '...')
-      } catch (aiError) {
-        console.warn('[Generate Reply API] AI generation failed, using fallback template:', aiError)
-        usedFallback = true
-      }
-    } else {
-      console.log('[Generate Reply API] No AI key configured, using fallback template')
-      usedFallback = true
+    if (!longcatAI.hasApiKey()) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'AI provider is not configured. Add LONGCAT_AI_API_KEY in Vercel to generate real replies.',
+        },
+        { status: 503, headers: getCorsHeaders(request) }
+      )
     }
 
-    // Use fallback template if AI failed or not configured
-    if (!aiReply) {
-      aiReply = getFallbackReply(rating || 3, tone, authorName || 'there')
-      usedFallback = true
+    // Generate reply using the configured AI provider.
+    let aiReply = ''
+    try {
+      const result = await longcatAI.generateReviewResponse(
+        reviewText,
+        rating || 3,
+        sentimentResult.sentiment,
+        tone as any,
+        authorName || 'there'
+      )
+      aiReply = result.response
+      console.log('[Generate Reply API] AI Reply generated:', aiReply.substring(0, 100) + '...')
+    } catch (aiError) {
+      console.warn('[Generate Reply API] AI generation failed:', aiError)
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'AI generation failed. Please verify the AI API key and try again.',
+        },
+        { status: 502, headers: getCorsHeaders(request) }
+      )
     }
 
     return NextResponse.json(
@@ -267,8 +205,8 @@ async function handler(request: NextRequest) {
           platform,
           language,
           generated_at: new Date().toISOString(),
-          ai_provider: usedFallback ? 'Fallback Templates' : 'LongCat AI',
-          used_fallback: usedFallback,
+          ai_provider: 'LongCat AI',
+          used_fallback: false,
         }
       },
       {

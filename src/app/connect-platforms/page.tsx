@@ -38,8 +38,7 @@ import {
   Users,
   Headphones
 } from 'lucide-react'
-import { 
-  PlatformIntegrationManager, 
+import {
   platformDefinitions,
   type PlatformConfig,
   type PlatformCredentialField 
@@ -102,15 +101,15 @@ const setupOptions = [
 
 // Platform options for managed setup
 const managedPlatformOptions = [
-  { id: 'google', name: 'Google My Business', icon: '🔍' },
-  { id: 'facebook', name: 'Facebook', icon: '📘' },
-  { id: 'yelp', name: 'Yelp', icon: '⭐' },
-  { id: 'tripadvisor', name: 'TripAdvisor', icon: '✈️' },
-  { id: 'trustpilot', name: 'Trustpilot', icon: '💚' },
-  { id: 'other', name: 'Other', icon: '🔗' }
+  { id: 'google', name: 'Google My Business', icon: 'G' },
+  { id: 'facebook', name: 'Facebook', icon: 'F' },
+  { id: 'yelp', name: 'Yelp', icon: 'Y' },
+  { id: 'tripadvisor', name: 'TripAdvisor', icon: 'TA' },
+  { id: 'trustpilot', name: 'Trustpilot', icon: 'TP' },
+  { id: 'other', name: 'Other', icon: 'Other' }
 ]
 
-// Testimonials — authentic marketing copy from beta users
+// Testimonials - authentic marketing copy from beta users
 const testimonials = [
   {
     name: 'Sarah Johnson',
@@ -182,12 +181,31 @@ export default function ConnectPlatformsPage() {
   useEffect(() => {
     if (!hydrated) return
     
-    const loadPlatforms = () => {
-      const loaded = PlatformIntegrationManager.getPlatforms()
-      setPlatforms(loaded)
-    }
     loadPlatforms()
   }, [hydrated])
+
+  const loadPlatforms = async () => {
+    try {
+      const response = await fetch('/api/platforms', { cache: 'no-store' })
+      const data = await response.json()
+      if (response.ok && Array.isArray(data.platforms)) {
+        setPlatforms(data.platforms)
+        return
+      }
+    } catch (error) {
+      console.error('Failed to load platforms from server:', error)
+    }
+
+    setPlatforms(Object.entries(platformDefinitions).map(([id, def]) => ({
+      id,
+      name: def.name,
+      icon: def.icon,
+      description: def.description,
+      connected: false,
+      credentials: {},
+      status: 'disconnected',
+    })))
+  }
 
   // Show loading state while platforms load
   const isLoadingPlatforms = hydrated && platforms.length === 0
@@ -242,7 +260,12 @@ export default function ConnectPlatformsPage() {
         return
       }
 
-      const result = await PlatformIntegrationManager.testConnection(selectedPlatform, formData)
+      const response = await fetch('/api/platforms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ platformId: selectedPlatform, credentials: formData }),
+      })
+      const result = await response.json()
       setTestResult(result)
     } catch (err) {
       setTestResult({ 
@@ -315,16 +338,27 @@ export default function ConnectPlatformsPage() {
     setSaving(true)
     
     try {
-      const test = await PlatformIntegrationManager.testConnection(selectedPlatform, formData)
+      const testResponse = await fetch('/api/platforms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ platformId: selectedPlatform, credentials: formData }),
+      })
+      const test = await testResponse.json()
       
       if (test.success) {
-        const saved = PlatformIntegrationManager.savePlatform(selectedPlatform, formData)
-        if (saved) {
-          const updated = PlatformIntegrationManager.getPlatforms()
-          setPlatforms(updated)
+        const saveResponse = await fetch('/api/platforms', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ platformId: selectedPlatform, credentials: formData }),
+        })
+        const saved = await saveResponse.json().catch(() => ({}))
+        if (saveResponse.ok && saved.success) {
+          await loadPlatforms()
           setSelectedPlatform(null)
           setFormData({})
           setTestResult(null)
+        } else {
+          setTestResult({ success: false, message: saved.error || 'Failed to save platform.' })
         }
       } else {
         setTestResult({ success: false, message: test.message })
@@ -337,11 +371,22 @@ export default function ConnectPlatformsPage() {
   }
 
   // Disconnect platform
-  const handleDisconnect = (platformId: string) => {
+  const handleDisconnect = async (platformId: string) => {
     if (confirm('Are you sure you want to disconnect this platform?')) {
-      PlatformIntegrationManager.disconnectPlatform(platformId)
-      const updated = PlatformIntegrationManager.getPlatforms()
-      setPlatforms(updated)
+      try {
+        const response = await fetch(`/api/platforms?platformId=${encodeURIComponent(platformId)}`, {
+          method: 'DELETE',
+        })
+        if (!response.ok) throw new Error('Failed to disconnect platform')
+        await loadPlatforms()
+        if (selectedPlatform === platformId) {
+          setSelectedPlatform(null)
+          setFormData({})
+          setTestResult(null)
+        }
+      } catch {
+        setTestResult({ success: false, message: 'Failed to disconnect platform. Please try again.' })
+      }
     }
   }
 
@@ -660,7 +705,7 @@ export default function ConnectPlatformsPage() {
                         <span className={`text-sm font-medium ${
                           option.color === 'emerald' ? 'text-emerald-400' :
                           option.color === 'cyan' ? 'text-cyan-400' : 'text-purple-400'
-                        }`}>✓ Selected</span>
+                        }`}>Selected</span>
                       </div>
                     )}
                   </div>
@@ -693,10 +738,7 @@ export default function ConnectPlatformsPage() {
                         Available Platforms
                       </h2>
                       <button
-                        onClick={() => {
-                          const updated = PlatformIntegrationManager.getPlatforms()
-                          setPlatforms(updated)
-                        }}
+                        onClick={loadPlatforms}
                         className="flex items-center gap-2 px-4 py-2 glass rounded-lg text-white/70 hover:text-white transition-colors"
                       >
                         <RefreshCw className="w-4 h-4" />
@@ -1194,14 +1236,14 @@ export default function ConnectPlatformsPage() {
                       </h3>
                       <div className="space-y-4">
                         {[
-                          { step: 1, title: 'Submit Request', desc: 'Fill out the form with your details', icon: '📝' },
-                          { step: 2, title: 'We Contact You', desc: 'Our team reaches out within 24 hours', icon: '📞' },
-                          { step: 3, title: 'Setup Process', desc: 'We configure everything for you', icon: '⚙️' },
-                          { step: 4, title: 'Start Using', desc: 'Your platforms are ready to go!', icon: '🚀' }
+                          { step: 1, title: 'Submit Request', desc: 'Fill out the form with your details', icon: <MessageSquare className="w-5 h-5 text-cyan-300" /> },
+                          { step: 2, title: 'We Contact You', desc: 'Our team reaches out within 24 hours', icon: <Phone className="w-5 h-5 text-cyan-300" /> },
+                          { step: 3, title: 'Setup Process', desc: 'We configure everything for you', icon: <Wrench className="w-5 h-5 text-cyan-300" /> },
+                          { step: 4, title: 'Start Using', desc: 'Your platforms are ready to go!', icon: <CheckCircle className="w-5 h-5 text-cyan-300" /> }
                         ].map((item) => (
                           <div key={item.step} className="flex items-start gap-3">
                             <div className="w-10 h-10 rounded-full bg-cyan-500/20 flex items-center justify-center shrink-0">
-                              <span className="text-xl">{item.icon}</span>
+                              {item.icon}
                             </div>
                             <div>
                               <h4 className="text-white font-medium text-sm">Step {item.step}: {item.title}</h4>
@@ -1519,7 +1561,7 @@ export default function ConnectPlatformsPage() {
                         'Create API credentials'
                       ],
                       color: 'from-blue-500 to-blue-600',
-                      icon: '🔍'
+                      icon: <Globe className="w-6 h-6 text-white" />
                     },
                     {
                       platform: 'Yelp',
@@ -1530,7 +1572,7 @@ export default function ConnectPlatformsPage() {
                         'Copy the API key'
                       ],
                       color: 'from-red-500 to-red-600',
-                      icon: '⭐'
+                      icon: <Star className="w-6 h-6 text-white" />
                     },
                     {
                       platform: 'Facebook',
@@ -1541,7 +1583,7 @@ export default function ConnectPlatformsPage() {
                         'Generate Page Access Token'
                       ],
                       color: 'from-blue-600 to-blue-700',
-                      icon: '📘'
+                      icon: <MessageSquare className="w-6 h-6 text-white" />
                     },
                     {
                       platform: 'Trustpilot',
@@ -1552,7 +1594,7 @@ export default function ConnectPlatformsPage() {
                         'Get your API credentials'
                       ],
                       color: 'from-green-500 to-green-600',
-                      icon: '💚'
+                      icon: <Shield className="w-6 h-6 text-white" />
                     }
                   ].map((item, index) => (
                     <div key={index} className="space-y-3">

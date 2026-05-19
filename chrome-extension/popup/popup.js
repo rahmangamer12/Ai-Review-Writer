@@ -1,8 +1,7 @@
+// DOM Elements
 // AutoReview AI - Popup Script
-// Version 1.1.3
+// Version 1.1.4
 
-// ─── Configuration ────────────────────────────────────────────────────────────
-// Users can override this in popup settings; falls back to production URL
 const DEFAULT_API_URL = 'https://ai-review-writer.vercel.app';
 
 function getApiUrl() {
@@ -13,55 +12,6 @@ function getApiUrl() {
   });
 }
 
-// ─── Fallback Templates ───────────────────────────────────────────────────────
-const FALLBACK_TEMPLATES = {
-  positive: [
-    "Thank you {name} for your wonderful review! We're thrilled you had such a great experience with us!",
-    "We truly appreciate your kind words, {name}! It was our pleasure to serve you.",
-    "Thank you so much, {name}! We're excited to hear you enjoyed your experience.",
-    "Greatly appreciate the support, {name}! We're so happy we could meet your expectations.",
-    "Thanks for the 5 stars, {name}! We love hearing from happy customers.",
-    "It was a pleasure serving you, {name}! We're glad you liked everything.",
-    "We're grinning ear to ear reading this, {name}! Thanks for making our day!",
-  ],
-  neutral: [
-    "Thank you, {name}, for your feedback. We appreciate you taking the time to share your experience.",
-    "We value your input, {name}. Thank you for bringing this to our attention.",
-    "Thanks for sharing your thoughts, {name}. We'll take this feedback into account.",
-    "We appreciate the honest feedback, {name}. We hope to serve you better next time!",
-  ],
-  negative: [
-    "Hi {name}, we sincerely apologize that your experience didn't meet your expectations. Please reach out to us directly.",
-    "Dear {name}, we're sorry to hear about your experience. Please contact us so we can make things better.",
-    "We apologize for the inconvenience, {name}. We are looking into this issue.",
-    "We're sorry to hear you weren't satisfied, {name}. We'd appreciate a chance to discuss this.",
-  ]
-};
-
-function getFallbackReply(rating, tone, name) {
-  const sentiment = rating >= 4 ? 'positive' : rating <= 2 ? 'negative' : 'neutral';
-  const templates = FALLBACK_TEMPLATES[sentiment];
-  let template = templates[Math.floor(Math.random() * templates.length)];
-  template = template.replace(/\{name\}/g, name || 'there');
-
-  if (tone === 'professional') {
-    return sentiment === 'positive'
-      ? `Thank you for your positive feedback, ${name}. We appreciate your business.`
-      : sentiment === 'negative'
-      ? `We apologize for this experience, ${name}. Please contact our management team.`
-      : `Thank you for your feedback, ${name}. We will use this to improve.`;
-  }
-  if (tone === 'desi') {
-    return sentiment === 'positive'
-      ? `Shukriya ${name} bhai! Aapka review parh kar bohat khushi hui! ✨`
-      : sentiment === 'negative'
-      ? `Maazrat khwah hain ${name} bhai. Hum se rabta karein taake hum isay theek kar sakein. 🙏`
-      : `Shukriya ${name}! Hum mazeed behtar karne ki koshish karein ge.`;
-  }
-  return template;
-}
-
-// ─── DOM Elements ──────────────────────────────────────────────────────────────
 const elements = {
   platformContainer: document.getElementById('platformContainer'),
   reviewSection: document.getElementById('reviewSection'),
@@ -88,14 +38,14 @@ const elements = {
   saveSettingsBtn: document.getElementById('saveSettingsBtn'),
 };
 
-// ─── State ─────────────────────────────────────────────────────────────────────
+// State
 let allReviews = [];
 let filteredReviews = [];
 let currentReviewIndex = 0;
 let currentPlatform = null;
 let currentReview = null;
 
-// ─── Initialize ────────────────────────────────────────────────────────────────
+// Initialize
 async function init() {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
@@ -108,7 +58,7 @@ async function init() {
   setupEventListeners();
 }
 
-// ─── Event Listeners ───────────────────────────────────────────────────────────
+// Event Listeners
 function setupEventListeners() {
   if (elements.generateBtn) {
     elements.generateBtn.addEventListener('click', handleGenerateClick);
@@ -154,14 +104,14 @@ function setupEventListeners() {
     elements.saveSettingsBtn.addEventListener('click', () => {
       if (elements.apiUrlInput) {
         chrome.storage.sync.set({ apiUrl: elements.apiUrlInput.value.trim() }, () => {
-          showTempMessage('✅ Saved!');
+          showTempMessage('Saved!');
         });
       }
     });
   }
 }
 
-// ─── Platform Detection ───────────────────────────────────────────────────────
+// Platform Detection
 function detectPlatform(url) {
   const platforms = [
     { name: 'Google', pattern: /google\.com\/maps|business\.google/, class: 'platform-google' },
@@ -183,7 +133,7 @@ function detectPlatform(url) {
       }
       if (elements.generateBtn) {
         elements.generateBtn.disabled = false;
-        elements.generateBtn.textContent = '✨ Generate AI Reply';
+        elements.generateBtn.textContent = 'Generate AI Reply';
       }
       return;
     }
@@ -199,7 +149,7 @@ function detectPlatform(url) {
   }
 }
 
-// ─── Review Scraping ──────────────────────────────────────────────────────────
+// Review Scraping
 async function runDetection(tab) {
   showLoading(true);
   hideError();
@@ -219,7 +169,7 @@ async function runDetection(tab) {
         const response = await chrome.tabs.sendMessage(tab.id, { action: 'getReviews' });
         allReviews = response?.reviews || [];
       } catch {
-        // Content script not loaded — inject it manually
+        // Content script not loaded; inject it manually
         await chrome.scripting.executeScript({
           target: { tabId: tab.id },
           files: ['content/scraper.js'],
@@ -244,7 +194,7 @@ async function runDetection(tab) {
       showError('No reviews detected. Make sure reviews are loaded on the page, then try again.');
       if (elements.reviewSection) elements.reviewSection.style.display = 'none';
       if (elements.generateBtn) {
-        elements.generateBtn.textContent = '🔍 Detect Reviews on Page';
+        elements.generateBtn.textContent = 'Detect Reviews on Page';
         elements.generateBtn.disabled = false;
       }
     }
@@ -350,18 +300,18 @@ function scrapeAllReviewsFromPage() {
   return reviews;
 }
 
-// ─── Display Review ────────────────────────────────────────────────────────────
+// Display Review
 function displayReview(review) {
   if (!review) return;
   currentReview = review;
 
   if (elements.reviewerName) elements.reviewerName.textContent = review.author || 'Customer';
-  if (elements.reviewRating) elements.reviewRating.textContent = '⭐'.repeat(review.rating || 5);
+  if (elements.reviewRating) elements.reviewRating.textContent = '*'.repeat(review.rating || 5);
   if (elements.reviewText) elements.reviewText.textContent = review.text || 'No review text found.';
   if (elements.reviewSection) elements.reviewSection.style.display = 'block';
   if (elements.generateBtn) {
     elements.generateBtn.disabled = false;
-    elements.generateBtn.textContent = '✨ Generate AI Reply';
+    elements.generateBtn.textContent = 'Generate AI Reply';
   }
 
   if (filteredReviews.length > 0 && elements.reviewCounter) {
@@ -376,7 +326,7 @@ function displayReview(review) {
   if (elements.aiReply) elements.aiReply.textContent = '';
 }
 
-// ─── Navigation ────────────────────────────────────────────────────────────────
+// Navigation
 function applyReviewFilter() {
   const query = (elements.reviewSearch?.value || '').trim().toLowerCase();
   filteredReviews = allReviews.filter((review) => {
@@ -425,7 +375,7 @@ function prevReview() {
   displayReview(filteredReviews[currentReviewIndex]);
 }
 
-// ─── Generate AI Reply ────────────────────────────────────────────────────────
+// Generate AI Reply
 async function handleGenerateClick() {
   if (!elements.generateBtn) return;
 
@@ -474,32 +424,26 @@ async function generateReply() {
       if (elements.autoCopy && elements.autoCopy.checked && reply) {
         try {
           await navigator.clipboard.writeText(reply);
-          showTempMessage('✅ Copied!');
+          showTempMessage('Copied!');
         } catch {
-          // Clipboard failed — non-critical
+          // Clipboard failed; non-critical
         }
       }
     } else {
-      // API returned error — use fallback
-      console.warn('[Popup] API error, using fallback:', data.error);
-      const fallbackReply = getFallbackReply(currentReview.rating, tone, currentReview.author);
-      if (elements.aiReply) elements.aiReply.textContent = fallbackReply;
-      if (elements.replySection) elements.replySection.style.display = 'block';
-      showError(`AI service unavailable. Using offline template. (${data.error || 'Unknown error'})`);
+      console.warn('[Popup] API error:', data.error);
+      if (elements.replySection) elements.replySection.style.display = 'none';
+      showError(`AI service unavailable. Please check app API keys and try again. (${data.error || 'Unknown error'})`);
     }
   } catch (error) {
     console.error('[Popup] Error:', error);
-    // Network error — use fallback template
-    const fallbackReply = getFallbackReply(currentReview.rating, tone, currentReview.author);
-    if (elements.aiReply) elements.aiReply.textContent = fallbackReply;
-    if (elements.replySection) elements.replySection.style.display = 'block';
-    showError('Could not reach AI server. Using offline template.');
+    if (elements.replySection) elements.replySection.style.display = 'none';
+    showError('Could not reach AI server. Please check the app URL and try again.');
   } finally {
     showLoading(false);
   }
 }
 
-// ─── UI Helpers ────────────────────────────────────────────────────────────────
+// UI Helpers
 function showLoading(show) {
   if (elements.loadingState) elements.loadingState.classList.toggle('active', show);
   if (elements.generateBtn) elements.generateBtn.disabled = show;
@@ -542,5 +486,5 @@ function loadSettings() {
   });
 }
 
-// ─── Start ─────────────────────────────────────────────────────────────────────
+// Start
 init();

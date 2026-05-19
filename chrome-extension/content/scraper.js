@@ -290,7 +290,7 @@ function addAIReplyButtons() {
       const freshData = getReviewFromContainer(container);
       if (!freshData.text || freshData.text.length < 5) return;
 
-      btn.textContent = '⏳ ...';
+      btn.textContent = 'Loading...';
       btn.disabled = true;
       
       try {
@@ -391,7 +391,7 @@ function getReviewFromContainer(container) {
   return { author, rating, text, platform };
 }
 
-// Generate AI reply with fallback support
+// Generate AI reply through the AutoReview backend.
 async function generateAIReply(review, tone = 'friendly') {
   // Try multiple API endpoints for reliability
   const API_URLS = [
@@ -454,42 +454,7 @@ async function generateAIReply(review, tone = 'friendly') {
     }
   }
 
-  // All endpoints failed — use fallback template
-  console.log('[AutoReview AI] All endpoints failed, using fallback template');
-  const name = review.author || 'there';
-  const sentiment = review.rating >= 4 ? 'positive' : review.rating <= 2 ? 'negative' : 'neutral';
-
-  const fallbackTemplates = {
-    positive: [
-      `Thank you ${name} for your wonderful review! We're thrilled you had such a great experience with us!`,
-      `We truly appreciate your kind words, ${name}! It was our pleasure to serve you.`,
-      `Thank you so much, ${name}! We're excited to hear you enjoyed your experience.`,
-    ],
-    neutral: [
-      `Thank you, ${name}, for your feedback. We appreciate you taking the time to share your experience.`,
-      `We value your input, ${name}. We're committed to providing the best experience possible.`,
-    ],
-    negative: [
-      `Hi ${name}, we sincerely apologize that your experience didn't meet your expectations. Please reach out to us directly.`,
-      `Dear ${name}, we're sorry to hear about your experience. Please contact us so we can make things better.`,
-    ],
-  };
-
-  const templates = fallbackTemplates[sentiment] || fallbackTemplates.neutral;
-  let template = templates[Math.floor(Math.random() * templates.length)];
-
-  // Apply tone modifiers
-  if (tone === 'desi') {
-    if (sentiment === 'positive') {
-      template = `Shukriya ${name} bhai! Aapka review parh kar bohat khushi hui. Bohat bohat shukriya! ✨`;
-    } else if (sentiment === 'negative') {
-      template = `Maazrat khwah hain ${name} bhai. Humein dukh hua. Hum se rabta karein taake hum isay theek kar sakein. 🙏`;
-    } else {
-      template = `Shukriya ${name}! Hum mazeed behtar karne ki koshish karein ge.`;
-    }
-  }
-
-  return template;
+  throw new Error('AI server unavailable. Please check the app URL and AI API keys.');
 }
 
 // Show reply modal (Improved)
@@ -607,7 +572,7 @@ function showReplyModal(review, reply) {
     <div class="autoreview-modal-overlay"></div>
     <div class="autoreview-modal-content">
       <div class="autoreview-modal-header">
-        <h3>✨ AI Generated Reply</h3>
+        <h3>AI Generated Reply</h3>
         <button class="autoreview-close">&times;</button>
       </div>
       <div class="autoreview-modal-body">
@@ -632,8 +597,8 @@ function showReplyModal(review, reply) {
         </div>
       </div>
       <div class="autoreview-modal-footer">
-        <button class="autoreview-btn autoreview-btn-secondary autoreview-regenerate">🔄 Regenerate</button>
-        <button class="autoreview-btn autoreview-btn-primary autoreview-copy">📋 Copy Reply</button>
+        <button class="autoreview-btn autoreview-btn-secondary autoreview-regenerate">Regenerate</button>
+        <button class="autoreview-btn autoreview-btn-primary autoreview-copy">Copy Reply</button>
       </div>
     </div>
   `;
@@ -651,9 +616,9 @@ function showReplyModal(review, reply) {
   copyBtn.onclick = async () => {
     try {
       await navigator.clipboard.writeText(textArea.value);
-      copyBtn.textContent = '✅ Copied!';
+      copyBtn.textContent = 'Copied!';
       setTimeout(() => {
-        if (copyBtn) copyBtn.textContent = '📋 Copy Reply';
+        if (copyBtn) copyBtn.textContent = 'Copy Reply';
       }, 2000);
     } catch (err) {
       console.error('Copy failed:', err);
@@ -662,7 +627,7 @@ function showReplyModal(review, reply) {
   
   regenBtn.onclick = async () => {
     const tone = toneSelect.value;
-    regenBtn.textContent = '⏳ ...';
+    regenbtn.textContent = 'Loading...';
     regenBtn.disabled = true;
     try {
       const newReply = await generateAIReply(review, tone);
@@ -670,7 +635,7 @@ function showReplyModal(review, reply) {
     } catch (err) {
       alert(`AI Error: ${err.message}. Could not regenerate.`);
     } finally {
-      regenBtn.textContent = '🔄 Regenerate';
+      regenBtn.textContent = 'Regenerate';
       regenBtn.disabled = false;
     }
   };

@@ -4,7 +4,6 @@ import { useState, useEffect, type ReactNode } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageSquare, LayoutDashboard, Database, Shield, Zap, Globe, Link as LinkIcon, Bell, Bot, Settings as SettingsIcon, AlertCircle, CheckCircle2, RefreshCcw, ExternalLink, Save, FileText, ScrollText, CreditCard, Plug, SlidersHorizontal, Gem, Search, Star, BookOpen, Plane, HeartHandshake } from 'lucide-react'
-import { PlatformIntegrationManager } from '@/lib/platformIntegrations'
 import CreditManager from '@/components/CreditManager'
 import PageTransition from '@/components/transitions/PageTransition'
 import LocationPermission from '@/components/LocationPermission'
@@ -20,6 +19,15 @@ function useHydrated() {
 }
 
 type TabType = 'general' | 'credits' | 'notifications' | 'location' | 'billing' | 'ai' | 'integrations' | 'advanced' | 'legal'
+
+interface SettingsPlatform {
+  id: string
+  name: string
+  description: string
+  connected: boolean
+  status: string
+  lastSync?: string
+}
 
 function TabButton({ tab, label, icon, activeTab, onClick }: { tab: TabType; label: string; icon: ReactNode; activeTab: TabType; onClick: (t: TabType) => void }) {
   return (
@@ -134,6 +142,8 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('general')
   const [currentPlan, setCurrentPlan] = useState<string>('free')
   const [integrationNotice, setIntegrationNotice] = useState<string | null>(null)
+  const [platforms, setPlatforms] = useState<SettingsPlatform[]>([])
+  const [platformsLoading, setPlatformsLoading] = useState(false)
 
   useEffect(() => {
     if (!hydrated) return
@@ -145,6 +155,25 @@ export default function SettingsPage() {
         console.error('Failed to parse settings', e)
       }
     }
+  }, [hydrated])
+
+  const loadPlatforms = async () => {
+    setPlatformsLoading(true)
+    try {
+      const response = await fetch('/api/platforms', { cache: 'no-store' })
+      const data = await response.json()
+      setPlatforms(Array.isArray(data.platforms) ? data.platforms : [])
+    } catch (error) {
+      console.error('Failed to load platforms', error)
+      setIntegrationNotice('Could not load platform status. Please refresh and try again.')
+    } finally {
+      setPlatformsLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!hydrated) return
+    loadPlatforms()
   }, [hydrated])
 
   const handleSave = () => {
@@ -378,19 +407,19 @@ export default function SettingsPage() {
                     </div>
                     <div>
                       <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70 tracking-tight">Global Platform Matrix</h3>
-                      <p className="text-indigo-200/80 font-medium mt-1 text-sm">Real-time bi-directional sync active across all connected nodes</p>
+                      <p className="text-indigo-200/80 font-medium mt-1 text-sm">Live status from your saved platform connections</p>
                     </div>
                   </div>
-                  <button 
-                    onClick={() => window.location.reload()} 
+                  <button
+                    onClick={loadPlatforms}
                     className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-white font-bold transition-all text-sm border border-white/10 hover:border-white/30 shadow-xl z-10 backdrop-blur-md"
                   >
-                    <RefreshCcw className="w-4 h-4" /> Force Sync
+                    <RefreshCcw className={`w-4 h-4 ${platformsLoading ? 'animate-spin' : ''}`} /> Refresh Status
                   </button>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {PlatformIntegrationManager.getPlatforms().map((platform) => (
+                  {platforms.map((platform) => (
                     <motion.div 
                       whileHover={undefined}
                       key={platform.id} 
@@ -411,7 +440,9 @@ export default function SettingsPage() {
                           </div>
                           <div>
                             <h4 className="text-white font-bold text-base tracking-wide">{platform.name}</h4>
-                            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-1">Auto-Sync: Active</p>
+                            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-1">
+                              {platform.lastSync ? `Last sync: ${new Date(platform.lastSync).toLocaleDateString()}` : 'Not synced yet'}
+                            </p>
                           </div>
                         </div>
                         <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
@@ -440,6 +471,12 @@ export default function SettingsPage() {
                     </motion.div>
                   ))}
                 </div>
+
+                {!platformsLoading && platforms.length === 0 && (
+                  <div className="rounded-2xl border border-white/10 bg-white/5 p-6 text-sm text-white/70">
+                    No platform connections found yet. Connect Google, Facebook, Yelp, TripAdvisor, or Trustpilot from the platforms page.
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="relative overflow-hidden p-8 rounded-3xl border border-white/10 bg-black/40 backdrop-blur-md">

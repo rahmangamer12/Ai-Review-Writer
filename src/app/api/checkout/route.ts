@@ -25,12 +25,14 @@ async function checkoutHandler(request: NextRequest) {
     const { plan, billingCycle, userEmail, userName } = body
 
     // Validate plan
-    if (!plan || !['starter', 'growth', 'business', 'professional', 'enterprise'].includes(plan)) {
+    if (!plan || !['starter', 'growth', 'business'].includes(plan)) {
       return NextResponse.json(
         { error: 'Invalid plan selected' },
         { status: 400 }
       )
     }
+
+    const paidPlan = plan as 'starter' | 'growth' | 'business'
 
     // Check if Lemon Squeezy is configured
     if (!lemonSqueezy.isConfigured()) {
@@ -39,6 +41,7 @@ async function checkoutHandler(request: NextRequest) {
       return NextResponse.json(
         { 
           error: 'Payment system is currently under maintenance. Please try again later.',
+          missing: lemonSqueezy.getMissingForPlan(paidPlan),
           success: false
         },
         { status: 503 }
@@ -47,7 +50,7 @@ async function checkoutHandler(request: NextRequest) {
 
 
     // Create checkout session with Lemon Squeezy
-    const checkout = await lemonSqueezy.createCheckout(plan, {
+    const checkout = await lemonSqueezy.createCheckout(paidPlan, {
       userEmail,
       userName,
       customData: {
@@ -59,7 +62,10 @@ async function checkoutHandler(request: NextRequest) {
 
     if (!checkout) {
       return NextResponse.json(
-        { error: 'Failed to create checkout session' },
+        {
+          error: 'Failed to create checkout session. Check Lemon Squeezy API key, store ID, variant ID, and store verification status.',
+          missing: lemonSqueezy.getMissingForPlan(paidPlan),
+        },
         { status: 500 }
       )
     }
