@@ -110,7 +110,7 @@ export default function ScheduleCallPage() {
                     name="phone"
                     required
                     className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-primary transition-colors"
-                    placeholder="+1 (555) 123-4567"
+                    placeholder="Phone or WhatsApp number"
                   />
                 </div>
                 <ValidationError prefix="Phone" field="phone" errors={state.errors} />
@@ -294,18 +294,18 @@ export default function ScheduleCallPage() {
               <h3 className="text-lg font-bold text-white mb-4">Need Help?</h3>
               <div className="space-y-3">
                 <a
-                  href="mailto:support@autoreview-ai.com"
+                  href="mailto:rahman.mac.apple@gamil.com?cc=abdulmoto656@gmail.com"
                   className="flex items-center gap-3 text-white/70 hover:text-primary transition-colors"
                 >
                   <Mail className="w-5 h-5" />
-                  <span className="text-sm">support@autoreview-ai.com</span>
+                  <span className="text-sm">rahman.mac.apple@gamil.com / abdulmoto656@gmail.com</span>
                 </a>
                 <a
-                  href="tel:+15551234567"
+                  href="/contact"
                   className="flex items-center gap-3 text-white/70 hover:text-primary transition-colors"
                 >
                   <Phone className="w-5 h-5" />
-                  <span className="text-sm">+1 (555) 123-4567</span>
+                  <span className="text-sm">Share your number in the form</span>
                 </a>
               </div>
             </motion.div>

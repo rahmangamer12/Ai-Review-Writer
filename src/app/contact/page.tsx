@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Mail, Phone, MapPin, Clock, Send, Calendar } from 'lucide-react'
+import { CheckCircle, Mail, Phone, MapPin, Clock, Send, Calendar } from 'lucide-react'
 import { useForm, ValidationError } from '@formspree/react'
 import { useToast } from '@/components/ui/Toast'
 
@@ -16,7 +16,7 @@ export default function ContactPage() {
   }
 
   const handleScheduleCall = () => {
-    toastInfo('📅 Schedule a Call', 'To schedule a personalized walk-through or business integration call, please email us at support@autoreview-ai.com. Our team will get back to you within 24 hours.')
+    toastInfo('Schedule a Call', 'Email rahman.mac.apple@gamil.com or abdulmoto656@gmail.com with your preferred time and phone or WhatsApp number.')
   }
 
   return (
@@ -47,7 +47,7 @@ export default function ContactPage() {
             {state.succeeded ? (
               <div className="text-center py-12">
                 <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <span className="text-3xl">✓</span>
+                  <CheckCircle className="w-9 h-9 text-white" />
                 </div>
                 <h3 className="text-2xl font-bold text-white mb-2">Thank You!</h3>
                 <p className="text-white/70">Your message has been sent successfully. We&apos;ll get back to you soon!</p>
@@ -87,7 +87,7 @@ export default function ContactPage() {
                     type="tel"
                     name="phone"
                     className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-primary transition-colors"
-                    placeholder="+1 (555) 123-4567"
+                    placeholder="Phone or WhatsApp number"
                   />
                   <ValidationError prefix="Phone" field="phone" errors={state.errors} />
                 </div>
@@ -163,7 +163,7 @@ export default function ContactPage() {
               </div>
               
               <p className="text-white/70 mb-6 text-sm sm:text-base">
-                Book a free 30-minute consultation with our team. We&apos;ll help you choose the right plan and answer any questions.
+                Book a free consultation by sharing your preferred time, email, and phone or WhatsApp number.
               </p>
 
               <motion.button
@@ -177,7 +177,7 @@ export default function ContactPage() {
               </motion.button>
 
               <div className="mt-4 text-center text-white/60 text-xs sm:text-sm">
-                Available Monday-Friday, 9 AM - 6 PM EST
+                We respond by email first, then schedule a call if needed.
               </div>
             </motion.div>
 
@@ -196,9 +196,12 @@ export default function ContactPage() {
                     <Mail className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="text-white/60 text-sm mb-1">Email</p>
-                    <a href="mailto:support@autoreview-ai.com" className="text-white hover:text-primary transition-colors font-medium">
-                      support@autoreview-ai.com
+                    <p className="text-white/60 text-sm mb-1">Primary Email</p>
+                    <a href="mailto:rahman.mac.apple@gamil.com?cc=abdulmoto656@gmail.com" className="text-white hover:text-primary transition-colors font-medium">
+                      rahman.mac.apple@gamil.com
+                    </a>
+                    <a href="mailto:abdulmoto656@gmail.com" className="mt-1 block text-white/70 hover:text-primary transition-colors text-sm">
+                      abdulmoto656@gmail.com
                     </a>
                   </div>
                 </div>
@@ -208,10 +211,8 @@ export default function ContactPage() {
                     <Phone className="w-5 h-5 text-cyan-400" />
                   </div>
                   <div>
-                    <p className="text-white/60 text-sm mb-1">Phone</p>
-                    <a href="tel:+15551234567" className="text-white hover:text-cyan-400 transition-colors font-medium">
-                      +1 (555) 123-4567
-                    </a>
+                    <p className="text-white/60 text-sm mb-1">Phone / WhatsApp</p>
+                    <p className="text-white font-medium">Add your number in the form and we will contact you directly.</p>
                   </div>
                 </div>
 
@@ -220,11 +221,8 @@ export default function ContactPage() {
                     <MapPin className="w-5 h-5 text-purple-400" />
                   </div>
                   <div>
-                    <p className="text-white/60 text-sm mb-1">Address</p>
-                    <p className="text-white font-medium">
-                      123 AI Street, Suite 100<br />
-                      San Francisco, CA 94105
-                    </p>
+                    <p className="text-white/60 text-sm mb-1">Location</p>
+                    <p className="text-white font-medium">Remote support for international customers</p>
                   </div>
                 </div>
 
@@ -235,8 +233,8 @@ export default function ContactPage() {
                   <div>
                     <p className="text-white/60 text-sm mb-1">Business Hours</p>
                     <p className="text-white font-medium">
-                      Monday - Friday: 9 AM - 6 PM EST<br />
-                      Saturday - Sunday: Closed
+                      Email support: daily<br />
+                      Calls: scheduled after request
                     </p>
                   </div>
                 </div>
@@ -253,16 +251,16 @@ export default function ContactPage() {
               <h3 className="text-lg font-bold text-white mb-4">Quick Links</h3>
               <div className="space-y-2">
                 <a href="/settings" className="block text-white/70 hover:text-primary transition-colors text-sm">
-                  → Help Center & FAQ
+                  Help Center & FAQ
                 </a>
                 <a href="/subscription" className="block text-white/70 hover:text-primary transition-colors text-sm">
-                  → Pricing & Plans
+                  Pricing & Plans
                 </a>
                 <a href="/privacy" className="block text-white/70 hover:text-primary transition-colors text-sm">
-                  → Privacy Policy
+                  Privacy Policy
                 </a>
                 <a href="/terms" className="block text-white/70 hover:text-primary transition-colors text-sm">
-                  → Terms of Service
+                  Terms of Service
                 </a>
               </div>
             </motion.div>
@@ -282,14 +280,14 @@ export default function ContactPage() {
             <div>
               <h3 className="text-white font-semibold mb-2">How quickly will I get a response?</h3>
               <p className="text-white/70 text-sm">
-                We typically respond to all inquiries within 24 hours during business days. Priority support plans receive responses within 12 hours.
+                We usually respond within 24 hours. Billing and production issues are prioritized first.
               </p>
             </div>
             
             <div>
               <h3 className="text-white font-semibold mb-2">Do you offer technical support?</h3>
               <p className="text-white/70 text-sm">
-                Yes! Our technical support team is available to help with integration, setup, and troubleshooting.
+                Yes. We help with Google OAuth, Lemon Squeezy setup, Chrome extension issues, and review sync troubleshooting.
               </p>
             </div>
             
@@ -303,7 +301,7 @@ export default function ContactPage() {
             <div>
               <h3 className="text-white font-semibold mb-2">What about enterprise support?</h3>
               <p className="text-white/70 text-sm">
-                Enterprise customers get dedicated account managers and priority phone support. Contact us to learn more.
+                Business customers get priority email support and scheduled call support when needed.
               </p>
             </div>
           </div>

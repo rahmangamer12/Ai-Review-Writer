@@ -30,7 +30,7 @@ const faqData: FAQ[] = [
       },
       {
         q: "Is there a free trial?",
-        a: "Yes! Our Free plan gives you 50 AI credits every month to test all features. No credit card required to sign up."
+        a: "Yes. The Free plan gives you 20 AI credits per month to test core features. No credit card is required to sign up."
       },
       {
         q: "How long does setup take?",
@@ -47,11 +47,11 @@ const faqData: FAQ[] = [
       },
       {
         q: "Which review platforms are supported?",
-        a: "We currently support Google My Business, Facebook Reviews, Yelp, TripAdvisor, Trustpilot, and several other major platforms. We're constantly adding new integrations."
+        a: "Google Business Profile is the primary supported OAuth integration. Facebook can be connected through platform keys or user-provided Meta app keys, but public Facebook OAuth still depends on Meta app approval. Yelp, TripAdvisor, and Trustpilot can be configured through their API credentials where available."
       },
       {
         q: "Can I customize the AI responses?",
-        a: "Absolutely! You can set custom tone preferences, create response templates, and even train the AI on your brand voice. Professional and Enterprise plans get advanced customization options."
+        a: "Yes. You can set tone preferences and edit AI replies before saving. Growth and Business plans are intended for deeper analytics, more credits, and advanced workflows."
       },
       {
         q: "What languages are supported?",
@@ -80,7 +80,7 @@ const faqData: FAQ[] = [
       },
       {
         q: "What payment methods are accepted?",
-        a: "We accept all major credit cards, PayPal, and bank transfers for Enterprise customers. All payments are processed securely through Lemon Squeezy."
+        a: "Payments are handled through Lemon Squeezy checkout. Available payment methods depend on your country and Lemon Squeezy configuration."
       },
       {
         q: "Is there a refund policy?",
@@ -93,11 +93,11 @@ const faqData: FAQ[] = [
     questions: [
       {
         q: "Is my data secure?",
-        a: "Yes! We use bank-level encryption (AES-256) for all data. We're SOC 2 compliant and never store your platform passwords. All API connections use OAuth for secure authentication."
+        a: "Sensitive platform credentials are encrypted server-side and raw card details are never collected by AutoReview AI. Payments are processed by Lemon Squeezy. We are not claiming SOC 2 certification at this stage."
       },
       {
         q: "Do you store my review data?",
-        a: "We temporarily cache review data to provide analytics and AI responses. You can request complete data deletion at any time. Enterprise customers get dedicated data storage options."
+        a: "Reviews you import or save are stored in your account so the dashboard, analytics, and AI replies can work. You can delete reviews from the app or request account data deletion."
       },
       {
         q: "Who has access to my account?",
@@ -114,15 +114,15 @@ const faqData: FAQ[] = [
     questions: [
       {
         q: "How can I get help?",
-        a: "We offer multiple support channels: in-app chat, email support (24h response), and phone support for Enterprise customers. Visit our Contact page for details."
+        a: "Email rahman.mac.apple@gamil.com or abdulmoto656@gmail.com. For call support, include your phone or WhatsApp number and preferred time."
       },
       {
         q: "Do you offer training?",
-        a: "Yes! We have video tutorials, documentation, and live webinars. Enterprise customers get dedicated onboarding and training sessions."
+        a: "We provide documentation and scheduled onboarding help when needed. Business customers get priority setup guidance."
       },
       {
         q: "What are your support hours?",
-        a: "Email support is available 24/7 with typical response times under 24 hours. Enterprise customers get priority support with faster response times."
+        a: "The support inbox is monitored daily. We usually reply within 24 hours, with billing and production issues handled first."
       },
       {
         q: "Can I schedule a walkthrough?",

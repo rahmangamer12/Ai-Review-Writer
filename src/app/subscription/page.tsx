@@ -467,6 +467,10 @@ export default function SubscriptionPage() {
                 a: 'Add Lemon Squeezy API key, store ID, webhook secret, and the variant ID for each paid plan in Vercel. Checkout will open through Lemon Squeezy and payment methods are validated there.'
               },
               {
+                q: 'How do I contact billing support?',
+                a: 'Email rahman.mac.apple@gamil.com and include abdulmoto656@gmail.com in CC. For calls, include your phone or WhatsApp number and preferred time in the message.'
+              },
+              {
                 q: 'What is your refund policy?',
                 a: 'We offer a 30-day money-back guarantee. If you are not satisfied, contact support within 30 days for a full refund.'
               }
@@ -493,6 +497,15 @@ export default function SubscriptionPage() {
           className="mt-16 text-center"
         >
           <p className="text-white/50 mb-4">Still have questions?</p>
+          <div className="mb-5 flex flex-col items-center gap-1 text-sm text-white/60">
+            <a href="mailto:rahman.mac.apple@gamil.com?cc=abdulmoto656@gmail.com" className="text-violet-300 hover:text-violet-200">
+              rahman.mac.apple@gamil.com
+            </a>
+            <a href="mailto:abdulmoto656@gmail.com" className="text-violet-300 hover:text-violet-200">
+              abdulmoto656@gmail.com
+            </a>
+            <span>Need a call? Send your phone or WhatsApp number with your preferred time.</span>
+          </div>
           <div className="flex flex-wrap justify-center gap-4">
             <button
               onClick={() => router.push('/contact')}

@@ -53,8 +53,8 @@ export default function SubscriptionCancelPage() {
           <div className="mt-6 pt-6 border-t border-white/10">
             <p className="text-white/50 text-xs">
               Still have questions? Email us at{' '}
-              <a href="mailto:support@autoreview-ai.com" className="text-primary hover:underline">
-                support@autoreview-ai.com
+              <a href="mailto:rahman.mac.apple@gamil.com?cc=abdulmoto656@gmail.com" className="text-primary hover:underline">
+                rahman.mac.apple@gamil.com / abdulmoto656@gmail.com
               </a>
             </p>
           </div>
