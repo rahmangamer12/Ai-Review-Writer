@@ -27,23 +27,22 @@ async function ensureUser(userId: string, email: string, name: string) {
   if (existing) return existing
 
   try {
-    return await prisma.user.create({
-      data: {
-        id: userId,
-        email,
-        name,
-      },
-    })
-  } catch (error: any) {
-    if (error?.code !== 'P2002') throw error
+    const existingByEmail = await prisma.user.findUnique({ where: { email } })
+    if (existingByEmail) {
+      return await prisma.user.update({
+        where: { id: existingByEmail.id },
+        data: { name: existingByEmail.name || name },
+      })
+    }
 
-    return prisma.user.create({
-      data: {
-        id: userId,
-        email: `${userId}@setup.local`,
-        name,
-      },
-    })
+    return await prisma.user.create({ data: { id: userId, email, name } })
+  } catch (error: any) {
+    if (error?.code !== 'P2002') {
+      console.error('[Setup Request API] User ensure failed:', error)
+      return null
+    }
+
+    return null
   }
 }
 
@@ -79,26 +78,36 @@ export async function POST(req: NextRequest) {
 
     await ensureUser(userId, userEmail, userName)
 
-    await prisma.notification.create({
-      data: {
-        userId,
-        type: data.requestType === 'managed' ? 'setup' : 'support',
-        title: `${requestLabel} request submitted`,
-        message: [
-          `Name: ${data.name}`,
-          `Email: ${data.email}`,
-          `Business: ${data.business}`,
-          `Phone: ${data.phone || 'Not provided'}`,
-          `Platforms: ${platforms}`,
-          data.preferred_time ? `Preferred time: ${data.preferred_time}` : null,
-          data.timezone ? `Timezone: ${data.timezone}` : null,
-          data.message ? `Message: ${data.message}` : null,
-          'Support emails: rahman.mac.apple@gamil.com, abdulmoto656@gmail.com',
-        ]
-          .filter(Boolean)
-          .join('\n'),
-      },
-    })
+    const requestMessage = [
+      `Name: ${data.name}`,
+      `Email: ${data.email}`,
+      `Business: ${data.business}`,
+      `Phone: ${data.phone || 'Not provided'}`,
+      `Platforms: ${platforms}`,
+      data.preferred_time ? `Preferred time: ${data.preferred_time}` : null,
+      data.timezone ? `Timezone: ${data.timezone}` : null,
+      data.message ? `Message: ${data.message}` : null,
+      'Support emails: rahman.mac.apple@gamil.com, abdulmoto656@gmail.com',
+    ]
+      .filter(Boolean)
+      .join('\n')
+
+    try {
+      await prisma.notification.create({
+        data: {
+          userId,
+          type: data.requestType === 'managed' ? 'setup' : 'support',
+          title: `${requestLabel} request submitted`,
+          message: requestMessage,
+        },
+      })
+    } catch (notificationError) {
+      console.error('[Setup Request API] Notification save failed, request accepted:', {
+        requestType: data.requestType,
+        requestMessage,
+        notificationError,
+      })
+    }
 
     return NextResponse.json({
       success: true,

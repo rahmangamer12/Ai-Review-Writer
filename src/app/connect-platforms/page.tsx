@@ -205,6 +205,22 @@ export default function ConnectPlatformsPage() {
     setHydrated(true)
   }, [])
 
+  useEffect(() => {
+    if (!hydrated) return
+
+    const targetRef = setupMode === 'managed'
+      ? managedFormRef
+      : setupMode === 'video'
+        ? videoFormRef
+        : selfSetupRef
+
+    const timer = window.setTimeout(() => {
+      targetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }, 80)
+
+    return () => window.clearTimeout(timer)
+  }, [setupMode, hydrated])
+
   // Load platforms on mount
   useEffect(() => {
     if (!hydrated) return
@@ -429,18 +445,6 @@ export default function ConnectPlatformsPage() {
 
   const scrollToSetupMode = (targetMode: 'self' | 'managed' | 'video') => {
     setSetupMode(targetMode)
-
-    window.requestAnimationFrame(() => {
-      setTimeout(() => {
-        const targetRef = targetMode === 'managed'
-          ? managedFormRef
-          : targetMode === 'video'
-            ? videoFormRef
-            : selfSetupRef
-
-        targetRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 180)
-    })
   }
 
   const submitSetupRequest = async (
