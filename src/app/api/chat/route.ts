@@ -39,7 +39,9 @@ const chatRequestSchema = z.object({
     content: z.union([z.string(), z.array(chatMessagePartSchema)])
   })).min(1),
   model: z.enum(ALLOWED_MODELS as [string, ...string[]]).default('LongCat-Flash-Chat'),
-  temperature: z.number().min(0).max(2).default(0.7)
+  temperature: z.number().min(0).max(2).default(0.7),
+  max_tokens: z.number().int().min(100).max(4000).optional(),
+  fastMode: z.boolean().default(false)
 });
 
 async function handler(request: NextRequest) {
@@ -81,7 +83,7 @@ async function handler(request: NextRequest) {
     const body = await request.json();
     const validated = chatRequestSchema.parse(body);
 
-    const { messages, model: selectedModel, temperature } = validated;
+    const { messages, model: selectedModel, temperature, max_tokens: requestedMaxTokens, fastMode } = validated;
 
     if (!process.env.LONGCAT_AI_API_KEY) {
       return NextResponse.json(
@@ -146,11 +148,55 @@ CRITICAL INSTRUCTIONS FOR YOU:
     };
 
     const modelMessages = [godTierPrompt, ...formattedMessages.filter((m: any) => m.role !== 'system')];
-    const maxOutputTokens = selectedModel.includes('Thinking')
+    const defaultMaxOutputTokens = selectedModel.includes('Thinking')
       ? 1200
       : selectedModel.includes('Lite')
         ? 900
         : 1400;
+    const maxOutputTokens = Math.min(
+      requestedMaxTokens ?? defaultMaxOutputTokens,
+      fastMode ? 700 : defaultMaxOutputTokens
+    );
+
+    const getCurrentTime = tool({
+      description: 'Get the exact current date, time, and timezone. Call this when the user asks for the time, date, today, or live time info.',
+      parameters: z.object({
+        location: z.string().optional().describe('Optional specific location or timezone, otherwise returns system time')
+      }),
+      // @ts-ignore
+      execute: async ({ location }) => {
+        const date = new Date();
+        return {
+          time: date.toLocaleTimeString(),
+          date: date.toLocaleDateString(),
+          zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          iso: date.toISOString()
+        };
+      },
+    });
+
+    const searchWeb = tool({
+      description: 'Search Wikipedia for live real-time information, facts, definitions, and news. Call this when the user asks a question about the real world, events, people, places, or any general knowledge that requires searching.',
+      parameters: z.object({
+        query: z.string().describe('The search query or keyword to find on Wikipedia.')
+      }),
+      // @ts-ignore
+      execute: async ({ query }) => {
+        try {
+          const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&utf8=&format=json&origin=*`);
+          const data = await res.json();
+          if (data.query && data.query.search && data.query.search.length > 0) {
+            return data.query.search.slice(0, 3).map((item: any) => ({
+              title: item.title,
+              snippet: item.snippet.replace(/<\/?[^>]+(>|$)/g, "")
+            }));
+          }
+          return { error: 'No results found on Wikipedia.' };
+        } catch (err) {
+          return { error: 'Search failed.' };
+        }
+      }
+    });
 
     const result = streamText({
       model: provider,
@@ -159,48 +205,7 @@ CRITICAL INSTRUCTIONS FOR YOU:
       maxOutputTokens,
       // @ts-ignore
       maxSteps: 2,
-      tools: {
-        // @ts-ignore
-        getCurrentTime: tool({
-          description: 'Get the exact current date, time, and timezone. Call this when the user asks for the time, date, today, or live time info.',
-          parameters: z.object({
-            location: z.string().optional().describe('Optional specific location or timezone, otherwise returns system time')
-          }),
-          // @ts-ignore
-          execute: async ({ location }) => {
-            const date = new Date();
-            return {
-              time: date.toLocaleTimeString(),
-              date: date.toLocaleDateString(),
-              zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-              iso: date.toISOString()
-            };
-          },
-        }),
-        // @ts-ignore
-        searchWeb: tool({
-          description: 'Search Wikipedia for live real-time information, facts, definitions, and news. Call this when the user asks a question about the real world, events, people, places, or any general knowledge that requires searching.',
-          parameters: z.object({
-            query: z.string().describe('The search query or keyword to find on Wikipedia.')
-          }),
-          // @ts-ignore
-          execute: async ({ query }) => {
-            try {
-              const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&utf8=&format=json&origin=*`);
-              const data = await res.json();
-              if (data.query && data.query.search && data.query.search.length > 0) {
-                return data.query.search.slice(0, 3).map((item: any) => ({
-                  title: item.title,
-                  snippet: item.snippet.replace(/<\/?[^>]+(>|$)/g, "") // Clean HTML tags
-                }));
-              }
-              return { error: 'No results found on Wikipedia.' };
-            } catch (err) {
-              return { error: 'Search failed.' };
-            }
-          }
-        })
-      },
+      tools: fastMode ? { getCurrentTime } : { getCurrentTime, searchWeb },
       async onChunk({ chunk }) {
         // Stream immediately without waiting for DB operations
       },

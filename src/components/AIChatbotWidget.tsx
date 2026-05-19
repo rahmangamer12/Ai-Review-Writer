@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useUser } from '@clerk/nextjs'
 import {
   X, Send, User, Sparkles, Loader2, Bot,
   RefreshCw, ChevronDown, Copy, Check, Download,
@@ -28,6 +29,32 @@ const SARAH_PROFILE = {
   title: 'AI Assistant',
   avatar: '👩‍💼',
   status: 'Powered by LongCat AI'
+}
+
+const WIDGET_SESSION_TITLE = 'Sarah Widget Chat'
+
+function createClientId() {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID()
+  }
+  return `widget-${Date.now()}-${Math.random().toString(36).slice(2)}`
+}
+
+function toMessage(raw: any): Message {
+  return {
+    id: raw.id || createClientId(),
+    role: raw.role === 'assistant' ? 'assistant' : 'user',
+    content: String(raw.content || ''),
+    timestamp: raw.timestamp ? new Date(raw.timestamp) : raw.createdAt ? new Date(raw.createdAt) : new Date(),
+    model: raw.model,
+    isTyping: false,
+  }
+}
+
+function buildSessionTitle(messages: Message[]) {
+  const firstUserMessage = messages.find(message => message.role === 'user' && message.content.trim())
+  if (!firstUserMessage) return WIDGET_SESSION_TITLE
+  return firstUserMessage.content.replace(/\s+/g, ' ').trim().slice(0, 48)
 }
 
 function SarahAvatar({ className = '' }: { className?: string }) {
@@ -66,8 +93,8 @@ const TypewriterMarkdown = ({ content, onComplete }: { content: string, onComple
     if (displayLength < content.length) {
       const timer = setTimeout(() => {
         // Faster typing effect
-        setDisplayLength(prev => Math.min(prev + 1 + Math.floor(Math.random() * 3), content.length)) 
-      }, 10)
+        setDisplayLength(prev => Math.min(prev + 8, content.length))
+      }, 8)
       return () => clearTimeout(timer)
     } else {
       const timer = setTimeout(() => onComplete(), 200) // Small delay before finishing
@@ -97,6 +124,7 @@ import { usePathname } from 'next/navigation'
 
 export default function AIChatbot() {
   const pathname = usePathname()
+  const { isLoaded: isUserLoaded, isSignedIn } = useUser()
   const [isOpen, setIsOpen] = useState(false)
   const [showTooltip, setShowTooltip] = useState(true)
   const [messages, setMessages] = useState<Message[]>([])
@@ -104,18 +132,21 @@ export default function AIChatbot() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const [selectedModel, setSelectedModel] = useState('LongCat-Flash-Chat')
+  const [selectedModel, setSelectedModel] = useState('LongCat-Flash-Lite')
   const [showModelDropdown, setShowModelDropdown] = useState(false)
 
   const [hasStarted, setHasStarted] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [isEnabled, setIsEnabled] = useState(true)
   const [uploadedFiles, setUploadedFiles] = useState<Array<{name: string, preview: string}>>([])
+  const [chatSessionId, setChatSessionId] = useState<string | null>(null)
+  const [remoteHydrated, setRemoteHydrated] = useState(false)
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const lastSavedSnapshotRef = useRef('')
 
   // Auto-hide tooltip
   useEffect(() => {
@@ -154,11 +185,7 @@ export default function AIChatbot() {
     if (saved) {
       try {
         const parsed = JSON.parse(saved)
-        const hydrated = parsed.messages.map((m: any) => ({
-          ...m,
-          timestamp: new Date(m.timestamp),
-          isTyping: false // Never show typing for old history
-        }))
+        const hydrated = parsed.messages.map(toMessage)
         if (hydrated.length > 0) {
           setMessages(hydrated)
           setHasStarted(true)
@@ -168,6 +195,54 @@ export default function AIChatbot() {
       }
     }
   }, [])
+
+  useEffect(() => {
+    if (!isUserLoaded) return
+    if (!isSignedIn) {
+      setRemoteHydrated(true)
+      return
+    }
+
+    let cancelled = false
+
+    const loadRemoteWidgetSession = async () => {
+      try {
+        const savedSessionId = sessionStorage.getItem('autoreview-chatbot-session-id')
+        const response = await fetch('/api/chat/sessions', { cache: 'no-store' })
+        const sessions = await response.json()
+        if (cancelled || !Array.isArray(sessions)) return
+
+        const widgetSession = sessions.find((session: any) => session.id === savedSessionId)
+          || sessions.find((session: any) => session.title === WIDGET_SESSION_TITLE)
+
+        if (widgetSession) {
+          setChatSessionId(widgetSession.id)
+          sessionStorage.setItem('autoreview-chatbot-session-id', widgetSession.id)
+          if (Array.isArray(widgetSession.messages) && widgetSession.messages.length > 0) {
+            setMessages(widgetSession.messages.map(toMessage))
+            setHasStarted(true)
+          }
+        } else {
+          const nextSessionId = savedSessionId || createClientId()
+          setChatSessionId(nextSessionId)
+          sessionStorage.setItem('autoreview-chatbot-session-id', nextSessionId)
+        }
+      } catch (error) {
+        console.error('Failed to load Sarah widget chat session', error)
+        const fallbackSessionId = sessionStorage.getItem('autoreview-chatbot-session-id') || createClientId()
+        setChatSessionId(fallbackSessionId)
+        sessionStorage.setItem('autoreview-chatbot-session-id', fallbackSessionId)
+      } finally {
+        if (!cancelled) setRemoteHydrated(true)
+      }
+    }
+
+    loadRemoteWidgetSession()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isUserLoaded, isSignedIn])
 
   // Listen for global toggle
   useEffect(() => {
@@ -202,6 +277,57 @@ export default function AIChatbot() {
       sessionStorage.setItem('autoreview-chatbot-history', JSON.stringify({ messages }))
     }
   }, [messages])
+
+  useEffect(() => {
+    if (!isUserLoaded || !isSignedIn || !remoteHydrated || isLoading || messages.length === 0) return
+    if (messages.some(message => message.isTyping)) return
+
+    const sessionId = chatSessionId || createClientId()
+    if (!chatSessionId) {
+      setChatSessionId(sessionId)
+      sessionStorage.setItem('autoreview-chatbot-session-id', sessionId)
+    }
+
+    const messagesToSave = messages
+      .filter(message => message.content.trim())
+      .map(message => ({
+        id: message.id,
+        role: message.role,
+        content: message.content,
+        timestamp: message.timestamp,
+        model: message.model,
+      }))
+
+    const snapshot = JSON.stringify({ sessionId, messagesToSave })
+    if (snapshot === lastSavedSnapshotRef.current) return
+
+    const saveTimer = window.setTimeout(async () => {
+      try {
+        const response = await fetch('/api/chat/sessions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            title: buildSessionTitle(messages),
+            messages: messagesToSave,
+          }),
+        })
+
+        if (response.ok) {
+          lastSavedSnapshotRef.current = snapshot
+          const savedSession = await response.json().catch(() => null)
+          if (savedSession?.id && savedSession.id !== chatSessionId) {
+            setChatSessionId(savedSession.id)
+            sessionStorage.setItem('autoreview-chatbot-session-id', savedSession.id)
+          }
+        }
+      } catch (error) {
+        console.error('Failed to save Sarah widget chat session', error)
+      }
+    }, 700)
+
+    return () => window.clearTimeout(saveTimer)
+  }, [messages, isLoading, isSignedIn, isUserLoaded, remoteHydrated, chatSessionId])
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -283,6 +409,9 @@ export default function AIChatbot() {
     setMessages([])
     setError(null)
     setHasStarted(false)
+    const nextSessionId = createClientId()
+    setChatSessionId(nextSessionId)
+    sessionStorage.setItem('autoreview-chatbot-session-id', nextSessionId)
     sessionStorage.removeItem('autoreview-chatbot-history')
     setTimeout(() => {
       const welcomeMsg: Message = {
@@ -342,7 +471,7 @@ export default function AIChatbot() {
     try {
       const apiMessages = [
         { role: 'system', content: SYSTEM_PROMPT },
-        ...messages.slice(-10).map(m => ({
+          ...messages.slice(-6).map(m => ({
           role: m.role,
           content: m.content
         })),
@@ -356,7 +485,8 @@ export default function AIChatbot() {
           messages: apiMessages,
           model: selectedModel,
           temperature: 0.7,
-          max_tokens: 2000
+          max_tokens: selectedModel.includes('Thinking') ? 900 : 650,
+          fastMode: true
         }),
       })
 
@@ -417,12 +547,11 @@ export default function AIChatbot() {
   }
 
   const quickQuestions = [
-    { text: 'What is AutoReview AI?', icon: '🤔' },
-    { text: 'How much does it cost?', icon: '💰' },
-    { text: 'How do I get started?', icon: '🚀' },
-    { text: 'Which platforms work?', icon: '🌐' }
+    { text: 'What is AutoReview AI?', icon: <Lightbulb className="w-3 h-3" /> },
+    { text: 'How much does it cost?', icon: <Zap className="w-3 h-3" /> },
+    { text: 'How do I get started?', icon: <Rocket className="w-3 h-3" /> },
+    { text: 'Which platforms work?', icon: <Globe className="w-3 h-3" /> }
   ]
-
   const activeModel = LongCatModels.find(m => m.id === selectedModel)
   const isChatPage = pathname?.startsWith('/chat')
 
@@ -785,7 +914,7 @@ export default function AIChatbot() {
                   <div className="flex items-center justify-between mt-2.5 px-1">
                     <span className="text-[9px] text-gray-400 flex items-center gap-1 truncate">
                       <Bot className="w-3 h-3 flex-shrink-0" />
-                      Powered by LongCat AI • Secure Local History
+                      Powered by LongCat AI {isSignedIn ? '• Synced to your account' : '• Temporary local history'}
                     </span>
                     <span className="text-[9px] text-gray-400 bg-gray-100 dark:bg-gray-800 px-2 py-0.5 rounded-full">
                       {messages.length} msg

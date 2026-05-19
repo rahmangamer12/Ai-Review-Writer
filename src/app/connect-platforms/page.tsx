@@ -24,6 +24,8 @@ import {
   Loader2,
   Database,
   Globe,
+  MapPin,
+  Search,
   Check,
   Video,
   MessageSquare,
@@ -101,12 +103,12 @@ const setupOptions = [
 
 // Platform options for managed setup
 const managedPlatformOptions = [
-  { id: 'google', name: 'Google My Business', icon: 'G' },
-  { id: 'facebook', name: 'Facebook', icon: 'F' },
-  { id: 'yelp', name: 'Yelp', icon: 'Y' },
-  { id: 'tripadvisor', name: 'TripAdvisor', icon: 'TA' },
-  { id: 'trustpilot', name: 'Trustpilot', icon: 'TP' },
-  { id: 'other', name: 'Other', icon: 'Other' }
+  { id: 'google', name: 'Google My Business' },
+  { id: 'facebook', name: 'Facebook' },
+  { id: 'yelp', name: 'Yelp' },
+  { id: 'tripadvisor', name: 'TripAdvisor' },
+  { id: 'trustpilot', name: 'Trustpilot' },
+  { id: 'other', name: 'Other' }
 ]
 
 // Testimonials - authentic marketing copy from beta users
@@ -141,6 +143,32 @@ const initialSetupFormState: SetupFormState = {
   submitting: false,
   succeeded: false,
   error: null,
+}
+
+const platformIconStyles: Record<string, string> = {
+  google: 'bg-blue-500/15 text-blue-300 border-blue-400/25',
+  facebook: 'bg-indigo-500/15 text-indigo-300 border-indigo-400/25',
+  yelp: 'bg-red-500/15 text-red-300 border-red-400/25',
+  tripadvisor: 'bg-emerald-500/15 text-emerald-300 border-emerald-400/25',
+  trustpilot: 'bg-lime-500/15 text-lime-300 border-lime-400/25',
+  other: 'bg-slate-500/15 text-slate-200 border-slate-400/25',
+}
+
+function PlatformIcon({ id, className = 'w-7 h-7' }: { id: string; className?: string }) {
+  switch (id) {
+    case 'google':
+      return <Search className={className} />
+    case 'facebook':
+      return <MessageSquare className={className} />
+    case 'yelp':
+      return <Star className={className} />
+    case 'tripadvisor':
+      return <MapPin className={className} />
+    case 'trustpilot':
+      return <Shield className={className} />
+    default:
+      return <Globe className={className} />
+  }
 }
 
 export default function ConnectPlatformsPage() {
@@ -779,8 +807,8 @@ export default function ConnectPlatformsPage() {
                         >
                           <div className="flex items-start justify-between">
                             <div className="flex items-center gap-4">
-                              <div className="w-14 h-14 rounded-xl bg-white/10 flex items-center justify-center text-3xl">
-                                {platform.icon}
+                              <div className={`w-14 h-14 rounded-xl border flex items-center justify-center shadow-inner ${platformIconStyles[platform.id] || platformIconStyles.other}`}>
+                                <PlatformIcon id={platform.id} />
                               </div>
                               <div>
                                 <h3 className="text-white font-semibold text-lg">{platform.name}</h3>
@@ -830,7 +858,9 @@ export default function ConnectPlatformsPage() {
                       >
                         <div className="flex items-center justify-between mb-6">
                           <div className="flex items-center gap-3">
-                            <span className="text-3xl">{platformDef.icon}</span>
+                            <span className={`w-12 h-12 rounded-xl border flex items-center justify-center ${platformIconStyles[selectedPlatform] || platformIconStyles.other}`}>
+                              <PlatformIcon id={selectedPlatform} className="w-6 h-6" />
+                            </span>
                             <div>
                               <h3 className="text-white font-semibold">{platformDef.name}</h3>
                               <p className="text-white/50 text-sm">
@@ -1184,7 +1214,9 @@ export default function ConnectPlatformsPage() {
                                 }`}
                               >
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xl">{platform.icon}</span>
+                                  <span className={`w-8 h-8 rounded-lg border flex items-center justify-center ${platformIconStyles[platform.id] || platformIconStyles.other}`}>
+                                    <PlatformIcon id={platform.id} className="w-4 h-4" />
+                                  </span>
                                   <span className="text-sm font-medium">{platform.name}</span>
                                 </div>
                               </button>
