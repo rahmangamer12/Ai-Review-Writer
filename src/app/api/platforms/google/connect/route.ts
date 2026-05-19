@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
+import { encryptSensitiveData } from '@/lib/encryption';
 
 // POST - User provides their own Google Client ID + Secret
 export async function POST(request: NextRequest) {
@@ -25,12 +26,12 @@ export async function POST(request: NextRequest) {
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ai-review-writer.vercel.app';
     const redirectUri = `${appUrl}/api/platforms/google/callback`;
 
-    // Encode userId + clientId + clientSecret into state
-    const stateData = Buffer.from(JSON.stringify({
+    // Encrypt userId + OAuth client data into state so secrets are not plain base64 in the URL.
+    const stateData = encryptSensitiveData(JSON.stringify({
       userId,
       clientId: resolvedClientId,
       clientSecret: resolvedClientSecret,
-    })).toString('base64url');
+    }));
 
     const scopes = [
       'https://www.googleapis.com/auth/business.manage',

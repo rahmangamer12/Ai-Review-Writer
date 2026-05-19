@@ -1,12 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  autoReplyScheduler,
   getScheduledReplies,
   getAutoReplyRules,
   updateAutoReplyRule,
-  cancelScheduledReply,
-  scheduleReply,
-  initializeUserAutoReply
 } from '@/lib/auto-reply/scheduler';
 import { auth } from '@clerk/nextjs/server';
 
@@ -31,23 +27,23 @@ export async function POST(request: NextRequest) {
 
     switch (action) {
       case 'schedule':
-        const { reviewId, platform, replyText, delayMinutes, autoPost } = body;
-        const scheduled = await scheduleReply(userId, reviewId, platform, replyText, delayMinutes, autoPost);
-        if (!scheduled) {
-          return NextResponse.json({ error: 'Failed to schedule reply' }, { status: 500 });
-        }
-        return NextResponse.json({ success: true, scheduled });
+        return NextResponse.json({
+          success: false,
+          error: 'Auto-reply scheduling is not enabled yet.',
+          message: 'Review replies can still be generated and saved manually. Scheduled auto-posting requires the Prisma scheduler model before production use.',
+        }, { status: 501 });
 
       case 'cancel':
-        const { scheduledId } = body;
-        const cancelled = await cancelScheduledReply(scheduledId);
-        return NextResponse.json({ success: cancelled, message: cancelled ? 'Reply cancelled' : 'Could not cancel reply' });
+        return NextResponse.json({
+          success: false,
+          error: 'Auto-reply scheduling is not enabled yet.',
+        }, { status: 501 });
 
       case 'execute_now':
-        // Execute a scheduled reply immediately
-        const { replyId } = body;
-        // Implementation would call executeReply
-        return NextResponse.json({ success: true, message: 'Reply executed' });
+        return NextResponse.json({
+          success: false,
+          error: 'Auto-reply execution is not enabled yet.',
+        }, { status: 501 });
 
       default:
         return NextResponse.json({ error: 'Unknown action' }, { status: 400 });

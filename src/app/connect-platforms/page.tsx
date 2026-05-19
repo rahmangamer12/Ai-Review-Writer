@@ -890,6 +890,11 @@ export default function ConnectPlatformsPage() {
                                   ? 'Best for your SaaS: users select their Google/Facebook account and your Vercel OAuth keys handle the connection.'
                                   : 'Advanced option: the user can connect through their own Google/Facebook app credentials.'}
                               </p>
+                              {selectedPlatform === 'facebook' && (
+                                <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/10 p-3 text-xs leading-relaxed text-amber-100/85">
+                                  Facebook public OAuth depends on Meta app mode and page permissions. If Meta blocks your platform app, switch to Use My Keys and connect with a Meta app where the user is admin/tester.
+                                </div>
+                              )}
                             </div>
                           )}
                           {(!isOAuthPlatform || credentialMode === 'custom') && platformDef.fields.map((field: PlatformCredentialField) => (

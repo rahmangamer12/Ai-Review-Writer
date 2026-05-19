@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
+import { encryptSensitiveData } from '@/lib/encryption';
 
 // POST - User provides their own Facebook App ID + Secret
 export async function POST(request: NextRequest) {
@@ -35,19 +36,19 @@ export async function POST(request: NextRequest) {
         }, { status: 400 });
       }
     } catch (fetchError) {
-      // If test fails, still allow — user might have restricted the app
+      // If test fails, still allow because the app may have restricted Graph access.
       console.warn('[Facebook Connect] Validation API call failed:', fetchError);
     }
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://ai-review-writer.vercel.app';
     const redirectUri = `${appUrl}/api/platforms/facebook/callback`;
 
-    // Encode userId + appId + appSecret into state (base64 encrypted)
-    const stateData = Buffer.from(JSON.stringify({
+    // Encrypt userId + app credentials into state so app secrets are not plain base64 in the URL.
+    const stateData = encryptSensitiveData(JSON.stringify({
       userId,
       appId: resolvedAppId,
       appSecret: resolvedAppSecret,
-    })).toString('base64url');
+    }));
 
     // Generate OAuth URL with user's credentials
     const authUrl = new URL('https://www.facebook.com/v18.0/dialog/oauth');
@@ -79,9 +80,9 @@ export async function GET() {
     instructions: [
       '1. Go to developers.facebook.com/apps',
       '2. Create a new app (Business type)',
-      '3. Copy App ID and App Secret from Settings → Basic',
+      '3. Copy App ID and App Secret from Settings > Basic',
       '4. Add "Facebook Login" product to your app',
-      '5. In Facebook Login → Settings, add Valid OAuth Redirect URI',
+      '5. In Facebook Login > Settings, add Valid OAuth Redirect URI',
       '6. Send App ID + Secret to this API to connect',
     ],
   });

@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
           sentimentScore = sentimentResult.score
           console.log('[Agentic] Sentiment detected:', sentiment, 'Confidence:', sentimentResult.confidence)
         } catch (e) {
-          console.log('[Agentic] Sentiment analysis failed, using fallback')
+          console.log('[Agentic] Sentiment analysis failed, using rating heuristic')
           sentiment = review.rating >= 4 ? 'positive' : review.rating <= 2 ? 'negative' : 'neutral'
         }
 

@@ -103,6 +103,7 @@ function ReviewsContent() {
 
   const [reviews, setReviews] = useState<Review[]>([])
   const [loading, setLoading] = useState(true)
+  const [syncingGoogle, setSyncingGoogle] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [platforms, setPlatforms] = useState<string[]>([])
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('list')
@@ -143,6 +144,30 @@ function ReviewsContent() {
     sortOrder: 'desc',
   })
   const [showFilters, setShowFilters] = useState(false)
+
+  const syncGoogleReviews = async () => {
+    if (syncingGoogle) return
+    setSyncingGoogle(true)
+    setError(null)
+
+    try {
+      const response = await fetch('/api/platforms/google/sync', { method: 'POST' })
+      const data = await response.json().catch(() => ({}))
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Google sync failed')
+      }
+
+      toastSuccess('Google sync complete', data.message || 'Reviews are up to date.')
+      await fetchReviews(1)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Google sync failed'
+      setError(message)
+      toastError('Google sync failed', message)
+    } finally {
+      setSyncingGoogle(false)
+    }
+  }
 
   const fetchReviews = useCallback(async (page = currentPage, signal?: AbortSignal) => {
     if (!userId) return
@@ -442,6 +467,17 @@ function ReviewsContent() {
                 suppressHydrationWarning
               >
                 <RefreshCw className={`h-3.5 w-3.5 sm:h-5 sm:w-5 ${loading ? 'animate-spin' : ''}`} />
+              </button>
+
+              <button
+                onClick={syncGoogleReviews}
+                disabled={syncingGoogle}
+                className="flex items-center gap-1 sm:gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 px-2 py-1.5 sm:px-3 sm:py-2 text-[10px] sm:text-sm font-medium text-blue-300 hover:bg-blue-500/20 transition-colors disabled:opacity-50"
+                title="Sync Google reviews"
+                suppressHydrationWarning
+              >
+                <Upload className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${syncingGoogle ? 'animate-pulse' : ''}`} />
+                <span className="hidden sm:inline">Sync Google</span>
               </button>
 
               <button

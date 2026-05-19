@@ -5,8 +5,7 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@clerk/nextjs'
-import { CheckCircle, Loader2, Sparkles } from 'lucide-react'
-import { CreditsManager } from '@/lib/credits'
+import { AlertTriangle, CheckCircle, Loader2, Sparkles } from 'lucide-react'
 
 function SubscriptionSuccessContent() {
   const router = useRouter()
@@ -14,6 +13,7 @@ function SubscriptionSuccessContent() {
   const { user, isLoaded } = useUser()
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing')
   const [plan, setPlan] = useState<string>('')
+  const [message, setMessage] = useState<string>('Waiting for Lemon Squeezy webhook confirmation...')
 
   useEffect(() => {
     const handleSuccess = async () => {
@@ -23,30 +23,29 @@ function SubscriptionSuccessContent() {
       setPlan(planId)
 
       try {
-        // Get current plan before updating
-        const currentPlan = localStorage.getItem('autoreview-plan') || 'free'
-        
-        // Backend handles credits, just update local plan
-        localStorage.setItem('autoreview-plan', planId)
         localStorage.removeItem('pending-plan')
-        
-        // Store subscription info
-        localStorage.setItem('autoreview-subscription', JSON.stringify({
-          plan: planId,
-          status: 'active',
-          activatedAt: new Date().toISOString(),
-          userId: user.id
-        }))
 
-        setStatus('success')
-        
-        // Redirect after 3 seconds
-        setTimeout(() => {
-          router.push('/dashboard')
-        }, 3000)
-      } catch (error) {
-        console.error('Error activating subscription:', error)
+        for (let attempt = 0; attempt < 8; attempt += 1) {
+          const response = await fetch('/api/user/me', { cache: 'no-store' })
+          const data = await response.json().catch(() => ({}))
+
+          if (response.ok && data.planType && data.planType !== 'free') {
+            setPlan(data.planType)
+            setMessage('Your subscription is active and your account is updated.')
+            setStatus('success')
+            setTimeout(() => router.push('/dashboard'), 2500)
+            return
+          }
+
+          await new Promise((resolve) => setTimeout(resolve, 1500))
+        }
+
         setStatus('error')
+        setMessage('Payment completed, but the webhook has not confirmed your plan yet. Please refresh in a minute or contact support if it does not update.')
+      } catch (error) {
+        console.error('Error verifying subscription:', error)
+        setStatus('error')
+        setMessage('Could not verify your subscription status. Your payment is handled by Lemon Squeezy, so please contact support if the plan does not update.')
       }
     }
 
@@ -84,7 +83,7 @@ function SubscriptionSuccessContent() {
           <div className="glass-card border border-primary/20 rounded-2xl p-8 text-center">
             <Loader2 className="w-16 h-16 animate-spin text-primary mx-auto mb-4" />
             <h1 className="text-2xl font-bold text-white mb-2">Activating Your Subscription</h1>
-            <p className="text-white/70">Please wait while we set up your account...</p>
+            <p className="text-white/70">{message}</p>
           </div>
         )}
 
@@ -113,7 +112,7 @@ function SubscriptionSuccessContent() {
               Welcome to the <span className="text-primary font-semibold capitalize">{plan}</span> plan!
             </p>
             <p className="text-white/60 text-sm mb-6">
-              Your subscription is now active and credits have been added to your account.
+              {message}
             </p>
 
             <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 mb-6">
@@ -134,12 +133,11 @@ function SubscriptionSuccessContent() {
         {status === 'error' && (
           <div className="glass-card border-2 border-red-500/30 rounded-2xl p-8 text-center">
             <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
-              <span className="text-4xl">⚠️</span>
+              <AlertTriangle className="w-10 h-10 text-red-400" />
             </div>
             <h1 className="text-2xl font-bold text-white mb-2">Something Went Wrong</h1>
             <p className="text-white/70 mb-6">
-              Your payment was successful, but we had trouble activating your subscription. 
-              Please contact support.
+              {message}
             </p>
             <div className="flex gap-3">
               <button

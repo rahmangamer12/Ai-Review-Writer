@@ -300,40 +300,40 @@ const ExtensionPage = () => {
                   <div className="p-4 rounded-xl bg-white/5">
                     <h4 className="font-semibold text-white mb-2">Extension not detecting reviews</h4>
                     <ul className="text-gray-400 text-sm space-y-1">
-                      <li>â€¢ Try refreshing the page</li>
-                      <li>â€¢ Check if the review is fully loaded</li>
-                      <li>â€¢ Ensure you're on a supported platform</li>
-                      <li>â€¢ Clear browser cache and restart</li>
+                      <li>- Try refreshing the page</li>
+                      <li>- Check if the review is fully loaded</li>
+                      <li>- Ensure you're on a supported platform</li>
+                      <li>- Clear browser cache and restart</li>
                     </ul>
                   </div>
 
                   <div className="p-4 rounded-xl bg-white/5">
                     <h4 className="font-semibold text-white mb-2">API errors</h4>
                     <ul className="text-gray-400 text-sm space-y-1">
-                      <li>â€¢ Check internet connection</li>
-                      <li>â€¢ Verify AutoReview AI backend is running</li>
-                      <li>â€¢ Check browser console for detailed errors</li>
-                      <li>â€¢ Ensure API endpoint is correctly configured</li>
+                      <li>- Check internet connection</li>
+                      <li>- Verify AutoReview AI backend is running</li>
+                      <li>- Check browser console for detailed errors</li>
+                      <li>- Ensure API endpoint is correctly configured</li>
                     </ul>
                   </div>
 
                   <div className="p-4 rounded-xl bg-white/5">
                     <h4 className="font-semibold text-white mb-2">Reply not copying</h4>
                     <ul className="text-gray-400 text-sm space-y-1">
-                      <li>â€¢ Check clipboard permissions in browser</li>
-                      <li>â€¢ Try manual copy from the modal</li>
-                      <li>â€¢ Verify auto-copy setting is enabled</li>
-                      <li>â€¢ Check for browser extensions conflicts</li>
+                      <li>- Check clipboard permissions in browser</li>
+                      <li>- Try manual copy from the modal</li>
+                      <li>- Verify auto-copy setting is enabled</li>
+                      <li>- Check for browser extensions conflicts</li>
                     </ul>
                   </div>
 
                   <div className="p-4 rounded-xl bg-white/5">
                     <h4 className="font-semibold text-white mb-2">Button not appearing</h4>
                     <ul className="text-gray-400 text-sm space-y-1">
-                      <li>â€¢ Ensure the extension is enabled</li>
-                      <li>â€¢ Check if the page has fully loaded</li>
-                      <li>â€¢ Try disabling other extensions temporarily</li>
-                      <li>â€¢ Restart browser after installation</li>
+                      <li>- Ensure the extension is enabled</li>
+                      <li>- Check if the page has fully loaded</li>
+                      <li>- Try disabling other extensions temporarily</li>
+                      <li>- Restart browser after installation</li>
                     </ul>
                   </div>
                 </div>

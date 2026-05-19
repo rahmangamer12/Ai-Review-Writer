@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { encryptSensitiveData } from '@/lib/encryption';
+import { decryptSensitiveData, encryptSensitiveData } from '@/lib/encryption';
 import prisma from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -11,15 +11,24 @@ function jsString(value: unknown): string {
 function callbackPage(type: 'success' | 'error', title: string, message: string) {
   const eventType = type === 'success' ? 'GOOGLE_AUTH_SUCCESS' : 'GOOGLE_AUTH_ERROR';
   const target = type === 'success' ? '/reviews' : '/connect-platforms';
+  const accent = type === 'success' ? '#22c55e' : '#fb7185';
+  const actionLabel = type === 'success' ? 'Open Reviews' : 'Back to Platforms';
   return new Response(
-    `<html><body style="font-family:system-ui;background:#0a0a0f;color:white;display:grid;place-items:center;min-height:100vh;text-align:center">
-      <main><h2>${title}</h2><p>${message}</p><p>Redirecting...</p></main>
+    `<html><head><meta name="viewport" content="width=device-width, initial-scale=1" /></head>
+    <body style="margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:radial-gradient(circle at 50% 15%,rgba(124,58,237,.22),transparent 34%),#07070b;color:white;display:grid;place-items:center;min-height:100vh;text-align:center">
+      <main style="width:min(92vw,520px);border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);box-shadow:0 24px 80px rgba(0,0,0,.45);border-radius:28px;padding:42px 28px">
+        <div style="width:64px;height:64px;border-radius:20px;margin:0 auto 22px;background:${accent};display:grid;place-items:center;font-weight:900;color:#07070b">G</div>
+        <h2 style="font-size:28px;line-height:1.1;margin:0 0 12px">${title}</h2>
+        <p style="margin:0 auto 24px;color:rgba(255,255,255,.72);line-height:1.6;max-width:420px">${message}</p>
+        <a href="${target}" style="display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:14px;background:white;color:#09090f;text-decoration:none;font-weight:800">${actionLabel}</a>
+        <p style="margin:20px 0 0;color:rgba(255,255,255,.45);font-size:13px">Redirecting automatically...</p>
+      </main>
       <script>
         if (window.opener) {
           window.opener.postMessage({type:${jsString(eventType)},message:${jsString(message)},error:${jsString(message)}},'*');
-          setTimeout(()=>window.close(),1200);
+          setTimeout(()=>window.close(),1800);
         } else {
-          setTimeout(()=>{ window.location.href=${jsString(target)}; },1200);
+          setTimeout(()=>{ window.location.href=${jsString(target)}; },1800);
         }
       </script>
     </body></html>`,
@@ -27,8 +36,14 @@ function callbackPage(type: 'success' | 'error', title: string, message: string)
   );
 }
 
-// Decode base64url state (not security-critical, just obfuscation)
 function decryptState(state: string): { userId: string; clientId: string; clientSecret: string } | null {
+  try {
+    const decrypted = decryptSensitiveData(state);
+    return JSON.parse(decrypted);
+  } catch {
+    // Backward compatibility for OAuth sessions started before encrypted state shipped.
+  }
+
   try {
     const decoded = Buffer.from(state, 'base64url').toString();
     return JSON.parse(decoded);
@@ -122,6 +137,7 @@ async function processCallback(code: string, userId: string, clientId: string, c
     const encryptedRefreshToken = tokens.refresh_token
       ? encryptSensitiveData(tokens.refresh_token)
       : null;
+    const encryptedClientSecret = encryptSensitiveData(clientSecret);
 
     try {
       await prisma.user.upsert({
@@ -146,6 +162,7 @@ async function processCallback(code: string, userId: string, clientId: string, c
             accessTokenEncrypted: encryptedAccessToken,
             refreshTokenEncrypted: encryptedRefreshToken,
             clientId,
+            clientSecretEncrypted: encryptedClientSecret,
             expiresAt: Date.now() + (tokens.expires_in * 1000),
           },
           lastSyncedAt: new Date(),
@@ -158,6 +175,7 @@ async function processCallback(code: string, userId: string, clientId: string, c
             accessTokenEncrypted: encryptedAccessToken,
             refreshTokenEncrypted: encryptedRefreshToken,
             clientId,
+            clientSecretEncrypted: encryptedClientSecret,
             expiresAt: Date.now() + (tokens.expires_in * 1000),
           },
         },

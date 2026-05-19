@@ -65,12 +65,26 @@ export async function POST(request: NextRequest) {
 
     if (platform === 'google' && refreshToken) {
       try {
+        const clientId = credentials.clientId || process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
+        let clientSecret = process.env.GOOGLE_CLIENT_SECRET || ''
+        if (credentials.clientSecretEncrypted) {
+          try {
+            clientSecret = decryptSensitiveData(credentials.clientSecretEncrypted)
+          } catch {
+            return NextResponse.json({ error: 'Saved Google client secret could not be decrypted. Please reconnect Google.', requiresReauth: true }, { status: 401 })
+          }
+        }
+
+        if (!clientId || !clientSecret) {
+          return NextResponse.json({ error: 'Google OAuth client credentials missing. Please reconnect Google.', requiresReauth: true }, { status: 401 })
+        }
+
         const response = await fetch('https://oauth2.googleapis.com/token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams({
-            client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
-            client_secret: process.env.GOOGLE_CLIENT_SECRET || '',
+            client_id: clientId,
+            client_secret: clientSecret,
             refresh_token: refreshToken,
             grant_type: 'refresh_token',
           }),

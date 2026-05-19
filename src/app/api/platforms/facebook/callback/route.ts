@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { encryptSensitiveData } from '@/lib/encryption';
+import { decryptSensitiveData, encryptSensitiveData } from '@/lib/encryption';
 import prisma from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
-// Decrypt helper (simple base64 - not security critical, just obfuscation)
 function decryptState(state: string): { userId: string; appId: string; appSecret: string } | null {
+  try {
+    const decrypted = decryptSensitiveData(state);
+    return JSON.parse(decrypted);
+  } catch {
+    // Backward compatibility for OAuth sessions started before encrypted state shipped.
+  }
+
   try {
     const decoded = Buffer.from(state, 'base64url').toString();
     return JSON.parse(decoded);
@@ -30,15 +36,24 @@ function escapeHtml(value: unknown): string {
 function callbackPage(type: 'success' | 'error', title: string, message: string) {
   const eventType = type === 'success' ? 'FACEBOOK_AUTH_SUCCESS' : 'FACEBOOK_AUTH_ERROR';
   const target = type === 'success' ? '/reviews' : '/connect-platforms';
+  const accent = type === 'success' ? '#2563eb' : '#fb7185';
+  const actionLabel = type === 'success' ? 'Open Reviews' : 'Back to Platforms';
   return new Response(
-    `<html><body style="font-family:system-ui;background:#0a0a0f;color:white;display:grid;place-items:center;min-height:100vh;text-align:center">
-      <main><h2>${escapeHtml(title)}</h2><p>${escapeHtml(message)}</p><p>Redirecting...</p></main>
+    `<html><head><meta name="viewport" content="width=device-width, initial-scale=1" /></head>
+    <body style="margin:0;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:radial-gradient(circle at 50% 15%,rgba(37,99,235,.22),transparent 34%),#07070b;color:white;display:grid;place-items:center;min-height:100vh;text-align:center">
+      <main style="width:min(92vw,520px);border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);box-shadow:0 24px 80px rgba(0,0,0,.45);border-radius:28px;padding:42px 28px">
+        <div style="width:64px;height:64px;border-radius:20px;margin:0 auto 22px;background:${accent};display:grid;place-items:center;font-weight:900;color:white">F</div>
+        <h2 style="font-size:28px;line-height:1.1;margin:0 0 12px">${escapeHtml(title)}</h2>
+        <p style="margin:0 auto 24px;color:rgba(255,255,255,.72);line-height:1.6;max-width:420px">${escapeHtml(message)}</p>
+        <a href="${target}" style="display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border-radius:14px;background:white;color:#09090f;text-decoration:none;font-weight:800">${actionLabel}</a>
+        <p style="margin:20px 0 0;color:rgba(255,255,255,.45);font-size:13px">Redirecting automatically...</p>
+      </main>
       <script>
         if (window.opener) {
           window.opener.postMessage({type:${jsString(eventType)},message:${jsString(message)},error:${jsString(message)}},'*');
-          setTimeout(()=>window.close(),1200);
+          setTimeout(()=>window.close(),1800);
         } else {
-          setTimeout(()=>{ window.location.href=${jsString(target)}; },1200);
+          setTimeout(()=>{ window.location.href=${jsString(target)}; },1800);
         }
       </script>
     </body></html>`,
@@ -145,6 +160,7 @@ async function processCallback(code: string, userId: string, appId: string, appS
 
     const encryptedUserAccessToken = encryptSensitiveData(accessToken);
     const encryptedPageAccessToken = encryptSensitiveData(page.access_token);
+    const encryptedAppSecret = encryptSensitiveData(appSecret);
 
     try {
       await prisma.user.upsert({
@@ -171,6 +187,7 @@ async function processCallback(code: string, userId: string, appId: string, appS
             pageId: page.id,
             pageName: page.name,
             appId,
+            appSecretEncrypted: encryptedAppSecret,
           },
           lastSyncedAt: new Date(),
         },
@@ -184,6 +201,7 @@ async function processCallback(code: string, userId: string, appId: string, appS
             pageId: page.id,
             pageName: page.name,
             appId,
+            appSecretEncrypted: encryptedAppSecret,
           },
         },
       });
@@ -201,16 +219,6 @@ async function processCallback(code: string, userId: string, appId: string, appS
     console.log('[Facebook OAuth] Connected page:', page.name, 'for user:', userId);
 
     return callbackPage('success', 'Facebook Connected!', `Connected page: ${page.name}. Open Reviews to sync and manage reviews.`);
-
-    return new Response(
-      `<html><body>
-        <h2>Facebook Connected!</h2>
-        <p>Page: <strong>${escapeHtml(page.name)}</strong></p>
-        <p>You can close this window.</p>
-        <script>window.opener?.postMessage({type:'FACEBOOK_AUTH_SUCCESS',pageName:${jsString(page.name)}},'*');setTimeout(()=>window.close(),2000);</script>
-      </body></html>`,
-      { status: 200, headers: { 'Content-Type': 'text/html' } }
-    );
   } catch (err) {
     console.error('[Facebook OAuth] Process error:', err);
     return new Response(
