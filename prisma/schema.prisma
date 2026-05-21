@@ -27,6 +27,7 @@ model User {
   platforms        ConnectedPlatform[]
   reviews          Review[]
   chatSessions     ChatSession[]
+  feedbacks        Feedback[]
 }
 
 model ConnectedPlatform {
@@ -104,4 +105,25 @@ model Notification {
 
   @@index([userId])
   @@index([read])
+}
+
+model Feedback {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  rating    Int
+  category  String   @default("general")
+  message   String
+  email     String?
+  pageUrl   String?
+  userAgent String?
+
+  status    String   @default("new")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
 }
