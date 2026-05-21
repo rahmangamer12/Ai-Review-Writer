@@ -99,7 +99,7 @@ function UserProfile() {
   const promptCount = userData?.promptCount ?? 0
 
   return (
-    <div className="rounded-2xl p-2 sm:p-3 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 shadow-lg">
+    <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-3 shadow-lg backdrop-blur-md">
       <div className="flex items-center gap-2 mb-2">
         <UserButton afterSignOutUrl="/" />
         <div className="flex-1 min-w-0">
@@ -111,30 +111,42 @@ function UserProfile() {
           </p>
         </div>
       </div>
-      <div className="text-[9px] text-white/50 space-y-1">
-        <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-white/5">
-          <span className="capitalize">Plan: {plan}</span>
-          <Link href="/subscription" className="rounded-lg bg-violet-500 px-2 py-1 text-white hover:bg-violet-400 font-bold transition-all text-[9px] shadow-sm shadow-violet-500/20">
-            Upgrade
-          </Link>
-        </div>
-        <div className="flex flex-col gap-1 p-2 rounded-xl bg-white/5">
-          <div className="flex items-center justify-between">
-            <span>Credits: {credits}</span>
-            <Link href="/subscription" className="rounded-lg bg-cyan-400 px-2 py-1 font-bold text-slate-950 hover:bg-cyan-300 transition-all text-[9px] shadow-sm shadow-cyan-500/20">
+      <div className="space-y-2">
+        <Link
+          href="/subscription"
+          className="block rounded-2xl border border-violet-400/20 bg-gradient-to-r from-violet-500/20 via-fuchsia-500/15 to-cyan-500/20 p-3 transition-all hover:border-violet-300/40 hover:bg-violet-500/20"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-violet-100/55">Current plan</p>
+              <p className="mt-1 text-xs font-black capitalize text-white">{plan}</p>
+            </div>
+            <span className="rounded-xl bg-white px-3 py-1.5 text-[10px] font-black text-slate-950 shadow-lg shadow-white/10">
+              Upgrade
+            </span>
+          </div>
+        </Link>
+
+        <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <div>
+              <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/35">AI credits</p>
+              <p className="mt-1 text-sm font-black text-white">{credits}</p>
+            </div>
+            <Link href="/subscription" className="rounded-xl border border-cyan-300/20 bg-cyan-400/15 px-3 py-1.5 text-[10px] font-black text-cyan-100 hover:bg-cyan-400/25">
               Get More
             </Link>
           </div>
-          <div className="flex flex-col gap-1 mt-1">
+          <div className="flex flex-col gap-1">
             <div className="flex justify-between items-center text-[8px] uppercase tracking-tighter text-white/40">
               <span>Usage Progress</span>
               <span>{promptCount}/10 prompts</span>
             </div>
-            <div className="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-              <motion.div 
+            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+              <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${(promptCount / 10) * 100}%` }}
-                className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
+                className="h-full bg-gradient-to-r from-cyan-400 to-violet-400"
               />
             </div>
           </div>
