@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useUser, useClerk } from '@clerk/nextjs'
-import { Menu, X, Sparkles, LayoutDashboard, MessageSquare, BarChart3, Plug2, User, Settings, FileText, Puzzle, LogOut, Bot, Download } from 'lucide-react'
+import { Menu, X, Sparkles, LayoutDashboard, MessageSquare, BarChart3, Plug2, User, Settings, FileText, Puzzle, LogOut, Bot, Download, CreditCard } from 'lucide-react'
 import { usePWAInstall } from '@/hooks/usePWAInstall'
 import { useToast } from '@/components/ui/Toast'
 import { sanitizationService } from '@/lib/sanitization'
@@ -99,7 +99,7 @@ function UserProfile() {
   const promptCount = userData?.promptCount ?? 0
 
   return (
-    <div className="rounded-xl p-2 sm:p-3 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 shadow-lg">
+    <div className="rounded-2xl p-2 sm:p-3 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-md border border-white/20 shadow-lg">
       <div className="flex items-center gap-2 mb-2">
         <UserButton afterSignOutUrl="/" />
         <div className="flex-1 min-w-0">
@@ -112,17 +112,17 @@ function UserProfile() {
         </div>
       </div>
       <div className="text-[9px] text-white/50 space-y-1">
-        <div className="flex items-center justify-between p-2 rounded-lg bg-white/5">
+        <div className="flex items-center justify-between gap-2 p-2 rounded-xl bg-white/5">
           <span className="capitalize">Plan: {plan}</span>
-          <Link href="/subscription" className="text-primary hover:text-primary/80 hover:underline font-medium transition-all text-[9px]">
-            Upgrade ✨
+          <Link href="/subscription" className="rounded-lg bg-violet-500 px-2 py-1 text-white hover:bg-violet-400 font-bold transition-all text-[9px] shadow-sm shadow-violet-500/20">
+            Upgrade
           </Link>
         </div>
-        <div className="flex flex-col gap-1 p-2 rounded-lg bg-white/5">
+        <div className="flex flex-col gap-1 p-2 rounded-xl bg-white/5">
           <div className="flex items-center justify-between">
             <span>Credits: {credits}</span>
-            <Link href="/subscription" className="text-cyan-400 hover:text-cyan-300 hover:underline font-medium transition-all text-[9px]">
-              Get More 💳
+            <Link href="/subscription" className="rounded-lg bg-cyan-400 px-2 py-1 font-bold text-slate-950 hover:bg-cyan-300 transition-all text-[9px] shadow-sm shadow-cyan-500/20">
+              Get More
             </Link>
           </div>
           <div className="flex flex-col gap-1 mt-1">
@@ -286,6 +286,13 @@ export default function Navigation() {
       icon: Plug2,
       description: 'Connect Reviews',
       gradient: 'from-yellow-500 to-orange-500'
+    },
+    {
+      href: '/subscription',
+      label: 'Subscription',
+      icon: CreditCard,
+      description: 'Plans & Credits',
+      gradient: 'from-cyan-500 to-violet-500'
     },
     {
       href: '/profile',

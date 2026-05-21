@@ -216,9 +216,9 @@ function AnalyticsPage() {
 
         <div className="px-4 md:px-0 pt-8 md:pt-0">
           {/* ── Header ───────────────────────────────────────────────────────── */}
-          <header className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-6 xl:gap-8 mb-12 sm:mb-16 lg:mb-24 relative">
+          <header className="flex flex-col xl:flex-row items-start xl:items-end justify-between gap-5 xl:gap-8 mb-8 sm:mb-10 lg:mb-12 relative rounded-[2rem] border border-white/10 bg-white/[0.025] p-5 sm:p-7">
             <div className="absolute -top-12 -left-12 w-64 h-64 bg-violet-600/10 rounded-full blur-[100px] pointer-events-none" />
-            <div className="space-y-6 relative z-10">
+            <div className="space-y-4 relative z-10">
               <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="flex items-center gap-4">
                 <div className="px-4 py-1.5 bg-violet-600/10 border border-violet-500/20 rounded-full text-[10px] font-black uppercase tracking-[0.25em] text-violet-400 flex items-center gap-2">
                   <span className="relative flex h-2 w-2">
@@ -231,12 +231,12 @@ function AnalyticsPage() {
               </motion.div>
               <motion.h1 
                 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", damping: 20 }}
-                className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.9] sm:leading-none"
+                className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tight leading-[1.02]"
               >
                 Review <br className="hidden sm:block" />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-indigo-300 to-cyan-300 drop-shadow-[0_0_30px_rgba(139,92,246,0.3)]">Analytics</span>
               </motion.h1>
-              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-white/50 text-sm sm:text-base lg:text-xl max-w-2xl font-medium leading-relaxed">
+              <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-white/50 text-sm sm:text-base max-w-2xl font-medium leading-relaxed">
                 Turn real customer reviews into <span className="text-white">actionable owner decisions</span>: ratings, sentiment, response rate, and unresolved issues.
               </motion.p>
             </div>
@@ -257,15 +257,15 @@ function AnalyticsPage() {
 
           {!hasData ? (
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="mt-8">
-              <PremiumGlass className="p-8 sm:p-16 lg:p-24 flex flex-col items-center text-center max-w-4xl mx-auto border-dashed border-white/20">
-                <div className="relative mb-12">
+              <PremiumGlass className="p-6 sm:p-10 lg:p-12 flex flex-col items-center text-center max-w-4xl mx-auto border-dashed border-white/20">
+                <div className="relative mb-8">
                   <div className="absolute inset-0 bg-violet-600/20 blur-[50px] rounded-full animate-pulse" />
-                  <div className="w-24 h-24 sm:w-32 sm:h-32 bg-white/5 border border-white/10 rounded-[2rem] flex items-center justify-center relative z-10 shadow-2xl">
-                    <Database className="w-10 h-10 sm:w-12 sm:h-12 text-violet-400" />
+                  <div className="w-20 h-20 sm:w-24 sm:h-24 bg-white/5 border border-white/10 rounded-[2rem] flex items-center justify-center relative z-10 shadow-2xl">
+                    <Database className="w-9 h-9 sm:w-10 sm:h-10 text-violet-400" />
                   </div>
                 </div>
-                <h2 className="text-2xl sm:text-4xl font-black text-white mb-6 tracking-tight">No review data yet</h2>
-                <p className="text-white/40 text-sm sm:text-lg mb-12 max-w-md mx-auto leading-relaxed font-medium">
+                <h2 className="text-2xl sm:text-3xl font-black text-white mb-4 tracking-tight">No review data yet</h2>
+                <p className="text-white/40 text-sm sm:text-base mb-8 max-w-md mx-auto leading-relaxed font-medium">
                   Connect a review platform or add real reviews manually to start building analytics.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
