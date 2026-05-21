@@ -238,7 +238,7 @@ export default async function LandingPage() {
 
       {/* ─── Footer ──────────────────────────────────────────────────────────── */}
       <footer className="border-t border-white/5 bg-[#030308] pt-16 pb-8 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 mb-16">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-5 gap-8 mb-16">
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="text-xl font-bold text-white tracking-tight flex items-center gap-2 mb-4">
               <div className="w-8 h-8 bg-gradient-to-br from-violet-600 to-cyan-600 rounded-lg flex items-center justify-center shadow-lg shadow-violet-500/20">
@@ -256,6 +256,15 @@ export default async function LandingPage() {
               <li><Link href="/dashboard" className="hover:text-white transition-colors">Features</Link></li>
               <li><Link href="/subscription" className="hover:text-white transition-colors">Pricing</Link></li>
               <li><Link href="/extension" className="hover:text-white transition-colors">Chrome Extension</Link></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold mb-4 text-white">Industries</h4>
+            <ul className="space-y-3 text-sm text-white/40">
+              <li><Link href="/restaurants" className="hover:text-white transition-colors">Restaurants</Link></li>
+              <li><Link href="/clinics" className="hover:text-white transition-colors">Clinics</Link></li>
+              <li><Link href="/salons" className="hover:text-white transition-colors">Salons</Link></li>
+              <li><Link href="/repair-shops" className="hover:text-white transition-colors">Repair Shops</Link></li>
             </ul>
           </div>
           <div>

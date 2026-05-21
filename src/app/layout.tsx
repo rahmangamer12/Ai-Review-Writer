@@ -28,21 +28,21 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ai Review Writer | Automate & Manage Reviews 10x Faster",
-  description: "Boost your business reputation with Ai Review Writer. Automatically track, analyze, and reply to customer reviews across Google, Yelp, and Facebook using AI.",
-  keywords: ["review management", "AI auto reply", "reputation management", "customer reviews AI", "Google reviews software"],
+  title: "Ai Review Writer | AI Review Management for Local Businesses",
+  description: "Ai Review Writer helps restaurants, clinics, salons, repair shops, and local service teams track reviews, analyze sentiment, and draft safer AI replies.",
+  keywords: ["local business review management", "Google reviews AI", "restaurant review replies", "clinic review management", "salon review software", "repair shop reviews", "AI review response generator"],
   authors: [{ name: "Ai Review Writer Team" }],
   openGraph: {
-    title: "Ai Review Writer - Intelligent Reputation Management",
-    description: "Connect your platforms and let our AI generate personalized, context-aware responses to your customer reviews instantly.",
+    title: "Ai Review Writer - AI Review Management for Local Businesses",
+    description: "Track reviews, draft safer AI replies, and protect local reputation from one focused workspace.",
     type: "website",
     url: "https://ai-review-writer.vercel.app",
     siteName: "Ai Review Writer"
   },
   twitter: {
     card: "summary_large_image",
-    title: "Ai Review Writer | Smart Review Automation",
-    description: "Manage your online reputation effortlessly with AI-powered review responses."
+    title: "Ai Review Writer | Local Review Management With AI",
+    description: "Manage local customer reviews and AI reply drafts from one workspace."
   }
 };
 
