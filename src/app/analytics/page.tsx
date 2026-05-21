@@ -225,7 +225,7 @@ function AnalyticsPage() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                   </span>
-                  Neural Intelligence Terminal
+                  Local Reputation Analytics
                 </div>
                 <div className="h-px w-12 sm:w-20 bg-gradient-to-r from-violet-500/50 to-transparent" />
               </motion.div>
@@ -233,11 +233,11 @@ function AnalyticsPage() {
                 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ type: "spring", damping: 20 }}
                 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-black tracking-tighter leading-[0.9] sm:leading-none"
               >
-                Enterprise <br className="hidden sm:block" />
+                Review <br className="hidden sm:block" />
                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-400 via-indigo-300 to-cyan-300 drop-shadow-[0_0_30px_rgba(139,92,246,0.3)]">Analytics</span>
               </motion.h1>
               <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="text-white/50 text-sm sm:text-base lg:text-xl max-w-2xl font-medium leading-relaxed">
-                Synthesizing cross-platform review data into <span className="text-white">actionable intelligence</span> through neural pattern recognition.
+                Turn real customer reviews into <span className="text-white">actionable owner decisions</span>: ratings, sentiment, response rate, and unresolved issues.
               </motion.p>
             </div>
 
@@ -264,16 +264,16 @@ function AnalyticsPage() {
                     <Database className="w-10 h-10 sm:w-12 sm:h-12 text-violet-400" />
                   </div>
                 </div>
-                <h2 className="text-2xl sm:text-4xl font-black text-white mb-6 tracking-tight">Data Nodes Disconnected</h2>
+                <h2 className="text-2xl sm:text-4xl font-black text-white mb-6 tracking-tight">No review data yet</h2>
                 <p className="text-white/40 text-sm sm:text-lg mb-12 max-w-md mx-auto leading-relaxed font-medium">
-                  Your analytics matrix is offline. Connect platforms to initialize review ingestion.
+                  Connect a review platform or add real reviews manually to start building analytics.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                   <button onClick={() => router.push('/connect-platforms')} className="w-full sm:w-auto px-10 py-4 bg-white text-black rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest hover:bg-violet-400 hover:text-white transition-all shadow-xl active:scale-95">
                     Connect Platforms
                   </button>
                   <button onClick={() => router.push('/dashboard')} className="w-full sm:w-auto px-10 py-4 bg-white/5 border border-white/10 text-white rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest active:scale-95 transition-all">
-                    Return to Base
+                    Return to Dashboard
                   </button>
                 </div>
               </PremiumGlass>
@@ -281,10 +281,10 @@ function AnalyticsPage() {
           ) : (
             <div className="space-y-8">
               <div className="grid grid-cols-1 xs:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                <StatCard title="Global Volume" value={stats.totalReviews} icon={Layers} color="violet" trend={12} delay={0.1} />
+                <StatCard title="Review Volume" value={stats.totalReviews} icon={Layers} color="violet" trend={12} delay={0.1} />
                 <StatCard title="Quality Score" value={`${stats.avgRating}/5`} icon={Star} color="amber" trend={2.4} delay={0.2} />
-                <StatCard title="Neural Sync" value={`${stats.responseRate}%`} icon={Zap} color="emerald" trend={8.1} delay={0.3} />
-                <StatCard title="Positive Delta" value={`${stats.totalReviews ? Math.round((sentiment.positive / stats.totalReviews) * 100) : 0}%`} icon={ThumbsUp} color="blue" trend={5.2} delay={0.4} />
+                <StatCard title="Response Rate" value={`${stats.responseRate}%`} icon={Zap} color="emerald" trend={8.1} delay={0.3} />
+                <StatCard title="Positive Share" value={`${stats.totalReviews ? Math.round((sentiment.positive / stats.totalReviews) * 100) : 0}%`} icon={ThumbsUp} color="blue" trend={5.2} delay={0.4} />
               </div>
 
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 sm:gap-8">
@@ -381,7 +381,7 @@ function AnalyticsPage() {
         <div className="max-w-[1600px] mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-8">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/20 font-black text-sm">V4</div>
-            <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.2em]">AutoReview AI • Neural Matrix Analytics</p>
+            <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.2em]">AutoReview AI • Local Review Analytics</p>
           </div>
           <div className="flex flex-wrap justify-center gap-8 text-[10px] font-black uppercase tracking-widest text-white/40">
             <Link href="/docs" className="hover:text-violet-400 transition-colors">Documentation</Link>

@@ -16,12 +16,11 @@ const ExtensionPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
+    <div className="min-h-screen bg-[#030308] text-white overflow-x-hidden">
       {/* Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-pink-600/5 rounded-full blur-3xl" />
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-violet-600/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -29,17 +28,18 @@ const ExtensionPage = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+          className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.035] p-6 text-center mb-10 shadow-2xl sm:p-10"
         >
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-purple-600 to-blue-600">
+          <div className="flex flex-col items-center justify-center gap-4">
+            <div className="p-4 rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-600 shadow-lg shadow-violet-500/20">
               <Chrome className="w-8 h-8 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">
+              <p className="text-xs font-black uppercase tracking-[0.25em] text-cyan-200/70">Desktop workflow</p>
+              <h1 className="mt-2 text-3xl sm:text-5xl lg:text-6xl font-black bg-gradient-to-r from-violet-300 via-fuchsia-300 to-cyan-300 bg-clip-text text-transparent">
                 Chrome Extension
               </h1>
-              <p className="text-gray-400 text-lg mt-2">Generate AI replies directly on review platforms</p>
+              <p className="mx-auto max-w-2xl text-white/60 text-lg mt-4">Generate editable AI replies directly while viewing customer reviews, then keep the main dashboard as your source of truth.</p>
             </div>
           </div>
         </motion.div>
@@ -55,29 +55,29 @@ const ExtensionPage = () => {
             <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mx-auto mb-3">
               <Star className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-2xl font-bold text-white">95%</h3>
-            <p className="text-sm text-gray-400">User Satisfaction</p>
+            <h3 className="text-2xl font-bold text-white">Manual</h3>
+            <p className="text-sm text-gray-400">Developer install</p>
           </div>
           <div className="glass-card border border-white/10 rounded-2xl p-6 text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mx-auto mb-3">
               <Zap className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-2xl font-bold text-white">8s</h3>
-            <p className="text-sm text-gray-400">Avg Reply Time</p>
+            <h3 className="text-2xl font-bold text-white">Google</h3>
+            <p className="text-sm text-gray-400">Review workflow</p>
           </div>
           <div className="glass-card border border-white/10 rounded-2xl p-6 text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mx-auto mb-3">
               <CheckCircle className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-2xl font-bold text-white">24/7</h3>
-            <p className="text-sm text-gray-400">Availability</p>
+            <h3 className="text-2xl font-bold text-white">PWA</h3>
+            <p className="text-sm text-gray-400">Mobile companion</p>
           </div>
           <div className="glass-card border border-white/10 rounded-2xl p-6 text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center mx-auto mb-3">
               <Shield className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-2xl font-bold text-white">100%</h3>
-            <p className="text-sm text-gray-400">Secure</p>
+            <h3 className="text-2xl font-bold text-white">Editable</h3>
+            <p className="text-sm text-gray-400">Reply drafts</p>
           </div>
         </motion.div>
 
@@ -88,7 +88,7 @@ const ExtensionPage = () => {
           transition={{ delay: 0.2 }}
           className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12"
         >
-          <div className="glass-card border border-white/10 rounded-2xl p-8">
+          <div className="glass-card border border-white/10 rounded-3xl p-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-blue-600 rounded-xl flex items-center justify-center">
                 <Zap className="w-6 h-6 text-white" />
@@ -114,7 +114,7 @@ const ExtensionPage = () => {
             </ul>
           </div>
 
-          <div className="glass-card border border-white/10 rounded-2xl p-8">
+          <div className="glass-card border border-white/10 rounded-3xl p-8">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center">
                 <Smartphone className="w-6 h-6 text-white" />

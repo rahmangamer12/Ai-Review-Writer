@@ -494,6 +494,32 @@ function ReviewsContent() {
       </header>
 
       <main className="relative z-10 mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8 min-w-0 pb-[env(safe-area-inset-bottom)]">
+        <section className="mt-6 mb-6 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.035] p-5 shadow-2xl sm:p-7">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.25em] text-cyan-200/70">Review operations</p>
+              <h2 className="mt-2 text-3xl font-black text-white sm:text-4xl">Manage every customer review</h2>
+              <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/55">
+                Sync Google reviews, draft AI replies, filter by sentiment, and keep every response editable before it goes public.
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-2 sm:min-w-[360px]">
+              <div className="rounded-2xl border border-white/10 bg-black/20 p-3 text-center">
+                <p className="text-2xl font-black text-white">{totalCount}</p>
+                <p className="text-[10px] uppercase tracking-widest text-white/35">Reviews</p>
+              </div>
+              <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 p-3 text-center">
+                <p className="text-2xl font-black text-amber-200">{reviews.filter(r => r.status === 'pending').length}</p>
+                <p className="text-[10px] uppercase tracking-widest text-amber-100/50">Pending</p>
+              </div>
+              <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-3 text-center">
+                <p className="text-2xl font-black text-emerald-200">{reviews.filter(r => r.reply).length}</p>
+                <p className="text-[10px] uppercase tracking-widest text-emerald-100/50">Drafted</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Agentic Mode Banner */}
         {agenticMode && (
           <motion.div

@@ -33,10 +33,10 @@ function TabButton({ tab, label, icon, activeTab, onClick }: { tab: TabType; lab
   return (
     <button
       onClick={() => onClick(tab)}
-      className={`flex items-center gap-2 px-4 py-2 md:px-6 md:py-3 rounded-lg transition-all text-sm md:text-base ${
+      className={`flex items-center gap-2 px-4 py-2 md:px-5 md:py-3 rounded-2xl border transition-all text-sm md:text-base whitespace-nowrap ${
         activeTab === tab
-          ? 'bg-primary text-primary-foreground'
-          : 'glass text-white/70 hover:text-white hover:bg-white/10'
+          ? 'border-violet-400/40 bg-violet-500/20 text-white shadow-lg shadow-violet-500/10'
+          : 'border-white/10 bg-white/[0.04] text-white/65 hover:text-white hover:bg-white/10'
       }`}
     >
       <span className="flex h-5 w-5 items-center justify-center">{icon}</span>
@@ -215,16 +215,32 @@ export default function SettingsPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-[100dvh] p-6 overflow-x-hidden w-full">
+      <div className="min-h-[100dvh] overflow-x-hidden w-full bg-[#030308] px-4 py-6 sm:px-6">
+        <div className="fixed inset-0 pointer-events-none">
+          <div className="absolute left-1/4 top-0 h-96 w-96 rounded-full bg-violet-600/10 blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
+        </div>
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-            <h1 className="text-4xl font-bold text-gradient mb-2">Settings</h1>
-            <p className="text-white/70">Configure your AutoReview AI preferences</p>
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="relative mb-6 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.035] p-6 shadow-2xl sm:p-8">
+            <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase tracking-[0.25em] text-cyan-200/70">Control center</p>
+                <h1 className="mt-2 text-4xl font-black text-white sm:text-5xl">Settings</h1>
+                <p className="mt-3 max-w-2xl text-white/60">Configure AI behavior, billing, notifications, integrations, and account preferences from one workspace.</p>
+              </div>
+              <button
+                onClick={handleSave}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-black text-slate-950 shadow-lg shadow-cyan-500/10 transition-all hover:bg-cyan-50"
+              >
+                <Save className="h-4 w-4" />
+                Save Settings
+              </button>
+            </div>
           </motion.div>
 
           {/* Tabs */}
-          <div className="flex overflow-x-auto pb-4 gap-2 sm:gap-4 mb-4 sm:mb-8 hide-scrollbar snap-x">
+          <div className="flex overflow-x-auto pb-4 gap-2 sm:gap-3 mb-4 sm:mb-8 hide-scrollbar snap-x">
             <div className="flex gap-2 sm:gap-4 snap-start">
               <TabButton tab="general" label="General" icon={<SettingsIcon className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
               <TabButton tab="credits" label="Credits" icon={<Gem className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
@@ -237,7 +253,7 @@ export default function SettingsPage() {
           </div>
 
           {/* Settings Content */}
-          <div className="glass-card border-2 border-primary/20 rounded-2xl p-4 sm:p-8 shadow-xl">
+          <div className="glass-card border border-white/10 rounded-[2rem] p-4 sm:p-8 shadow-2xl">
             {activeTab === 'general' && (
               <div className="space-y-6 sm:space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">

@@ -16,16 +16,16 @@ const DocumentationPage = () => {
       title: 'Overview',
       icon: <Star className="w-5 h-5" />,
       content: `
-# AutoReview AI - The Future of Reputation Management
+# AutoReview AI - Local Review Management Guide
 
-AutoReview AI is a next-generation SaaS platform designed to help businesses automate their customer engagement. By leveraging advanced AI (LongCat AI), we enable businesses to track, analyze, and respond to reviews across multiple platforms in seconds.
+AutoReview AI helps local service businesses organize real customer reviews, generate editable AI reply drafts, and keep review work in one authenticated dashboard.
 
 ## Why AutoReview AI?
 
-- **Save Time**: Reduce review response time by 90%.
-- **Improve SEO**: Consistent and fast responses boost your local search ranking.
-- **Brand Consistency**: Use AI Personas to ensure every reply matches your brand's voice.
-- **Sentiment Insights**: Understand exactly how your customers feel with deep NLP analysis.
+- **Reply Faster**: Draft professional responses without starting from a blank page.
+- **Stay in Control**: Review, edit, approve, reject, or delete AI replies before using them publicly.
+- **Track Sentiment**: Understand positive, neutral, and negative review patterns.
+- **Use Real Data**: The dashboard is built around saved platform reviews and manual customer reviews.
       `
     },
     {
@@ -189,13 +189,18 @@ Integrate AutoReview AI directly into your own custom CRM or website.
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-[#030308] text-white overflow-x-hidden">
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute left-1/4 top-0 h-96 w-96 rounded-full bg-violet-600/10 blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 rounded-[2rem] border border-white/10 bg-white/[0.03] p-5 sm:p-8 shadow-2xl">
           <Link
             href="/dashboard"
-            className="flex items-center gap-2 text-purple-400 hover:text-purple-300 mb-6 transition-colors"
+            className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm text-violet-200 hover:text-white transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to Dashboard
@@ -203,12 +208,13 @@ Integrate AutoReview AI directly into your own custom CRM or website.
 
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-purple-600/20">
-                <BookOpen className="w-8 h-8 text-purple-400" />
+              <div className="p-3 rounded-2xl bg-gradient-to-br from-violet-600 to-cyan-600 shadow-lg shadow-violet-500/20">
+                <BookOpen className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-white">Documentation</h1>
-                <p className="text-gray-400">Master AutoReview AI with our guides</p>
+                <p className="text-xs font-black uppercase tracking-[0.25em] text-cyan-200/70">Knowledge base</p>
+                <h1 className="text-3xl sm:text-5xl font-black text-white">Documentation</h1>
+                <p className="mt-2 max-w-2xl text-white/55">Setup guides, platform workflows, AI reply rules, and extension instructions for local review teams.</p>
               </div>
             </div>
 
@@ -216,7 +222,7 @@ Integrate AutoReview AI directly into your own custom CRM or website.
               <a 
                 href="/autoreview-ai-extension.zip"
                 download
-                className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition-all font-medium"
+                className="flex items-center gap-2 px-4 py-3 bg-white text-black rounded-2xl transition-all font-bold hover:bg-cyan-50"
               >
                 <Download className="w-4 h-4" />
                 Download Extension
@@ -225,7 +231,7 @@ Integrate AutoReview AI directly into your own custom CRM or website.
           </div>
 
           {/* Search */}
-          <div className="mt-8 max-w-md">
+          <div className="mt-8 max-w-xl">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
@@ -233,7 +239,7 @@ Integrate AutoReview AI directly into your own custom CRM or website.
                 placeholder="Search documentation..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl border border-white/10 bg-white/5 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-3 rounded-2xl border border-white/10 bg-black/25 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:border-transparent"
               />
             </div>
           </div>
@@ -242,8 +248,11 @@ Integrate AutoReview AI directly into your own custom CRM or website.
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Sidebar */}
           <div className="lg:w-80 flex-shrink-0">
-            <div className="sticky top-8 bg-white/5 border border-white/10 rounded-2xl p-6">
-              <h3 className="font-semibold text-white mb-4">Contents</h3>
+            <div className="sticky top-8 bg-white/[0.04] border border-white/10 rounded-3xl p-4 sm:p-6 shadow-xl">
+              <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+                <BookOpen className="h-4 w-4 text-cyan-300" />
+                Contents
+              </h3>
               <nav className="space-y-2">
                 {documentationSections.map((section) => (
                   <button
@@ -251,11 +260,11 @@ Integrate AutoReview AI directly into your own custom CRM or website.
                     onClick={() => setActiveSection(section.id)}
                     className={`w-full text-left px-3 py-2.5 rounded-lg transition-all flex items-center gap-3 ${
                       activeSection === section.id
-                        ? 'bg-purple-600/20 border border-purple-500/30 text-purple-400'
+                        ? 'bg-violet-600/20 border border-violet-500/30 text-white'
                         : 'text-gray-400 hover:text-white hover:bg-white/5'
                     }`}
                   >
-                    <span className="text-purple-400">{section.icon}</span>
+                    <span className="text-cyan-300">{section.icon}</span>
                     <span className="text-sm">{section.title}</span>
                   </button>
                 ))}
@@ -272,14 +281,14 @@ Integrate AutoReview AI directly into your own custom CRM or website.
                 animate={{ opacity: 1, y: 0 }}
                 className={`mb-12 ${activeSection !== section.id ? 'hidden' : ''}`}
               >
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-bold text-white flex items-center gap-3">
-                    {section.icon}
-                    {section.title}
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-6">
+                  <h2 className="text-2xl sm:text-3xl font-black text-white flex items-center gap-3">
+                    <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/5 text-cyan-300">{section.icon}</span>
+                    <span>{section.title}</span>
                   </h2>
                 </div>
 
-                <div className="prose prose-invert max-w-none bg-gray-900/50 p-6 rounded-xl border border-white/10 shadow-xl">
+                <div className="prose prose-invert max-w-none bg-white/[0.035] p-5 sm:p-8 rounded-3xl border border-white/10 shadow-2xl">
                   {renderMarkdown(section.content)}
                 </div>
               </motion.div>

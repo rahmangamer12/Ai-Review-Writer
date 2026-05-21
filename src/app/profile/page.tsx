@@ -288,16 +288,20 @@ export default function ProfilePage() {
 
   return (
     <PageTransition>
-    <div className="min-h-[100dvh] p-6 overflow-x-hidden w-full">
+    <div className="min-h-[100dvh] overflow-x-hidden w-full bg-[#030308] px-4 py-6 sm:px-6">
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute left-1/4 top-0 h-96 w-96 rounded-full bg-violet-600/10 blur-3xl" />
+        <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
+      </div>
       <div className="max-w-7xl mx-auto">
         {/* Profile Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card border-2 border-primary/20 rounded-2xl p-4 sm:p-6 lg:p-8 mb-6 relative overflow-hidden"
+          className="glass-card border border-white/10 rounded-[2rem] p-4 sm:p-6 lg:p-8 mb-6 relative overflow-hidden shadow-2xl"
         >
           {/* Background Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-accent/10 to-purple-500/10 opacity-50" />
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-500/15 via-cyan-500/10 to-fuchsia-500/10 opacity-80" />
           
           <div className="relative z-10">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
@@ -368,24 +372,25 @@ export default function ProfilePage() {
                   </div>
                 ) : (
                   <>
-                    <h1 className="text-3xl font-bold text-white mb-2">{profile.full_name}</h1>
+                    <p className="mb-2 text-xs font-black uppercase tracking-[0.25em] text-cyan-200/70">Account profile</p>
+                    <h1 className="text-3xl sm:text-5xl font-black text-white mb-2">{profile.full_name}</h1>
                     <p className="text-white/70 mb-3">{profile.email}</p>
                     <p className="text-white/80 text-sm mb-4">{profile.bio}</p>
                     
                     <div className="flex flex-wrap gap-3">
-                      <div className="flex items-center gap-2 px-3 py-1.5 glass rounded-lg">
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-2xl border border-white/10 bg-black/20">
                         <CreditCard className={`h-4 w-4 ${getPlanColor(profile.plan)}`} />
                         <span className={`font-semibold capitalize ${getPlanColor(profile.plan)}`}>
                           {profile.plan} Plan
                         </span>
                       </div>
                       
-                      <div className="flex items-center gap-2 px-3 py-1.5 glass rounded-lg">
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-2xl border border-white/10 bg-black/20">
                         <CreditCard className="w-4 h-4 text-cyan-400" />
                         <span className="text-white font-medium">{profile.credits} Credits</span>
                       </div>
                       
-                      <div className="flex items-center gap-2 px-3 py-1.5 glass rounded-lg">
+                      <div className="flex items-center gap-2 px-3 py-1.5 rounded-2xl border border-white/10 bg-black/20">
                         <Calendar className="w-4 h-4 text-purple-400" />
                         <span className="text-white/70 text-sm">
                           Joined {new Date(profile.joined_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
