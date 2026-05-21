@@ -12,74 +12,74 @@ import {
 const features = [
   {
     icon: Bot,
-    title: 'AI-Powered Responses',
-    description: 'Generate intelligent, personalized replies to customer reviews in seconds using advanced AI.',
+    title: 'Local Review Replies',
+    description: 'Draft better replies for restaurants, clinics, salons, repair shops, and local service teams.',
     gradient: 'from-purple-500 to-pink-500'
   },
   {
     icon: BarChart3,
-    title: 'Advanced Analytics',
-    description: 'Get deep insights into customer sentiment, trends, and satisfaction metrics.',
+    title: 'Reputation Analytics',
+    description: 'Track rating trends, sentiment, response status, and the reviews that need attention.',
     gradient: 'from-blue-500 to-cyan-500'
   },
   {
     icon: Globe,
-    title: 'Multi-Platform Support',
-    description: 'Connect Google, Facebook, Yelp, TripAdvisor, and Trustpilot all in one place.',
+    title: 'Google-First Inbox',
+    description: 'Connect supported platforms or manually add real customer reviews while integrations mature.',
     gradient: 'from-emerald-500 to-teal-500'
   },
   {
     icon: Zap,
-    title: 'Lightning Fast',
-    description: 'Process hundreds of reviews in minutes with our powerful automation engine.',
+    title: 'Fast Daily Workflow',
+    description: 'Help owners respond in minutes instead of leaving customer feedback unanswered.',
     gradient: 'from-amber-500 to-orange-500'
   },
   {
     icon: Shield,
-    title: 'Enterprise Security',
-    description: 'Your data is encrypted and protected with bank-level security protocols.',
+    title: 'Human Approval',
+    description: 'AI creates editable drafts so the business stays in control before anything is used publicly.',
     gradient: 'from-rose-500 to-pink-500'
   },
   {
     icon: HeadphonesIcon,
-    title: '24/7 Support',
-    description: 'Our AI assistant "Sarah" is always available to help you with any questions.',
+    title: 'Sarah AI Assistant',
+    description: 'A built-in assistant helps with product guidance, reply ideas, and support questions.',
     gradient: 'from-indigo-500 to-purple-500'
   }
 ]
 
 const testimonials = [
   {
-    name: 'Sarah Johnson',
-    role: 'Marketing Director',
-    company: 'TechStart Inc.',
+    name: 'Restaurant owner',
+    role: 'Review workflow',
+    company: 'Local business',
     avatar: 'S',
-    content: 'AutoReview AI has transformed how we manage customer feedback. Our response time improved by 80%!',
+    content: 'Use one inbox to turn customer feedback into clear reply drafts and daily reputation tasks.',
     rating: 5
   },
   {
-    name: 'Michael Chen',
-    role: 'Owner',
-    company: 'Golden Dragon Restaurant',
+    name: 'Clinic manager',
+    role: 'Response control',
+    company: 'Service team',
     avatar: 'M',
-    content: 'The AI-generated responses sound so natural. Our customers love the personalized touch.',
+    content: 'Keep AI replies editable so sensitive or negative reviews still get a careful human check.',
     rating: 5
   },
   {
-    name: 'Emily Davis',
-    role: 'Customer Success Manager',
-    company: 'FitLife Gym',
+    name: 'Agency operator',
+    role: 'Client reporting',
+    company: 'Local agency',
     avatar: 'E',
-    content: 'Finally, a tool that actually understands how to handle negative reviews professionally.',
+    content: 'Track saved reviews, statuses, replies, and trends without building a custom dashboard for every client.',
     rating: 5
   }
 ]
 
 const stats = [
-  { value: '10K+', label: 'Businesses' },
-  { value: '500K+', label: 'Reviews Processed' },
-  { value: '99.9%', label: 'Uptime' },
-  { value: '4.9/5', label: 'Rating' }
+  { value: '5+', label: 'Review sources' },
+  { value: '24/7', label: 'AI assistant' },
+  { value: '100%', label: 'Editable drafts' },
+  { value: '1', label: 'Owner dashboard' }
 ]
 
 export default function LandingPage() {
@@ -145,20 +145,20 @@ export default function LandingPage() {
               className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500/10 border border-purple-500/20 rounded-full text-purple-300 text-sm mb-8"
             >
               <Sparkles className="w-4 h-4" />
-              <span>Built for real customer review workflows</span>
+              <span>AI review management for local service businesses</span>
             </motion.div>
 
             {/* Main Heading */}
             <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-              Manage Reviews with{' '}
+              Win Back Time on{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400">
-                AI Power
+                Customer Reviews
               </span>
             </h1>
 
             {/* Subheading */}
             <p className="text-lg sm:text-xl text-white/60 max-w-3xl mx-auto mb-10 leading-relaxed">
-              Automate your review responses, analyze customer sentiment, and grow your business with intelligent AI that sounds human.
+              A focused workspace for restaurants, clinics, salons, repair shops, and local agencies to track reviews, draft replies, and protect reputation.
             </p>
 
             {/* CTA Buttons */}
@@ -169,7 +169,7 @@ export default function LandingPage() {
                 onClick={() => router.push('/sign-up')}
                 className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-semibold text-lg hover:shadow-xl hover:shadow-purple-500/25 transition-all flex items-center justify-center gap-2"
               >
-                Start Free Trial
+                Start Managing Reviews
                 <ArrowRight className="w-5 h-5" />
               </motion.button>
               <motion.button
@@ -178,7 +178,7 @@ export default function LandingPage() {
                 className="w-full sm:w-auto px-8 py-4 border border-white/20 bg-white/5 text-white rounded-xl font-semibold text-lg hover:bg-white/10 transition-all flex items-center justify-center gap-2"
               >
                 <Play className="w-5 h-5" />
-                How it Works
+                How It Works
               </motion.button>
             </div>
 
@@ -219,8 +219,8 @@ export default function LandingPage() {
                     <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
                       <BarChart3 className="w-10 h-10 text-white" />
                     </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">Interactive Dashboard</h3>
-                    <p className="text-white/60">Sign up to see your analytics in action</p>
+                    <h3 className="text-2xl font-bold text-white mb-2">Local Reputation Dashboard</h3>
+                    <p className="text-white/60">Reviews, replies, sentiment, and action items in one place</p>
                   </div>
                 </div>
               </div>
@@ -251,13 +251,13 @@ export default function LandingPage() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
-              Everything You Need to{' '}
+              Everything Local Teams Need to{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
-                Succeed
+                Reply Faster
               </span>
             </h2>
             <p className="text-white/60 text-lg max-w-2xl mx-auto">
-              Powerful features designed to help you manage reviews like a pro.
+              Practical tools designed around the daily review workflow, not generic AI hype.
             </p>
           </motion.div>
 
@@ -298,12 +298,12 @@ export default function LandingPage() {
             className="text-center mb-16"
           >
             <h2 className="text-3xl lg:text-5xl font-bold text-white mb-4">
-              Loved by{' '}
+              Built for{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">
-                Thousands
+                Real Operators
               </span>
             </h2>
-            <p className="text-white/60 text-lg">See what our customers have to say</p>
+            <p className="text-white/60 text-lg">Clear, believable workflows a local business owner can understand fast.</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -350,10 +350,10 @@ export default function LandingPage() {
               Start{' '}
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400">
                 Free
-              </span>, Scale When Ready
+              </span>, Upgrade When Reviews Grow
             </h2>
             <p className="text-white/60 text-lg mb-10">
-              No credit card required. 20 free credits every month.
+              Start with a simple local review workflow, then add more platforms and credits as your business grows.
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-2xl mx-auto">
@@ -395,7 +395,7 @@ export default function LandingPage() {
                   </li>
                   <li className="flex items-center gap-2 text-white/70">
                     <CheckCircle className="w-4 h-4 text-emerald-500" />
-                    Unlimited platforms
+                    More connected platforms
                   </li>
                   <li className="flex items-center gap-2 text-white/70">
                     <CheckCircle className="w-4 h-4 text-emerald-500" />
