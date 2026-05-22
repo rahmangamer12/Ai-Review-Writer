@@ -20,6 +20,16 @@ function idPart(name: string, prefix: string) {
   return name.replace(prefix, '').replace(/^\//, '')
 }
 
+class GoogleApiError extends Error {
+  status: number
+
+  constructor(message: string, status: number) {
+    super(message)
+    this.name = 'GoogleApiError'
+    this.status = status
+  }
+}
+
 async function refreshGoogleToken(credentials: Record<string, any>) {
   const refreshTokenEncrypted = credentials.refreshTokenEncrypted
   if (!refreshTokenEncrypted) throw new Error('Google refresh token missing. Please reconnect Google.')
@@ -62,7 +72,7 @@ async function googleJson(url: string, accessToken: string) {
   })
   const data = await response.json().catch(() => ({}))
   if (!response.ok) {
-    throw new Error(data.error?.message || `Google API failed with ${response.status}`)
+    throw new GoogleApiError(data.error?.message || `Google API failed with ${response.status}`, response.status)
   }
   return data
 }
@@ -81,8 +91,38 @@ export async function POST() {
     }
 
     const credentials = (platform.credentials || {}) as Record<string, any>
+    const syncLockedUntil = Number(credentials.syncLockedUntil || 0)
+
+    if (syncLockedUntil > Date.now()) {
+      const retryAfter = Math.max(1, Math.ceil((syncLockedUntil - Date.now()) / 1000))
+      return NextResponse.json(
+        {
+          error: `Google API quota is cooling down. Please try again in ${retryAfter} seconds.`,
+          retryAfter,
+        },
+        { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+      )
+    }
+
+    const lastSyncAttemptAt = Number(credentials.lastSyncAttemptAt || 0)
+    if (lastSyncAttemptAt && Date.now() - lastSyncAttemptAt < 60_000) {
+      const retryAfter = Math.max(1, Math.ceil((60_000 - (Date.now() - lastSyncAttemptAt)) / 1000))
+      return NextResponse.json(
+        {
+          error: `Please wait ${retryAfter} seconds before syncing Google again.`,
+          retryAfter,
+        },
+        { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+      )
+    }
+
     let accessToken = decryptSensitiveData(credentials.accessTokenEncrypted)
-    let updatedCredentials = { ...credentials }
+    let updatedCredentials: Record<string, any> = { ...credentials, lastSyncAttemptAt: Date.now() }
+
+    await prisma.connectedPlatform.update({
+      where: { id: platform.id },
+      data: { credentials: updatedCredentials },
+    })
 
     if (!credentials.expiresAt || Date.now() > Number(credentials.expiresAt) - 60_000) {
       const refreshed = await refreshGoogleToken(credentials)
@@ -95,23 +135,31 @@ export async function POST() {
       }
     }
 
-    const accountsData = await googleJson('https://mybusinessaccountmanagement.googleapis.com/v1/accounts', accessToken)
-    const account = accountsData.accounts?.[0]
-    if (!account?.name) {
-      return NextResponse.json({ error: 'No Google Business Profile account found for this user' }, { status: 404 })
+    let accountId = credentials.accountId as string | undefined
+    let locationId = credentials.locationId as string | undefined
+    let locationName = credentials.locationName as string | undefined
+
+    if (!accountId || !locationId) {
+      const accountsData = await googleJson('https://mybusinessaccountmanagement.googleapis.com/v1/accounts', accessToken)
+      const account = accountsData.accounts?.[0]
+      if (!account?.name) {
+        return NextResponse.json({ error: 'No Google Business Profile account found for this user' }, { status: 404 })
+      }
+
+      const locationsData = await googleJson(
+        `https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations?readMask=name,title`,
+        accessToken
+      )
+      const location = locationsData.locations?.[0]
+      if (!location?.name) {
+        return NextResponse.json({ error: 'No Google Business location found for this account' }, { status: 404 })
+      }
+
+      accountId = idPart(account.name, 'accounts/')
+      locationId = idPart(location.name, 'locations/')
+      locationName = location.title || location.name
     }
 
-    const locationsData = await googleJson(
-      `https://mybusinessbusinessinformation.googleapis.com/v1/${account.name}/locations?readMask=name,title`,
-      accessToken
-    )
-    const location = locationsData.locations?.[0]
-    if (!location?.name) {
-      return NextResponse.json({ error: 'No Google Business location found for this account' }, { status: 404 })
-    }
-
-    const accountId = idPart(account.name, 'accounts/')
-    const locationId = idPart(location.name, 'locations/')
     const reviewsData = await googleJson(
       `https://mybusiness.googleapis.com/v4/accounts/${accountId}/locations/${locationId}/reviews`,
       accessToken
@@ -157,7 +205,8 @@ export async function POST() {
           ...updatedCredentials,
           accountId,
           locationId,
-          locationName: location.title || location.name,
+          locationName,
+          syncLockedUntil: null,
           lastError: null,
         },
         lastSyncedAt: new Date(),
@@ -169,11 +218,49 @@ export async function POST() {
       synced,
       accountId,
       locationId,
-      locationName: location.title || location.name,
+      locationName,
       message: synced ? `Synced ${synced} Google reviews.` : 'Google connected, but no reviews were found yet.',
     })
   } catch (error) {
     console.error('[Google Sync] Error:', error)
+
+    if (error instanceof GoogleApiError && error.status === 429) {
+      const retryAfter = 60
+
+      try {
+        const { userId } = await auth()
+        if (userId) {
+          const platform = await prisma.connectedPlatform.findFirst({
+            where: { userId, platformType: 'google' },
+          })
+          if (platform) {
+            await prisma.connectedPlatform.update({
+              where: { id: platform.id },
+              data: {
+                status: 'error',
+                credentials: {
+                  ...((platform.credentials || {}) as Record<string, any>),
+                  syncLockedUntil: Date.now() + retryAfter * 1000,
+                  lastError: error.message,
+                },
+              },
+            })
+          }
+        }
+      } catch {
+        // Best-effort quota lock save.
+      }
+
+      return NextResponse.json(
+        {
+          error: 'Google Business Profile quota limit reached. Please wait about 1 minute, then sync again.',
+          details: error.message,
+          retryAfter,
+        },
+        { status: 429, headers: { 'Retry-After': String(retryAfter) } }
+      )
+    }
+
     return NextResponse.json(
       { error: error instanceof Error ? error.message : 'Google sync failed' },
       { status: 500 }
