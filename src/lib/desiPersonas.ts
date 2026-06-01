@@ -4,6 +4,7 @@
  */
 
 import { longcatAI } from './longcatAI'
+import { LONGCAT_DEFAULT_MODEL } from './longcatModels'
 
 export interface Persona {
   id: string
@@ -122,7 +123,7 @@ Generate ONLY the reply text, nothing else. Match the persona's style exactly.`
           content: prompt
         }
       ],
-      'LongCat-Flash-Chat',
+      LONGCAT_DEFAULT_MODEL,
       { temperature: 0.85, max_tokens: 400 }
     )
 

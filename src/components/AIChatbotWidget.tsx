@@ -6,8 +6,9 @@ import { useUser } from '@clerk/nextjs'
 import {
   X, Send, User, Sparkles, Loader2, Bot,
   RefreshCw, ChevronDown, Copy, Check, Download,
-  Zap, Brain, Lightbulb, Rocket, Globe, Upload
+  Zap, Upload, Lightbulb, Rocket, Globe
 } from 'lucide-react'
+import { LONGCAT_DEFAULT_MODEL, LONGCAT_MODEL_LABEL } from '@/lib/longcatModels'
 
 interface Message {
   id: string
@@ -78,11 +79,7 @@ CRITICAL INSTRUCTIONS FOR YOU:
 4. Always respond in the exact language the user queries you in.`
 
 const LongCatModels = [
-  { id: 'LongCat-Flash-Chat', name: 'Flash Chat', icon: <Zap className="w-3.5 h-3.5" /> },
-  { id: 'LongCat-Flash-Thinking', name: 'Flash Thinking', icon: <Brain className="w-3.5 h-3.5" /> },
-  { id: 'LongCat-Flash-Thinking-2601', name: 'Thinking 2601', icon: <Lightbulb className="w-3.5 h-3.5" /> },
-  { id: 'LongCat-Flash-Lite', name: 'Flash Lite', icon: <Rocket className="w-3.5 h-3.5" /> },
-  // { id: 'LongCat-Flash-Omni-2603', name: 'Flash Omni', icon: <Globe className="w-3.5 h-3.5" /> } // Disabled - API error
+  { id: LONGCAT_DEFAULT_MODEL, name: LONGCAT_MODEL_LABEL, icon: <Zap className="w-3.5 h-3.5" /> },
 ]
 
 // Custom Typewriter Component for Markdown
@@ -132,7 +129,7 @@ export default function AIChatbot() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const [selectedModel, setSelectedModel] = useState('LongCat-Flash-Lite')
+  const [selectedModel, setSelectedModel] = useState<string>(LONGCAT_DEFAULT_MODEL)
   const [showModelDropdown, setShowModelDropdown] = useState(false)
 
   const [hasStarted, setHasStarted] = useState(false)
@@ -349,7 +346,7 @@ export default function AIChatbot() {
             role: 'assistant',
             content: "👋 **Hey there!**\n\nI'm **Sarah**, your AI assistant powered by LongCat AI! 🤖✨\n\nI can help you with:\n• How AutoReview AI works\n• Pricing & plans\n• Setting up your account\n• Connecting review platforms\n• Any questions you have!\n\n**Try asking me anything** - I understand 100+ languages! 🌍",
             timestamp: new Date(),
-            model: 'LongCat-Flash-Chat',
+            model: LONGCAT_DEFAULT_MODEL,
             isTyping: true
           }
           setMessages([welcomeMsg])
@@ -419,7 +416,7 @@ export default function AIChatbot() {
         role: 'assistant',
         content: "👋 **Fresh start!**\n\nI'm **Sarah** - How can I help you today?",
         timestamp: new Date(),
-        model: 'LongCat-Flash-Chat',
+        model: LONGCAT_DEFAULT_MODEL,
         isTyping: true
       }
       setMessages([welcomeMsg])
@@ -433,9 +430,9 @@ export default function AIChatbot() {
 
     setError(null)
 
-    // Auto-switch to Omni if files uploaded
-    if (uploadedFiles.length > 0 && selectedModel !== 'LongCat-Flash-Omni-2603') {
-      setSelectedModel('LongCat-Flash-Omni-2603')
+    if (uploadedFiles.length > 0) {
+      setError('Image analysis is temporarily unavailable on the current LongCat model. Please send a text question.')
+      return
     }
 
     // Build display content (string for UI)
@@ -485,7 +482,7 @@ export default function AIChatbot() {
           messages: apiMessages,
           model: selectedModel,
           temperature: 0.7,
-          max_tokens: selectedModel.includes('Thinking') ? 900 : 650,
+          max_tokens: 900,
           fastMode: true
         }),
       })
@@ -877,7 +874,7 @@ export default function AIChatbot() {
                       type="text"
                       value={input}
                       onChange={(e) => setInput(e.target.value)}
-                      placeholder={selectedModel.includes('Thinking') ? "Give me a complex task..." : "Message Sarah..."}
+                      placeholder="Message Sarah..."
                       disabled={isLoading}
                       className="flex-1 bg-gray-100 dark:bg-gray-800 border border-transparent focus:border-violet-400 rounded-xl px-4 py-3 text-xs sm:text-sm text-gray-800 dark:text-white placeholder:text-gray-400 focus:outline-none focus:ring-4 focus:ring-violet-500/10 transition-all disabled:opacity-50 min-w-0"
                     />

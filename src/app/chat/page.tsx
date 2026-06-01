@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from 'uuid'
 import type { Message, ChatSession, UserData, ChatSettings, Notification, UploadedFile } from '@/components/chat-internal/types'
 import { DEFAULT_SETTINGS } from '@/components/chat-internal/types'
 import { getModelById, getModelIcon } from '@/components/chat-internal/models'
+import { LONGCAT_DEFAULT_MODEL } from '@/lib/longcatModels'
 
 import ChatSidebar from '@/components/chat-internal/ChatSidebar'
 import ChatMessages from '@/components/chat-internal/ChatMessages'
@@ -32,7 +33,7 @@ export default function ChatPage() {
   const [settings, setSettings] = useState<ChatSettings>(DEFAULT_SETTINGS)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedModel, setSelectedModel] = useState('LongCat-Flash-Lite') // Fastest model for instant responses
+  const [selectedModel, setSelectedModel] = useState<string>(LONGCAT_DEFAULT_MODEL)
   const [isLoading, setIsLoading] = useState(false)
   const [loadingStartedAt, setLoadingStartedAt] = useState<number | null>(null)
   const [loadingSeconds, setLoadingSeconds] = useState(0)
@@ -537,10 +538,6 @@ export default function ChatPage() {
 
         <div className="flex-1 overflow-y-auto custom-scrollbar px-2 sm:px-4 lg:px-12 pb-[180px] sm:pb-[150px] md:pb-[110px] lg:pb-16">
           <div className="max-w-4xl mx-auto w-full py-8">
-            <div className="mb-6 rounded-2xl border border-amber-500/25 bg-amber-500/10 px-4 py-3 text-xs sm:text-sm text-amber-100">
-              <span className="font-semibold text-amber-300">Maintenance notice:</span>{' '}
-              Some AI models may be unavailable after May 28 while provider migration is completed. The app will stay online, but model responses may be limited from May 28 to May 30.
-            </div>
             <ChatMessages
               messages={messages}
               isLoading={isLoading}

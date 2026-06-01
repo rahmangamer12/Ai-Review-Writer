@@ -3,6 +3,7 @@
  * Centralized configuration for enterprise-grade maintainability
  * @version 1.0.0
  */
+import { LONGCAT_DEFAULT_MODEL } from '@/lib/longcatModels'
 
 export const APP_CONFIG = {
   /**
@@ -87,12 +88,12 @@ export const APP_CONFIG = {
    * AI Models Configuration
    */
   ai: {
-    defaultModel: 'LongCat-Flash-Lite',
+    defaultModel: LONGCAT_DEFAULT_MODEL,
     models: {
-      chat: 'LongCat-Flash-Chat',
-      thinking: 'LongCat-Flash-Thinking',
-      thinkingAdvanced: 'LongCat-Flash-Thinking-2601',
-      lite: 'LongCat-Flash-Lite',
+      chat: LONGCAT_DEFAULT_MODEL,
+      thinking: LONGCAT_DEFAULT_MODEL,
+      thinkingAdvanced: LONGCAT_DEFAULT_MODEL,
+      lite: LONGCAT_DEFAULT_MODEL,
     },
     maxTokens: {
       chat: 2000,

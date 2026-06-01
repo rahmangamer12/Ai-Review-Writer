@@ -112,11 +112,7 @@ export default function ChatInput({
 
     setUploadedFiles(prev => [...prev, ...newFiles])
     
-    // Auto-switch to Omni model for file uploads
-    if (newFiles.length > 0 && activeModel && !activeModel.id.includes('Omni')) {
-      // Trigger model switch via parent - for now just log
-      console.log('Consider switching to Omni for file analysis')
-    }
+    // Vision/file analysis is disabled until the active provider exposes a stable vision model.
 
     // Reset input
     if (fileInputRef.current) {
@@ -262,7 +258,7 @@ export default function ChatInput({
               </button>
               <span className="hidden xs:inline">•</span>
               <span className="hidden xs:inline truncate">
-                {activeModel?.id.includes('Thinking') ? 'Deep thinking may take longer' : 'Enter to send'}
+                Enter to send
               </span>
             </div>
             <div className="flex items-center gap-1 shrink-0">

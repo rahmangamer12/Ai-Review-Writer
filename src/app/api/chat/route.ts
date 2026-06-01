@@ -6,6 +6,7 @@ import { streamText, tool } from 'ai';
 import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit';
 import { z } from 'zod';
 import { withCSRFProtection } from '@/lib/csrfProtection';
+import { LONGCAT_DEFAULT_MODEL, normalizeLongCatModel } from '@/lib/longcatModels';
 
 export const dynamic = 'force-dynamic'
 
@@ -14,14 +15,6 @@ const longcat = createOpenAI({
   apiKey: process.env.LONGCAT_AI_API_KEY,
   baseURL: 'https://api.longcat.chat/openai/v1',
 });
-
-// Allowed models for security
-const ALLOWED_MODELS = [
-  'LongCat-Flash-Chat',
-  'LongCat-Flash-Thinking',
-  'LongCat-Flash-Thinking-2601',
-  'LongCat-Flash-Lite'
-];
 
 // Input validation schema with proper types
 const chatMessagePartSchema = z.object({
@@ -38,7 +31,7 @@ const chatRequestSchema = z.object({
     role: z.enum(['system', 'user', 'assistant', 'tool']),
     content: z.union([z.string(), z.array(chatMessagePartSchema)])
   })).min(1),
-  model: z.enum(ALLOWED_MODELS as [string, ...string[]]).default('LongCat-Flash-Chat'),
+  model: z.string().optional().default(LONGCAT_DEFAULT_MODEL),
   temperature: z.number().min(0).max(2).default(0.7),
   max_tokens: z.number().int().min(100).max(4000).optional(),
   fastMode: z.boolean().default(false)
@@ -83,7 +76,8 @@ async function handler(request: NextRequest) {
     const body = await request.json();
     const validated = chatRequestSchema.parse(body);
 
-    const { messages, model: selectedModel, temperature, max_tokens: requestedMaxTokens, fastMode } = validated;
+    const { messages, temperature, max_tokens: requestedMaxTokens, fastMode } = validated;
+    const selectedModel = normalizeLongCatModel(validated.model);
 
     if (!process.env.LONGCAT_AI_API_KEY) {
       return NextResponse.json(
@@ -148,11 +142,7 @@ CRITICAL INSTRUCTIONS FOR YOU:
     };
 
     const modelMessages = [godTierPrompt, ...formattedMessages.filter((m: any) => m.role !== 'system')];
-    const defaultMaxOutputTokens = selectedModel.includes('Thinking')
-      ? 1200
-      : selectedModel.includes('Lite')
-        ? 900
-        : 1400;
+    const defaultMaxOutputTokens = 1400;
     const maxOutputTokens = Math.min(
       requestedMaxTokens ?? defaultMaxOutputTokens,
       fastMode ? 700 : defaultMaxOutputTokens

@@ -3,6 +3,7 @@ import { auth } from '@clerk/nextjs/server'
 import { createOpenAI } from '@ai-sdk/openai'
 import { generateText } from 'ai'
 import { z } from 'zod'
+import { LONGCAT_DEFAULT_MODEL } from '@/lib/longcatModels'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
     }
 
     const result = await generateText({
-      model: longcat.chat('LongCat-Flash-Lite'),
+      model: longcat.chat(LONGCAT_DEFAULT_MODEL),
       temperature: 0.2,
       maxOutputTokens: 24,
       prompt: `Create a short, clear chat title from this first user message.

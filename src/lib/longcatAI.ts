@@ -6,6 +6,8 @@
  * All AI processing should be done through API routes for security.
  */
 
+import { LONGCAT_DEFAULT_MODEL, type LongCatModel } from './longcatModels'
+
 const LONGCAT_API_URL = "https://api.longcat.chat/openai/v1/chat/completions";
 
 // Get API key from environment variable - ONLY for server-side use
@@ -21,13 +23,6 @@ const getApiKey = () => {
   }
   return '';
 };
-
-export type LongCatModel =
-  | "LongCat-Flash-Chat"
-  | "LongCat-Flash-Thinking"
-  | "LongCat-Flash-Thinking-2601"
-  | "LongCat-Flash-Lite";
-  // | "LongCat-Flash-Omni-2603"; // Disabled - API returns "json format error"
 
 export interface ChatMessageContentPart {
   type: "text" | "image_url";
@@ -150,7 +145,7 @@ export class LongCatAI {
    */
   async chat(
     messages: ChatMessage[],
-    model: LongCatModel = "LongCat-Flash-Chat",
+    model: LongCatModel = LONGCAT_DEFAULT_MODEL,
     options: {
       max_tokens?: number;
       temperature?: number;
@@ -270,7 +265,7 @@ Return ONLY the JSON object, no additional text.`;
             content: prompt,
           },
         ],
-        "LongCat-Flash-Chat",
+        LONGCAT_DEFAULT_MODEL,
         { temperature: 0.3, retries: 2 }
       );
 
@@ -343,7 +338,7 @@ Return ONLY the JSON object.`;
             content: prompt,
           },
         ],
-        "LongCat-Flash-Chat",
+        LONGCAT_DEFAULT_MODEL,
         { temperature: 0.8, retries: 2 }
       );
 
@@ -407,7 +402,7 @@ Return ONLY a JSON object with:
             content: prompt,
           },
         ],
-        "LongCat-Flash-Chat",
+        LONGCAT_DEFAULT_MODEL,
         { temperature: 0.9, max_tokens: 500, retries: 1 }
       );
 
@@ -466,7 +461,7 @@ Return ONLY the JSON object.`;
             content: prompt,
           },
         ],
-        "LongCat-Flash-Thinking",
+        LONGCAT_DEFAULT_MODEL,
         { temperature: 0.4, max_tokens: 1500, retries: 2 }
       );
 
@@ -510,7 +505,7 @@ Return ONLY the JSON object.`;
             content: prompt,
           },
         ],
-        "LongCat-Flash-Chat",
+        LONGCAT_DEFAULT_MODEL,
         { temperature: 0.1, max_tokens: 100, retries: 1 }
       );
 
@@ -569,7 +564,7 @@ Return ONLY a JSON object with these fields.`;
             content: prompt,
           },
         ],
-        "LongCat-Flash-Thinking",
+        LONGCAT_DEFAULT_MODEL,
         { temperature: 0.5, max_tokens: 2000, retries: 2 }
       );
 

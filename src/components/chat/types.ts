@@ -1,3 +1,5 @@
+import { LONGCAT_DEFAULT_MODEL, LONGCAT_MODEL_LABEL } from '@/lib/longcatModels'
+
 export interface Message {
   id: string
   role: 'user' | 'assistant' | 'system'
@@ -53,65 +55,17 @@ export interface AIModel {
 
 export const MODELS: AIModel[] = [
   {
-    id: 'LongCat-Flash-Chat',
-    name: 'Flash Chat',
-    shortName: 'Flash',
+    id: LONGCAT_DEFAULT_MODEL,
+    name: LONGCAT_MODEL_LABEL,
+    shortName: '2.0 Preview',
     icon: null,
-    description: 'High-performance general-purpose chat model',
-    badge: 'GENERAL',
+    description: 'Current production LongCat model',
+    badge: 'ACTIVE',
     color: 'emerald',
-    quality: 85,
-    speed: 'Ultra Fast',
+    quality: 90,
+    speed: 'Fast',
     context: '128k'
   },
-  {
-    id: 'LongCat-Flash-Thinking',
-    name: 'Flash Thinking',
-    shortName: 'Thinking',
-    icon: null,
-    description: 'Deep-thinking & reasoning for complex logic',
-    badge: 'REASONING',
-    color: 'violet',
-    quality: 92,
-    speed: 'Balanced',
-    context: '64k'
-  },
-  {
-    id: 'LongCat-Flash-Thinking-2601',
-    name: 'Thinking 2601',
-    shortName: 'T-2601',
-    icon: null,
-    description: 'Upgraded elite thinking model (Latest)',
-    badge: 'ELITE',
-    color: 'amber',
-    quality: 96,
-    speed: 'High Quality',
-    context: '128k'
-  },
-  {
-    id: 'LongCat-Flash-Lite',
-    name: 'Flash Lite',
-    shortName: 'Lite',
-    icon: null,
-    description: 'Efficient lightweight MoE model',
-    badge: 'FAST',
-    color: 'blue',
-    quality: 78,
-    speed: 'Instant',
-    context: '32k'
-  },
-  // {
-  //   id: 'LongCat-Flash-Omni-2603',
-  //   name: 'Flash Omni',
-  //   shortName: 'Omni',
-  //   icon: null,
-  //   description: 'MultiModal vision + text engine',
-  //   badge: 'VISION',
-  //   color: 'pink',
-  //   quality: 94,
-  //   speed: 'Advanced',
-  //   context: '128k'
-  // }, // Disabled - LongCat API returns "json format error"
   {
     id: 'deepseek-v3.2',
     name: 'DeepSeek V3.2',

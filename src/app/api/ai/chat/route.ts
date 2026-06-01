@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { longcatAI } from '@/lib/longcatAI';
 import { withCSRFProtection } from '@/lib/csrfProtection';
+import { normalizeLongCatModel } from '@/lib/longcatModels';
 
 /**
  * API Proxy for LongCat AI Chat
@@ -32,7 +33,7 @@ async function handler(request: NextRequest) {
     // Process request with server-side LongCat instance
     const reply = await longcatAI.chat(
       messages,
-      model || 'LongCat-Flash-Chat',
+      normalizeLongCatModel(model),
       options || {}
     );
 

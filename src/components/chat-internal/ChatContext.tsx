@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect, typ
 import type { ChatSession, Message, UserData, ChatSettings, Notification, AIModel } from './types'
 import { DEFAULT_SETTINGS } from './types'
 import { getModelById } from './models'
+import { LONGCAT_DEFAULT_MODEL } from '@/lib/longcatModels'
 
 interface ChatContextType {
   sessions: ChatSession[]
@@ -42,7 +43,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useState<ChatSettings>(DEFAULT_SETTINGS)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedModel, setSelectedModel] = useState('LongCat-Flash-Chat')
+  const [selectedModel, setSelectedModel] = useState<string>(LONGCAT_DEFAULT_MODEL)
   const [isLoading, setIsLoading] = useState(false)
   const [isVoiceActive, setIsVoiceActive] = useState(false)
   const [isSpeaking, setIsSpeaking] = useState(false)

@@ -1,5 +1,6 @@
 import React from 'react'
 import { Zap, Brain, Globe, Lightbulb, Cpu, Sparkles, Rocket, Shield, Bot, Activity } from 'lucide-react'
+import { LONGCAT_DEFAULT_MODEL, LONGCAT_MODEL_LABEL } from '@/lib/longcatModels'
 
 export interface AIModel {
   id: string
@@ -19,94 +20,25 @@ export interface AIModel {
 
 export const MODELS: AIModel[] = [
   {
-    id: 'LongCat-Flash-Chat',
-    name: 'Flash Chat',
-    shortName: 'Flash',
+    id: LONGCAT_DEFAULT_MODEL,
+    name: LONGCAT_MODEL_LABEL,
+    shortName: '2.0 Preview',
     iconName: 'Zap',
-    description: 'High-performance general-purpose chat model for everyday tasks',
-    badge: 'GENERAL',
+    description: 'Current production LongCat model for chat, review replies, sentiment, and insights',
+    badge: 'ACTIVE',
     badgeColor: 'emerald',
-    quality: 85,
-    speed: 'Ultra Fast',
+    quality: 90,
+    speed: 'Fast',
     context: '128k',
     contextTokens: 128000,
     supportsVision: false,
     supportsThinking: false
-  },
-  {
-    id: 'LongCat-Flash-Thinking',
-    name: 'Flash Thinking',
-    shortName: 'Thinking',
-    iconName: 'Brain',
-    description: 'Deep-thinking & reasoning model for complex logic and analysis',
-    badge: 'REASONING',
-    badgeColor: 'violet',
-    quality: 92,
-    speed: 'Balanced',
-    context: '64k',
-    contextTokens: 64000,
-    supportsVision: false,
-    supportsThinking: true
-  },
-  {
-    id: 'LongCat-Flash-Thinking-2601',
-    name: 'Thinking 2601',
-    shortName: 'T-2601',
-    iconName: 'Rocket',
-    description: 'Upgraded elite thinking model with advanced reasoning capabilities',
-    badge: 'ELITE',
-    badgeColor: 'amber',
-    quality: 96,
-    speed: 'High Quality',
-    context: '128k',
-    contextTokens: 128000,
-    supportsVision: false,
-    supportsThinking: true
-  },
-  {
-    id: 'LongCat-Flash-Lite',
-    name: 'Flash Lite',
-    shortName: 'Lite',
-    iconName: 'Cpu',
-    description: 'Efficient lightweight MoE model for quick, simple tasks',
-    badge: 'FAST',
-    badgeColor: 'blue',
-    quality: 78,
-    speed: 'Instant',
-    context: '32k',
-    contextTokens: 32000,
-    supportsVision: false,
-    supportsThinking: false
-  },
-  // {
-  //   id: 'LongCat-Flash-Omni-2603',
-  //   name: 'Flash Omni',
-  //   shortName: 'Omni',
-  //   iconName: 'Globe',
-  //   description: 'Multimodal vision + text engine for image analysis and understanding',
-  //   badge: 'VISION',
-  //   badgeColor: 'pink',
-  //   quality: 94,
-  //   speed: 'Advanced',
-  //   context: '128k',
-  //   contextTokens: 128000,
-  //   supportsVision: true,
-  //   supportsThinking: false
-  // }, // Disabled - LongCat API returns "json format error"
-  // Gemini models are hidden until quota/API access is stable in production.
+  }
 ]
 
 export const MODEL_GROUPS = {
-  speed: [
-    'LongCat-Flash-Lite',
-    'LongCat-Flash-Chat',
-    'LongCat-Flash-Thinking',
-    // 'LongCat-Flash-Omni-2603' // Disabled
-  ] as const,
-  reasoning: [
-    'LongCat-Flash-Thinking',
-    'LongCat-Flash-Thinking-2601'
-  ] as const,
+  speed: [LONGCAT_DEFAULT_MODEL] as const,
+  reasoning: [LONGCAT_DEFAULT_MODEL] as const,
   vision: [] as const
 }
 
