@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import prisma from '@/lib/db'
+import { ensureUserAccount } from '@/lib/userAccount'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,50 +27,7 @@ export async function GET() {
     const userEmail = clerkUser?.emailAddresses?.[0]?.emailAddress || `${userId}@unknown.com`
     const userName = clerkUser?.fullName || `${clerkUser?.firstName || ''} ${clerkUser?.lastName || ''}`.trim() || 'User'
 
-    let user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: {
-        id: true,
-        planType: true,
-        aiCredits: true,
-        promptCount: true,
-        maxPlatforms: true,
-        name: true,
-        email: true
-      }
-    })
-
-    if (!user) {
-      try {
-        const existingByEmail = await prisma.user.findUnique({ where: { email: userEmail } }).catch(() => null)
-        if (existingByEmail) {
-          user = existingByEmail
-        } else {
-          user = await prisma.user.create({
-          data: {
-            id: userId,
-            email: userEmail,
-            name: userName,
-            planType: 'free',
-            aiCredits: 20,
-            promptCount: 0,
-            maxPlatforms: 1,
-          },
-          select: {
-            id: true,
-            planType: true,
-            aiCredits: true,
-            promptCount: true,
-            maxPlatforms: true,
-            name: true,
-            email: true
-          }
-        })
-        }
-      } catch (e) {
-        console.warn('[User/Me API] Clerk user error:', e)
-      }
-    }
+    const user = await ensureUserAccount({ userId, email: userEmail, name: userName })
 
     return NextResponse.json({
       planType: user?.planType || 'free',

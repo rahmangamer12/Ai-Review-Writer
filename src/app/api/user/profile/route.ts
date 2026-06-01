@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth, clerkClient, currentUser } from '@clerk/nextjs/server'
 import prisma from '@/lib/db'
 import { z } from 'zod'
+import { ensureUserAccount } from '@/lib/userAccount'
 
 export const dynamic = 'force-dynamic'
 
@@ -129,22 +130,7 @@ function buildActivity(reviews: any[], platforms: any[]) {
 }
 
 async function ensureDbUser(userId: string, email: string, fullName: string) {
-  const existing = await prisma.user.findUnique({ where: { id: userId } })
-  if (existing) {
-    return prisma.user.update({
-      where: { id: userId },
-      data: { email, name: fullName },
-    }).catch(() => existing)
-  }
-
-  const existingByEmail = await prisma.user.findUnique({ where: { email } }).catch(() => null)
-  if (existingByEmail) {
-    return existingByEmail
-  }
-
-  return prisma.user.create({
-    data: { id: userId, email, name: fullName, planType: 'free', aiCredits: 20, promptCount: 0, maxPlatforms: 1 },
-  })
+  return ensureUserAccount({ userId, email, name: fullName })
 }
 
 function fallbackProfile(userId: string, email: string, fullName: string, clerkUser: Awaited<ReturnType<typeof currentUser>> | null) {

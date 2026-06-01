@@ -7,6 +7,7 @@ import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit';
 import { z } from 'zod';
 import { withCSRFProtection } from '@/lib/csrfProtection';
 import { LONGCAT_DEFAULT_MODEL, normalizeLongCatModel } from '@/lib/longcatModels';
+import { ensureUserAccount } from '@/lib/userAccount';
 
 export const dynamic = 'force-dynamic'
 
@@ -45,11 +46,11 @@ async function handler(request: NextRequest) {
     }
 
     // ULTRA-FAST OPTIMIZATION: Run Rate Limit and DB checks concurrently
-    let [rateLimitResult, userDb] = await Promise.all([
+    const [rateLimitResult, existingUser] = await Promise.all([
       rateLimit(userId, RATE_LIMITS.AI_ANALYSIS).catch(() => ({ success: true, message: '', resetTime: Date.now(), remaining: 100, limit: 100 })), // Fail open for max speed
       prisma.user.findUnique({
         where: { id: userId },
-        select: { id: true, aiCredits: true, promptCount: true }
+        select: { id: true, aiCredits: true, promptCount: true, email: true, name: true }
       }).catch(() => null)
     ])
 
@@ -80,18 +81,10 @@ async function handler(request: NextRequest) {
       );
     }
 
-    if (!userDb) {
-      const clerkUser = await currentUser().catch(() => null)
-      const email = clerkUser?.emailAddresses?.[0]?.emailAddress || `${userId}@unknown.com`
-      const name = clerkUser?.fullName || clerkUser?.firstName || 'User'
-      const existingByEmail = await prisma.user.findUnique({ where: { email } }).catch(() => null)
-      userDb = existingByEmail
-        ? { id: existingByEmail.id, aiCredits: existingByEmail.aiCredits, promptCount: existingByEmail.promptCount }
-        : await prisma.user.create({
-            data: { id: userId, email, name, planType: 'free', aiCredits: 20, promptCount: 0, maxPlatforms: 1 },
-            select: { id: true, aiCredits: true, promptCount: true },
-          }).catch(() => null)
-    }
+    const clerkUser = await currentUser().catch(() => null)
+    const email = clerkUser?.emailAddresses?.[0]?.emailAddress || existingUser?.email || `${userId}@unknown.com`
+    const name = clerkUser?.fullName || clerkUser?.firstName || existingUser?.name || 'User'
+    const userDb = await ensureUserAccount({ userId, email, name }).catch(() => existingUser)
 
     // If user doesn't exist, return error (user should be created on sign-up)
     if (!userDb || userDb.aiCredits <= 0) {
