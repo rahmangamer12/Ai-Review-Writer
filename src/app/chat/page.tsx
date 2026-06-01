@@ -244,7 +244,16 @@ export default function ChatPage() {
         body: JSON.stringify({ messages: [...messages.map(m => ({ role: m.role, content: m.content })), apiMessage], model: selectedModel })
       })
 
-      if (!res.ok) throw new Error('API Error')
+      if (!res.ok) {
+        const contentType = res.headers.get('content-type') || ''
+        const detail = contentType.includes('application/json')
+          ? await res.json().catch(() => null)
+          : await res.text().catch(() => '')
+        const message = typeof detail === 'string'
+          ? detail
+          : detail?.error || detail?.message || `Chat request failed (${res.status})`
+        throw new Error(message)
+      }
 
       const reader = res.body?.getReader()
       if (!reader) throw new Error('Response body is null')
@@ -289,8 +298,9 @@ export default function ChatPage() {
 
     } catch (err) {
       console.error('Chat error:', err)
-      addNotification('Error sending message', 'error')
-      setSessions(prev => prev.map(s => s.id === sId ? { ...s, messages: s.messages.map(m => m.id === aiId ? { ...m, content: 'Failed to connect. Please try again.', isTyping: false } : m) } : s))
+      const message = err instanceof Error ? err.message : 'Failed to connect. Please try again.'
+      addNotification(message, 'error')
+      setSessions(prev => prev.map(s => s.id === sId ? { ...s, messages: s.messages.map(m => m.id === aiId ? { ...m, content: message, isTyping: false, status: 'error' } : m) } : s))
     } finally {
       setIsLoading(false)
       setLoadingStartedAt(null)

@@ -2,19 +2,13 @@ import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import prisma from '@/lib/db';
 import { createOpenAI } from '@ai-sdk/openai';
-import { streamText, tool } from 'ai';
+import { streamText } from 'ai';
 import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit';
 import { z } from 'zod';
 import { withCSRFProtection } from '@/lib/csrfProtection';
 import { LONGCAT_DEFAULT_MODEL, normalizeLongCatModel } from '@/lib/longcatModels';
 
 export const dynamic = 'force-dynamic'
-
-// Configure LongCat as a custom OpenAI provider
-const longcat = createOpenAI({
-  apiKey: process.env.LONGCAT_AI_API_KEY,
-  baseURL: 'https://api.longcat.chat/openai/v1',
-});
 
 // Input validation schema with proper types
 const chatMessagePartSchema = z.object({
@@ -97,6 +91,10 @@ async function handler(request: NextRequest) {
       );
     }
 
+    const longcat = createOpenAI({
+      apiKey: process.env.LONGCAT_AI_API_KEY,
+      baseURL: 'https://api.longcat.chat/openai/v1',
+    });
     const provider = longcat.chat(selectedModel);
 
     const currentPromptCount = (userDb as any).promptCount ?? 0;
@@ -133,11 +131,13 @@ async function handler(request: NextRequest) {
       content: `You are Sarah, the God-Tier AI Assistant for "AutoReview AI" platform. 
 You possess absolute, expert-level knowledge of everything related to AutoReview AI—our platform imports, manages, and automatically replies to reviews from Google, Yelp, Facebook, etc., and uses LongCat AI to save businesses hours of work daily. Our plans: Free ($0), Starter ($10/m), Pro ($19/m), Enterprise ($39/m).
 
+Current server date/time: ${new Date().toISOString()}.
+
 CRITICAL INSTRUCTIONS FOR YOU:
 1. You are a God-Tier general purpose AI as well. If the user asks ANY question—whether it be coding, general knowledge, math, science, philosophy, or writing—you MUST answer it perfectly and enthusiastically. NEVER say "I only answer questions about AutoReview AI."
 2. Always maintain a warm, helpful, and highly intelligent persona. Use emojis occasionally.
 3. Be transparent, direct, and incredibly thorough. Give the most informative and accurate answers possible!
-4. IMPORTANT: If the user asks for the current date, time, today, or any live temporal information, you MUST use the "getCurrentTime" tool to fetch the real data before answering.
+4. IMPORTANT: If the user asks for the current date, time, today, or live temporal information, answer using the current server date/time above.
 5. Always respond in the exact language the user queries you in.`
     };
 
@@ -148,54 +148,11 @@ CRITICAL INSTRUCTIONS FOR YOU:
       fastMode ? 700 : defaultMaxOutputTokens
     );
 
-    const getCurrentTime = tool({
-      description: 'Get the exact current date, time, and timezone. Call this when the user asks for the time, date, today, or live time info.',
-      parameters: z.object({
-        location: z.string().optional().describe('Optional specific location or timezone, otherwise returns system time')
-      }),
-      // @ts-ignore
-      execute: async ({ location }) => {
-        const date = new Date();
-        return {
-          time: date.toLocaleTimeString(),
-          date: date.toLocaleDateString(),
-          zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          iso: date.toISOString()
-        };
-      },
-    });
-
-    const searchWeb = tool({
-      description: 'Search Wikipedia for live real-time information, facts, definitions, and news. Call this when the user asks a question about the real world, events, people, places, or any general knowledge that requires searching.',
-      parameters: z.object({
-        query: z.string().describe('The search query or keyword to find on Wikipedia.')
-      }),
-      // @ts-ignore
-      execute: async ({ query }) => {
-        try {
-          const res = await fetch(`https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(query)}&utf8=&format=json&origin=*`);
-          const data = await res.json();
-          if (data.query && data.query.search && data.query.search.length > 0) {
-            return data.query.search.slice(0, 3).map((item: any) => ({
-              title: item.title,
-              snippet: item.snippet.replace(/<\/?[^>]+(>|$)/g, "")
-            }));
-          }
-          return { error: 'No results found on Wikipedia.' };
-        } catch (err) {
-          return { error: 'Search failed.' };
-        }
-      }
-    });
-
     const result = streamText({
       model: provider,
       messages: modelMessages,
       temperature,
       maxOutputTokens,
-      // @ts-ignore
-      maxSteps: 2,
-      tools: fastMode ? { getCurrentTime } : { getCurrentTime, searchWeb },
       async onChunk({ chunk }) {
         // Stream immediately without waiting for DB operations
       },
@@ -261,8 +218,11 @@ CRITICAL INSTRUCTIONS FOR YOU:
       }, { status: 400 });
     }
 
+    const message = String(error?.message || 'An error occurred. Please try again.')
     return NextResponse.json({
-      error: 'An error occurred. Please try again.',
+      error: message.includes('API key')
+        ? 'AI provider rejected the request. Please verify the LongCat API key in Vercel.'
+        : message,
       success: false
     }, { status: 500 });
   }
