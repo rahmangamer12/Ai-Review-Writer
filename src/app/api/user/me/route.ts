@@ -5,12 +5,14 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    let userId = null
+    let userId: string | null = null
+    let clerkUser: any = null
     
     try {
-      const { auth } = await import('@clerk/nextjs/server')
+      const { auth, currentUser } = await import('@clerk/nextjs/server')
       const authResult = await auth()
       userId = authResult?.userId
+      clerkUser = await currentUser().catch(() => null)
     } catch (authError) {
       console.warn('[User/Me API] Auth module error:', authError)
     }
@@ -21,6 +23,9 @@ export async function GET() {
         message: 'Authentication required'
       }, { status: 401 })
     }
+
+    const userEmail = clerkUser?.emailAddresses?.[0]?.emailAddress || `${userId}@unknown.com`
+    const userName = clerkUser?.fullName || `${clerkUser?.firstName || ''} ${clerkUser?.lastName || ''}`.trim() || 'User'
 
     let user = await prisma.user.findUnique({
       where: { id: userId },
@@ -36,15 +41,12 @@ export async function GET() {
     })
 
     if (!user) {
-      let userEmail = `${userId}@unknown.com`
-      let userName = 'User'
       try {
-        const { currentUser } = await import('@clerk/nextjs/server')
-        const clerkUser = await currentUser()
-        userEmail = clerkUser?.emailAddresses?.[0]?.emailAddress || userEmail
-        userName = `${clerkUser?.firstName || ''} ${clerkUser?.lastName || ''}`.trim() || 'User'
-
-        user = await prisma.user.create({
+        const existingByEmail = await prisma.user.findUnique({ where: { email: userEmail } }).catch(() => null)
+        if (existingByEmail) {
+          user = existingByEmail
+        } else {
+          user = await prisma.user.create({
           data: {
             id: userId,
             email: userEmail,
@@ -64,6 +66,7 @@ export async function GET() {
             email: true
           }
         })
+        }
       } catch (e) {
         console.warn('[User/Me API] Clerk user error:', e)
       }
@@ -71,10 +74,11 @@ export async function GET() {
 
     return NextResponse.json({
       planType: user?.planType || 'free',
-      aiCredits: user?.aiCredits || 20,
-      promptCount: user?.promptCount || 0,
+      aiCredits: user?.aiCredits ?? 20,
+      promptCount: user?.promptCount ?? 0,
       maxPlatforms: user?.maxPlatforms || 1,
-      name: user?.name || 'User',
+      name: user?.name || userName,
+      email: user?.email || userEmail,
       imageUrl: (user as any)?.imageUrl || null
     })
   } catch (error) {

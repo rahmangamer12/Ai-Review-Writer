@@ -128,98 +128,172 @@ function buildActivity(reviews: any[], platforms: any[]) {
     .slice(0, 20)
 }
 
-export async function GET() {
-  const { userId } = await auth()
-  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  const clerkUser = await currentUser()
-  const email = clerkUser?.emailAddresses?.[0]?.emailAddress || `${userId}@unknown.com`
-  const fullName = clerkUser?.fullName || clerkUser?.firstName || 'User'
-
-  const [dbUser, reviews, platforms] = await Promise.all([
-    prisma.user.upsert({
+async function ensureDbUser(userId: string, email: string, fullName: string) {
+  const existing = await prisma.user.findUnique({ where: { id: userId } })
+  if (existing) {
+    return prisma.user.update({
       where: { id: userId },
-      update: { email, name: fullName },
-      create: { id: userId, email, name: fullName, planType: 'free', aiCredits: 20, promptCount: 0, maxPlatforms: 1 },
-    }),
-    prisma.review.findMany({
-      where: { userId },
-      orderBy: { createdAt: 'desc' },
-      include: { platform: { select: { platformType: true, status: true } } },
-    }),
-    prisma.connectedPlatform.findMany({
-      where: { userId },
-      orderBy: { updatedAt: 'desc' },
-    }),
-  ])
-
-  const meta = profileMeta(clerkUser)
-  const now = new Date()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-  const totalReviews = reviews.length
-  const totalReplies = reviews.filter((review) => Boolean(review.aiReplyText) || review.status === 'AI_replied').length
-  const reviewsThisMonth = reviews.filter((review) => (review.sourceDate || review.createdAt) >= monthStart).length
-  const avgRating = totalReviews ? reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews : 0
-  const responseRate = totalReviews ? (totalReplies / totalReviews) * 100 : 0
-  const responseTimes = reviews
-    .filter((review) => review.aiReplyText || review.status === 'AI_replied')
-    .map((review) => Math.max(0, review.updatedAt.getTime() - (review.sourceDate || review.createdAt).getTime()))
-    .filter((ms) => ms > 0)
-  const avgResponseMinutes = responseTimes.length
-    ? Math.round(responseTimes.reduce((sum, ms) => sum + ms, 0) / responseTimes.length / 60000)
-    : 0
-
-  const stats = {
-    totalReviews,
-    totalReplies,
-    reviewsThisMonth,
-    avgRating: Number(avgRating.toFixed(1)),
-    responseRate: Number(responseRate.toFixed(1)),
-    avgResponseTime: avgResponseMinutes,
-    platformsConnected: platforms.filter((platform) => platform.status === 'connected').length,
-    satisfactionScore: totalReviews === 0 ? 0 : Math.min(100, Math.max(0, Math.round(avgRating * 18 + responseRate * 0.1))),
+      data: { email, name: fullName },
+    }).catch(() => existing)
   }
 
-  return NextResponse.json({
-    profile: {
-      id: userId,
-      email,
-      full_name: fullName,
-      avatar_url: clerkUser?.imageUrl || null,
-      bio: meta.bio,
-      location: meta.location,
-      phone: meta.phone,
-      website: meta.website,
-      company: meta.company,
-      role: meta.role,
-      industry: meta.industry,
-      plan: dbUser.planType,
-      credits: dbUser.aiCredits,
-      joined_date: dbUser.createdAt.toISOString(),
-      preferences: meta.preferences,
-      stats: {
-        total_reviews: stats.totalReviews,
-        reviews_this_month: stats.reviewsThisMonth,
-        avg_rating: stats.avgRating,
-        response_rate: stats.responseRate,
-        avg_response_time: stats.avgResponseTime,
-        total_replies: stats.totalReplies,
-        platforms_connected: stats.platformsConnected,
-        satisfaction_score: stats.satisfactionScore,
-      },
-      achievements: buildAchievements(stats),
-      activity: buildActivity(reviews, platforms),
-    },
-    reviews: reviews.map((review) => ({
-      id: review.id,
-      rating: review.rating,
-      created_at: review.createdAt.toISOString(),
-      source_date: review.sourceDate.toISOString(),
-      status: review.status,
-      ai_reply_text: review.aiReplyText,
-      platform: review.platform?.platformType || 'manual',
-    })),
+  const existingByEmail = await prisma.user.findUnique({ where: { email } }).catch(() => null)
+  if (existingByEmail) {
+    return existingByEmail
+  }
+
+  return prisma.user.create({
+    data: { id: userId, email, name: fullName, planType: 'free', aiCredits: 20, promptCount: 0, maxPlatforms: 1 },
   })
+}
+
+function fallbackProfile(userId: string, email: string, fullName: string, clerkUser: Awaited<ReturnType<typeof currentUser>> | null) {
+  const meta = profileMeta(clerkUser)
+  const stats = {
+    totalReviews: 0,
+    totalReplies: 0,
+    reviewsThisMonth: 0,
+    avgRating: 0,
+    responseRate: 0,
+    avgResponseTime: 0,
+    platformsConnected: 0,
+    satisfactionScore: 0,
+  }
+
+  return {
+    id: userId,
+    email,
+    full_name: fullName,
+    avatar_url: clerkUser?.imageUrl || null,
+    bio: meta.bio,
+    location: meta.location,
+    phone: meta.phone,
+    website: meta.website,
+    company: meta.company,
+    role: meta.role,
+    industry: meta.industry,
+    plan: 'free',
+    credits: 20,
+    joined_date: new Date().toISOString(),
+    preferences: meta.preferences,
+    stats: {
+      total_reviews: stats.totalReviews,
+      reviews_this_month: stats.reviewsThisMonth,
+      avg_rating: stats.avgRating,
+      response_rate: stats.responseRate,
+      avg_response_time: stats.avgResponseTime,
+      total_replies: stats.totalReplies,
+      platforms_connected: stats.platformsConnected,
+      satisfaction_score: stats.satisfactionScore,
+    },
+    achievements: buildAchievements(stats),
+    activity: [],
+  }
+}
+
+export async function GET() {
+  try {
+    const { userId } = await auth()
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+
+    const clerkUser = await currentUser().catch(() => null)
+    const email = clerkUser?.emailAddresses?.[0]?.emailAddress || `${userId}@unknown.com`
+    const fullName = clerkUser?.fullName || clerkUser?.firstName || 'User'
+
+    const dbUser = await ensureDbUser(userId, email, fullName)
+    const [reviews, platforms] = await Promise.all([
+      prisma.review.findMany({
+        where: { userId: dbUser.id },
+        orderBy: { createdAt: 'desc' },
+        include: { platform: { select: { platformType: true, status: true } } },
+      }).catch(() => []),
+      prisma.connectedPlatform.findMany({
+        where: { userId: dbUser.id },
+        orderBy: { updatedAt: 'desc' },
+      }).catch(() => []),
+    ])
+
+    const meta = profileMeta(clerkUser)
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    const totalReviews = reviews.length
+    const totalReplies = reviews.filter((review) => Boolean(review.aiReplyText) || review.status === 'AI_replied').length
+    const reviewsThisMonth = reviews.filter((review) => (review.sourceDate || review.createdAt) >= monthStart).length
+    const avgRating = totalReviews ? reviews.reduce((sum, review) => sum + review.rating, 0) / totalReviews : 0
+    const responseRate = totalReviews ? (totalReplies / totalReviews) * 100 : 0
+    const responseTimes = reviews
+      .filter((review) => review.aiReplyText || review.status === 'AI_replied')
+      .map((review) => Math.max(0, review.updatedAt.getTime() - (review.sourceDate || review.createdAt).getTime()))
+      .filter((ms) => ms > 0)
+    const avgResponseMinutes = responseTimes.length
+      ? Math.round(responseTimes.reduce((sum, ms) => sum + ms, 0) / responseTimes.length / 60000)
+      : 0
+
+    const stats = {
+      totalReviews,
+      totalReplies,
+      reviewsThisMonth,
+      avgRating: Number(avgRating.toFixed(1)),
+      responseRate: Number(responseRate.toFixed(1)),
+      avgResponseTime: avgResponseMinutes,
+      platformsConnected: platforms.filter((platform) => platform.status === 'connected').length,
+      satisfactionScore: totalReviews === 0 ? 0 : Math.min(100, Math.max(0, Math.round(avgRating * 18 + responseRate * 0.1))),
+    }
+
+    return NextResponse.json({
+      profile: {
+        id: userId,
+        email,
+        full_name: fullName,
+        avatar_url: clerkUser?.imageUrl || null,
+        bio: meta.bio,
+        location: meta.location,
+        phone: meta.phone,
+        website: meta.website,
+        company: meta.company,
+        role: meta.role,
+        industry: meta.industry,
+        plan: dbUser.planType,
+        credits: dbUser.aiCredits,
+        joined_date: dbUser.createdAt.toISOString(),
+        preferences: meta.preferences,
+        stats: {
+          total_reviews: stats.totalReviews,
+          reviews_this_month: stats.reviewsThisMonth,
+          avg_rating: stats.avgRating,
+          response_rate: stats.responseRate,
+          avg_response_time: stats.avgResponseTime,
+          total_replies: stats.totalReplies,
+          platforms_connected: stats.platformsConnected,
+          satisfaction_score: stats.satisfactionScore,
+        },
+        achievements: buildAchievements(stats),
+        activity: buildActivity(reviews, platforms),
+      },
+      reviews: reviews.map((review) => ({
+        id: review.id,
+        rating: review.rating,
+        created_at: review.createdAt.toISOString(),
+        source_date: review.sourceDate.toISOString(),
+        status: review.status,
+        ai_reply_text: review.aiReplyText,
+        platform: review.platform?.platformType || 'manual',
+      })),
+    })
+  } catch (error) {
+    console.error('[Profile API] GET failed:', error)
+    const { userId } = await auth().catch(() => ({ userId: null }))
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    const clerkUser = await currentUser().catch(() => null)
+    const email = clerkUser?.emailAddresses?.[0]?.emailAddress || `${userId}@unknown.com`
+    const fullName = clerkUser?.fullName || clerkUser?.firstName || 'User'
+
+    return NextResponse.json({
+      profile: fallbackProfile(userId, email, fullName, clerkUser),
+      reviews: [],
+      degraded: true,
+    })
+  }
 }
 
 export async function PATCH(req: NextRequest) {

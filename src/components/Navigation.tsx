@@ -23,6 +23,7 @@ function UserProfile() {
   const { user, isLoaded, isSignedIn } = useUser()
   const { signOut } = useClerk()
   const [userData, setUserData] = useState<{ plan: string, aiCredits: number, promptCount: number } | null>(null)
+  const [userDataLoading, setUserDataLoading] = useState(false)
   const hydrated = useHydrated()
 
   useEffect(() => {
@@ -40,6 +41,7 @@ function UserProfile() {
       if (!isMounted || retryCount >= MAX_RETRIES) return
 
       try {
+        setUserDataLoading(true)
         const response = await fetch('/api/user/me', {
           cache: 'no-store'
         })
@@ -63,7 +65,7 @@ function UserProfile() {
         const data = JSON.parse(text)
 
         if (data.planType && isMounted) {
-          setUserData({ plan: data.planType, aiCredits: data.aiCredits, promptCount: data.promptCount || 0 })
+          setUserData({ plan: data.planType, aiCredits: data.aiCredits ?? 20, promptCount: data.promptCount ?? 0 })
           retryCount = 0 // Reset on success
         }
       } catch (err) {
@@ -72,6 +74,8 @@ function UserProfile() {
         if (isMounted) {
           setUserData(null)
         }
+      } finally {
+        if (isMounted) setUserDataLoading(false)
       }
     }
 
@@ -95,7 +99,7 @@ function UserProfile() {
   }
 
   const plan = userData?.plan || 'Free'
-  const credits = userData?.aiCredits ?? 0
+  const credits = userData?.aiCredits
   const promptCount = userData?.promptCount ?? 0
 
   return (
@@ -131,7 +135,7 @@ function UserProfile() {
           <div className="mb-2 flex items-center justify-between">
             <div>
               <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/35">AI credits</p>
-              <p className="mt-1 text-sm font-black text-white">{credits}</p>
+              <p className="mt-1 text-sm font-black text-white">{userDataLoading && credits == null ? '...' : credits ?? 'Syncing'}</p>
             </div>
             <Link href="/subscription" className="rounded-xl border border-cyan-300/20 bg-cyan-400/15 px-3 py-1.5 text-[10px] font-black text-cyan-100 hover:bg-cyan-400/25">
               Get More

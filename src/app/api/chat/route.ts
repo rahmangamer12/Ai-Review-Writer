@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import prisma from '@/lib/db';
 import { createOpenAI } from '@ai-sdk/openai';
 import { streamText } from 'ai';
@@ -45,11 +45,11 @@ async function handler(request: NextRequest) {
     }
 
     // ULTRA-FAST OPTIMIZATION: Run Rate Limit and DB checks concurrently
-    const [rateLimitResult, userDb] = await Promise.all([
+    let [rateLimitResult, userDb] = await Promise.all([
       rateLimit(userId, RATE_LIMITS.AI_ANALYSIS).catch(() => ({ success: true, message: '', resetTime: Date.now(), remaining: 100, limit: 100 })), // Fail open for max speed
       prisma.user.findUnique({
         where: { id: userId },
-        select: { aiCredits: true, promptCount: true }
+        select: { id: true, aiCredits: true, promptCount: true }
       }).catch(() => null)
     ])
 
@@ -78,6 +78,19 @@ async function handler(request: NextRequest) {
         { error: 'AI models are currently unavailable. Please check your API key.' },
         { status: 503 }
       );
+    }
+
+    if (!userDb) {
+      const clerkUser = await currentUser().catch(() => null)
+      const email = clerkUser?.emailAddresses?.[0]?.emailAddress || `${userId}@unknown.com`
+      const name = clerkUser?.fullName || clerkUser?.firstName || 'User'
+      const existingByEmail = await prisma.user.findUnique({ where: { email } }).catch(() => null)
+      userDb = existingByEmail
+        ? { id: existingByEmail.id, aiCredits: existingByEmail.aiCredits, promptCount: existingByEmail.promptCount }
+        : await prisma.user.create({
+            data: { id: userId, email, name, planType: 'free', aiCredits: 20, promptCount: 0, maxPlatforms: 1 },
+            select: { id: true, aiCredits: true, promptCount: true },
+          }).catch(() => null)
     }
 
     // If user doesn't exist, return error (user should be created on sign-up)
@@ -166,14 +179,14 @@ CRITICAL INSTRUCTIONS FOR YOU:
             if (nextPromptCount >= 10) {
               await prisma.$transaction([
                 prisma.user.update({
-                  where: { id: userId },
+                  where: { id: userDb.id },
                   data: { aiCredits: { decrement: 1 }, promptCount: 0 }
                 })
               ]);
             } else {
               await prisma.$transaction([
                 prisma.user.update({
-                  where: { id: userId },
+                  where: { id: userDb.id },
                   data: { promptCount: { increment: 1 } }
                 })
               ]);

@@ -75,6 +75,7 @@ export default function ProfilePage() {
   const { user, isLoaded } = useUser()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
   const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
   const [activeTab, setActiveTab] = useState<'overview' | 'stats' | 'activity' | 'achievements' | 'settings'>('overview')
@@ -105,21 +106,33 @@ export default function ProfilePage() {
   const loadProfile = useCallback(async () => {
     if (!user) return
 
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), 15000)
+
     try {
       setLoading(true)
+      setLoadError('')
 
-      const response = await fetch('/api/user/profile')
+      const response = await fetch('/api/user/profile', {
+        cache: 'no-store',
+        signal: controller.signal,
+      })
       const text = await response.text()
 
       const isJson = text.trim().startsWith('{') || text.trim().startsWith('[')
       if (!isJson) {
-        setLoading(false)
+        setLoadError('Profile service returned an invalid response. Please reload and try again.')
         return
       }
 
       const userData = JSON.parse(text)
+      if (!response.ok) {
+        setLoadError(userData.error || userData.message || 'Profile could not be loaded.')
+        return
+      }
+
       if (!userData.profile) {
-        setLoading(false)
+        setLoadError('Profile data is not available yet. Please try again.')
         return
       }
 
@@ -129,7 +142,11 @@ export default function ProfilePage() {
       setEditedProfile(newProfile)
     } catch (error) {
       console.error('Error loading profile:', error)
+      setLoadError(error instanceof DOMException && error.name === 'AbortError'
+        ? 'Profile loading timed out. Please check your connection and retry.'
+        : 'Profile could not be loaded. Please retry.')
     } finally {
+      window.clearTimeout(timeout)
       setLoading(false)
     }
   }, [user])
@@ -261,7 +278,7 @@ export default function ProfilePage() {
   }
 
   // Profile loading state
-  if (loading || !profile) {
+  if (loading) {
     return (
       <div className="min-h-[100dvh] bg-background flex items-center justify-center overflow-x-hidden">
         <motion.div 
@@ -271,6 +288,28 @@ export default function ProfilePage() {
         >
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
           <p className="text-white/70">Loading your profile...</p>
+        </motion.div>
+      </div>
+    )
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-[100dvh] bg-background flex items-center justify-center overflow-x-hidden p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="glass-card max-w-md rounded-2xl border border-red-500/25 p-6 text-center"
+        >
+          <Users className="mx-auto mb-4 h-12 w-12 text-red-300" />
+          <h2 className="mb-2 text-xl font-bold text-white">Profile could not load</h2>
+          <p className="mb-5 text-sm text-white/60">{loadError || 'Please retry. Your data is safe.'}</p>
+          <button
+            onClick={loadProfile}
+            className="rounded-xl bg-primary px-5 py-2.5 font-semibold text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Retry
+          </button>
         </motion.div>
       </div>
     )
