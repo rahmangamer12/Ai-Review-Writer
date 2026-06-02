@@ -47,7 +47,7 @@ function UserProfile() {
         })
 
         // 401 = not signed in, silently bail
-        if (response.status === 401 || response.status === 500) {
+        if (response.status === 401) {
           setUserData(null)
           return
         }
@@ -99,7 +99,7 @@ function UserProfile() {
   }
 
   const plan = userData?.plan || 'Free'
-  const credits = userData?.aiCredits
+  const credits = userData?.aiCredits ?? 20
   const promptCount = userData?.promptCount ?? 0
 
   return (
@@ -135,7 +135,7 @@ function UserProfile() {
           <div className="mb-2 flex items-center justify-between">
             <div>
               <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/35">AI credits</p>
-              <p className="mt-1 text-sm font-black text-white">{userDataLoading && credits == null ? '...' : credits ?? 'Syncing'}</p>
+              <p className="mt-1 text-sm font-black text-white">{credits}</p>
             </div>
             <Link href="/subscription" className="rounded-xl border border-cyan-300/20 bg-cyan-400/15 px-3 py-1.5 text-[10px] font-black text-cyan-100 hover:bg-cyan-400/25">
               Get More

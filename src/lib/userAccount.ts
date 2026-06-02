@@ -8,6 +8,10 @@ type UserAccountInput = {
 
 const DEFAULT_FREE_CREDITS = 20
 
+function creditsOrDefault(value: number | null | undefined) {
+  return value ?? DEFAULT_FREE_CREDITS
+}
+
 export async function ensureUserAccount({ userId, email, name }: UserAccountInput) {
   const [byId, byEmail] = await Promise.all([
     prisma.user.findUnique({ where: { id: userId } }),
@@ -15,10 +19,9 @@ export async function ensureUserAccount({ userId, email, name }: UserAccountInpu
   ])
 
   if (byId) {
-    const planFloor = byId.planType === 'free' ? DEFAULT_FREE_CREDITS : 0
     const mergedCredits = byEmail && byEmail.id !== byId.id
-      ? Math.max(byId.aiCredits ?? 0, byEmail.aiCredits ?? 0, planFloor)
-      : Math.max(byId.aiCredits ?? 0, planFloor)
+      ? Math.max(creditsOrDefault(byId.aiCredits), creditsOrDefault(byEmail.aiCredits))
+      : creditsOrDefault(byId.aiCredits)
 
     const updates: Record<string, any> = {
       name: byId.name || name,
@@ -40,15 +43,19 @@ export async function ensureUserAccount({ userId, email, name }: UserAccountInpu
   }
 
   if (byEmail) {
-    const planFloor = byEmail.planType === 'free' ? DEFAULT_FREE_CREDITS : 0
+    const repairedCredits = creditsOrDefault(byEmail.aiCredits)
+
     return prisma.user.update({
-      where: { email },
+      where: { id: byEmail.id },
       data: {
-        id: userId,
         name: byEmail.name || name,
-        aiCredits: Math.max(byEmail.aiCredits ?? 0, planFloor),
+        aiCredits: repairedCredits,
       },
-    }).catch(() => byEmail)
+    }).catch(() => ({
+      ...byEmail,
+      aiCredits: repairedCredits,
+      name: byEmail.name || name,
+    }))
   }
 
   return prisma.user.create({

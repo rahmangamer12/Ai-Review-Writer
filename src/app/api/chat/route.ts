@@ -50,7 +50,7 @@ async function handler(request: NextRequest) {
       rateLimit(userId, RATE_LIMITS.AI_ANALYSIS).catch(() => ({ success: true, message: '', resetTime: Date.now(), remaining: 100, limit: 100 })), // Fail open for max speed
       prisma.user.findUnique({
         where: { id: userId },
-        select: { id: true, aiCredits: true, promptCount: true, email: true, name: true }
+        select: { id: true, aiCredits: true, promptCount: true, email: true, name: true, planType: true }
       }).catch(() => null)
     ])
 
@@ -85,9 +85,16 @@ async function handler(request: NextRequest) {
     const email = clerkUser?.emailAddresses?.[0]?.emailAddress || existingUser?.email || `${userId}@unknown.com`
     const name = clerkUser?.fullName || clerkUser?.firstName || existingUser?.name || 'User'
     const userDb = await ensureUserAccount({ userId, email, name }).catch(() => existingUser)
+    const effectiveCredits = userDb?.aiCredits ?? 0
 
-    // If user doesn't exist, return error (user should be created on sign-up)
-    if (!userDb || userDb.aiCredits <= 0) {
+    if (!userDb) {
+      return NextResponse.json(
+        { error: 'Your account could not be loaded. Please refresh and try again.' },
+        { status: 503 }
+      );
+    }
+
+    if (effectiveCredits <= 0) {
       return NextResponse.json(
         {
           error: 'Insufficient AI credits. Please upgrade your plan to continue chatting.',
@@ -104,7 +111,7 @@ async function handler(request: NextRequest) {
     const provider = longcat.chat(selectedModel);
 
     const currentPromptCount = (userDb as any).promptCount ?? 0;
-    const currentCredits = (userDb as any).aiCredits ?? 0;
+    const currentCredits = effectiveCredits;
 
     // Skip session save during streaming for speed - save after response completes
     const sessionId = request.headers.get('x-session-id');

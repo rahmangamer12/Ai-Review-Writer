@@ -4,8 +4,11 @@ import { ensureUserAccount } from '@/lib/userAccount'
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
+  let userId: string | null = null
+  let userEmail = ''
+  let userName = 'User'
+
   try {
-    let userId: string | null = null
     let clerkUser: any = null
     
     try {
@@ -24,10 +27,13 @@ export async function GET() {
       }, { status: 401 })
     }
 
-    const userEmail = clerkUser?.emailAddresses?.[0]?.emailAddress || `${userId}@unknown.com`
-    const userName = clerkUser?.fullName || `${clerkUser?.firstName || ''} ${clerkUser?.lastName || ''}`.trim() || 'User'
+    userEmail = clerkUser?.emailAddresses?.[0]?.emailAddress || `${userId}@unknown.com`
+    userName = clerkUser?.fullName || `${clerkUser?.firstName || ''} ${clerkUser?.lastName || ''}`.trim() || 'User'
 
-    const user = await ensureUserAccount({ userId, email: userEmail, name: userName })
+    const user = await ensureUserAccount({ userId, email: userEmail, name: userName }).catch((error) => {
+      console.warn('[User/Me API] Account sync fallback:', error)
+      return null
+    })
 
     return NextResponse.json({
       planType: user?.planType || 'free',
@@ -40,6 +46,19 @@ export async function GET() {
     })
   } catch (error) {
     console.error('[User/Me API] Fatal Error:', error)
+    if (userId) {
+      return NextResponse.json({
+        planType: 'free',
+        aiCredits: 20,
+        promptCount: 0,
+        maxPlatforms: 1,
+        name: userName,
+        email: userEmail || `${userId}@unknown.com`,
+        imageUrl: null,
+        degraded: true
+      })
+    }
+
     return NextResponse.json({ 
       error: 'Internal server error'
     }, { status: 500 })
