@@ -59,6 +59,62 @@
 
 ---
 
-## Phase 2-24 — Pending
+## Phase 2 — Fix Webhook Credit Amounts ✅ COMPLETED
 
-(Will be updated as each phase completes)
+**What changed:**
+- Updated `src/app/api/webhooks/lemonsqueezy/route.ts` to import and use CreditsManager
+- `handlePaymentSuccess()` now uses `CreditsManager.getPlanCredits(plan)` instead of hardcoded values
+- `handleSubscriptionExpired()` uses `CreditsManager.getPlanCredits('free')` for consistency
+- Credit grants now use atomic transactions with audit log entries
+
+**Verification:** TypeScript passes
+
+---
+
+## Phase 3 — Fix Chat Credit Deduction Race Condition ✅ COMPLETED
+
+**What changed:**
+- Updated `src/app/api/chat/route.ts` to read promptCount INSIDE the transaction
+- Added audit log entry (creditUsage) for every chat credit deduction
+- Removed stale `currentPromptCount` read outside transaction
+
+**Verification:** TypeScript passes
+
+---
+
+## Phase 4 — Credit Usage Audit Log ✅ COMPLETED
+
+**What changed:**
+- Added `CreditUsage` model to prisma/schema.prisma
+- Added `creditUsages` relation to User model
+- Added `getUsageHistory()` method to CreditsManager
+- All credit operations now create audit log entries
+
+**Verification:** Prisma client generated; TypeScript passes
+
+---
+
+## Phase 5 — Auth Middleware ✅ COMPLETED
+
+**What changed:**
+- Created `src/middleware.ts` with Clerk middleware
+- Protects /api/* routes except webhooks
+- Chrome extension route (/api/reviews/generate-reply) remains public (uses shared secret)
+
+**Verification:** TypeScript passes
+
+---
+
+## Phase 6-7 — Env Validation + Health Check ✅ COMPLETED
+
+**What changed:**
+- Created `src/lib/env.ts` with validateEnv() for fail-fast startup validation
+- Created `src/app/api/health/route.ts` checking DB, Clerk, AI, Redis, Payments
+
+**Verification:** TypeScript passes
+
+---
+
+## Phase 8-24 — Continuing
+
+(Batching remaining phases for efficiency)
