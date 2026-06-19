@@ -4,6 +4,7 @@ import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit'
 import { auth } from '@clerk/nextjs/server'
 import prisma from '@/lib/db'
 import { z } from 'zod'
+import { CreditsManager } from '@/lib/credits'
 
 // Input validation schema
 const generateReplySchema = z.object({
@@ -141,25 +142,17 @@ async function handler(request: NextRequest) {
       return NextResponse.json({ error: 'Review text is required' }, { status: 400 })
     }
 
-    console.log('[Generate Reply API] Using LongCat AI to generate reply')
-
-    // Analyze sentiment first
-    let sentimentResult
-    try {
-      if (longcatAI.hasApiKey()) {
-        sentimentResult = await longcatAI.analyzeSentiment(reviewText)
-        console.log('[Generate Reply API] Sentiment:', sentimentResult.sentiment)
-      } else {
-        throw new Error('No API key')
-      }
-    } catch (e) {
-      console.error('[Generate Reply API] Sentiment analysis failed, using rating heuristic')
-      sentimentResult = {
-        sentiment: (rating || 3) >= 4 ? 'positive' : (rating || 3) <= 2 ? 'negative' : 'neutral',
-        confidence: 0.8
-      }
+    // ─── CREDIT CHECK & DEDUCTION (Phase 1 Fix) ─────────────────────────────
+    // AI generation requires a valid user account with sufficient credits.
+    // This MUST happen BEFORE the AI API call to prevent free generations.
+    if (!userId) {
+      return NextResponse.json(
+        { error: 'Authentication required to generate AI replies' },
+        { status: 401, headers: getCorsHeaders(request) }
+      )
     }
 
+    // Check AI API key is configured before checking credits
     if (!longcatAI.hasApiKey()) {
       return NextResponse.json(
         {
@@ -170,7 +163,66 @@ async function handler(request: NextRequest) {
       )
     }
 
-    // Generate reply using the configured AI provider.
+    // Determine credit cost for this action
+    const creditCost = CreditsManager.getCreditCost('ai_response')
+
+    // Attempt atomic credit deduction with audit logging
+    const deductionResult = await CreditsManager.useCredits(
+      userId,
+      creditCost,
+      'ai_response',
+      `Generated AI reply for ${platform} review`,
+      { platform, tone, rating, reviewTextLength: reviewText.length }
+    )
+
+    if (!deductionResult.success) {
+      if (deductionResult.error === 'insufficient_credits') {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Insufficient AI credits. Please upgrade your plan to generate more replies.',
+            creditsRemaining: 0,
+            upgradeUrl: '/subscription'
+          },
+          { status: 402, headers: getCorsHeaders(request) }
+        )
+      }
+
+      if (deductionResult.error === 'user_not_found') {
+        return NextResponse.json(
+          { error: 'User account not found. Please sign in again.' },
+          { status: 401, headers: getCorsHeaders(request) }
+        )
+      }
+
+      // Transaction failed — don't generate AI, don't charge
+      console.error('[Generate Reply API] Credit deduction failed:', deductionResult.error)
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Unable to process payment. Please try again.',
+        },
+        { status: 500, headers: getCorsHeaders(request) }
+      )
+    }
+
+    // ─── AI GENERATION (only after successful credit deduction) ─────────────
+    console.log('[Generate Reply API] Using LongCat AI to generate reply. Credits after deduction:', deductionResult.balanceAfter)
+
+    // Analyze sentiment first
+    let sentimentResult
+    try {
+      sentimentResult = await longcatAI.analyzeSentiment(reviewText)
+      console.log('[Generate Reply API] Sentiment:', sentimentResult.sentiment)
+    } catch (e) {
+      console.error('[Generate Reply API] Sentiment analysis failed, using rating heuristic')
+      sentimentResult = {
+        sentiment: (rating || 3) >= 4 ? 'positive' : (rating || 3) <= 2 ? 'negative' : 'neutral',
+        confidence: 0.8
+      }
+    }
+
+    // Generate reply using the configured AI provider
     let aiReply = ''
     try {
       const result = await longcatAI.generateReviewResponse(
@@ -184,10 +236,15 @@ async function handler(request: NextRequest) {
       console.log('[Generate Reply API] AI Reply generated:', aiReply.substring(0, 100) + '...')
     } catch (aiError) {
       console.warn('[Generate Reply API] AI generation failed:', aiError)
+
+      // AI failed AFTER credit deduction — log this for investigation but don't refund automatically
+      // (In production, you might implement a refund queue for this edge case)
       return NextResponse.json(
         {
           success: false,
           error: 'AI generation failed. Please verify the AI API key and try again.',
+          creditsDeducted: creditCost,
+          note: 'Credits were deducted but AI generation failed. Contact support for a refund.'
         },
         { status: 502, headers: getCorsHeaders(request) }
       )
@@ -197,6 +254,8 @@ async function handler(request: NextRequest) {
       {
         success: true,
         reply: aiReply,
+        creditsRemaining: deductionResult.balanceAfter,
+        creditsUsed: creditCost,
         metadata: {
           original_rating: rating,
           detected_sentiment: sentimentResult.sentiment,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { lemonSqueezy } from '@/lib/lemonsqueezy'
 import prisma from '@/lib/db'
 import { sendUpgradeConfirmationEmail, sendLowCreditsEmail } from '@/lib/email'
+import { CreditsManager } from '@/lib/credits'
 
 export const dynamic = 'force-dynamic'
 
@@ -208,19 +209,9 @@ async function handlePaymentSuccess(event: any) {
   if (customData?.userId && customData?.plan) {
     const plan = customData.plan;
 
-    let aiCredits = 20;
-    let maxPlatforms = 1;
-
-    if (plan === 'starter') {
-      aiCredits = 100;
-      maxPlatforms = 3;
-    } else if (plan === 'professional' || plan === 'growth') {
-      aiCredits = 500;
-      maxPlatforms = 10;
-    } else if (plan === 'enterprise' || plan === 'business') {
-      aiCredits = 5000;
-      maxPlatforms = 100;
-    }
+    // Use CreditsManager as single source of truth for credit amounts
+    const planCredits = CreditsManager.getPlanCredits(plan)
+    const planPlatforms = CreditsManager.getPlanPlatforms(plan)
 
     try {
       // Verify payment status via LemonSqueezy API before updating database
@@ -233,16 +224,51 @@ async function handlePaymentSuccess(event: any) {
         return // Don't throw — just skip processing
       }
 
-      const updatedUser = await prisma.user.update({
-        where: { id: customData.userId },
-        data: {
-          planType: plan,
-          aiCredits: aiCredits,
-          maxPlatforms: maxPlatforms
-        }
-      });
+      // Use atomic transaction to update plan + credits + audit log
+      const updatedUser = await prisma.$transaction(async (tx) => {
+        const user = await tx.user.findUnique({
+          where: { id: customData.userId },
+          select: { id: true, aiCredits: true, email: true, name: true }
+        })
 
-      console.log(`✅ [LemonSqueezy Webhook] User ${customData.userId} upgraded to ${plan}`)
+        if (!user) return null
+
+        // Update plan and platform limit
+        const updated = await tx.user.update({
+          where: { id: customData.userId },
+          data: {
+            planType: plan,
+            maxPlatforms: planPlatforms
+          }
+        })
+
+        // Grant credits atomically with audit log
+        await tx.creditUsage.create({
+          data: {
+            userId: customData.userId,
+            action: 'plan_upgrade',
+            amount: planCredits,
+            balanceAfter: user.aiCredits + planCredits,
+            description: `Upgraded to ${plan} plan — granted ${planCredits} credits`,
+            metadata: { eventId, plan, previousCredits: user.aiCredits } as any
+          }
+        })
+
+        // Update the user's credits
+        await tx.user.update({
+          where: { id: customData.userId },
+          data: { aiCredits: user.aiCredits + planCredits }
+        })
+
+        return updated
+      })
+
+      if (!updatedUser) {
+        console.error('[LemonSqueezy Webhook] User not found:', customData.userId)
+        return
+      }
+
+      console.log(`✅ [LemonSqueezy Webhook] User ${customData.userId} upgraded to ${plan} (${planCredits} credits, ${planPlatforms} platforms)`)
 
       // 📧 Send Upgrade Confirmation Email
       if (updatedUser.email) {
@@ -250,7 +276,7 @@ async function handlePaymentSuccess(event: any) {
           updatedUser.email,
           updatedUser.name || 'there',
           plan,
-          aiCredits
+          planCredits
         )
       }
     } catch (e) {
@@ -270,23 +296,26 @@ async function handleSubscriptionExpired(event: any) {
 
   if (customData?.userId) {
     try {
+      const freeCredits = CreditsManager.getPlanCredits('free')
+      const freePlatforms = CreditsManager.getPlanPlatforms('free')
+
       const updatedUser = await prisma.user.update({
         where: { id: customData.userId },
         data: {
           planType: 'free',
-          aiCredits: 20,
-          maxPlatforms: 1
+          aiCredits: freeCredits,
+          maxPlatforms: freePlatforms
         }
       });
 
-      console.log(`❌ [LemonSqueezy Webhook] User ${customData.userId} reverted to free plan`)
+      console.log(`❌ [LemonSqueezy Webhook] User ${customData.userId} reverted to free plan (${freeCredits} credits)`)
 
       // 📧 Send Low Credits warning after downgrade
       if (updatedUser.email) {
         await sendLowCreditsEmail(
           updatedUser.email,
           updatedUser.name || 'there',
-          20,
+          freeCredits,
           'free'
         )
       }

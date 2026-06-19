@@ -28,6 +28,7 @@ model User {
   reviews          Review[]
   chatSessions     ChatSession[]
   feedbacks        Feedback[]
+  creditUsages     CreditUsage[]
 }
 
 model ConnectedPlatform {
@@ -125,5 +126,21 @@ model Feedback {
 
   @@index([userId])
   @@index([status])
+  @@index([createdAt])
+}
+
+model CreditUsage {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action      String   // 'ai_response', 'review_analysis', 'bulk_response', 'sentiment_analysis', 'auto_reply'
+  amount      Int      // Positive = granted, negative = deducted
+  balanceAfter Int     // Balance AFTER this transaction
+  description String?
+  metadata    Json?    // Optional: { reviewId, platform, tone, etc. }
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
   @@index([createdAt])
 }
