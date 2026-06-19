@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { withCSRFProtection } from '@/lib/csrfProtection';
 import { LONGCAT_DEFAULT_MODEL, normalizeLongCatModel } from '@/lib/longcatModels';
 import { ensureUserAccount } from '@/lib/userAccount';
+import { CreditsManager } from '@/lib/credits';
 
 export const dynamic = 'force-dynamic'
 
@@ -110,7 +111,6 @@ async function handler(request: NextRequest) {
     });
     const provider = longcat.chat(selectedModel);
 
-    const currentPromptCount = (userDb as any).promptCount ?? 0;
     const currentCredits = effectiveCredits;
 
     // Skip session save during streaming for speed - save after response completes
@@ -119,8 +119,8 @@ async function handler(request: NextRequest) {
     const formattedMessages: any[] = messages.map((m: any) => {
       const role = ['system', 'user', 'assistant', 'tool'].includes(m.role) ? m.role : 'user';
       if (role === 'system' || role === 'assistant') {
-        const textContent = Array.isArray(m.content) 
-          ? m.content.map((p: any) => p.text || '').join('\n') 
+        const textContent = Array.isArray(m.content)
+          ? m.content.map((p: any) => p.text || '').join('\n')
           : (m.content || '');
         return { role, content: String(textContent) };
       }
@@ -141,7 +141,7 @@ async function handler(request: NextRequest) {
 
     const godTierPrompt = {
       role: 'system',
-      content: `You are Sarah, the God-Tier AI Assistant for "AutoReview AI" platform. 
+      content: `You are Sarah, the God-Tier AI Assistant for "AutoReview AI" platform.
 You possess absolute, expert-level knowledge of everything related to AutoReview AI—our platform imports, manages, and automatically replies to reviews from Google, Yelp, Facebook, etc., and uses LongCat AI to save businesses hours of work daily. Our plans: Free ($0), Starter ($10/m), Pro ($19/m), Enterprise ($39/m).
 
 Current server date/time: ${new Date().toISOString()}.
@@ -173,26 +173,54 @@ CRITICAL INSTRUCTIONS FOR YOU:
         // Run DB operations in background after streaming completes
         setImmediate(async () => {
           try {
-            const nextPromptCount = currentPromptCount + 1;
-            
-            // Use atomic transaction to prevent race conditions
-            if (nextPromptCount >= 10) {
-              await prisma.$transaction([
-                prisma.user.update({
+            // Use CreditsManager for atomic credit deduction with audit log
+            // This reads promptCount INSIDE the transaction to prevent race conditions
+            const creditResult = await prisma.$transaction(async (tx) => {
+              // Lock user row and read current promptCount atomically
+              const user = await tx.user.findUnique({
+                where: { id: userDb.id },
+                select: { id: true, aiCredits: true, promptCount: true }
+              });
+
+              if (!user) return { deducted: false, balanceAfter: 0 };
+
+              const nextPromptCount = (user.promptCount ?? 0) + 1;
+
+              if (nextPromptCount >= 10) {
+                // Deduct 1 credit, reset promptCount
+                await tx.user.update({
                   where: { id: userDb.id },
                   data: { aiCredits: { decrement: 1 }, promptCount: 0 }
-                })
-              ]);
-            } else {
-              await prisma.$transaction([
-                prisma.user.update({
+                });
+
+                // Audit log
+                await tx.creditUsage.create({
+                  data: {
+                    userId: userDb.id,
+                    action: 'chat_message',
+                    amount: -1,
+                    balanceAfter: user.aiCredits - 1,
+                    description: `Chat: 10 prompts reached, deducted 1 credit`,
+                    metadata: { sessionId, promptCount: 10 } as any
+                  }
+                });
+
+                return { deducted: true, balanceAfter: user.aiCredits - 1 };
+              } else {
+                // Just increment promptCount
+                await tx.user.update({
                   where: { id: userDb.id },
-                  data: { promptCount: { increment: 1 } }
-                })
-              ]);
+                  data: { promptCount: nextPromptCount }
+                });
+                return { deducted: false, balanceAfter: user.aiCredits };
+              }
+            });
+
+            if (creditResult.deducted) {
+              console.log(`[Chat API] Deducted 1 credit. Balance: ${creditResult.balanceAfter}`);
             }
 
-            const sessionId = request.headers.get('x-session-id');
+            // Save assistant message to session
             if (sessionId && sessionId !== 'new') {
               await prisma.chatMessage.create({
                 data: {
@@ -215,7 +243,7 @@ CRITICAL INSTRUCTIONS FOR YOU:
        headers: {
         'Content-Type': 'text/plain; charset=utf-8',
         'x-credits-remaining': currentCredits.toString(),
-        'x-prompt-count': ((currentPromptCount + 1) % 10).toString()
+        'x-credits-per-prompt': '10'
        }
     });
 
