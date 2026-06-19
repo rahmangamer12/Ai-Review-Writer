@@ -1,115 +1,101 @@
-import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/db';
-import { longcatAI } from '@/lib/longcatAI';
+import { NextResponse } from 'next/server'
+import prisma from '@/lib/db'
 
-interface HealthStatus {
-  status: 'healthy' | 'degraded' | 'unhealthy';
-  timestamp: string;
-  uptime: number;
-  version: string;
-  environment: string;
-  checks: {
-    database: { status: 'up' | 'down'; responseTime?: number; error?: string };
-    aiService: { status: 'up' | 'down'; responseTime?: number; error?: string };
-    memory: { status: 'ok' | 'warning'; usage: number; total: number };
-  };
-}
+export const dynamic = 'force-dynamic'
 
 /**
- * GET /api/health
- * Real health check endpoint - checks actual service status
+ * Health Check Endpoint
+ *
+ * Returns status of all integrations.
+ * Used by monitoring tools and deployment verification.
  */
-export async function GET(request: NextRequest) {
-  const startTime = Date.now();
-  const healthCheck: HealthStatus = {
-    status: 'healthy',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    version: process.env.npm_package_version || '1.0.0',
-    environment: process.env.NODE_ENV || 'development',
-    checks: {
-      database: { status: 'down' },
-      aiService: { status: 'down' },
-      memory: { status: 'ok', usage: 0, total: 0 },
-    },
-  };
+export async function GET() {
+  const checks: Record<string, { status: 'ok' | 'error' | 'degraded'; latencyMs?: number; message?: string }> = {}
 
-  // ── 1. Database Check ─────────────────────────────────────────────────────
+  // 1. Database (Prisma)
+  const dbStart = Date.now()
   try {
-    const dbStart = Date.now();
-    await prisma.user.count(); // Simple query to check DB connection
-    healthCheck.checks.database = {
-      status: 'up',
-      responseTime: Date.now() - dbStart,
-    };
+    await prisma.user.count()
+    checks.database = { status: 'ok', latencyMs: Date.now() - dbStart }
   } catch (error) {
-    healthCheck.checks.database = {
-      status: 'down',
-      error: error instanceof Error ? error.message : 'Database connection failed',
-    };
-    healthCheck.status = 'degraded';
+    checks.database = {
+      status: 'error',
+      latencyMs: Date.now() - dbStart,
+      message: error instanceof Error ? error.message : 'Unknown error'
+    }
   }
 
-  // ── 2. AI Service Check ───────────────────────────────────────────────────
+  // 2. Clerk Auth
+  const clerkStart = Date.now()
   try {
-    const aiStart = Date.now();
-    if (longcatAI.hasApiKey()) {
-      // Lightweight check - just verify API key is configured
-      // For a deeper check, we could make a simple API call
-      healthCheck.checks.aiService = {
-        status: 'up',
-        responseTime: Date.now() - aiStart,
-      };
+    const { auth } = await import('@clerk/nextjs/server')
+    // Just verify the module loads and can be called (no actual auth needed for health)
+    if (typeof auth === 'function') {
+      checks.clerk = { status: 'ok', latencyMs: Date.now() - clerkStart }
     } else {
-      healthCheck.checks.aiService = {
-        status: 'down',
-        error: 'AI API key not configured',
-      };
+      checks.clerk = { status: 'degraded', message: 'Auth module loaded but unexpected export' }
     }
   } catch (error) {
-    healthCheck.checks.aiService = {
-      status: 'down',
-      error: error instanceof Error ? error.message : 'AI service check failed',
-    };
-  }
-
-  // ── 3. Memory Check ───────────────────────────────────────────────────────
-  try {
-    const memUsage = process.memoryUsage();
-    const usedMB = Math.round(memUsage.heapUsed / 1024 / 1024);
-    const totalMB = Math.round(memUsage.heapTotal / 1024 / 1024);
-
-    healthCheck.checks.memory = {
-      status: usedMB > 400 ? 'warning' : 'ok', // Warning if > 400MB
-      usage: usedMB,
-      total: totalMB,
-    };
-
-    if (usedMB > 400) {
-      healthCheck.status = 'degraded';
+    checks.clerk = {
+      status: 'error',
+      latencyMs: Date.now() - clerkStart,
+      message: error instanceof Error ? error.message : 'Failed to load Clerk'
     }
-  } catch {
-    // Memory check failed - non-critical
   }
 
-  // ── 4. Overall Status ─────────────────────────────────────────────────────
-  // If both critical services are down, mark as unhealthy
-  if (
-    healthCheck.checks.database.status === 'down' &&
-    healthCheck.checks.aiService.status === 'down'
-  ) {
-    healthCheck.status = 'unhealthy';
+  // 3. LongCat AI
+  const aiStart = Date.now()
+  try {
+    const hasKey = !!process.env.LONGCAT_AI_API_KEY
+    checks.ai = {
+      status: hasKey ? 'ok' : 'degraded',
+      latencyMs: Date.now() - aiStart,
+      message: hasKey ? undefined : 'LONGCAT_AI_API_KEY not set'
+    }
+  } catch (error) {
+    checks.ai = { status: 'error', message: error instanceof Error ? error.message : 'Unknown' }
   }
 
-  // Return appropriate status code
-  const statusCode =
-    healthCheck.status === 'healthy' ? 200 : healthCheck.status === 'degraded' ? 200 : 503;
+  // 4. Redis (Upstash)
+  const redisStart = Date.now()
+  try {
+    const hasUrl = !!process.env.UPSTASH_REDIS_REST_URL
+    const hasToken = !!process.env.UPSTASH_REDIS_REST_TOKEN
+    checks.redis = {
+      status: (hasUrl && hasToken) ? 'ok' : 'degraded',
+      latencyMs: Date.now() - redisStart,
+      message: (hasUrl && hasToken) ? undefined : 'UPSTASH_REDIS_REST_URL/TOKEN not set'
+    }
+  } catch (error) {
+    checks.redis = { status: 'error', message: error instanceof Error ? error.message : 'Unknown' }
+  }
 
-  return NextResponse.json(healthCheck, {
-    status: statusCode,
-    headers: {
-      'Cache-Control': 'no-store, no-cache, must-revalidate',
-      'X-Response-Time': `${Date.now() - startTime}ms`,
-    },
-  });
+  // 5. LemonSqueezy
+  const lsStart = Date.now()
+  try {
+    const hasKey = !!process.env.LEMONSQUEEZY_API_KEY
+    const hasStore = !!process.env.LEMONSQUEEZY_STORE_ID
+    checks.payments = {
+      status: (hasKey && hasStore) ? 'ok' : 'degraded',
+      latencyMs: Date.now() - lsStart,
+      message: (hasKey && hasStore) ? undefined : 'LemonSqueezy not fully configured'
+    }
+  } catch (error) {
+    checks.payments = { status: 'error', message: error instanceof Error ? error.message : 'Unknown' }
+  }
+
+  // Overall status
+  const allOk = Object.values(checks).every(c => c.status === 'ok')
+  const anyError = Object.values(checks).some(c => c.status === 'error')
+  const overall = anyError ? 'error' : allOk ? 'ok' : 'degraded'
+
+  return NextResponse.json({
+    status: overall,
+    timestamp: new Date().toISOString(),
+    checks,
+    environment: process.env.NODE_ENV ?? 'unknown',
+    uptime: process.uptime(),
+  }, {
+    status: overall === 'error' ? 503 : 200
+  })
 }
