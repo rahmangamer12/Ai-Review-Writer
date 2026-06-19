@@ -115,6 +115,38 @@
 
 ---
 
-## Phase 8-24 — Continuing
+## Phase 8-13 — Agentic Features Guardrails ✅ COMPLETED
 
-(Batching remaining phases for efficiency)
+**What changed:**
+- Added feature gate: auto_reply requires Growth or Business plan (403 if Free)
+- Added credit check BEFORE agentic processing (402 if insufficient)
+- Capped agentic batch to 5 reviews per run (was 10)
+- Default autoApprove to false (human approval required)
+- Added audit trail in response for transparency
+- Added credits to GET /api/agentic/reviews status
+- TypeScript passes
+
+---
+
+## Phase 14-18 — Database Indexes ✅ COMPLETED
+
+**What changed:**
+- Added indexes on Review: userId, userId+status, userId+createdAt, status
+- Added indexes on ChatSession: userId, userId+createdAt
+- Added indexes on ChatMessage: sessionId, sessionId+createdAt
+- Regenerated Prisma client
+
+---
+
+## Phase 19-20 — Production Checklist ✅ COMPLETED
+
+**What changed:**
+- Created PRODUCTION_CHECKLIST.md with critical/important/nice-to-have items
+- Pre-deploy commands documented
+- Post-deploy verification steps documented
+
+---
+
+## Phase 21-24 — Final Verification 🔄 IN PROGRESS
+
+(Running final checks and creating SUMMARY.md)

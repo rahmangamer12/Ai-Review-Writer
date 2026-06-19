@@ -56,31 +56,39 @@ model Review {
   platform       ConnectedPlatform @relation(fields: [platformId], references: [id], onDelete: Cascade)
   userId         String
   user           User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   authorName     String
   content        String
   rating         Int
   sentimentLabel String?  // positive, negative, neutral
   status         String   @default("pending") // pending, approved, AI_replied
-  
+
   aiReplyText    String?
   sourceDate     DateTime // The time the review was posted on Google/Yelp
-  
+
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, status])
+  @@index([userId, createdAt])
+  @@index([status])
 }
 
 model ChatSession {
   id        String   @id @default(uuid())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
+
   title     String   @default("New Conversation")
-  
+
   messages  ChatMessage[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([userId, createdAt])
 }
 
 model ChatMessage {
@@ -92,6 +100,9 @@ model ChatMessage {
   content   String
 
   createdAt DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([sessionId, createdAt])
 }
 
 model Notification {
