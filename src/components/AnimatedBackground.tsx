@@ -199,8 +199,9 @@ export default function AnimatedBackground() {
       ref={canvasRef}
       className="fixed top-0 left-0 w-screen h-screen min-h-[100dvh] -z-10 pointer-events-none"
       style={{
+        // Transparent so the body's single #030308 base shows through — the
+        // canvas only draws subtle particles/orbs on top (no clashing color).
         background: 'transparent',
-        backgroundImage: 'linear-gradient(to bottom, rgba(3, 7, 18, 0.8), rgba(12, 18, 34, 0.9))',
       }}
     />
   )

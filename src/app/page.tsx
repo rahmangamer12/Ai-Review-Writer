@@ -12,13 +12,6 @@ export const metadata = {
   description: 'Ai Review Writer helps restaurants, clinics, salons, repair shops, and local service teams manage, analyze, and reply to customer reviews with AI.',
 }
 
-const NAV_LINKS = [
-  { href: '/subscription', label: 'Pricing' },
-  { href: '/extension', label: 'Extension' },
-  { href: '/restaurants', label: 'Industries' },
-  { href: '/contact', label: 'Contact' },
-]
-
 const FEATURES = [
   { icon: Zap, tint: 'text-amber-400', glow: 'from-amber-500/20', title: 'Review Reply Drafts', desc: 'Generate polite, brand-safe replies for happy, angry, and neutral customers without starting from a blank page.' },
   { icon: BarChart3, tint: 'text-cyan-400', glow: 'from-cyan-500/20', title: 'Sentiment Tracking', desc: 'Spot negative review patterns early so the owner or manager can fix the real service issue.' },
@@ -45,45 +38,11 @@ export default async function LandingPage() {
   return (
     <div className="min-h-screen bg-[#030308] text-white font-sans w-full max-w-[100vw] overflow-x-hidden selection:bg-violet-500/30">
 
-      {/* ─── Sticky Navbar ──────────────────────────────────────────────────── */}
-      <header className="fixed top-0 inset-x-0 z-50">
-        <nav className="mx-auto mt-3 sm:mt-4 max-w-6xl px-3 sm:px-4">
-          <div className="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-[#0a0a14]/70 px-3 sm:px-5 py-2.5 backdrop-blur-xl shadow-[0_8px_32px_-12px_rgba(0,0,0,0.6)]">
-            <Link href="/" className="flex items-center gap-2.5 shrink-0">
-              <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-cyan-500 shadow-lg shadow-violet-500/30">
-                <Zap className="h-4 w-4 text-white" />
-              </span>
-              <span className="text-sm font-bold tracking-tight">Ai Review Writer</span>
-            </Link>
-
-            <div className="hidden md:flex items-center gap-1">
-              {NAV_LINKS.map((l) => (
-                <Link key={l.href} href={l.href} className="rounded-lg px-3 py-2 text-sm text-white/60 transition-colors hover:text-white hover:bg-white/5">
-                  {l.label}
-                </Link>
-              ))}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Link href="/dashboard" className="hidden sm:inline-flex rounded-xl px-3.5 py-2 text-sm font-medium text-white/70 transition-colors hover:text-white">
-                Sign in
-              </Link>
-              <Link href="/subscription" className="inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-black transition-transform hover:scale-[1.03] active:scale-95">
-                Get started
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
-            </div>
-          </div>
-        </nav>
-      </header>
-
       {/* ─── Hero ───────────────────────────────────────────────────────────── */}
-      <section className="relative px-4 sm:px-6 lg:px-8 pt-36 pb-20 lg:pt-52 lg:pb-28">
-        {/* Ambient background */}
+      <section className="relative px-4 sm:px-6 lg:px-8 pt-16 pb-20 lg:pt-24 lg:pb-28">
+        {/* Subtle ambient glow (kept light so it never clashes with the global background) */}
         <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute -top-20 left-1/2 h-[520px] w-[820px] -translate-x-1/2 rounded-full bg-violet-600/20 blur-[130px]" />
-          <div className="absolute top-44 left-1/2 h-[320px] w-[760px] -translate-x-1/2 rounded-full bg-cyan-500/10 blur-[120px]" />
-          <div className="absolute inset-0 cyber-grid opacity-[0.07]" />
+          <div className="absolute -top-16 left-1/2 h-[440px] w-[760px] -translate-x-1/2 rounded-full bg-violet-600/15 blur-[130px]" />
         </div>
 
         <div className="relative mx-auto flex max-w-4xl flex-col items-center text-center">

@@ -17,6 +17,9 @@ html {
 }
 
 body {
+  /* Single source of truth for the app background so the root and per-page
+     backgrounds never clash/seam (pages use #030308 too). */
+  background-color: #030308;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior-y: none;
