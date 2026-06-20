@@ -167,6 +167,7 @@ async function handler(request: NextRequest) {
     const creditCost = CreditsManager.getCreditCost('ai_response')
 
     // Attempt atomic credit deduction with audit logging
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- CreditsManager.useCredits is a static method, not a React Hook
     const deductionResult = await CreditsManager.useCredits(
       userId,
       creditCost,
@@ -214,7 +215,7 @@ async function handler(request: NextRequest) {
     try {
       sentimentResult = await longcatAI.analyzeSentiment(reviewText)
       console.log('[Generate Reply API] Sentiment:', sentimentResult.sentiment)
-    } catch (e) {
+    } catch (_e) {
       console.error('[Generate Reply API] Sentiment analysis failed, using rating heuristic')
       sentimentResult = {
         sentiment: (rating || 3) >= 4 ? 'positive' : (rating || 3) <= 2 ? 'negative' : 'neutral',

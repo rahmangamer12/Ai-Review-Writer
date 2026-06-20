@@ -8,7 +8,6 @@ import { z } from 'zod';
 import { withCSRFProtection } from '@/lib/csrfProtection';
 import { LONGCAT_DEFAULT_MODEL, normalizeLongCatModel } from '@/lib/longcatModels';
 import { ensureUserAccount } from '@/lib/userAccount';
-import { CreditsManager } from '@/lib/credits';
 
 export const dynamic = 'force-dynamic'
 
@@ -166,7 +165,7 @@ CRITICAL INSTRUCTIONS FOR YOU:
       messages: modelMessages,
       temperature,
       maxOutputTokens,
-      async onChunk({ chunk }) {
+      async onChunk(_chunk) {
         // Stream immediately without waiting for DB operations
       },
       onFinish: async ({ text }) => {

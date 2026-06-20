@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
       status: response.status,
       message: response.ok ? 'Test payload delivered successfully.' : `Endpoint responded with HTTP ${response.status}.`,
     }, { status: response.ok ? 200 : 502 })
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Could not deliver the test payload. Check the URL and server settings.' }, { status: 502 })
   }
 }

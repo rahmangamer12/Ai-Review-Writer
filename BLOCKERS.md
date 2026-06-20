@@ -4,107 +4,71 @@
 
 ---
 
-## 🔴 Critical Blockers (Prevent Phase 2 — Payments Integrity)
+## 🔴 Critical (Must Fix Before Deploy)
 
-### B1: LemonSqueezy Store Verification
-- **What's blocked:** End-to-end payment testing; live checkout flow
-- **Why:** Store must be verified by LemonSqueezy before accepting real payments
+### B1: Fix DATABASE_URL
+- **Error:** `FATAL: (ENOTFOUND) tenant/user postgres.vwtcudgyojqqzuxikoqw not found`
+- **Why:** Your old project was deleted. New project URL is different.
 - **What you must do:**
-  1. Log into LemonSqueezy dashboard
-  2. Complete store verification (tax info, payout method, etc.)
-  3. Confirm store status shows "Active" / "Verified"
+  1. Go to [Supabase Dashboard](https://supabase.com/dashboard)
+  2. Select your new project
+  3. Go to **Settings** → **Database** → **Connection String**
+  4. Copy the **Direct Connection** URL
+  5. Update `.env` with the correct URL
+  6. Run: `npx prisma migrate deploy`
 
-### B2: LemonSqueezy Product & Variant IDs
-- **What's blocked:** Checkout creation; correct plan fulfillment
-- **Why:** The app needs variant IDs for each plan (starter, growth, business)
-- **What you must do:**
-  1. In LemonSqueezy dashboard → Products → Create 3 products (or 3 variants of 1 product):
-     - Starter: $9/month
-     - Growth: $19/month
-     - Business: $39/month
-  2. Copy each variant's ID (numeric)
-  3. Add to `.env` or Vercel env:
-     ```
-     LEMONSQUEEZY_VARIANT_STARTER=<id>
-     LEMONSQUEEZY_VARIANT_GROWTH=<id>
-     LEMONSQUEEZY_VARIANT_BUSINESS=<id>
-     ```
+### B2: Set Environment Variables in Vercel Dashboard
+- **What's blocked:** Production deployment
+- **Why:** These env vars must be set in Vercel before deploy
 
-### B3: LemonSqueezy API Key + Store ID
-- **What's blocked:** All payment operations
-- **Why:** API access requires valid credentials
-- **What you must do:**
-  1. Generate API key in LemonSqueezy → Settings → API
-  2. Copy Store ID from dashboard URL or settings
-  3. Add to env:
-     ```
-     LEMONSQUEEZY_API_KEY=your_api_key
-     LEMONSQUEEZY_STORE_ID=your_store_id
-     ```
+**Copy this list to Vercel Dashboard → Settings → Environment Variables:**
 
-### B4: LemonSqueezy Webhook Secret
-- **What's blocked:** Payment confirmation; credit granting after payment
-- **Why:** Webhook signature verification prevents spoofed payment events
-- **What you must do:**
-  1. In LemonSqueezy → Settings → Webhooks
-  2. Create webhook URL: `https://ai-review-writer.vercel.app/api/webhooks/lemonsqueezy`
-  3. Select events: `order_created`, `subscription_created`, `subscription_payment_success`
-  4. Copy the signing secret
-  5. Add to env:
-     ```
-     LEMONSQUEEZY_WEBHOOK_SECRET=your_webhook_secret
-     ```
+| Variable Name | Description | Required |
+|--------------|-------------|----------|
+| `DATABASE_URL` | PostgreSQL connection string | ✅ Yes |
+| `DIRECT_URL` | Direct DB connection (for Prisma) | ✅ Yes |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | ✅ Yes |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key | ✅ Yes |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk frontend key | ✅ Yes |
+| `CLERK_SECRET_KEY` | Clerk backend key | ✅ Yes |
+| `LONGCAT_AI_API_KEY` | AI provider key | ✅ Yes |
+| `ENCRYPTION_KEY` | 64-char hex encryption key | ✅ Yes |
+| `SCHEDULER_SECRET` | Cron job secret | ✅ Yes |
+| `ADMIN_KEY` | Admin access key | ✅ Yes |
+| `LEMONSQUEEZY_API_KEY` | Payment API key | Optional |
+| `LEMONSQUEEZY_STORE_ID` | Payment store ID | Optional |
+| `LEMONSQUEEZY_WEBHOOK_SECRET` | Webhook signing secret | Optional |
+| `LEMONSQUEEZY_VARIANT_STARTER` | Starter plan variant ID | Optional |
+| `LEMONSQUEEZY_VARIANT_GROWTH` | Growth plan variant ID | Optional |
+| `LEMONSQUEEZY_VARIANT_BUSINESS` | Business plan variant ID | Optional |
+| `UPSTASH_REDIS_REST_URL` | Redis REST URL | Optional |
+| `UPSTASH_REDIS_REST_TOKEN` | Redis REST token | Optional |
+| `RESEND_API_KEY` | Email API key | Optional |
+| `RESEND_FROM_EMAIL` | Email sender | Optional |
+| `SENTRY_DSN` | Sentry error tracking | Optional |
+| `ENABLE_SENTRY` | Enable Sentry (true/false) | Optional |
+| `SENTRY_AUTH_TOKEN` | Sentry auth token | Optional |
+| `SENTRY_ORG` | Sentry org name | Optional |
+| `SENTRY_PROJECT` | Sentry project name | Optional |
+| `CLERK_WEBHOOK_SECRET` | Clerk webhook secret | Optional |
+| `NEXT_PUBLIC_APP_URL` | App URL | Optional |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | Google OAuth client ID | Optional |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth secret | Optional |
+| `NEXT_PUBLIC_FACEBOOK_APP_ID` | Facebook app ID | Optional |
+| `FACEBOOK_APP_SECRET` | Facebook app secret | Optional |
+| `CHROME_EXTENSION_ID` | Chrome extension ID | Optional |
+| `CHROME_EXTENSION_SHARED_SECRET` | Chrome extension secret | Optional |
+| `REVIEWS_WEBHOOK_SECRET` | Reviews webhook secret | Optional |
 
 ---
 
-## 🟡 Important (Prevent Full Production Readiness)
+## 🟢 Nice-to-Have (Can Add Later)
 
-### B5: LongCat AI API Key
-- **What's blocked:** All AI features (reply generation, chat, agentic processing)
-- **Why:** AI calls require valid API key
-- **What you must do:**
-  1. Verify `LONGCAT_AI_API_KEY` is set in Vercel
-  2. If missing, obtain from LongCat dashboard and add to env
+### B3: Verify LemonSqueezy Store
+- Complete store verification in LemonSqueezy dashboard
 
-### B6: Upstash Redis Credentials
-- **What's blocked:** Production rate limiting; webhook idempotency
-- **Why:** Serverless needs external storage for rate limit state
-- **What you must do:**
-  1. Create free Upstash account at upstash.com
-  2. Create a Redis database
-  3. Add to env:
-     ```
-     UPSTASH_REDIS_REST_URL=your_url
-     UPSTASH_REDIS_REST_TOKEN=your_token
-     ```
-
-### B7: Resend API Key
-- **What's blocked:** Transactional emails (upgrade confirmation, low credits alerts)
-- **Why:** Email sending requires API key
-- **What you must do:**
-  1. Verify `RESEND_API_KEY` is set in Vercel
-  2. If missing, obtain from resend.com and add to env
-
----
-
-## 🟢 Nice-to-Have (Can Defer)
-
-### B8: Sentry Auth Token
-- **What's blocked:** Source map upload for better error traces
-- **Why:** Without it, errors are reported but without stack traces
-- **What you must do:**
-  1. Set `SENTRY_AUTH_TOKEN` in Vercel
-  2. Set `SENTRY_UPLOAD_SOURCE_MAPS=true` for production builds
-
-### B9: Chrome Extension ID
-- **What's blocked:** Chrome extension API access
-- **Why:** Extension needs registered ID for CORS and auth
-- **What you must do:**
-  1. Publish extension to Chrome Web Store
-  2. Add extension ID to env:
-     ```
-     CHROME_EXTENSION_ID=your_extension_id
-     ```
+### B4: Chrome Extension
+- Publish extension to Chrome Web Store
 
 ---
 
@@ -112,13 +76,16 @@
 
 | Date | Blocker | Resolution |
 |------|---------|------------|
-| (none yet) | | |
+| 2026-06-20 | Credits not deducted on AI reply | Fixed: Added atomic credit deduction |
+| 2026-06-20 | Webhook credit amounts inconsistent | Fixed: Aligned with CreditsManager |
+| 2026-06-20 | Chat credit race condition | Fixed: Atomic transaction |
+| 2026-06-20 | No audit log | Fixed: Added CreditUsage model |
+| 2026-06-20 | UI components missing | Fixed: Recreated all UI components |
+| 2026-06-20 | Lint errors | Fixed: All lint errors resolved |
+| 2026-06-20 | Build failing | Fixed: Build passes |
 
 ---
 
 **When you resolve a blocker:**
-1. Mark it as resolved above
-2. Test the affected flow manually
-3. I will continue from where I left off
-
-**Note:** I will proceed with all non-blocked phases while you handle these items.
+1. Test the affected flow manually
+2. Tell me "done" and I'll continue

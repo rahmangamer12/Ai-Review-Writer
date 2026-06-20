@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { decryptSensitiveData, encryptSensitiveData } from '@/lib/encryption';
 import prisma from '@/lib/db';
 

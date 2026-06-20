@@ -89,7 +89,7 @@ export async function POST(req: NextRequest) {
           sentiment = sentimentResult.sentiment
           sentimentScore = sentimentResult.score
           console.log('[Agentic] Sentiment detected:', sentiment, 'Confidence:', sentimentResult.confidence)
-        } catch (e) {
+        } catch (_e) {
           console.log('[Agentic] Sentiment analysis failed, using rating heuristic')
           sentiment = review.rating >= 4 ? 'positive' : review.rating <= 2 ? 'negative' : 'neutral'
         }
@@ -108,6 +108,7 @@ export async function POST(req: NextRequest) {
         console.log('[Agentic] AI Reply generated:', aiReply.substring(0, 80) + '...')
 
         // Step 3: Deduct credit atomically
+        // eslint-disable-next-line react-hooks/rules-of-hooks -- CreditsManager.useCredits is a static method, not a React Hook
         const creditResult = await CreditsManager.useCredits(
           userId,
           CreditsManager.getCreditCost('auto_reply'),

@@ -30,7 +30,7 @@ interface TriageResult {
 /**
  * Triage Agent — Detect urgent reviews
  */
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const { userId } = await auth()
 
@@ -88,6 +88,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Deduct credit for triage analysis
+    // eslint-disable-next-line react-hooks/rules-of-hooks -- static method, not a React Hook
     const creditResult = await CreditsManager.useCredits(
       userId,
       1,

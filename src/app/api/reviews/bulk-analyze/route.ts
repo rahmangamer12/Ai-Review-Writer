@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
         try {
           const sentiment = await longcatAI.analyzeSentiment(review.text);
           return { id: review.id, sentiment: sentiment.sentiment, score: sentiment.score, confidence: sentiment.confidence, emotion: sentiment.emotion, topics: sentiment.topics, processed: true };
-        } catch (error) {
+        } catch (_error) {
           return { id: review.id, sentiment: 'unknown', score: 0, confidence: 0, emotion: 'unknown', topics: [], processed: false, error: 'Analysis failed' };
         }
       })

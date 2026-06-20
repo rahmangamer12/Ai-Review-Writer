@@ -16,7 +16,6 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
 import prisma from '@/lib/db'
 import { longcatAI } from '@/lib/longcatAI'
 import { CreditsManager } from '@/lib/credits'
@@ -104,10 +103,6 @@ export async function GET(request: NextRequest) {
         }
 
         // Generate insight using AI
-        const reviewsSummary = reviews.slice(0, 20).map(r =>
-          `Rating: ${r.rating}/5, Sentiment: r.sentimentLabel || 'unknown'} - ${r.content}`
-        ).join('\n')
-
         let insight = ''
         try {
           const result = await longcatAI.generateInsights(
@@ -125,6 +120,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Deduct credit for insight generation
+        // eslint-disable-next-line react-hooks/rules-of-hooks -- static method, not a React Hook
         const creditResult = await CreditsManager.useCredits(
           user.id,
           1,

@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
         message: 'Yelp connected successfully',
         directConnect: true,
       });
-    } catch (fetchError) {
+    } catch (_fetchError) {
       return NextResponse.json({
         error: 'Connection failed',
         message: 'Could not reach Yelp API. Check your internet connection.',

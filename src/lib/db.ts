@@ -22,6 +22,7 @@ function createPrismaClient() {
     min: 0, // No idle connections in serverless
     idleTimeoutMillis: 10000,
     connectionTimeoutMillis: 5000,
+    ssl: { rejectUnauthorized: false }, // Supabase pooler uses self-signed cert
   })
 
   // Pool error handling

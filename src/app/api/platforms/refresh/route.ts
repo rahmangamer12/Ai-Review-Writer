@@ -3,7 +3,9 @@ import { auth } from '@clerk/nextjs/server'
 import prisma from '@/lib/db'
 import { decryptSensitiveData, encryptSensitiveData } from '@/lib/encryption'
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const MAX_REFRESH_ATTEMPTS = 3
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const REFRESH_COOLDOWN_MS = 5000 // 5 seconds
 
 export async function POST(request: NextRequest) {
@@ -96,7 +98,7 @@ export async function POST(request: NextRequest) {
         } else {
           newTokens = await response.json()
         }
-      } catch (e) {
+      } catch (_e) {
         refreshError = 'Network error during token refresh'
       }
     }

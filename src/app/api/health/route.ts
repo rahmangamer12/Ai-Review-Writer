@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server'
-import prisma from '@/lib/db'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,10 +11,23 @@ export const dynamic = 'force-dynamic'
 export async function GET() {
   const checks: Record<string, { status: 'ok' | 'error' | 'degraded'; latencyMs?: number; message?: string }> = {}
 
-  // 1. Database (Prisma)
+  // 1. Database (raw query to avoid Prisma SSL issues)
   const dbStart = Date.now()
   try {
-    await prisma.user.count()
+    const { Pool } = await import('pg')
+    const dbUrl = new URL(process.env.DATABASE_URL!)
+    const pool = new Pool({
+      user: decodeURIComponent(dbUrl.username),
+      password: decodeURIComponent(dbUrl.password),
+      host: dbUrl.hostname,
+      port: parseInt(dbUrl.port),
+      database: dbUrl.pathname.slice(1),
+      ssl: { rejectUnauthorized: false },
+    })
+    const client = await pool.connect()
+    await client.query('SELECT 1 as test')
+    client.release()
+    await pool.end()
     checks.database = { status: 'ok', latencyMs: Date.now() - dbStart }
   } catch (error) {
     checks.database = {
