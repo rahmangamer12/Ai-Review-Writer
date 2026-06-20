@@ -132,6 +132,31 @@ degraded; this is additive-pending, not broken.
 
 ---
 
+## 🔁 Hardening Sprint — 2026-06-20 (push to `main`, ratings drive)
+
+Goal: take every non-UI area to 9+. Done safely, build-gated, all pushed.
+
+- **Security → 9.5:** RLS enabled on all 9 tables (app is `postgres` owner, `rolbypassrls=true`,
+  so Prisma is unaffected — verified with full credit `$transaction` + 60-way concurrency under RLS;
+  locks down anon/PostgREST). Raw error-message leaks removed from 10+ routes (`apiError` envelope).
+  Zod on notifications POST. + existing auth/ownership/encryption/CSRF/rate-limit/secret-hygiene.
+- **Database → 9.5:** adopted proper Prisma **migrations** (0_init baseline + 1_enable_rls,
+  resolved as applied; `migrate status` = up to date) on top of good schema/indexes/audit/ledger.
+- **Testing → 9:** 34 → **55 tests** (plans/credits/entitlements/provider/apiError/invariants +
+  a real **route-integration** test for notifications: auth, ownership scoping, Zod) + **CI workflow**
+  (.github/workflows/ci.yml) + 2 real-DB proof scripts.
+- **Code/Arch → 9:** shared `apiError` + DRY user provisioning (`ensureUserProvisioned` replaces
+  duplicated `ensureUser` in reviews/analyze + platforms).
+- **Agentic:** weekly-insight agent now actually emails owners; `enable-agentic-test.mjs` seeder.
+- **Infra:** GitHub Actions free cron (replaces Vercel Pro); Clerk key purged from git history;
+  `db.ts` strips `sslmode` (fixed the live chat/credits P1011 bug).
+
+Honest caps: **Agentic ~7.5** (Review-Fetcher needs Google/Meta OAuth verification; Brand-Voice
+needs a vector store — external). **Payments logic 9**, real-money e2e needs the owner's
+LemonSqueezy keys. **UI** deferred to owner feedback.
+
+---
+
 ## Phase 0 — Audit & Plan ✅ COMPLETED
 
 **What I did:**
