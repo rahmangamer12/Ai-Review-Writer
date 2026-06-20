@@ -250,6 +250,66 @@ function newReviewsEmailHtml(name: string, count: number, platform: string, avgR
   </body></html>`
 }
 
+export interface WeeklyInsightData {
+  reviewCount: number
+  avgRating: number
+  sentimentCounts: { positive: number; negative: number; neutral: number }
+  insight: string
+}
+
+function weeklyInsightEmailHtml(name: string, d: WeeklyInsightData): string {
+  const stars = '⭐'.repeat(Math.round(d.avgRating)) + '☆'.repeat(5 - Math.round(d.avgRating))
+  return `
+  <!DOCTYPE html>
+  <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>Your Weekly Review Insights</title></head>
+  <body style="${baseStyles}">
+    <div style="${containerStyles}">
+      <div style="text-align:center; padding-bottom: 32px;">
+        <div style="font-size: 44px; margin-bottom: 8px;">📈</div>
+        <h1 style="color:#fff; font-size: 26px; margin: 0;">Your Weekly Review Insights</h1>
+        <p style="color: rgba(255,255,255,0.5); margin: 8px 0 0; font-size: 15px;">A quick summary of the last 7 days</p>
+      </div>
+
+      <div style="${cardStyles}">
+        <p style="color: rgba(255,255,255,0.8); font-size: 16px; margin: 0 0 20px;">
+          Hi <strong style="color:#fff;">${name}</strong>,
+        </p>
+
+        <table style="width:100%; border-collapse:separate; border-spacing: 8px 0; margin-bottom: 20px;">
+          <tr>
+            <td style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; text-align:center;">
+              <div style="color:#fff; font-size: 24px; font-weight:800;">${d.reviewCount}</div>
+              <div style="color: rgba(255,255,255,0.45); font-size: 12px; margin-top:4px;">New reviews</div>
+            </td>
+            <td style="background: rgba(255,255,255,0.05); border-radius: 12px; padding: 16px; text-align:center;">
+              <div style="color:#fff; font-size: 24px; font-weight:800;">${d.avgRating.toFixed(1)}</div>
+              <div style="color: rgba(255,255,255,0.45); font-size: 12px; margin-top:4px;">Avg rating</div>
+            </td>
+          </tr>
+        </table>
+
+        <p style="text-align:center; font-size: 18px; margin: 0 0 16px;">${stars}</p>
+
+        <div style="background: rgba(255,255,255,0.05); border-radius:12px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: rgba(255,255,255,0.6);">
+          😊 ${d.sentimentCounts.positive} positive &nbsp;·&nbsp; 😐 ${d.sentimentCounts.neutral} neutral &nbsp;·&nbsp; 😟 ${d.sentimentCounts.negative} negative
+        </div>
+
+        <h3 style="color:#a78bfa; margin: 0 0 8px; font-size: 13px; text-transform:uppercase; letter-spacing:1px;">💡 This week's suggestion</h3>
+        <p style="color: rgba(255,255,255,0.75); line-height:1.7; margin: 0 0 24px;">${d.insight}</p>
+
+        <div style="text-align:center;">
+          <a href="${APP_URL}/analytics" style="${btnStyles}">View Full Analytics →</a>
+        </div>
+      </div>
+
+      <div style="${footerStyles}">
+        <p><a href="${APP_URL}/settings" style="color:#7c3aed; text-decoration:none;">Manage email preferences</a> ·
+        <a href="${APP_URL}" style="color:#7c3aed; text-decoration:none;">${APP_URL}</a></p>
+      </div>
+    </div>
+  </body></html>`
+}
+
 // ─── Email Sending Functions ───────────────────────────────────────────────────
 
 export async function sendWelcomeEmail(email: string, name: string) {
@@ -295,6 +355,23 @@ export async function sendLowCreditsEmail(email: string, name: string, creditsLe
     console.log(`✅ Low credits email sent to ${email}`)
   } catch (err) {
     console.error('❌ Failed to send low credits email:', err)
+  }
+}
+
+export async function sendWeeklyInsightEmail(email: string, name: string, data: WeeklyInsightData) {
+  if (!process.env.RESEND_API_KEY) return false
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: `📈 Your weekly review insights — ${data.reviewCount} reviews, ${data.avgRating.toFixed(1)}★ avg`,
+      html: weeklyInsightEmailHtml(name, data),
+    })
+    console.log(`✅ Weekly insight email sent to ${email}`)
+    return true
+  } catch (err) {
+    console.error('❌ Failed to send weekly insight email:', err)
+    return false
   }
 }
 

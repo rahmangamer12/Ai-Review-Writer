@@ -19,6 +19,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/db'
 import { longcatAI } from '@/lib/longcatAI'
 import { CreditsManager } from '@/lib/credits'
+import { sendWeeklyInsightEmail } from '@/lib/email'
 
 export const dynamic = 'force-dynamic'
 export const maxDuration = 300 // 5 minutes max
@@ -134,16 +135,25 @@ export async function GET(request: NextRequest) {
           continue
         }
 
+        // Actually deliver the insight to the business owner by email.
+        const emailed = await sendWeeklyInsightEmail(user.email, user.name || 'there', {
+          reviewCount: reviews.length,
+          avgRating,
+          sentimentCounts,
+          insight,
+        })
+
         results.push({
           userId: user.id,
           reviewCount: reviews.length,
           avgRating: avgRating.toFixed(1),
           sentimentCounts,
           insight,
+          emailed,
           creditsRemaining: creditResult.balanceAfter,
         })
 
-        console.log(`[WeeklyInsight] Generated insight for user ${user.id}: ${insight.substring(0, 50)}...`)
+        console.log(`[WeeklyInsight] Generated insight for user ${user.id} (emailed=${emailed}): ${insight.substring(0, 50)}...`)
       } catch (userError) {
         console.error(`[WeeklyInsight] Error processing user ${user.id}:`, userError)
       }
