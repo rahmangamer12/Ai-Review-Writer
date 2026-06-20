@@ -43,9 +43,16 @@ export default function AnimatedBackground() {
       canvas.height = window.innerHeight * dpr
       canvas.style.width = `${window.innerWidth}px`
       canvas.style.height = `${window.innerHeight}px`
-      ctx.scale(dpr, dpr)
+      // setTransform (not scale) so repeated resizes don't compound the scale,
+      // which previously caused blurry/misaligned particles after rotation/resize.
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     }
     resizeCanvas()
+
+    // Respect reduced-motion: render a single static frame and stop (a11y / WCAG).
+    const prefersReducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
     // Debounced resize handler
     let resizeTimeout: ReturnType<typeof setTimeout>
@@ -171,7 +178,10 @@ export default function AnimatedBackground() {
         }
       }
 
-      animationRef.current = requestAnimationFrame(animate)
+      // Stop after a single static frame when the user prefers reduced motion.
+      if (!prefersReducedMotion) {
+        animationRef.current = requestAnimationFrame(animate)
+      }
     }
 
     animationRef.current = requestAnimationFrame(animate)
