@@ -174,12 +174,9 @@ export default function ChatPage() {
 
   const handleSend = useCallback(async (overrideText?: string) => {
     const text = (overrideText || input).trim()
-    if ((!text && uploadedFiles.length === 0) || isLoading) return
-
-    if (uploadedFiles.length > 0 && !activeModel?.supportsVision) {
-      addNotification('File analysis is temporarily unavailable while vision models are under maintenance.', 'warning')
-      return
-    }
+    const hasFiles = uploadedFiles.length > 0
+    if ((!text && !hasFiles) || isLoading) return
+    // Images automatically use the Agnes vision model.
 
     let sId = currentSessionId || uuidv4()
     const titleNeedsAi = !currentSessionId || shouldGenerateTitle(currentSession)
@@ -242,7 +239,7 @@ export default function ChatPage() {
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-session-id': sId },
-        body: JSON.stringify({ messages: [...messages.map(m => ({ role: m.role, content: m.content })), apiMessage], model: selectedModel })
+        body: JSON.stringify({ messages: [...messages.map(m => ({ role: m.role, content: m.content })), apiMessage], model: hasFiles ? 'agnes-2.0-flash' : selectedModel })
       })
 
       if (!res.ok) {

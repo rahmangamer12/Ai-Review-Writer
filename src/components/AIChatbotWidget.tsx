@@ -433,12 +433,7 @@ export default function AIChatbot() {
 
     setError(null)
 
-    // Vision (image input) is supported on Agnes models; block only for non-vision models.
-    const VISION_MODELS = ['agnes-2.0-flash', 'agnes-1.5-flash']
-    if (uploadedFiles.length > 0 && !VISION_MODELS.includes(selectedModel)) {
-      setError('Image analysis needs a vision model. Switch to Agnes 2.0 or 1.5 Flash (model picker) to analyze images.')
-      return
-    }
+    // Images automatically use Agnes vision on the server (auto-switch), so no block here.
 
     // Build display content (string for UI)
     let displayContent = text
@@ -879,6 +874,19 @@ export default function AIChatbot() {
 
                 {/* Input Area */}
                 <form onSubmit={handleSend} className="p-3 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-white/10 shrink-0">
+                  {uploadedFiles.length > 0 && (
+                    <div className="mb-2 flex flex-wrap gap-2">
+                      {uploadedFiles.map((f, i) => (
+                        <div key={i} className="relative">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={f.preview} alt={f.name} className="h-12 w-12 rounded-lg border border-gray-200 object-cover dark:border-white/10" />
+                          <button type="button" onClick={() => removeFile(i)} className="absolute -right-1.5 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-white">
+                            <X className="h-2.5 w-2.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   <div className="flex gap-2 relative">
                     <input
                       ref={inputRef}
@@ -908,7 +916,7 @@ export default function AIChatbot() {
                     </button>
                     <button
                       type="submit"
-                      disabled={!input.trim() || isLoading}
+                      disabled={(!input.trim() && uploadedFiles.length === 0) || isLoading}
                       className="aspect-square h-[44px] bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl transition-all shadow-md flex items-center justify-center shrink-0"
                     >
                       {isLoading ? (

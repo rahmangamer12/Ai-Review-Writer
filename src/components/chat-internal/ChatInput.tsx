@@ -184,9 +184,9 @@ export default function ChatInput({
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              disabled={disabled || isLoading || !activeModel?.supportsVision}
+              disabled={disabled || isLoading}
               className="p-2 sm:p-2.5 lg:p-3 bg-white/[0.03] hover:bg-white/[0.08] rounded-lg sm:rounded-xl text-white/50 hover:text-white transition-colors shrink-0"
-              title={activeModel?.supportsVision ? 'Attach files' : 'File analysis is temporarily unavailable'}
+              title="Attach an image (auto-uses Agnes vision)"
             >
               <Paperclip className="w-4 h-4 sm:w-4.5 sm:h-4.5 lg:w-5 lg:h-5" />
             </button>
