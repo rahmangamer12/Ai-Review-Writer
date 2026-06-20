@@ -11,7 +11,7 @@ import HydrationSuppressor from "@/components/HydrationSuppressor";
 import HydrationFix from "@/components/HydrationFix";
 import PWAUpdateNotification from "@/components/PWAUpdateNotification";
 import PWAInstallBanner from "@/components/PWAInstallBanner";
-import ErrorBoundary from "@/components/ErrorBoundary";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ClerkProvider } from '@clerk/nextjs'
 import { ToastProvider } from '@/components/ui/Toast'
 
