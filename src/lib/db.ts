@@ -7,11 +7,27 @@ const globalForPrisma = globalThis as unknown as {
 }
 
 function createPrismaClient() {
-  const connectionString = process.env.DATABASE_URL
+  const rawConnectionString = process.env.DATABASE_URL
 
-  if (!connectionString) {
+  if (!rawConnectionString) {
     console.error('❌ DATABASE_URL is not defined')
     throw new Error('DATABASE_URL environment variable is required')
+  }
+
+  // Supabase's pooler presents a self-signed certificate. We disable cert
+  // verification explicitly via the `ssl` option below. But newer `pg` versions
+  // treat `sslmode=require` in the URL as `verify-full`, which then fails the
+  // handshake (error P1011) — notably breaking interactive `$transaction`s.
+  // Strip any `sslmode` from the URL so our explicit ssl option is authoritative.
+  let connectionString = rawConnectionString
+  try {
+    const u = new URL(rawConnectionString)
+    if (u.searchParams.has('sslmode')) {
+      u.searchParams.delete('sslmode')
+      connectionString = u.toString()
+    }
+  } catch {
+    // Non-URL connection string — leave as-is.
   }
 
   // Connection pool optimization for serverless
