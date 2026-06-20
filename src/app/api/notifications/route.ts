@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import prisma from '@/lib/db'
+import { z } from 'zod'
+
+const createNotificationSchema = z.object({
+  title: z.string().min(1).max(200),
+  message: z.string().min(1).max(1000),
+  type: z.enum(['info', 'success', 'warning', 'error', 'urgent']).default('info'),
+})
 
 function normalizeNotification(notification: any) {
   return {
@@ -46,15 +53,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const body = await req.json()
-    const { title, message, type = 'info' } = body
+    const parsed = createNotificationSchema.safeParse(await req.json().catch(() => null))
+    if (!parsed.success) {
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 })
+    }
 
     const data = await prisma.notification.create({
       data: {
         userId,
-        title,
-        message,
-        type,
+        title: parsed.data.title,
+        message: parsed.data.message,
+        type: parsed.data.type,
         read: false,
       },
     })

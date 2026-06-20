@@ -1,27 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth, currentUser } from '@clerk/nextjs/server'
+import { auth } from '@clerk/nextjs/server'
 import prisma from '@/lib/db'
 import { encryptSensitiveData } from '@/lib/encryption'
 import { PlatformIntegrationManager, platformDefinitions } from '@/lib/platformIntegrations'
 import { canConnectPlatform, platformCapError } from '@/lib/entitlements'
+import { ensureUserProvisioned } from '@/lib/requireUser'
 
 export const dynamic = 'force-dynamic'
 
 async function getAuthedUserId() {
   const { userId } = await auth()
   return userId
-}
-
-async function ensureUser(userId: string) {
-  const clerkUser = await currentUser().catch(() => null)
-  const email = clerkUser?.emailAddresses?.[0]?.emailAddress || `${userId}@autoreview.local`
-  const name = clerkUser?.fullName || clerkUser?.firstName || null
-
-  await prisma.user.upsert({
-    where: { id: userId },
-    update: { email, name },
-    create: { id: userId, email, name },
-  })
 }
 
 function publicPlatform(platformId: string, dbPlatform?: any) {
@@ -122,7 +111,7 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: validationError }, { status: 400 })
     }
 
-    await ensureUser(userId)
+    await ensureUserProvisioned(userId)
 
     // Enforce the plan's platform-connection cap (Principle 6)
     const cap = await canConnectPlatform(userId, platformId)

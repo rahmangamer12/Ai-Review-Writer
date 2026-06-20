@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth, currentUser } from '@clerk/nextjs/server'
+import { auth } from '@clerk/nextjs/server'
 import prisma from '@/lib/db'
 import { z } from 'zod'
 import { serverError } from '@/lib/apiError'
+import { ensureUserProvisioned } from '@/lib/requireUser'
 
 // Input validation schemas
 const reviewIdSchema = z.string().min(1).max(500)
@@ -45,18 +46,6 @@ function normalizeReview(review: any) {
         }
       : null,
   }
-}
-
-async function ensureUser(userId: string) {
-  const clerkUser = await currentUser().catch(() => null)
-  const email = clerkUser?.emailAddresses?.[0]?.emailAddress || `${userId}@autoreview.local`
-  const name = clerkUser?.fullName || clerkUser?.firstName || null
-
-  await prisma.user.upsert({
-    where: { id: userId },
-    update: { email, name },
-    create: { id: userId, email, name },
-  })
 }
 
 // GET - Analyze a single review or get review details
@@ -156,7 +145,7 @@ export async function POST(req: NextRequest) {
 
     const validated = createReviewSchema.parse(body)
 
-    await ensureUser(userId)
+    await ensureUserProvisioned(userId)
 
     const {
       content,
