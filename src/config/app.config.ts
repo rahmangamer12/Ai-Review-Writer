@@ -18,47 +18,49 @@ export const APP_CONFIG = {
 
   /**
    * Subscription Plans
+   * NOTE: Canonical plan data now lives in src/lib/plans.ts. These values are
+   * kept aligned only to avoid drift; prefer importing from src/lib/plans.ts.
    */
   plans: {
     free: {
       name: 'Free',
       price: 0,
       credits: 20,
-      maxPlatforms: 2,
-      maxReviews: 10,
-      features: ['Basic AI replies', '2 platforms', '10 reviews/month'],
+      maxPlatforms: 1,
+      maxReviews: 50,
+      features: ['Basic AI replies', '1 platform', 'Basic dashboard'],
     },
     starter: {
       name: 'Starter',
-      price: 10,
+      price: 9,
       credits: 100,
-      maxPlatforms: 5,
-      maxReviews: 50,
-      features: ['AI replies', '5 platforms', '50 reviews/month', 'Email support'],
+      maxPlatforms: 3,
+      maxReviews: 200,
+      features: ['AI replies', '3 platforms', 'Bulk replies', 'Templates', 'Analytics'],
     },
-    pro: {
-      name: 'Pro',
+    growth: {
+      name: 'Growth',
       price: 19,
       credits: 300,
       maxPlatforms: 10,
-      maxReviews: 200,
-      features: ['Advanced AI', '10 platforms', '200 reviews/month', 'Priority support', 'Analytics'],
+      maxReviews: 1000,
+      features: ['Auto-draft replies', '10 platforms', 'Weekly insights', 'Priority support'],
     },
-    enterprise: {
-      name: 'Enterprise',
+    business: {
+      name: 'Business',
       price: 39,
       credits: 1000,
       maxPlatforms: Infinity,
       maxReviews: Infinity,
-      features: ['Unlimited everything', 'Custom AI training', 'Dedicated support', 'White-label'],
+      features: ['Unlimited platforms', 'Advanced analytics', 'Priority support (4h SLA)'],
     },
   },
 
   /**
-   * Credit System
+   * Credit System — 1 credit = 1 AI response.
    */
   credits: {
-    promptsPerCredit: 10,
+    promptsPerCredit: 1,
     packages: [
       { credits: 100, price: 9, bonus: 0 },
       { credits: 250, price: 19, bonus: 25 },
@@ -112,10 +114,10 @@ export const APP_CONFIG = {
    */
   platforms: {
     maxConnectionsPerPlan: {
-      free: 2,
-      starter: 5,
-      pro: 10,
-      enterprise: Infinity,
+      free: 1,
+      starter: 3,
+      growth: 10,
+      business: Infinity,
     },
     supported: ['google', 'facebook', 'yelp', 'tripadvisor', 'trustpilot'],
   },

@@ -65,6 +65,9 @@ export async function POST(req: Request) {
       const userName = `${first_name || ''} ${last_name || ''}`.trim() || 'there'
       const userEmail = email_addresses[0].email_address
 
+      const renewAt = new Date()
+      renewAt.setMonth(renewAt.getMonth() + 1)
+
       await prisma.user.create({
         data: {
           id: id,
@@ -73,6 +76,7 @@ export async function POST(req: Request) {
           planType: 'free',
           aiCredits: 20,
           maxPlatforms: 1,
+          creditsRenewAt: renewAt,
         }
       });
 

@@ -22,6 +22,7 @@ model User {
   aiCredits        Int      @default(20)
   promptCount      Int      @default(0) // DEPRECATED: credit model is now 1 credit = 1 AI response. Column retained for backward compatibility; not used in logic.
   maxPlatforms     Int      @default(1)
+  creditsRenewAt   DateTime? // When the monthly credit allotment next resets to the plan amount
 
   // Relations
   platforms        ConnectedPlatform[]
@@ -138,6 +139,20 @@ model Feedback {
   @@index([userId])
   @@index([status])
   @@index([createdAt])
+}
+
+// Durable webhook idempotency ledger. A row is claimed (inserted) before a
+// webhook is processed; the unique primary key guarantees exactly-once handling
+// even without Redis. The claim is rolled back if processing fails so the
+// provider's retry can reprocess.
+model WebhookEvent {
+  id          String   @id // `${provider}:${eventName}:${externalId}`
+  provider    String   // 'lemonsqueezy', 'clerk'
+  eventName   String?
+  processedAt DateTime @default(now())
+
+  @@index([provider])
+  @@index([processedAt])
 }
 
 model CreditUsage {

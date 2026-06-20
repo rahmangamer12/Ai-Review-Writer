@@ -10,6 +10,7 @@ import {
   Rocket, Crown, Building2, X, Mail, Bell, CheckCircle2
 } from 'lucide-react'
 import { useToast } from '@/components/ui/Toast'
+import { PLAN_ORDER, PLANS, type PlanFeature } from '@/lib/plans'
 
 interface SubscriptionPlan {
   id: string
@@ -18,88 +19,37 @@ interface SubscriptionPlan {
   monthlyPrice: number
   yearlyPrice: number
   credits: number
-  features: string[]
+  features: PlanFeature[]
   popular?: boolean
   color: string
   icon: React.ReactNode
 }
 
-const plans: SubscriptionPlan[] = [
-  {
-    id: 'free',
-    name: 'Free',
-    description: 'Try before you buy',
-    monthlyPrice: 0,
-    yearlyPrice: 0,
-    credits: 20,
-    features: [
-      '20 AI responses per month',
-      '1 platform connection',
-      'Basic dashboard',
-      'Email support',
-      'No credit card required'
-    ],
-    color: 'from-gray-500 to-gray-600',
-    icon: <Star className="w-5 h-5" />
-  },
-  {
-    id: 'starter',
-    name: 'Starter',
-    description: 'Perfect for small business',
-    monthlyPrice: 9,
-    yearlyPrice: 90,
-    credits: 100,
-    features: [
-      '100 AI responses per month',
-      '3 platform connections',
-      'Bulk reply generation',
-      'Response templates',
-      'Analytics dashboard',
-      'All Free features'
-    ],
-    popular: true,
-    color: 'from-cyan-500 to-blue-600',
-    icon: <Rocket className="w-5 h-5" />
-  },
-  {
-    id: 'growth',
-    name: 'Growth',
-    description: 'For growing businesses',
-    monthlyPrice: 19,
-    yearlyPrice: 190,
-    credits: 300,
-    features: [
-      '300 AI responses per month',
-      'Unlimited platforms',
-      'Auto-draft mode',
-      'Sentiment reports',
-      'Slack notifications',
-      'Priority support',
-      'All Starter features'
-    ],
-    color: 'from-purple-500 to-pink-600',
-    icon: <Crown className="w-5 h-5" />
-  },
-  {
-    id: 'business',
-    name: 'Business',
-    description: 'For multi-location teams',
-    monthlyPrice: 39,
-    yearlyPrice: 390,
-    credits: 1000,
-    features: [
-      '1000 AI responses per month',
-      'Up to 5 team members',
-      'Advanced analytics',
-      'Custom integrations',
-      'API access',
-      'Priority support (4h SLA)',
-      'All Growth features'
-    ],
-    color: 'from-amber-500 to-orange-600',
-    icon: <Building2 className="w-5 h-5" />
+// Presentation-only metadata keyed by canonical plan id.
+const PLAN_PRESENTATION: Record<string, { color: string; icon: React.ReactNode }> = {
+  free: { color: 'from-gray-500 to-gray-600', icon: <Star className="w-5 h-5" /> },
+  starter: { color: 'from-cyan-500 to-blue-600', icon: <Rocket className="w-5 h-5" /> },
+  growth: { color: 'from-purple-500 to-pink-600', icon: <Crown className="w-5 h-5" /> },
+  business: { color: 'from-amber-500 to-orange-600', icon: <Building2 className="w-5 h-5" /> },
+}
+
+// Built from the canonical single source of truth (src/lib/plans.ts) so the
+// pricing page can never advertise a feature the product does not enforce.
+const plans: SubscriptionPlan[] = PLAN_ORDER.map((id) => {
+  const p = PLANS[id]
+  return {
+    id: p.id,
+    name: p.name,
+    description: p.description,
+    monthlyPrice: p.monthlyPrice,
+    yearlyPrice: p.yearlyPrice,
+    credits: p.credits,
+    features: p.features,
+    popular: p.popular,
+    color: PLAN_PRESENTATION[p.id].color,
+    icon: PLAN_PRESENTATION[p.id].icon,
   }
-]
+})
 
 export default function SubscriptionPage() {
   const router = useRouter()
@@ -344,10 +294,19 @@ export default function SubscriptionPage() {
                     <ul className="space-y-2.5">
                       {plan.features.map((feature, i) => (
                         <li key={i} className="flex items-start gap-2.5">
-                          <div className="w-4 h-4 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0 mt-0.5">
-                            <Check className="w-2.5 h-2.5 text-emerald-400" />
+                          <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 mt-0.5 ${feature.available ? 'bg-emerald-500/20' : 'bg-white/10'}`}>
+                            {feature.available
+                              ? <Check className="w-2.5 h-2.5 text-emerald-400" />
+                              : <Clock className="w-2.5 h-2.5 text-white/40" />}
                           </div>
-                          <span className="text-white/60 text-sm">{feature}</span>
+                          <span className={`text-sm ${feature.available ? 'text-white/60' : 'text-white/35'}`}>
+                            {feature.label}
+                            {!feature.available && (
+                              <span className="ml-1.5 text-[10px] uppercase tracking-wide text-amber-300/70 border border-amber-300/20 rounded px-1 py-0.5">
+                                Coming soon
+                              </span>
+                            )}
+                          </span>
                         </li>
                       ))}
                     </ul>

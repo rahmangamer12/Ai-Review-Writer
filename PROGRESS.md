@@ -45,6 +45,41 @@ race in `useCredits` (C2) despite the "FOR UPDATE" comment.
 table + Proxy middleware emitted). Decision logged: `api/ai/chat` (key-proxy) and
 `api/chat` differ; Sarah chat is metered, the raw proxy is not — noted for review.
 
+### Phase 2 — Payments Integrity & Entitlements ✅
+
+**2.3 Honest pricing + single source of truth (done FIRST per instruction):**
+- New `src/lib/plans.ts` — canonical plans (price, credits, platform cap, marketing
+  features w/ `available` flag, enforced `capabilities`). `CreditsManager` + a new
+  `src/lib/entitlements.ts` derive from it, killing the prior 3-way drift.
+- Pricing page now renders "Coming soon" (greyed, clock icon) for unbuilt features:
+  **Slack notifications, API access, Team members, Custom integrations**. Fixed
+  **"Unlimited platforms" → "Up to 10"** (growth); Business shows "Unlimited" (cap
+  1,000,000 = effectively unlimited). Stale `app.config.ts` realigned (was free/starter/
+  pro/enterprise w/ wrong caps).
+- **Platform-cap now ENFORCED** (was advertised, never enforced): `canConnectPlatform`
+  wired into `platforms` PUT + Google/Facebook OAuth callbacks → 403/blocked when over cap.
+
+**2.1 Idempotent webhooks (DB-backed, no Redis dependency):**
+- New `WebhookEvent` table (additive). LemonSqueezy webhook now claims
+  `lemonsqueezy:${event}:${id}` atomically; duplicate → skip; processing failure rolls
+  back the claim so provider retry works. Removed broken Redis-only dedup + the no-op
+  timestamp replay check.
+- Payment grant made atomic (single `increment` in tx) — fixes C6 read-then-write race.
+
+**2.2 Monthly credit reset (makes "X / month" truthful):**
+- New `creditsRenewAt` field; set at signup/JIT/upgrade (anchored +1 month).
+- New secured cron `GET /api/cron/reset-credits` (SCHEDULER_SECRET) resets due users to
+  plan allotment + advances anchor + audit row. Wired into `vercel.json` (daily 02:00).
+
+**2.4 LemonSqueezy hardening:** verification now **fails CLOSED in production**
+(`NODE_ENV==='production'`), fails open only in dev/test so pending store verification
+isn't blocked.
+
+**Verification:**
+- `node scripts/test-webhook-idempotency.mjs` → 4 concurrent replays of one event →
+  **exactly 1 grant, balance 400; monthly reset → 300 (allotment). PASS.**
+- `npx tsc --noEmit` → 0 errors (after `prisma generate`). `npm run build` → success.
+
 ---
 
 ## Phase 0 — Audit & Plan ✅ COMPLETED

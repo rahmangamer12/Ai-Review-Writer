@@ -3,6 +3,7 @@ import { auth, currentUser } from '@clerk/nextjs/server'
 import prisma from '@/lib/db'
 import { encryptSensitiveData } from '@/lib/encryption'
 import { PlatformIntegrationManager, platformDefinitions } from '@/lib/platformIntegrations'
+import { canConnectPlatform, platformCapError } from '@/lib/entitlements'
 
 export const dynamic = 'force-dynamic'
 
@@ -122,6 +123,13 @@ export async function PUT(request: NextRequest) {
     }
 
     await ensureUser(userId)
+
+    // Enforce the plan's platform-connection cap (Principle 6)
+    const cap = await canConnectPlatform(userId, platformId)
+    if (!cap.allowed) {
+      return NextResponse.json(platformCapError(cap), { status: 403 })
+    }
+
     const encryptedCredentials = encryptSensitiveData(JSON.stringify(credentials))
 
     await prisma.connectedPlatform.upsert({

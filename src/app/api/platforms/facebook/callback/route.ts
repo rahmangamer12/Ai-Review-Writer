@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server';
 import { decryptSensitiveData, encryptSensitiveData } from '@/lib/encryption';
 import prisma from '@/lib/db';
+import { canConnectPlatform } from '@/lib/entitlements';
 
 export const dynamic = 'force-dynamic';
 
@@ -171,6 +172,15 @@ async function processCallback(code: string, userId: string, appId: string, appS
           email: `${userId}@autoreview.local`,
         },
       });
+
+      // Enforce the plan's platform-connection cap (Principle 6)
+      const cap = await canConnectPlatform(userId, 'facebook')
+      if (!cap.allowed) {
+        return new Response(
+          `<html><body><script>window.opener?.postMessage({type:'FACEBOOK_AUTH_ERROR',error:${jsString(`Platform limit reached for your plan (${cap.limit}). Upgrade to connect more.`)}},'*');window.close();</script><p>Platform limit reached for your plan. You can close this window.</p></body></html>`,
+          { status: 200, headers: { 'Content-Type': 'text/html' } }
+        );
+      }
 
       await prisma.connectedPlatform.upsert({
         where: {

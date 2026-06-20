@@ -1,4 +1,5 @@
 import prisma from '@/lib/db';
+import { PLANS, getPlan, planHasCapability, type Capability } from '@/lib/plans';
 
 export interface CreditUsage {
   id: string
@@ -23,28 +24,22 @@ export interface CreditGrantResult {
 
 export class CreditsManager {
   // ─── Plan Configuration ─────────────────────────────────────────────────
-  // Single source of truth for plan credit allocations.
-  // Webhook and subscription page MUST use these values.
-  static readonly PLAN_CREDITS: Record<string, number> = {
-    'free': 20,
-    'starter': 100,
-    'growth': 300,
-    'business': 1000
-  }
+  // Derived from the canonical single source of truth in src/lib/plans.ts so
+  // pricing, credits, platform caps, and entitlements can never drift apart.
+  static readonly PLAN_CREDITS: Record<string, number> = Object.fromEntries(
+    Object.values(PLANS).map((p) => [p.id, p.credits])
+  )
 
-  static readonly PLAN_PLATFORMS: Record<string, number> = {
-    'free': 1,
-    'starter': 3,
-    'growth': 10,
-    'business': 100
-  }
+  static readonly PLAN_PLATFORMS: Record<string, number> = Object.fromEntries(
+    Object.values(PLANS).map((p) => [p.id, p.platforms])
+  )
 
   static getPlanCredits(planId: string): number {
-    return this.PLAN_CREDITS[planId] ?? 20
+    return getPlan(planId).credits
   }
 
   static getPlanPlatforms(planId: string): number {
-    return this.PLAN_PLATFORMS[planId] ?? 1
+    return getPlan(planId).platforms
   }
 
   // ─── Credit Query ───────────────────────────────────────────────────────
@@ -202,20 +197,10 @@ export class CreditsManager {
   }
 
   // ─── Feature Access Control ─────────────────────────────────────────────
+  // Backed by the canonical capability sets in src/lib/plans.ts.
   static async hasFeatureAccess(userId: string, feature: string): Promise<boolean> {
     const plan = await this.getUserPlan(userId);
-
-    const featureAccess: Record<string, string[]> = {
-      'free': ['basic_replies', 'sentiment', 'dashboard', '1_platform'],
-      'starter': ['basic_replies', 'sentiment', 'dashboard', '3_platforms', 'bulk_replies', 'templates', 'analytics'],
-      'growth': ['basic_replies', 'sentiment', 'dashboard', 'unlimited_platforms', 'bulk_replies', 'templates', 'analytics', 'slack', 'custom_tone', 'auto_reply'],
-      'business': ['all_features']
-    };
-
-    if (plan === 'business') return true;
-
-    const planFeatures = featureAccess[plan] ?? [];
-    return planFeatures.includes(feature) || planFeatures.includes('all_features');
+    return planHasCapability(plan, feature as Capability);
   }
 
   static getCreditCost(action: string): number {

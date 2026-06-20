@@ -6,42 +6,8 @@ import { CreditsManager } from '@/lib/credits'
 
 export const dynamic = 'force-dynamic'
 
-const WEBHOOK_EXPIRY = 5 * 60 * 1000 // 5 minutes
-
-// Redis client for webhook storage (prevents replay attacks in serverless)
-async function getRedisClient() {
-  const { Redis } = await import('@upstash/redis')
-  const url = process.env.UPSTASH_REDIS_REST_URL
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN
-  
-  if (!url || !token) return null
-  return new Redis({ url, token })
-}
-
-// Check if webhook was already processed (using Redis for persistence)
-async function isWebhookProcessed(eventId: string): Promise<boolean> {
-  try {
-    const redis = await getRedisClient()
-    if (redis) {
-      const result = await redis.exists(`webhook:${eventId}`)
-      return result === 1
-    }
-  } catch {
-    // Redis not available, continue
-  }
-  return false
-}
-
-// Mark webhook as processed
-async function markWebhookProcessed(eventId: string): Promise<void> {
-  try {
-    const redis = await getRedisClient()
-    if (redis) {
-      await redis.set(`webhook:${eventId}`, 'processed', { ex: 300 })
-    }
-  } catch {
-    // Redis not available, continue
-  }
+function isUniqueViolation(e: unknown): boolean {
+  return !!e && typeof e === 'object' && 'code' in e && (e as { code?: string }).code === 'P2002'
 }
 
 export async function POST(request: NextRequest) {
@@ -74,49 +40,52 @@ export async function POST(request: NextRequest) {
 
     const event = JSON.parse(payload)
     const eventName = event.meta?.event_name
-    const eventId = event.data?.id || `${eventName}-${Date.now()}`
+    const externalId = event.data?.id || 'unknown'
+    // Idempotency key is unique per (event type, provider object). For renewals,
+    // subscription_payment_success carries a distinct invoice id each cycle, so
+    // legitimate recurring payments are NOT wrongly deduped.
+    const idemKey = `lemonsqueezy:${eventName}:${externalId}`
 
-    // Prevent replay attacks - check if we've already processed this webhook (Redis-based)
-    const alreadyProcessed = await isWebhookProcessed(eventId)
-    if (alreadyProcessed) {
-      console.warn('[LemonSqueezy Webhook] Duplicate webhook detected:', eventId)
-      return NextResponse.json({ success: true, message: 'Already processed' })
+    // Durable, atomic idempotency claim (DB-backed — works without Redis).
+    try {
+      await prisma.webhookEvent.create({
+        data: { id: idemKey, provider: 'lemonsqueezy', eventName: eventName ?? null },
+      })
+    } catch (e) {
+      if (isUniqueViolation(e)) {
+        console.warn('[LemonSqueezy Webhook] Duplicate webhook, skipping:', idemKey)
+        return NextResponse.json({ success: true, message: 'Already processed' })
+      }
+      throw e
     }
 
-    // Validate timestamp (reject webhooks older than 5 minutes)
-    const eventTimestamp = event.meta?.custom_data?.timestamp || Date.now()
-    if (Date.now() - eventTimestamp > WEBHOOK_EXPIRY) {
-      console.error('[LemonSqueezy Webhook] Webhook too old:', eventId)
-      return NextResponse.json(
-        { error: 'Webhook expired' },
-        { status: 400 }
-      )
-    }
+    console.log('[LemonSqueezy Webhook] Processing event:', eventName, 'key:', idemKey)
 
-    // Mark as processed in Redis
-    await markWebhookProcessed(eventId)
+    try {
+      // Handle different webhook events
+      switch (eventName) {
+        case 'order_created':
+        case 'subscription_created':
+        case 'subscription_payment_success':
+          await handlePaymentSuccess(event)
+          break
 
-    console.log('[LemonSqueezy Webhook] Processing event:', eventName, 'ID:', eventId)
+        case 'subscription_updated':
+          console.log('[LemonSqueezy Webhook] Subscription updated:', idemKey)
+          break
 
-    // Handle different webhook events
-    switch (eventName) {
-      case 'order_created':
-      case 'subscription_created':
-      case 'subscription_payment_success':
-        await handlePaymentSuccess(event)
-        break
+        case 'subscription_cancelled':
+        case 'subscription_expired':
+          await handleSubscriptionExpired(event)
+          break
 
-      case 'subscription_updated':
-        console.log('[LemonSqueezy Webhook] Subscription updated:', eventId)
-        break
-
-      case 'subscription_cancelled':
-      case 'subscription_expired':
-        await handleSubscriptionExpired(event)
-        break
-
-      default:
-        console.log('[LemonSqueezy Webhook] Unhandled event:', eventName)
+        default:
+          console.log('[LemonSqueezy Webhook] Unhandled event:', eventName)
+      }
+    } catch (processingError) {
+      // Roll back the idempotency claim so the provider's retry can reprocess.
+      await prisma.webhookEvent.delete({ where: { id: idemKey } }).catch(() => {})
+      throw processingError
     }
 
     const processingTime = Date.now() - startTime
@@ -145,10 +114,13 @@ export async function POST(request: NextRequest) {
  * Verify order/subscription with LemonSqueezy API to prevent spoofed webhooks
  */
 async function verifyLemonSqueezyOrder(eventId: string, expectedUserId: string): Promise<boolean> {
+  // Fail-CLOSED in production, fail-open only outside production so test webhooks
+  // and local dev still work while store verification is pending (Phase 2.4).
+  const failOpen = process.env.NODE_ENV !== 'production'
   const apiKey = process.env.LEMONSQUEEZY_API_KEY
   if (!apiKey) {
-    console.warn('[LemonSqueezy Webhook] API key not set — skipping verification (dev mode)')
-    return true // Allow in dev mode when API key isn't configured
+    console.warn('[LemonSqueezy Webhook] API key not set — verification skipped')
+    return failOpen // In production with no key, do not grant on unverifiable events
   }
 
   try {
@@ -169,8 +141,8 @@ async function verifyLemonSqueezyOrder(eventId: string, expectedUserId: string):
         }
       })
       if (!subResponse.ok) {
-        console.warn('[LemonSqueezy Webhook] Could not verify order/subscription via API — allowing (may be test webhook)')
-        return true // Allow test webhooks from LemonSqueezy dashboard
+        console.warn('[LemonSqueezy Webhook] Could not verify order/subscription via API')
+        return failOpen // Production: do not grant on unverifiable events
       }
       const subData = await subResponse.json()
       const subUserId = subData.data?.attributes?.meta?.custom_data?.userId
@@ -196,7 +168,7 @@ async function verifyLemonSqueezyOrder(eventId: string, expectedUserId: string):
     return true
   } catch (error) {
     console.error('[LemonSqueezy Webhook] Verification error:', error)
-    return true // Fail open — allow the webhook if API is unreachable
+    return failOpen // Production: fail closed if the API is unreachable
   }
 }
 
@@ -224,40 +196,39 @@ async function handlePaymentSuccess(event: any) {
         return // Don't throw — just skip processing
       }
 
-      // Use atomic transaction to update plan + credits + audit log
+      // Atomic plan + credit update. The increment avoids any read-then-write
+      // race (C6); idempotency is guaranteed by the DB webhook claim above, so a
+      // single delivery grants credits exactly once.
       const updatedUser = await prisma.$transaction(async (tx) => {
-        const user = await tx.user.findUnique({
+        const exists = await tx.user.findUnique({
           where: { id: customData.userId },
-          select: { id: true, aiCredits: true, email: true, name: true }
+          select: { id: true },
         })
+        if (!exists) return null
 
-        if (!user) return null
+        const renewAt = new Date()
+        renewAt.setMonth(renewAt.getMonth() + 1)
 
-        // Update plan and platform limit
         const updated = await tx.user.update({
           where: { id: customData.userId },
           data: {
             planType: plan,
-            maxPlatforms: planPlatforms
-          }
+            maxPlatforms: planPlatforms,
+            aiCredits: { increment: planCredits },
+            creditsRenewAt: renewAt,
+          },
+          select: { id: true, email: true, name: true, aiCredits: true },
         })
 
-        // Grant credits atomically with audit log
         await tx.creditUsage.create({
           data: {
             userId: customData.userId,
             action: 'plan_upgrade',
             amount: planCredits,
-            balanceAfter: user.aiCredits + planCredits,
+            balanceAfter: updated.aiCredits,
             description: `Upgraded to ${plan} plan — granted ${planCredits} credits`,
-            metadata: { eventId, plan, previousCredits: user.aiCredits } as any
-          }
-        })
-
-        // Update the user's credits
-        await tx.user.update({
-          where: { id: customData.userId },
-          data: { aiCredits: user.aiCredits + planCredits }
+            metadata: { eventId, plan } as any,
+          },
         })
 
         return updated

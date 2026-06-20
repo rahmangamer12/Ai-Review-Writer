@@ -58,6 +58,9 @@ export async function ensureUserAccount({ userId, email, name }: UserAccountInpu
     }))
   }
 
+  const renewAt = new Date()
+  renewAt.setMonth(renewAt.getMonth() + 1)
+
   return prisma.user.create({
     data: {
       id: userId,
@@ -67,6 +70,7 @@ export async function ensureUserAccount({ userId, email, name }: UserAccountInpu
       aiCredits: DEFAULT_FREE_CREDITS,
       promptCount: 0,
       maxPlatforms: 1,
+      creditsRenewAt: renewAt,
     },
   })
 }
