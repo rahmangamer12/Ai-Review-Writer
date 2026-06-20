@@ -3,6 +3,8 @@ import { auth } from '@clerk/nextjs/server';
 import { longcatAI } from '@/lib/longcatAI';
 import { withCSRFProtection } from '@/lib/csrfProtection';
 import { normalizeLongCatModel } from '@/lib/longcatModels';
+import { ensureUserProvisioned } from '@/lib/requireUser';
+import { CreditsManager } from '@/lib/credits';
 
 /**
  * API Proxy for LongCat AI Chat
@@ -30,14 +32,40 @@ async function handler(request: NextRequest) {
       );
     }
 
-    // Process request with server-side LongCat instance
-    const reply = await longcatAI.chat(
-      messages,
-      normalizeLongCatModel(model),
-      options || {}
+    // Meter this endpoint: 1 credit per AI response (consistent with the rest of
+    // the app, so this proxy can't be used as an unmetered AI bypass).
+    await ensureUserProvisioned(userId);
+    const deduction = await CreditsManager.useCredits(
+      userId,
+      1,
+      'ai_response',
+      'AI chat (proxy) response',
     );
+    if (!deduction.success) {
+      if (deduction.error === 'insufficient_credits') {
+        return NextResponse.json(
+          { error: 'Insufficient AI credits. Please upgrade your plan.', creditsRemaining: 0 },
+          { status: 402 }
+        );
+      }
+      return NextResponse.json({ error: 'Could not process request.' }, { status: 500 });
+    }
 
-    return NextResponse.json({ reply });
+    // Process request with server-side LongCat instance
+    let reply: string;
+    try {
+      reply = await longcatAI.chat(
+        messages,
+        normalizeLongCatModel(model),
+        options || {}
+      );
+    } catch (aiErr) {
+      // Refund on failure so the user is never charged for a non-response.
+      await CreditsManager.refundCredits(userId, 1, 'ai_response', 'Refund: AI chat proxy failed');
+      throw aiErr;
+    }
+
+    return NextResponse.json({ reply, creditsRemaining: deduction.balanceAfter });
   } catch (error: any) {
     console.error('[AI Chat API Proxy Error]:', error);
     return NextResponse.json(

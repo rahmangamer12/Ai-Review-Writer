@@ -271,6 +271,26 @@ async function handler(request: NextRequest) {
       )
     }
 
+    // Low-credit warning: fire once when the balance crosses the threshold.
+    // Fire-and-forget; never blocks or fails the response.
+    const LOW_CREDIT_THRESHOLD = 5
+    if (deductionResult.balanceAfter === LOW_CREDIT_THRESHOLD) {
+      void (async () => {
+        try {
+          const u = await prisma.user.findUnique({
+            where: { id: userId },
+            select: { email: true, name: true, planType: true },
+          })
+          if (u?.email) {
+            const { sendLowCreditsEmail } = await import('@/lib/email')
+            await sendLowCreditsEmail(u.email, u.name || 'there', LOW_CREDIT_THRESHOLD, u.planType)
+          }
+        } catch (e) {
+          console.warn('[Generate Reply API] low-credit email skipped:', e)
+        }
+      })()
+    }
+
     return NextResponse.json(
       {
         success: true,
