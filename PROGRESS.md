@@ -80,6 +80,28 @@ isn't blocked.
   **exactly 1 grant, balance 400; monthly reset → 300 (allotment). PASS.**
 - `npx tsc --noEmit` → 0 errors (after `prisma generate`). `npm run build` → success.
 
+### Phase 3 — Agentic System ✅ (core) / ⏸️ (3.4, 3.5 deferred)
+
+- **3.1 Provider abstraction** — new `src/lib/ai/provider.ts` gateway: LongCat default,
+  premium-escalation seam (`PREMIUM_AI_API_KEY`), input/payload guardrails (`clampInput`).
+  Wired into `generate-reply` + `agentic/reviews`; hard/negative reviews flag `escalate`.
+- **3.2 Auto-Reply Agent** — already saved DRAFTS (never posts publicly); now routed
+  through the provider gateway with guardrails. Human approval still required.
+- **3.3 Triage/Escalation** — hourly cron now creates **de-duplicated damage-control
+  notifications** (skip users with an unread 'urgent' alert <12h old). Cron wired in `vercel.json`.
+- **3.6 Weekly-Insight** — Monday 09:00 cron wired in `vercel.json` (route already existed).
+- **3.4 Review-Fetcher** & **3.5 Brand-Voice RAG** — DEFERRED (see BLOCKERS): 3.4 needs
+  verified Google/Meta OAuth; 3.5 needs a vector store. Provider seam ready for brand voice.
+
+**Guardrails honored:** max 5 reviews/agentic run; nothing auto-posted to public platforms
+(drafts only); every action audit-logged in `CreditUsage`.
+
+**Verification:** `npx tsc --noEmit` → 0 errors; `npm run build` → success (triage/weekly/
+reset-credits routes compiled).
+
+**Operational follow-ups logged in BLOCKERS.md:** B5 (`CRON_SECRET`=`SCHEDULER_SECRET`),
+B6 (Vercel Pro for 4 crons), B7 (optional `PREMIUM_AI_API_KEY`).
+
 ---
 
 ## Phase 0 — Audit & Plan ✅ COMPLETED

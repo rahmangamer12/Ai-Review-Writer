@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import prisma from '@/lib/db'
 import { longcatAI } from '@/lib/longcatAI'
+import { aiProvider } from '@/lib/ai/provider'
 import { CreditsManager } from '@/lib/credits'
 
 // POST - Run agentic review processing with REAL AI
@@ -85,7 +86,7 @@ export async function POST(req: NextRequest) {
         let sentimentScore = 0
         try {
           console.log('[Agentic] Analyzing sentiment with LongCat AI...')
-          const sentimentResult = await longcatAI.analyzeSentiment(reviewText)
+          const sentimentResult = await aiProvider.analyzeSentiment(reviewText)
           sentiment = sentimentResult.sentiment
           sentimentScore = sentimentResult.score
           console.log('[Agentic] Sentiment detected:', sentiment, 'Confidence:', sentimentResult.confidence)
@@ -97,13 +98,14 @@ export async function POST(req: NextRequest) {
         // Step 2: Generate AI reply with REAL AI
         let aiReply = ''
         console.log('[Agentic] Generating reply with LongCat AI...')
-        const result = await longcatAI.generateReviewResponse(
+        const result = await aiProvider.generateReviewReply({
           reviewText,
-          review.rating,
+          rating: review.rating,
           sentiment,
-          'friendly',
-          authorName
-        )
+          tone: 'friendly',
+          authorName,
+          escalate: review.rating <= 2 || sentiment === 'negative',
+        })
         aiReply = result.response
         console.log('[Agentic] AI Reply generated:', aiReply.substring(0, 80) + '...')
 

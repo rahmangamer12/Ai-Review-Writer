@@ -62,13 +62,45 @@
 
 ---
 
+## 🔴 New — Cron Authentication & Plan (added autonomous run 2)
+
+### B5: Set `CRON_SECRET` in Vercel = your `SCHEDULER_SECRET`
+- **Why:** Vercel Cron sends `Authorization: Bearer $CRON_SECRET` to scheduled
+  requests. Our cron routes (`/api/scheduler`, `/api/cron/reset-credits`,
+  `/api/agentic/triage`, `/api/cron/weekly-insights`) authorize against
+  `SCHEDULER_SECRET`. If `CRON_SECRET` ≠ `SCHEDULER_SECRET`, every cron returns 401.
+- **Action:** In Vercel → Settings → Environment Variables, set `CRON_SECRET` to the
+  exact same value as `SCHEDULER_SECRET`.
+
+### B6: Vercel plan must allow 4 cron jobs
+- `vercel.json` now defines **4** crons. Vercel **Hobby allows only 2**; **Pro allows 40**.
+- **Action:** Use a Pro plan, or remove crons you don't need from `vercel.json`.
+
 ## 🟢 Nice-to-Have (Can Add Later)
 
 ### B3: Verify LemonSqueezy Store
 - Complete store verification in LemonSqueezy dashboard
+- Also set `LEMONSQUEEZY_API_KEY`, `LEMONSQUEEZY_STORE_ID`,
+  `LEMONSQUEEZY_WEBHOOK_SECRET`, and `LEMONSQUEEZY_VARIANT_{STARTER,GROWTH,BUSINESS}`.
+  Until set, checkout shows a maintenance state (by design).
 
 ### B4: Chrome Extension
 - Publish extension to Chrome Web Store
+
+### B7: (Optional) Premium AI escalation
+- The AI provider abstraction (`src/lib/ai/provider.ts`) escalates hard/negative
+  reviews when `PREMIUM_AI_API_KEY` is set. Until then it logs intent and uses LongCat.
+  Set `PREMIUM_AI_API_KEY` only if you want premium routing (wiring to the premium
+  model itself is a future task).
+
+## ⏸️ Deferred Agentic Sub-Phases (not blockers — scoped for later)
+
+- **3.4 Review-Fetcher (scheduled platform ingest):** depends on working Google/Meta
+  OAuth + API access, which is gated by provider verification (see Google/Meta notes).
+  Manual + webhook review ingestion works today; automated polling deferred until
+  platform credentials are verified.
+- **3.5 Brand-Voice RAG:** requires an embeddings/vector store; deferred to keep the
+  core agentic loop shipping. The provider seam is ready to accept brand-voice context.
 
 ---
 

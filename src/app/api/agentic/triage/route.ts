@@ -151,10 +151,41 @@ export async function GET(request: NextRequest) {
 
     console.log(`[Triage Cron] Found ${urgentReviews.length} urgent reviews across ${userAlerts.size} users`)
 
+    // Create de-duplicated damage-control notifications. To avoid hourly spam,
+    // skip users who already have an unread 'urgent' alert from the last 12h.
+    const twelveHoursAgo = new Date(Date.now() - 12 * 60 * 60 * 1000)
+    let notified = 0
+    for (const [uid, reviews] of userAlerts) {
+      try {
+        const recent = await prisma.notification.findFirst({
+          where: { userId: uid, type: 'urgent', read: false, createdAt: { gte: twelveHoursAgo } },
+          select: { id: true },
+        })
+        if (recent) continue
+
+        const critical = reviews.filter((r) => r.rating === 1).length
+        await prisma.notification.create({
+          data: {
+            userId: uid,
+            type: 'urgent',
+            title: `${reviews.length} urgent review${reviews.length === 1 ? '' : 's'} need attention`,
+            message:
+              `You have ${reviews.length} low-rated review${reviews.length === 1 ? '' : 's'}` +
+              (critical ? ` (${critical} at 1★)` : '') +
+              `. Respond quickly to limit reputation damage.`,
+          },
+        })
+        notified++
+      } catch (e) {
+        console.error('[Triage Cron] Notification failed for user', uid, e)
+      }
+    }
+
     return NextResponse.json({
       success: true,
       usersWithAlerts: userAlerts.size,
       totalUrgent: urgentReviews.length,
+      notificationsCreated: notified,
       timestamp: new Date().toISOString(),
     })
   } catch (error) {

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { longcatAI } from '@/lib/longcatAI'
+import { aiProvider } from '@/lib/ai/provider'
 import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit'
 import { auth } from '@clerk/nextjs/server'
 import prisma from '@/lib/db'
@@ -219,7 +220,7 @@ async function handler(request: NextRequest) {
     // Analyze sentiment first
     let sentimentResult
     try {
-      sentimentResult = await longcatAI.analyzeSentiment(reviewText)
+      sentimentResult = await aiProvider.analyzeSentiment(reviewText)
       console.log('[Generate Reply API] Sentiment:', sentimentResult.sentiment)
     } catch (_e) {
       console.error('[Generate Reply API] Sentiment analysis failed, using rating heuristic')
@@ -232,13 +233,15 @@ async function handler(request: NextRequest) {
     // Generate reply using the configured AI provider
     let aiReply = ''
     try {
-      const result = await longcatAI.generateReviewResponse(
+      const result = await aiProvider.generateReviewReply({
         reviewText,
-        rating || 3,
-        sentimentResult.sentiment,
-        tone as any,
-        authorName || 'there'
-      )
+        rating: rating || 3,
+        sentiment: sentimentResult.sentiment,
+        tone: tone as any,
+        authorName: authorName || 'there',
+        // Escalate hard cases: very negative or low-rating reviews
+        escalate: (rating || 3) <= 2 || sentimentResult.sentiment === 'negative',
+      })
       aiReply = result.response
       console.log('[Generate Reply API] AI Reply generated:', aiReply.substring(0, 100) + '...')
     } catch (aiError) {
