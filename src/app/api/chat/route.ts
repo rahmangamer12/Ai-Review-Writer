@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { withCSRFProtection } from '@/lib/csrfProtection';
 import { LONGCAT_DEFAULT_MODEL, normalizeLongCatModel } from '@/lib/longcatModels';
 import { ensureUserAccount } from '@/lib/userAccount';
+import { CreditsManager } from '@/lib/credits';
 
 export const dynamic = 'force-dynamic'
 
@@ -50,7 +51,7 @@ async function handler(request: NextRequest) {
       rateLimit(userId, RATE_LIMITS.AI_ANALYSIS).catch(() => ({ success: true, message: '', resetTime: Date.now(), remaining: 100, limit: 100 })), // Fail open for max speed
       prisma.user.findUnique({
         where: { id: userId },
-        select: { id: true, aiCredits: true, promptCount: true, email: true, name: true, planType: true }
+        select: { id: true, aiCredits: true, email: true, name: true, planType: true }
       }).catch(() => null)
     ])
 
@@ -141,7 +142,7 @@ async function handler(request: NextRequest) {
     const godTierPrompt = {
       role: 'system',
       content: `You are Sarah, the God-Tier AI Assistant for "AutoReview AI" platform.
-You possess absolute, expert-level knowledge of everything related to AutoReview AI—our platform imports, manages, and automatically replies to reviews from Google, Yelp, Facebook, etc., and uses LongCat AI to save businesses hours of work daily. Our plans: Free ($0), Starter ($10/m), Pro ($19/m), Enterprise ($39/m).
+You possess absolute, expert-level knowledge of everything related to AutoReview AI—our platform imports, manages, and automatically replies to reviews from Google, Yelp, Facebook, etc., and uses LongCat AI to save businesses hours of work daily. Our plans: Free ($0), Starter ($9/m), Growth ($19/m), Business ($39/m). Each AI response uses 1 credit.
 
 Current server date/time: ${new Date().toISOString()}.
 
@@ -172,51 +173,19 @@ CRITICAL INSTRUCTIONS FOR YOU:
         // Run DB operations in background after streaming completes
         setImmediate(async () => {
           try {
-            // Use CreditsManager for atomic credit deduction with audit log
-            // This reads promptCount INSIDE the transaction to prevent race conditions
-            const creditResult = await prisma.$transaction(async (tx) => {
-              // Lock user row and read current promptCount atomically
-              const user = await tx.user.findUnique({
-                where: { id: userDb.id },
-                select: { id: true, aiCredits: true, promptCount: true }
-              });
+            // Credit model: 1 credit = 1 AI response (atomic, concurrency-safe).
+            const creditResult = await CreditsManager.useCredits(
+              userDb.id,
+              1,
+              'chat_message',
+              'Sarah AI chat response',
+              { sessionId }
+            );
 
-              if (!user) return { deducted: false, balanceAfter: 0 };
-
-              const nextPromptCount = (user.promptCount ?? 0) + 1;
-
-              if (nextPromptCount >= 10) {
-                // Deduct 1 credit, reset promptCount
-                await tx.user.update({
-                  where: { id: userDb.id },
-                  data: { aiCredits: { decrement: 1 }, promptCount: 0 }
-                });
-
-                // Audit log
-                await tx.creditUsage.create({
-                  data: {
-                    userId: userDb.id,
-                    action: 'chat_message',
-                    amount: -1,
-                    balanceAfter: user.aiCredits - 1,
-                    description: `Chat: 10 prompts reached, deducted 1 credit`,
-                    metadata: { sessionId, promptCount: 10 } as any
-                  }
-                });
-
-                return { deducted: true, balanceAfter: user.aiCredits - 1 };
-              } else {
-                // Just increment promptCount
-                await tx.user.update({
-                  where: { id: userDb.id },
-                  data: { promptCount: nextPromptCount }
-                });
-                return { deducted: false, balanceAfter: user.aiCredits };
-              }
-            });
-
-            if (creditResult.deducted) {
+            if (creditResult.success) {
               console.log(`[Chat API] Deducted 1 credit. Balance: ${creditResult.balanceAfter}`);
+            } else {
+              console.warn(`[Chat API] Credit deduction skipped: ${creditResult.error}`);
             }
 
             // Save assistant message to session
@@ -242,7 +211,7 @@ CRITICAL INSTRUCTIONS FOR YOU:
        headers: {
         'Content-Type': 'text/plain; charset=utf-8',
         'x-credits-remaining': currentCredits.toString(),
-        'x-credits-per-prompt': '10'
+        'x-credits-per-prompt': '1'
        }
     });
 

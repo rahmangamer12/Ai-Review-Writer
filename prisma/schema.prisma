@@ -20,7 +20,7 @@ model User {
   stripeCustomerId String?  @unique
   planType         String   @default("free") // free, starter, growth, business
   aiCredits        Int      @default(20)
-  promptCount      Int      @default(0) // Tracks 0-9 prompts before deducting 1 credit
+  promptCount      Int      @default(0) // DEPRECATED: credit model is now 1 credit = 1 AI response. Column retained for backward compatibility; not used in logic.
   maxPlatforms     Int      @default(1)
 
   // Relations

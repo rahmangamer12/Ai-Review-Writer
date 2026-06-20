@@ -5,6 +5,7 @@ import { auth } from '@clerk/nextjs/server'
 import prisma from '@/lib/db'
 import { z } from 'zod'
 import { CreditsManager } from '@/lib/credits'
+import { ensureUserProvisioned } from '@/lib/requireUser'
 
 // Input validation schema
 const generateReplySchema = z.object({
@@ -163,6 +164,11 @@ async function handler(request: NextRequest) {
       )
     }
 
+    // JIT provisioning: guarantee a Prisma user row exists before charging.
+    // Without this, a signed-in Clerk user whose webhook never fired would hit
+    // `user_not_found` and the AI would never respond (root cause C1).
+    await ensureUserProvisioned(userId)
+
     // Determine credit cost for this action
     const creditCost = CreditsManager.getCreditCost('ai_response')
 
@@ -238,14 +244,25 @@ async function handler(request: NextRequest) {
     } catch (aiError) {
       console.warn('[Generate Reply API] AI generation failed:', aiError)
 
-      // AI failed AFTER credit deduction — log this for investigation but don't refund automatically
-      // (In production, you might implement a refund queue for this edge case)
+      // AI failed AFTER credit deduction — automatically refund the credit so the
+      // user is never charged for a generation they did not receive (Phase 1.3).
+      const refund = await CreditsManager.refundCredits(
+        userId,
+        creditCost,
+        'ai_response',
+        'Refund: AI generation failed after deduction',
+        { platform, tone, rating }
+      )
+      if (!refund.success) {
+        console.error('[Generate Reply API] Refund failed after AI error:', refund.error)
+      }
+
       return NextResponse.json(
         {
           success: false,
-          error: 'AI generation failed. Please verify the AI API key and try again.',
-          creditsDeducted: creditCost,
-          note: 'Credits were deducted but AI generation failed. Contact support for a refund.'
+          error: 'AI generation failed. Your credit was not charged — please try again.',
+          creditsRefunded: refund.success ? creditCost : 0,
+          creditsRemaining: refund.balanceAfter,
         },
         { status: 502, headers: getCorsHeaders(request) }
       )

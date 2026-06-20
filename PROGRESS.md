@@ -5,6 +5,48 @@
 
 ---
 
+## 🔁 Autonomous Run 2 — 2026-06-20 (branch `autonomous/phase-1-5`)
+
+Re-audited against live DB. Key correction to prior session's claims: the credit
+*code* was repaired, but the **live blocker was provisioning** — `User` table had
+**0 rows** and there was **no JIT user creation**, so every signed-in user hit
+`user_not_found` → AI never responded (root cause C1). Also found a real TOCTOU
+race in `useCredits` (C2) despite the "FOR UPDATE" comment.
+
+### Phase 1.1 — JIT user provisioning ✅
+- New `src/lib/requireUser.ts` (`ensureUserProvisioned`, `requireDbUser`).
+- Wired into `api/reviews/generate-reply` before credit deduction.
+- Result: a signed-in user with no Prisma row is auto-created (20 credits) instead of 401.
+
+### Phase 1.2 — Atomic credit deduction ✅
+- Rewrote `CreditsManager.useCredits` to a single conditional `updateMany`
+  (`WHERE aiCredits >= n … decrement n`) — concurrency-safe, no double-spend/negative.
+- Rewrote `grantCredits` to atomic `increment`.
+- **Verified:** `node scripts/test-credit-concurrency.mjs` → 60 parallel deductions
+  on a 20-credit user → exactly **20 succeeded, final balance 0, never negative. PASS.**
+
+### Phase 1.3 — Refund on AI failure ✅
+- Added `CreditsManager.refundCredits`; `generate-reply` now auto-refunds the credit
+  when LongCat fails after deduction. User message: "your credit was not charged."
+
+### Phase 1.4 — Credit model = 1 credit / 1 AI response ✅
+- Unified `api/chat` (Sarah) from "10 prompts = 1 credit" to 1 credit/response via
+  atomic `useCredits`. Removed `promptCount` logic + "X/10 prompts" UI in `Navigation.tsx`.
+- `promptCount` column retained (db-push repo → no reversible migration; not dropped per
+  safety rule) but marked DEPRECATED in schema and unused in logic.
+- Fixed wrong plan names in Sarah's system prompt (was Starter $10/Pro/Enterprise →
+  now Free/Starter $9/Growth $19/Business $39).
+
+### Phase 1.5 — Honest error states ✅
+- `reviews/page.tsx` now maps 401/402/429/502/503 to distinct user messages
+  (out-of-credits → upgrade, AI-failed → not charged, etc.).
+
+**Verification:** `npx tsc --noEmit` → 0 errors. `npm run build` → success (full route
+table + Proxy middleware emitted). Decision logged: `api/ai/chat` (key-proxy) and
+`api/chat` differ; Sarah chat is metered, the raw proxy is not — noted for review.
+
+---
+
 ## Phase 0 — Audit & Plan ✅ COMPLETED
 
 **What I did:**

@@ -316,14 +316,31 @@ function ReviewsContent() {
         }),
       })
       
-      if (!response.ok) throw new Error('Failed to generate reply')
-      
-      const data = await response.json()
+      const data = await response.json().catch(() => null)
+
+      if (!response.ok) {
+        // Surface distinct, honest error states (Phase 1.5)
+        if (response.status === 402) {
+          setError("You're out of AI credits. Upgrade your plan to generate more replies.")
+        } else if (response.status === 401) {
+          setError('Your session expired or your account is still syncing. Please refresh and sign in again.')
+        } else if (response.status === 429) {
+          setError('Too many requests. Please wait a moment and try again.')
+        } else if (response.status === 502) {
+          setError('AI generation failed — your credit was not charged. Please try again.')
+        } else if (response.status === 503) {
+          setError('The AI service is temporarily unavailable. Please try again shortly.')
+        } else {
+          setError(data?.error || 'Failed to generate reply. Please try again.')
+        }
+        return
+      }
+
       setReplyText(data.reply)
       setShowReplyModal(true)
     } catch (err) {
       console.error('AI Reply Generation Error:', err)
-      setError('Failed to generate reply. Please check your AI API configuration and try again.')
+      setError('Network error while generating the reply. Please check your connection and try again.')
     } finally {
       setGeneratingReply(null)
     }

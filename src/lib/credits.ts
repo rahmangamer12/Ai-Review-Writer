@@ -65,10 +65,12 @@ export class CreditsManager {
   }
 
   // ─── Atomic Credit Deduction (with audit log) ───────────────────────────
-  // Uses Prisma transaction to guarantee atomicity:
-  // - Row-level lock via SELECT ... FOR UPDATE (via findUnique in transaction)
-  // - Credit decrement + CreditUsage log written atomically
-  // - Returns new balance on success, error code on failure
+  // Concurrency-safe: the deduction is a single conditional UPDATE
+  //   UPDATE "User" SET aiCredits = aiCredits - $n WHERE id = $id AND aiCredits >= $n
+  // performed via Prisma `updateMany`. Postgres serializes concurrent updates to
+  // the same row and re-evaluates the `>= amount` guard against the latest
+  // committed value, so two parallel requests can NEVER double-spend or drive the
+  // balance negative (unlike a read-then-write under READ COMMITTED).
   static async useCredits(
     userId: string,
     amount: number,
@@ -76,33 +78,37 @@ export class CreditsManager {
     description?: string,
     metadata?: Record<string, unknown>
   ): Promise<CreditDeductionResult> {
+    if (amount <= 0) {
+      return { success: false, error: 'transaction_failed' };
+    }
     try {
       const result = await prisma.$transaction(async (tx) => {
-        // 1. Lock the user row and read current balance
-        const user = await tx.user.findUnique({
-          where: { id: userId },
-          select: { id: true, aiCredits: true }
+        // 1. Atomic conditional decrement (row-locked guard)
+        const updated = await tx.user.updateMany({
+          where: { id: userId, aiCredits: { gte: amount } },
+          data: { aiCredits: { decrement: amount } },
         });
 
-        if (!user) {
-          return { success: false, error: 'user_not_found' as const };
+        // 2. Zero rows affected => either no such user OR not enough credits
+        if (updated.count === 0) {
+          const exists = await tx.user.findUnique({
+            where: { id: userId },
+            select: { id: true },
+          });
+          const err: 'insufficient_credits' | 'user_not_found' = exists
+            ? 'insufficient_credits'
+            : 'user_not_found';
+          return { success: false, error: err };
         }
 
-        // 2. Check sufficient balance
-        if (user.aiCredits < amount) {
-          return { success: false, error: 'insufficient_credits' as const };
-        }
-
-        // 3. Calculate new balance
-        const newBalance = user.aiCredits - amount;
-
-        // 4. Update user credits
-        await tx.user.update({
+        // 3. Read the post-update balance (same tx, after our locked write)
+        const fresh = await tx.user.findUnique({
           where: { id: userId },
-          data: { aiCredits: newBalance }
+          select: { aiCredits: true },
         });
+        const newBalance = fresh?.aiCredits ?? 0;
 
-        // 5. Create immutable audit log entry
+        // 4. Immutable audit log entry
         await tx.creditUsage.create({
           data: {
             userId,
@@ -110,8 +116,8 @@ export class CreditsManager {
             amount: -amount, // Negative = deducted
             balanceAfter: newBalance,
             description: description ?? `Credit used for ${action}`,
-            metadata: (metadata ?? {}) as any
-          }
+            metadata: (metadata ?? {}) as any,
+          },
         });
 
         return { success: true, balanceAfter: newBalance };
@@ -124,6 +130,24 @@ export class CreditsManager {
     }
   }
 
+  // ─── Refund (used when AI generation fails AFTER deduction) ──────────────
+  // Convenience wrapper over grantCredits that records a 'refund' audit entry.
+  static async refundCredits(
+    userId: string,
+    amount: number,
+    action: string,
+    description?: string,
+    metadata?: Record<string, unknown>
+  ): Promise<CreditGrantResult> {
+    return this.grantCredits(
+      userId,
+      amount,
+      action,
+      description ?? `Refund for failed ${action}`,
+      { ...(metadata ?? {}), refund: true }
+    );
+  }
+
   // ─── Atomic Credit Grant (with audit log) ───────────────────────────────
   // Used by webhooks to grant credits on payment success.
   static async grantCredits(
@@ -133,28 +157,29 @@ export class CreditsManager {
     description?: string,
     metadata?: Record<string, unknown>
   ): Promise<CreditGrantResult> {
+    if (amount <= 0) {
+      return { success: false, error: 'transaction_failed' };
+    }
     try {
       const result = await prisma.$transaction(async (tx) => {
-        // 1. Lock the user row
-        const user = await tx.user.findUnique({
+        // 1. Atomic increment (no read-then-write race)
+        const affected = await tx.user.updateMany({
           where: { id: userId },
-          select: { id: true, aiCredits: true }
+          data: { aiCredits: { increment: amount } },
         });
 
-        if (!user) {
+        if (affected.count === 0) {
           return { success: false, error: 'user_not_found' as const };
         }
 
-        // 2. Calculate new balance
-        const newBalance = user.aiCredits + amount;
-
-        // 3. Update user credits
-        await tx.user.update({
+        // 2. Read post-update balance for the audit log
+        const fresh = await tx.user.findUnique({
           where: { id: userId },
-          data: { aiCredits: newBalance }
+          select: { aiCredits: true },
         });
+        const newBalance = fresh?.aiCredits ?? amount;
 
-        // 4. Create immutable audit log entry
+        // 3. Immutable audit log entry
         await tx.creditUsage.create({
           data: {
             userId,

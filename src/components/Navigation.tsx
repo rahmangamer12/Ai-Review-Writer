@@ -100,7 +100,6 @@ function UserProfile() {
 
   const plan = userData?.plan || 'Free'
   const credits = userData?.aiCredits ?? 20
-  const promptCount = userData?.promptCount ?? 0
 
   return (
     <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-3 shadow-lg backdrop-blur-md">
@@ -141,19 +140,9 @@ function UserProfile() {
               Get More
             </Link>
           </div>
-          <div className="flex flex-col gap-1">
-            <div className="flex justify-between items-center text-[8px] uppercase tracking-tighter text-white/40">
-              <span>Usage Progress</span>
-              <span>{promptCount}/10 prompts</span>
-            </div>
-            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${(promptCount / 10) * 100}%` }}
-                className="h-full bg-gradient-to-r from-cyan-400 to-violet-400"
-              />
-            </div>
-          </div>
+          <p className="text-[8px] uppercase tracking-tighter text-white/40">
+            1 credit = 1 AI response
+          </p>
         </div>
       </div>
       <button
