@@ -62,18 +62,15 @@
 
 ---
 
-## 🔴 SECURITY — Rotate exposed Clerk dev key (added autonomous run 2)
+## ✅ SECURITY — Clerk dev key removed from GitHub (RESOLVED this run)
 
-### B0: `.clerk/.tmp/keyless.json` (Clerk `sk_test_…` secret) was committed to git
-- **What I did:** removed `.clerk/` from tracking and added it to `.gitignore`, so it
-  will not be committed again. The secret is now out of the working index.
-- **Still required from you:** the key remains in **git history**. Because purging
-  history needs a force-push (a destructive op I will not run autonomously):
-  1. Rotate the Clerk dev/test keys in the Clerk Dashboard (treat the leaked
-     `sk_test_…` as compromised).
-  2. Optionally scrub history with `git filter-repo`/BFG before publishing the repo.
-- These are **dev/test** keys (not `sk_live_`), so production is not directly exposed,
-  but rotate anyway as good hygiene.
+### B0: `.clerk/.tmp/keyless.json` (Clerk `sk_test_…`) — DONE
+- Removed `.clerk/` from tracking + added to `.gitignore`.
+- **Purged the file from ALL git history** (`git filter-branch`) and **force-pushed `main`**
+  to GitHub. The key is no longer in any branch/commit on GitHub.
+- Per your decision, the key was **not rotated** (it's a dev/test `sk_test_` key).
+- Minor note: GitHub may keep the old blob reachable by its raw SHA for a short while
+  until its own garbage collection runs; the visible history is clean now.
 
 ## 🟢 Cron jobs — FREE solution via GitHub Actions (no Vercel Pro needed)
 
