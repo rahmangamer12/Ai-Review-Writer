@@ -34,6 +34,7 @@ const isPublicRoute = createRouteMatcher([
 const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)',
   '/reviews(.*)',
+  '/agentic(.*)',
   '/analytics(.*)',
   '/settings(.*)',
   '/profile(.*)',

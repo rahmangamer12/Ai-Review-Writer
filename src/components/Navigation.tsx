@@ -279,6 +279,13 @@ export default function Navigation() {
       gradient: 'from-purple-500 to-pink-500'
     },
     {
+      href: '/agentic',
+      label: 'Agentic AI',
+      icon: Sparkles,
+      description: 'Auto-reply, triage & insights',
+      gradient: 'from-fuchsia-500 to-violet-500'
+    },
+    {
       href: '/analytics',
       label: 'Analytics',
       icon: BarChart3,
