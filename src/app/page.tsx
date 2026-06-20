@@ -12,6 +12,40 @@ export const metadata = {
   description: 'Ai Review Writer helps restaurants, clinics, salons, repair shops, and local service teams manage, analyze, and reply to customer reviews with AI.',
 }
 
+const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL || 'https://ai-review-writer.vercel.app').replace(/\/$/, '')
+
+const STRUCTURED_DATA = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#org`,
+      name: 'Ai Review Writer',
+      url: SITE_URL,
+      logo: `${SITE_URL}/app-logo.png`,
+      description: 'AI review management for local service businesses.',
+    },
+    {
+      '@type': 'SoftwareApplication',
+      name: 'Ai Review Writer',
+      applicationCategory: 'BusinessApplication',
+      operatingSystem: 'Web',
+      url: SITE_URL,
+      description: 'Track customer reviews, analyze sentiment, and draft AI replies for restaurants, clinics, salons, and repair shops.',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    },
+    {
+      '@type': 'FAQPage',
+      mainEntity: [
+        { '@type': 'Question', name: 'What does Ai Review Writer do?', acceptedAnswer: { '@type': 'Answer', text: 'It helps local businesses track customer reviews, detect sentiment, and draft AI replies that you approve before posting.' } },
+        { '@type': 'Question', name: 'Does it post replies automatically?', acceptedAnswer: { '@type': 'Answer', text: 'No. AI replies are saved as drafts for your approval — nothing is posted publicly without you.' } },
+        { '@type': 'Question', name: 'Is there a free plan?', acceptedAnswer: { '@type': 'Answer', text: 'Yes. The free plan includes monthly AI credits, one platform connection, and the dashboard — no credit card required.' } },
+        { '@type': 'Question', name: 'Which businesses is it for?', acceptedAnswer: { '@type': 'Answer', text: 'Restaurants, clinics, salons, repair shops, real estate offices, and other local service teams.' } },
+      ],
+    },
+  ],
+}
+
 const FEATURES = [
   { icon: Zap, tint: 'text-amber-400', glow: 'from-amber-500/20', title: 'Review Reply Drafts', desc: 'Generate polite, brand-safe replies for happy, angry, and neutral customers without starting from a blank page.' },
   { icon: BarChart3, tint: 'text-cyan-400', glow: 'from-cyan-500/20', title: 'Sentiment Tracking', desc: 'Spot negative review patterns early so the owner or manager can fix the real service issue.' },
@@ -274,6 +308,12 @@ export default async function LandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* SEO: structured data for rich results */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
+      />
     </div>
   )
 }
