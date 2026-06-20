@@ -62,6 +62,35 @@
 
 ---
 
+## 🔴🔴 #1 CRITICAL — Production DB is pointing to a DELETED Supabase project
+
+**Symptom:** Production par credits/AI kaam nahi karti, "Your account could not be
+loaded / Failed to send". Health check confirms:
+`/api/health` → `database: error "(ENOTFOUND) postgres.vwtcudgyojqqzuxikoqw not found"`.
+
+**Wajah:** Vercel ki `DATABASE_URL` (aur shayad `DIRECT_URL`) abhi bhi **purane,
+delete ho chuke** Supabase project `vwtcudgyojqqzuxikoqw` ko point kar rahi hain.
+Aap ki **local `.env` sahi (naye) project** `eagimhssidmzkkijsksc` par hai — isliye
+local chalti hai, production nahi. **Yeh code ka bug NAHI, Vercel env config hai.**
+
+**FIX (sirf aap kar sakte ho — 3 min):**
+1. Apni local `.env` file kholo. Usme `DATABASE_URL=` aur `DIRECT_URL=` ki poori
+   line copy karo (woh `eagimhssidmzkkijsksc` wali, sahi hai).
+2. Vercel → apna project → **Settings → Environment Variables**.
+3. `DATABASE_URL` dhoondo → **Edit** → purani value (jisme `vwtcudgyojqqzuxikoqw`)
+   ko local `.env` wali (naye `eagimhssidmzkkijsksc`) se replace karo → Save.
+4. Isi tarah `DIRECT_URL` bhi update karo (agar mojood hai).
+5. Vercel → **Deployments** → latest → **Redeploy** (warna nayi value nahi uthegi).
+6. Verify: browser me `https://ai-review-writer.vercel.app/api/health` kholo →
+   `database` ka status `ok` aana chahiye. Phir credits/AI production me chalegi.
+
+> Tip: agar local `.env` me bhi koi shaq ho, Supabase Dashboard → naya project →
+> Settings → Database → Connection string (Transaction pooler, port 6543) se naya
+> URL le lo, aur `?sslmode=no-verify` rakho (ya kuch bhi — code ab sslmode khud
+> handle kar leta hai).
+
+---
+
 ## ✅ SECURITY — Clerk dev key removed from GitHub (RESOLVED this run)
 
 ### B0: `.clerk/.tmp/keyless.json` (Clerk `sk_test_…`) — DONE
