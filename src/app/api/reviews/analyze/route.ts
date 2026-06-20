@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth, currentUser } from '@clerk/nextjs/server'
 import prisma from '@/lib/db'
 import { z } from 'zod'
+import { serverError } from '@/lib/apiError'
 
 // Input validation schemas
 const reviewIdSchema = z.string().min(1).max(500)
@@ -91,7 +92,7 @@ export async function GET(req: NextRequest) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ZodError') {
       return NextResponse.json({ error: 'Invalid review ID format', details: (error as any).issues || [] }, { status: 400 })
     }
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
+    return serverError('[Reviews Analyze GET]', error)
   }
 }
 
@@ -199,7 +200,8 @@ export async function POST(req: NextRequest) {
     })
 
     return NextResponse.json(normalizeReview(review))
-  } catch (error: unknown) { const message = error instanceof Error ? error.message : "Unknown error"; return NextResponse.json({ error: message }, { status: 500 })
+  } catch (error) {
+    return serverError('[Reviews Analyze]', error)
   }
 }
 
@@ -233,7 +235,8 @@ export async function PATCH(req: NextRequest) {
     })
 
     return NextResponse.json(normalizeReview(review))
-  } catch (error: unknown) { const message = error instanceof Error ? error.message : "Unknown error"; return NextResponse.json({ error: message }, { status: 500 })
+  } catch (error) {
+    return serverError('[Reviews Analyze]', error)
   }
 }
 
@@ -272,8 +275,7 @@ export async function DELETE(req: NextRequest) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'ZodError') {
       return NextResponse.json({ error: 'Invalid review ID format', details: (error as any).issues || [] }, { status: 400 })
     }
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 })
+    return serverError('[Reviews Analyze DELETE]', error)
   }
 }
 
