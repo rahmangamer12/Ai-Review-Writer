@@ -12,6 +12,7 @@ for (const file of ['.env', '.env.local']) {
 export default defineConfig({
   schema: path.join(__dirname, 'prisma', 'schema.prisma'),
   datasource: {
-    url: process.env.DATABASE_URL
+    // Use direct connection for CLI (db push, migrate). Pooler URLs lack tenant id for schema ops.
+    url: process.env.DIRECT_URL ?? process.env.DATABASE_URL
   }
 })
