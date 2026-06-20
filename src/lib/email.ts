@@ -312,6 +312,54 @@ function weeklyInsightEmailHtml(name: string, d: WeeklyInsightData): string {
 
 // ─── Email Sending Functions ───────────────────────────────────────────────────
 
+export async function sendContactEmail(p: {
+  type: 'contact' | 'schedule'
+  name: string
+  email: string
+  phone?: string
+  subject?: string
+  business?: string
+  preferredTime?: string
+  message?: string
+}) {
+  if (!process.env.RESEND_API_KEY) return
+  // Where incoming contact/call requests land. Set CONTACT_EMAIL (or ADMIN_EMAIL)
+  // to your inbox; if unset, the submission is still saved in the DB.
+  const to = process.env.CONTACT_EMAIL || process.env.ADMIN_EMAIL
+  if (!to) return
+
+  const label = p.type === 'schedule' ? 'New call request' : 'New contact message'
+  const rows = [
+    ['Name', p.name],
+    ['Email', p.email],
+    ['Phone / WhatsApp', p.phone],
+    ['Subject', p.subject],
+    ['Business', p.business],
+    ['Preferred time', p.preferredTime],
+  ]
+    .filter(([, v]) => v)
+    .map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;color:#888"><b>${k}</b></td><td style="padding:4px 0">${v}</td></tr>`)
+    .join('')
+
+  try {
+    await resend.emails.send({
+      from: FROM_EMAIL,
+      to,
+      subject: `${label} from ${p.name}`,
+      html: `<div style="font-family:system-ui,sans-serif;max-width:560px">
+        <h2 style="margin:0 0 12px">${label}</h2>
+        <table style="border-collapse:collapse;font-size:14px">${rows}</table>
+        <p style="margin:16px 0 4px;color:#888"><b>Message</b></p>
+        <p style="white-space:pre-wrap;font-size:14px;background:#f6f6f6;padding:12px;border-radius:8px">${(p.message || '(no message)').replace(/</g, '&lt;')}</p>
+        <p style="margin-top:16px;font-size:12px;color:#999">Reply directly to ${p.email}</p>
+      </div>`,
+    })
+    console.log(`✅ Contact email sent to ${to}`)
+  } catch (err) {
+    console.error('❌ Failed to send contact email:', err)
+  }
+}
+
 export async function sendWelcomeEmail(email: string, name: string) {
   if (!process.env.RESEND_API_KEY) return
   try {

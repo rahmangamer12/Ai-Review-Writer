@@ -1,22 +1,47 @@
 'use client'
 
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { CheckCircle, Mail, Phone, MapPin, Clock, Send, Calendar } from 'lucide-react'
-import { useForm, ValidationError } from '@formspree/react'
 import { useToast } from '@/components/ui/Toast'
 
 export default function ContactPage() {
-  const [state, handleSubmit] = useForm("xreqgero")
   const { info: toastInfo } = useToast()
-  
-  if (!state) {
-    return <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="text-white">Loading form...</div>
-    </div>
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState('')
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (submitting) return
+    setSubmitting(true)
+    setError('')
+    const fd = new FormData(e.currentTarget)
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'contact',
+          name: String(fd.get('name') || ''),
+          email: String(fd.get('email') || ''),
+          phone: String(fd.get('phone') || ''),
+          subject: String(fd.get('subject') || ''),
+          message: String(fd.get('message') || ''),
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Could not send your message.')
+      setSubmitted(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not send your message.')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const handleScheduleCall = () => {
-    toastInfo('Schedule a Call', 'Email rahman.mac.apple@gamil.com or abdulmoto656@gmail.com with your preferred time and phone or WhatsApp number.')
+    toastInfo('Schedule a Call', 'Email rahman.mac.apple@gmail.com or abdulmoto656@gmail.com with your preferred time and phone or WhatsApp number.')
   }
 
   return (
@@ -44,7 +69,7 @@ export default function ContactPage() {
           >
             <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6">Send us a Message</h2>
             
-            {state.succeeded ? (
+            {submitted ? (
               <div className="text-center py-12">
                 <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="w-9 h-9 text-white" />
@@ -64,7 +89,6 @@ export default function ContactPage() {
                     className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-primary transition-colors"
                     placeholder="Your full name"
                   />
-                  <ValidationError prefix="Name" field="name" errors={state.errors} />
                 </div>
 
                 <div>
@@ -77,7 +101,6 @@ export default function ContactPage() {
                     className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-primary transition-colors"
                     placeholder="your@email.com"
                   />
-                  <ValidationError prefix="Email" field="email" errors={state.errors} />
                 </div>
 
                 <div>
@@ -89,7 +112,6 @@ export default function ContactPage() {
                     className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-primary transition-colors"
                     placeholder="Phone or WhatsApp number"
                   />
-                  <ValidationError prefix="Phone" field="phone" errors={state.errors} />
                 </div>
 
                 <div>
@@ -107,7 +129,6 @@ export default function ContactPage() {
                     <option value="feature" style={{ backgroundColor: '#1f2937', color: 'white' }}>Feature Request</option>
                     <option value="partnership" style={{ backgroundColor: '#1f2937', color: 'white' }}>Partnership Opportunity</option>
                   </select>
-                  <ValidationError prefix="Subject" field="subject" errors={state.errors} />
                 </div>
 
                 <div>
@@ -120,17 +141,22 @@ export default function ContactPage() {
                     className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-primary transition-colors resize-none"
                     placeholder="Tell us how we can help..."
                   />
-                  <ValidationError prefix="Message" field="message" errors={state.errors} />
                 </div>
+
+                {error && (
+                  <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+                    {error}
+                  </div>
+                )}
 
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  disabled={state.submitting}
-                  className={`w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 bg-linear-to-r from-primary to-accent text-white hover:from-primary/90 hover:to-accent/90 ${state.submitting ? 'opacity-50 cursor-wait' : ''}`}
+                  disabled={submitting}
+                  className={`w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 bg-linear-to-r from-primary to-accent text-white hover:from-primary/90 hover:to-accent/90 ${submitting ? 'opacity-50 cursor-wait' : ''}`}
                 >
-                  {state.submitting ? (
+                  {submitting ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       Sending...
@@ -197,8 +223,8 @@ export default function ContactPage() {
                   </div>
                   <div>
                     <p className="text-white/60 text-sm mb-1">Primary Email</p>
-                    <a href="mailto:rahman.mac.apple@gamil.com?cc=abdulmoto656@gmail.com" className="text-white hover:text-primary transition-colors font-medium">
-                      rahman.mac.apple@gamil.com
+                    <a href="mailto:rahman.mac.apple@gmail.com?cc=abdulmoto656@gmail.com" className="text-white hover:text-primary transition-colors font-medium">
+                      rahman.mac.apple@gmail.com
                     </a>
                     <a href="mailto:abdulmoto656@gmail.com" className="mt-1 block text-white/70 hover:text-primary transition-colors text-sm">
                       abdulmoto656@gmail.com

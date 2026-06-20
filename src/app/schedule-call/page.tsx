@@ -3,12 +3,42 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { Calendar, Clock, Video, Mail, Phone, User, Building2, MessageSquare } from 'lucide-react'
-import { useForm, ValidationError } from '@formspree/react'
-
 export default function ScheduleCallPage() {
-  const [state, handleSubmit] = useForm("xreqgero") // Use same Formspree ID or create new one
+  const [submitting, setSubmitting] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState('')
 
-  if (state.succeeded) {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    if (submitting) return
+    setSubmitting(true)
+    setError('')
+    const fd = new FormData(e.currentTarget)
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'schedule',
+          name: String(fd.get('name') || ''),
+          email: String(fd.get('email') || ''),
+          phone: String(fd.get('phone') || ''),
+          business: String(fd.get('business') || ''),
+          preferredTime: String(fd.get('preferredTime') || ''),
+          message: String(fd.get('message') || ''),
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Could not schedule your call.')
+      setSubmitted(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not schedule your call.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  if (submitted) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <motion.div
@@ -77,7 +107,6 @@ export default function ScheduleCallPage() {
                     placeholder="John Doe"
                   />
                 </div>
-                <ValidationError prefix="Name" field="name" errors={state.errors} />
               </div>
 
               <div>
@@ -95,7 +124,6 @@ export default function ScheduleCallPage() {
                     placeholder="john@example.com"
                   />
                 </div>
-                <ValidationError prefix="Email" field="email" errors={state.errors} />
               </div>
 
               <div>
@@ -113,7 +141,6 @@ export default function ScheduleCallPage() {
                     placeholder="Phone or WhatsApp number"
                   />
                 </div>
-                <ValidationError prefix="Phone" field="phone" errors={state.errors} />
               </div>
 
               <div>
@@ -130,7 +157,6 @@ export default function ScheduleCallPage() {
                     placeholder="Your Business Name"
                   />
                 </div>
-                <ValidationError prefix="Business" field="business" errors={state.errors} />
               </div>
 
               <div>
@@ -150,7 +176,6 @@ export default function ScheduleCallPage() {
                     <option value="evening" style={{ backgroundColor: '#1f2937', color: 'white' }}>Evening (5 PM - 8 PM)</option>
                   </select>
                 </div>
-                <ValidationError prefix="Preferred Time" field="preferredTime" errors={state.errors} />
               </div>
 
               <div>
@@ -167,19 +192,24 @@ export default function ScheduleCallPage() {
                     placeholder="Tell us about your business and what you need help with..."
                   />
                 </div>
-                <ValidationError prefix="Message" field="message" errors={state.errors} />
               </div>
+
+              {error && (
+                <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+                  {error}
+                </div>
+              )}
 
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 type="submit"
-                disabled={state.submitting}
+                disabled={submitting}
                 className={`w-full py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 bg-linear-to-r from-primary to-accent text-white hover:opacity-90 ${
-                  state.submitting ? 'opacity-50 cursor-wait' : ''
+                  submitting ? 'opacity-50 cursor-wait' : ''
                 }`}
               >
-                {state.submitting ? (
+                {submitting ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     Scheduling...
@@ -294,11 +324,11 @@ export default function ScheduleCallPage() {
               <h3 className="text-lg font-bold text-white mb-4">Need Help?</h3>
               <div className="space-y-3">
                 <a
-                  href="mailto:rahman.mac.apple@gamil.com?cc=abdulmoto656@gmail.com"
+                  href="mailto:rahman.mac.apple@gmail.com?cc=abdulmoto656@gmail.com"
                   className="flex items-center gap-3 text-white/70 hover:text-primary transition-colors"
                 >
                   <Mail className="w-5 h-5" />
-                  <span className="text-sm">rahman.mac.apple@gamil.com / abdulmoto656@gmail.com</span>
+                  <span className="text-sm">rahman.mac.apple@gmail.com / abdulmoto656@gmail.com</span>
                 </a>
                 <a
                   href="/contact"
