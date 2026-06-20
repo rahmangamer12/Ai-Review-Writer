@@ -80,6 +80,8 @@ CRITICAL INSTRUCTIONS FOR YOU:
 
 const LongCatModels = [
   { id: LONGCAT_DEFAULT_MODEL, name: LONGCAT_MODEL_LABEL, icon: <Zap className="w-3.5 h-3.5" /> },
+  { id: 'agnes-2.0-flash', name: 'Agnes 2.0 Flash', icon: <Sparkles className="w-3.5 h-3.5" /> },
+  { id: 'agnes-1.5-flash', name: 'Agnes 1.5 Flash', icon: <Globe className="w-3.5 h-3.5" /> },
 ]
 
 // Custom Typewriter Component for Markdown
@@ -430,8 +432,10 @@ export default function AIChatbot() {
 
     setError(null)
 
-    if (uploadedFiles.length > 0) {
-      setError('Image analysis is temporarily unavailable on the current LongCat model. Please send a text question.')
+    // Vision (image input) is supported on Agnes models; block only for non-vision models.
+    const VISION_MODELS = ['agnes-2.0-flash', 'agnes-1.5-flash']
+    if (uploadedFiles.length > 0 && !VISION_MODELS.includes(selectedModel)) {
+      setError('Image analysis needs a vision model. Switch to Agnes 2.0 or 1.5 Flash (model picker) to analyze images.')
       return
     }
 

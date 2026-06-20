@@ -6,7 +6,8 @@ import { streamText } from 'ai';
 import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit';
 import { z } from 'zod';
 import { withCSRFProtection } from '@/lib/csrfProtection';
-import { LONGCAT_DEFAULT_MODEL, normalizeLongCatModel } from '@/lib/longcatModels';
+import { LONGCAT_DEFAULT_MODEL } from '@/lib/longcatModels';
+import { resolveChatProvider } from '@/lib/aiModels';
 import { ensureUserAccount } from '@/lib/userAccount';
 import { CreditsManager } from '@/lib/credits';
 
@@ -73,11 +74,13 @@ async function handler(request: NextRequest) {
     const validated = chatRequestSchema.parse(body);
 
     const { messages, temperature, max_tokens: requestedMaxTokens, fastMode } = validated;
-    const selectedModel = normalizeLongCatModel(validated.model);
+    // Resolve provider (LongCat or Agnes) from the requested model id.
+    const resolved = resolveChatProvider(validated.model);
+    const selectedModel = resolved.model;
 
-    if (!process.env.LONGCAT_AI_API_KEY) {
+    if (!resolved.apiKey) {
       return NextResponse.json(
-        { error: 'AI models are currently unavailable. Please check your API key.' },
+        { error: `The selected AI model (${resolved.provider}) is not configured. Please add its API key.` },
         { status: 503 }
       );
     }
@@ -105,11 +108,11 @@ async function handler(request: NextRequest) {
       );
     }
 
-    const longcat = createOpenAI({
-      apiKey: process.env.LONGCAT_AI_API_KEY,
-      baseURL: 'https://api.longcat.chat/openai/v1',
+    const aiClient = createOpenAI({
+      apiKey: resolved.apiKey,
+      baseURL: resolved.baseURL,
     });
-    const provider = longcat.chat(selectedModel);
+    const provider = aiClient.chat(selectedModel);
 
     const currentCredits = effectiveCredits;
 
