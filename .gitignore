@@ -73,3 +73,6 @@ motivation/
 
 # Sentry Config File
 .env.sentry-build-plugin
+
+# Clerk keyless/dev artifacts (contain secret keys — never commit)
+.clerk/

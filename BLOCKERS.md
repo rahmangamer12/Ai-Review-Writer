@@ -62,6 +62,19 @@
 
 ---
 
+## 🔴 SECURITY — Rotate exposed Clerk dev key (added autonomous run 2)
+
+### B0: `.clerk/.tmp/keyless.json` (Clerk `sk_test_…` secret) was committed to git
+- **What I did:** removed `.clerk/` from tracking and added it to `.gitignore`, so it
+  will not be committed again. The secret is now out of the working index.
+- **Still required from you:** the key remains in **git history**. Because purging
+  history needs a force-push (a destructive op I will not run autonomously):
+  1. Rotate the Clerk dev/test keys in the Clerk Dashboard (treat the leaked
+     `sk_test_…` as compromised).
+  2. Optionally scrub history with `git filter-repo`/BFG before publishing the repo.
+- These are **dev/test** keys (not `sk_live_`), so production is not directly exposed,
+  but rotate anyway as good hygiene.
+
 ## 🔴 New — Cron Authentication & Plan (added autonomous run 2)
 
 ### B5: Set `CRON_SECRET` in Vercel = your `SCHEDULER_SECRET`

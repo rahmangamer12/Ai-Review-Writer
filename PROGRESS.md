@@ -102,6 +102,34 @@ reset-credits routes compiled).
 **Operational follow-ups logged in BLOCKERS.md:** B5 (`CRON_SECRET`=`SCHEDULER_SECRET`),
 B6 (Vercel Pro for 4 crons), B7 (optional `PREMIUM_AI_API_KEY`).
 
+### Phase 5 — Hardening & Tests ✅ (core) + Phase 4 status
+
+- **5.6 Automated tests:** new `src/lib/__tests__/plans.test.ts` (locks the
+  truthful-pricing invariants + capability gating) and `aiProvider.test.ts` (gateway
+  guardrails). **Full suite: 5 files, 34 tests, all pass.** Plus two real-DB scripts
+  (`test-credit-concurrency.mjs`, `test-webhook-idempotency.mjs`).
+- **5.3/5.4 Auth & ownership:** verified — `src/proxy.ts` (Clerk middleware) gates all
+  protected routes; Prisma review queries scope by `userId`; platform cap now enforced.
+- **5.x SECRET HYGIENE (security fix):** found a committed Clerk `sk_test_` key in
+  `.clerk/.tmp/keyless.json` → untracked it + added `.clerk/` to `.gitignore`. Rotation
+  logged as **B0** (history purge needs a force-push, not done autonomously).
+- Existing: Sentry configured, Upstash rate limiting, CSRF protection, AES-256-GCM
+  encryption, `prefers-reduced-motion` baseline in `globals.css`.
+
+### Phase 4 — Premium UI Rebuild — ⏸️ STAGED (intentionally not force-completed)
+
+Honest status: a full premium redesign of landing/dashboard/subscription/industry pages
+to a "premium standard" requires **visual iteration** and carries real risk of breaking
+currently-working pages — which violates the prime safety rule ("never break a working
+feature") if done blind in an autonomous batch. Delivered safely this run:
+- Subscription page rebuilt to **honest pricing** (coming-soon badges, real caps).
+- Navigation credits UI cleaned up (removed misleading "X/10 prompts").
+- Confirmed a11y reduced-motion baseline.
+
+Remaining (recommended as a supervised effort): design-token system, landing/dashboard
+visual rebuild, Three.js bundle optimization, full WCAG 2.2 AA audit. No working page was
+degraded; this is additive-pending, not broken.
+
 ---
 
 ## Phase 0 — Audit & Plan ✅ COMPLETED
