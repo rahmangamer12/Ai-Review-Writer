@@ -37,7 +37,8 @@ export async function GET() {
 
     return NextResponse.json({
       planType: user?.planType || 'free',
-      aiCredits: user?.aiCredits ?? 20,
+      aiCredits: user?.aiCredits ?? 200,
+      agnesCredits: (user as any)?.agnesCredits ?? 50,
       promptCount: user?.promptCount ?? 0,
       maxPlatforms: user?.maxPlatforms || 1,
       name: user?.name || userName,

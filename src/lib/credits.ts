@@ -1,5 +1,8 @@
 import prisma from '@/lib/db';
-import { PLANS, getPlan, planHasCapability, type Capability } from '@/lib/plans';
+import { PLANS, getPlan, planHasCapability, getPlanAgnesCredits, type Capability } from '@/lib/plans';
+
+// Two independent monthly credit pools.
+export type CreditPool = 'longcat' | 'agnes';
 
 export interface CreditUsage {
   id: string
@@ -38,17 +41,40 @@ export class CreditsManager {
     return getPlan(planId).credits
   }
 
+  static getPlanAgnesCredits(planId: string): number {
+    return getPlanAgnesCredits(planId)
+  }
+
   static getPlanPlatforms(planId: string): number {
     return getPlan(planId).platforms
   }
 
   // ─── Credit Query ───────────────────────────────────────────────────────
-  static async getCredits(userId: string): Promise<number> {
+  static async getCredits(userId: string, pool: CreditPool = 'longcat'): Promise<number> {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { aiCredits: true }
+      select: { aiCredits: true, agnesCredits: true }
     });
-    return user?.aiCredits ?? 0;
+    if (!user) return 0;
+    return pool === 'agnes' ? user.agnesCredits : user.aiCredits;
+  }
+
+  /** Both pool balances + plan allotments in one call (for the credit UI). */
+  static async getAllCredits(userId: string): Promise<{
+    longcat: number; agnes: number; plan: string; longcatMax: number; agnesMax: number;
+  }> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { aiCredits: true, agnesCredits: true, planType: true }
+    });
+    const plan = user?.planType ?? 'free';
+    return {
+      longcat: user?.aiCredits ?? 0,
+      agnes: user?.agnesCredits ?? 0,
+      plan,
+      longcatMax: getPlan(plan).credits,
+      agnesMax: getPlanAgnesCredits(plan),
+    };
   }
 
   static async getUserPlan(userId: string): Promise<string> {
@@ -71,18 +97,25 @@ export class CreditsManager {
     amount: number,
     action: string,
     description?: string,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
+    pool: CreditPool = 'longcat'
   ): Promise<CreditDeductionResult> {
     if (amount <= 0) {
       return { success: false, error: 'transaction_failed' };
     }
+    const isAgnes = pool === 'agnes';
     try {
       const result = await prisma.$transaction(async (tx) => {
-        // 1. Atomic conditional decrement (row-locked guard)
-        const updated = await tx.user.updateMany({
-          where: { id: userId, aiCredits: { gte: amount } },
-          data: { aiCredits: { decrement: amount } },
-        });
+        // 1. Atomic conditional decrement on the chosen pool (row-locked guard)
+        const updated = isAgnes
+          ? await tx.user.updateMany({
+              where: { id: userId, agnesCredits: { gte: amount } },
+              data: { agnesCredits: { decrement: amount } },
+            })
+          : await tx.user.updateMany({
+              where: { id: userId, aiCredits: { gte: amount } },
+              data: { aiCredits: { decrement: amount } },
+            });
 
         // 2. Zero rows affected => either no such user OR not enough credits
         if (updated.count === 0) {
@@ -99,9 +132,9 @@ export class CreditsManager {
         // 3. Read the post-update balance (same tx, after our locked write)
         const fresh = await tx.user.findUnique({
           where: { id: userId },
-          select: { aiCredits: true },
+          select: { aiCredits: true, agnesCredits: true },
         });
-        const newBalance = fresh?.aiCredits ?? 0;
+        const newBalance = (isAgnes ? fresh?.agnesCredits : fresh?.aiCredits) ?? 0;
 
         // 4. Immutable audit log entry
         await tx.creditUsage.create({
@@ -111,7 +144,7 @@ export class CreditsManager {
             amount: -amount, // Negative = deducted
             balanceAfter: newBalance,
             description: description ?? `Credit used for ${action}`,
-            metadata: (metadata ?? {}) as any,
+            metadata: { ...(metadata ?? {}), pool } as any,
           },
         });
 
@@ -132,14 +165,16 @@ export class CreditsManager {
     amount: number,
     action: string,
     description?: string,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
+    pool: CreditPool = 'longcat'
   ): Promise<CreditGrantResult> {
     return this.grantCredits(
       userId,
       amount,
       action,
       description ?? `Refund for failed ${action}`,
-      { ...(metadata ?? {}), refund: true }
+      { ...(metadata ?? {}), refund: true },
+      pool
     );
   }
 
@@ -150,18 +185,25 @@ export class CreditsManager {
     amount: number,
     action: string,
     description?: string,
-    metadata?: Record<string, unknown>
+    metadata?: Record<string, unknown>,
+    pool: CreditPool = 'longcat'
   ): Promise<CreditGrantResult> {
     if (amount <= 0) {
       return { success: false, error: 'transaction_failed' };
     }
+    const isAgnes = pool === 'agnes';
     try {
       const result = await prisma.$transaction(async (tx) => {
-        // 1. Atomic increment (no read-then-write race)
-        const affected = await tx.user.updateMany({
-          where: { id: userId },
-          data: { aiCredits: { increment: amount } },
-        });
+        // 1. Atomic increment on the chosen pool (no read-then-write race)
+        const affected = isAgnes
+          ? await tx.user.updateMany({
+              where: { id: userId },
+              data: { agnesCredits: { increment: amount } },
+            })
+          : await tx.user.updateMany({
+              where: { id: userId },
+              data: { aiCredits: { increment: amount } },
+            });
 
         if (affected.count === 0) {
           return { success: false, error: 'user_not_found' as const };
@@ -170,9 +212,9 @@ export class CreditsManager {
         // 2. Read post-update balance for the audit log
         const fresh = await tx.user.findUnique({
           where: { id: userId },
-          select: { aiCredits: true },
+          select: { aiCredits: true, agnesCredits: true },
         });
-        const newBalance = fresh?.aiCredits ?? amount;
+        const newBalance = (isAgnes ? fresh?.agnesCredits : fresh?.aiCredits) ?? amount;
 
         // 3. Immutable audit log entry
         await tx.creditUsage.create({
@@ -182,7 +224,7 @@ export class CreditsManager {
             amount: amount, // Positive = granted
             balanceAfter: newBalance,
             description: description ?? `Credits granted for ${action}`,
-            metadata: (metadata ?? {}) as any
+            metadata: { ...(metadata ?? {}), pool } as any
           }
         });
 

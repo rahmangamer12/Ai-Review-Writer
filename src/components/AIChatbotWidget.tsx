@@ -9,6 +9,7 @@ import {
   Zap, Upload, Lightbulb, Rocket, Globe
 } from 'lucide-react'
 import { LONGCAT_DEFAULT_MODEL, LONGCAT_MODEL_LABEL } from '@/lib/longcatModels'
+import CreditPills from '@/components/CreditPills'
 
 interface Message {
   id: string
@@ -724,6 +725,12 @@ export default function AIChatbot() {
                     </select>
                     <ChevronDown className="w-3 h-3 text-white/50 mr-2 shrink-0 pointer-events-none" />
                   </div>
+                </div>
+
+                {/* Credit balances (LongCat + Agnes) */}
+                <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-gray-100 dark:border-white/10 bg-white dark:bg-gray-900">
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-white/40">Credits left</span>
+                  <CreditPills refreshKey={messages.length} compact />
                 </div>
 
                 {/* Messages Area */}

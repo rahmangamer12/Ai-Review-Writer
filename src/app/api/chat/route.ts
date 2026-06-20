@@ -9,7 +9,26 @@ import { withCSRFProtection } from '@/lib/csrfProtection';
 import { LONGCAT_DEFAULT_MODEL } from '@/lib/longcatModels';
 import { resolveChatProvider } from '@/lib/aiModels';
 import { ensureUserAccount } from '@/lib/userAccount';
-import { CreditsManager } from '@/lib/credits';
+import { CreditsManager, type CreditPool } from '@/lib/credits';
+
+// Auto-switch to Agnes (vision + search) when the latest message contains an
+// image or clearly asks for live/search information.
+const SEARCH_HINTS = [
+  'search', 'look up', 'lookup', 'latest', 'current', 'today', 'right now',
+  'news', 'weather', 'price of', 'stock', 'real-time', 'realtime', 'google',
+  'find online', 'who won', 'score', 'recent',
+]
+function needsAgnes(messages: Array<{ role?: string; content?: unknown }>): boolean {
+  const last = [...messages].reverse().find((m) => m.role === 'user')
+  if (!last) return false
+  if (Array.isArray(last.content)) {
+    if (last.content.some((p: any) => p?.type === 'image_url' || p?.type === 'image')) return true
+    const text = last.content.map((p: any) => p?.text || '').join(' ').toLowerCase()
+    return SEARCH_HINTS.some((h) => text.includes(h))
+  }
+  const text = String(last.content || '').toLowerCase()
+  return SEARCH_HINTS.some((h) => text.includes(h))
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -52,7 +71,7 @@ async function handler(request: NextRequest) {
       rateLimit(userId, RATE_LIMITS.AI_ANALYSIS).catch(() => ({ success: true, message: '', resetTime: Date.now(), remaining: 100, limit: 100 })), // Fail open for max speed
       prisma.user.findUnique({
         where: { id: userId },
-        select: { id: true, aiCredits: true, email: true, name: true, planType: true }
+        select: { id: true, aiCredits: true, agnesCredits: true, email: true, name: true, planType: true }
       }).catch(() => null)
     ])
 
@@ -74,9 +93,12 @@ async function handler(request: NextRequest) {
     const validated = chatRequestSchema.parse(body);
 
     const { messages, temperature, max_tokens: requestedMaxTokens, fastMode } = validated;
-    // Resolve provider (LongCat or Agnes) from the requested model id.
-    const resolved = resolveChatProvider(validated.model);
+    // Auto-switch to Agnes for image (vision) or search-intent messages.
+    const autoSwitched = needsAgnes(messages as any[]);
+    const requestedModel = autoSwitched ? 'agnes-2.0-flash' : validated.model;
+    const resolved = resolveChatProvider(requestedModel);
     const selectedModel = resolved.model;
+    const pool: CreditPool = resolved.provider === 'agnes' ? 'agnes' : 'longcat';
 
     if (!resolved.apiKey) {
       return NextResponse.json(
@@ -89,7 +111,6 @@ async function handler(request: NextRequest) {
     const email = clerkUser?.emailAddresses?.[0]?.emailAddress || existingUser?.email || `${userId}@unknown.com`
     const name = clerkUser?.fullName || clerkUser?.firstName || existingUser?.name || 'User'
     const userDb = await ensureUserAccount({ userId, email, name }).catch(() => existingUser)
-    const effectiveCredits = userDb?.aiCredits ?? 0
 
     if (!userDb) {
       return NextResponse.json(
@@ -98,11 +119,17 @@ async function handler(request: NextRequest) {
       );
     }
 
+    // Check the balance of the pool this request will use.
+    const effectiveCredits = (pool === 'agnes' ? (userDb as any)?.agnesCredits : userDb?.aiCredits) ?? 0
+
     if (effectiveCredits <= 0) {
+      const label = pool === 'agnes' ? 'Agnes (search & vision)' : 'LongCat'
       return NextResponse.json(
         {
-          error: 'Insufficient AI credits. Please upgrade your plan to continue chatting.',
-          creditsRemaining: 0
+          error: `You're out of ${label} credits this month. Upgrade your plan to continue.`,
+          pool,
+          creditsRemaining: 0,
+          upgradeUrl: '/subscription',
         },
         { status: 402 }
       );
@@ -177,12 +204,14 @@ CRITICAL INSTRUCTIONS FOR YOU:
         setImmediate(async () => {
           try {
             // Credit model: 1 credit = 1 AI response (atomic, concurrency-safe).
+            // Deduct from the pool that served this request (LongCat or Agnes).
             const creditResult = await CreditsManager.useCredits(
               userDb.id,
               1,
               'chat_message',
-              'Sarah AI chat response',
-              { sessionId }
+              `Sarah AI chat (${pool})`,
+              { sessionId, model: selectedModel, autoSwitched },
+              pool
             );
 
             if (creditResult.success) {
@@ -213,7 +242,10 @@ CRITICAL INSTRUCTIONS FOR YOU:
     return new Response(result.textStream, {
        headers: {
         'Content-Type': 'text/plain; charset=utf-8',
-        'x-credits-remaining': currentCredits.toString(),
+        'x-credits-remaining': Math.max(0, currentCredits - 1).toString(),
+        'x-credit-pool': pool,
+        'x-model-used': selectedModel,
+        'x-auto-switched': autoSwitched ? '1' : '0',
         'x-credits-per-prompt': '1'
        }
     });

@@ -14,6 +14,7 @@ import ChatSidebar from '@/components/chat-internal/ChatSidebar'
 import ChatMessages from '@/components/chat-internal/ChatMessages'
 import ChatInput from '@/components/chat-internal/ChatInput'
 import ModelSelector from '@/components/chat-internal/ModelSelector'
+import CreditPills from '@/components/CreditPills'
 import SettingsModal from '@/components/chat-internal/SettingsModal'
 
 import {
@@ -502,6 +503,7 @@ export default function ChatPage() {
           </div>
 
           <div className="flex items-center gap-1.5 sm:gap-2">
+            <CreditPills className="hidden sm:flex mr-1" refreshKey={messages.length} />
             <div className="hidden md:flex items-center gap-2 mr-2 border-r border-white/10 pr-2">
               <motion.button whileTap={{ scale: 0.95 }} onClick={exportHistory} className="p-2.5 bg-white/5 rounded-2xl flex items-center justify-center active:bg-white/10" title="Export">
                 <Download className="w-4 h-4 text-white/70" />

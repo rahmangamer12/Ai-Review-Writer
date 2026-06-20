@@ -19,6 +19,7 @@ interface SubscriptionPlan {
   monthlyPrice: number
   yearlyPrice: number
   credits: number
+  agnesCredits: number
   features: PlanFeature[]
   popular?: boolean
   color: string
@@ -44,6 +45,7 @@ const plans: SubscriptionPlan[] = PLAN_ORDER.map((id) => {
     monthlyPrice: p.monthlyPrice,
     yearlyPrice: p.yearlyPrice,
     credits: p.credits,
+    agnesCredits: p.agnesCredits,
     features: p.features,
     popular: p.popular,
     color: PLAN_PRESENTATION[p.id].color,
@@ -284,9 +286,15 @@ export default function SubscriptionPage() {
                   </div>
 
                   <div className="px-6 pb-5">
-                    <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-3 text-center">
-                      <div className="text-2xl font-bold text-violet-400">{plan.credits}</div>
-                      <div className="text-white/40 text-xs">AI Credits / month</div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-3 text-center">
+                        <div className="text-xl font-bold text-violet-400">{plan.credits}</div>
+                        <div className="text-white/40 text-[10px] leading-tight">LongCat AI / mo</div>
+                      </div>
+                      <div className="bg-white/[0.04] border border-white/[0.06] rounded-xl p-3 text-center">
+                        <div className="text-xl font-bold text-cyan-400">{plan.agnesCredits}</div>
+                        <div className="text-white/40 text-[10px] leading-tight">Agnes search+vision / mo</div>
+                      </div>
                     </div>
                   </div>
 

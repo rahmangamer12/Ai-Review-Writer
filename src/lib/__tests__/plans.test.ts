@@ -14,11 +14,18 @@ describe('plans — canonical single source of truth', () => {
     for (const id of PLAN_ORDER) expect(PLANS[id]).toBeDefined()
   })
 
-  it('credit allotments match the advertised model (1 credit = 1 response)', () => {
-    expect(PLANS.free.credits).toBe(20)
-    expect(PLANS.starter.credits).toBe(100)
-    expect(PLANS.growth.credits).toBe(300)
-    expect(PLANS.business.credits).toBe(1000)
+  it('LongCat credit allotments per plan', () => {
+    expect(PLANS.free.credits).toBe(200)
+    expect(PLANS.starter.credits).toBe(500)
+    expect(PLANS.growth.credits).toBe(1500)
+    expect(PLANS.business.credits).toBe(5000)
+  })
+
+  it('Agnes credit allotments per plan', () => {
+    expect(PLANS.free.agnesCredits).toBe(50)
+    expect(PLANS.starter.agnesCredits).toBe(150)
+    expect(PLANS.growth.agnesCredits).toBe(400)
+    expect(PLANS.business.agnesCredits).toBe(1500)
   })
 
   it('platform caps are real numbers, business effectively unlimited', () => {

@@ -19,10 +19,11 @@ model User {
   // Subscription Details
   stripeCustomerId String?  @unique
   planType         String   @default("free") // free, starter, growth, business
-  aiCredits        Int      @default(20)
+  aiCredits        Int      @default(200) // LongCat credit pool (1 credit = 1 LongCat AI response)
+  agnesCredits     Int      @default(50)  // Agnes credit pool (1 credit = 1 Agnes/search/vision response)
   promptCount      Int      @default(0) // DEPRECATED: credit model is now 1 credit = 1 AI response. Column retained for backward compatibility; not used in logic.
   maxPlatforms     Int      @default(1)
-  creditsRenewAt   DateTime? // When the monthly credit allotment next resets to the plan amount
+  creditsRenewAt   DateTime? // When both monthly credit allotments next reset to the plan amount
 
   // Relations
   platforms        ConnectedPlatform[]

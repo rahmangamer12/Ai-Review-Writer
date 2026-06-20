@@ -74,7 +74,8 @@ export async function POST(req: Request) {
           email: userEmail,
           name: userName,
           planType: 'free',
-          aiCredits: 20,
+          aiCredits: 200,
+          agnesCredits: 50,
           maxPlatforms: 1,
           creditsRenewAt: renewAt,
         }

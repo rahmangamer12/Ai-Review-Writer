@@ -6,7 +6,8 @@ type UserAccountInput = {
   name: string
 }
 
-const DEFAULT_FREE_CREDITS = 20
+const DEFAULT_FREE_CREDITS = 200
+const DEFAULT_FREE_AGNES_CREDITS = 50
 
 function creditsOrDefault(value: number | null | undefined) {
   return value ?? DEFAULT_FREE_CREDITS
@@ -68,6 +69,7 @@ export async function ensureUserAccount({ userId, email, name }: UserAccountInpu
       name,
       planType: 'free',
       aiCredits: DEFAULT_FREE_CREDITS,
+      agnesCredits: DEFAULT_FREE_AGNES_CREDITS,
       promptCount: 0,
       maxPlatforms: 1,
       creditsRenewAt: renewAt,

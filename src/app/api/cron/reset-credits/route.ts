@@ -41,27 +41,28 @@ export async function GET(request: NextRequest) {
       where: {
         OR: [{ creditsRenewAt: null }, { creditsRenewAt: { lte: now } }],
       },
-      select: { id: true, planType: true, aiCredits: true },
+      select: { id: true, planType: true, aiCredits: true, agnesCredits: true },
       take: 500,
     })
 
     let reset = 0
     for (const user of dueUsers) {
-      const allotment = CreditsManager.getPlanCredits(user.planType)
+      const longcatAllot = CreditsManager.getPlanCredits(user.planType)
+      const agnesAllot = CreditsManager.getPlanAgnesCredits(user.planType)
       try {
         await prisma.$transaction(async (tx) => {
           await tx.user.update({
             where: { id: user.id },
-            data: { aiCredits: allotment, creditsRenewAt: nextRenew },
+            data: { aiCredits: longcatAllot, agnesCredits: agnesAllot, creditsRenewAt: nextRenew },
           })
           await tx.creditUsage.create({
             data: {
               userId: user.id,
               action: 'monthly_reset',
-              amount: allotment - user.aiCredits, // net change (can be +/-)
-              balanceAfter: allotment,
-              description: `Monthly reset to ${user.planType} allotment (${allotment} credits)`,
-              metadata: { plan: user.planType, previousCredits: user.aiCredits } as any,
+              amount: longcatAllot - user.aiCredits,
+              balanceAfter: longcatAllot,
+              description: `Monthly reset to ${user.planType}: ${longcatAllot} LongCat + ${agnesAllot} Agnes`,
+              metadata: { plan: user.planType, longcat: longcatAllot, agnes: agnesAllot } as any,
             },
           })
         })

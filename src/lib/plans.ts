@@ -39,8 +39,10 @@ export interface PlanDef {
   description: string
   monthlyPrice: number
   yearlyPrice: number
-  /** AI responses granted per month (1 credit = 1 AI response) */
+  /** LongCat AI responses granted per month (1 credit = 1 response) */
   credits: number
+  /** Agnes (search + vision) responses granted per month */
+  agnesCredits: number
   /** Maximum connected review platforms. Business is effectively unlimited. */
   platforms: number
   popular?: boolean
@@ -62,10 +64,12 @@ export const PLANS: Record<PlanId, PlanDef> = {
     description: 'Get started at no cost',
     monthlyPrice: 0,
     yearlyPrice: 0,
-    credits: 20,
+    credits: 200,
+    agnesCredits: 50,
     platforms: 1,
     features: [
-      f('20 AI responses per month'),
+      f('200 LongCat AI responses / month'),
+      f('50 Agnes search & vision credits / month'),
       f('1 platform connection'),
       f('Basic dashboard'),
       f('Email support'),
@@ -79,11 +83,13 @@ export const PLANS: Record<PlanId, PlanDef> = {
     description: 'Perfect for small business',
     monthlyPrice: 9,
     yearlyPrice: 90,
-    credits: 100,
+    credits: 500,
+    agnesCredits: 150,
     platforms: 3,
     popular: true,
     features: [
-      f('100 AI responses per month'),
+      f('500 LongCat AI responses / month'),
+      f('150 Agnes search & vision credits / month'),
       f('3 platform connections'),
       f('Bulk reply generation'),
       f('Response templates'),
@@ -98,10 +104,12 @@ export const PLANS: Record<PlanId, PlanDef> = {
     description: 'For growing businesses',
     monthlyPrice: 19,
     yearlyPrice: 190,
-    credits: 300,
+    credits: 1500,
+    agnesCredits: 400,
     platforms: 10,
     features: [
-      f('300 AI responses per month'),
+      f('1500 LongCat AI responses / month'),
+      f('400 Agnes search & vision credits / month'),
       f('Up to 10 platform connections'),
       f('Auto-draft replies'),
       f('Sentiment reports'),
@@ -121,10 +129,12 @@ export const PLANS: Record<PlanId, PlanDef> = {
     description: 'For multi-location teams',
     monthlyPrice: 39,
     yearlyPrice: 390,
-    credits: 1000,
+    credits: 5000,
+    agnesCredits: 1500,
     platforms: UNLIMITED_PLATFORMS,
     features: [
-      f('1000 AI responses per month'),
+      f('5000 LongCat AI responses / month'),
+      f('1500 Agnes search & vision credits / month'),
       f('Unlimited platform connections'),
       f('Advanced analytics'),
       f('Priority support (4h SLA)'),
@@ -149,6 +159,10 @@ export function getPlan(planId: string): PlanDef {
 
 export function planHasCapability(planId: string, cap: Capability): boolean {
   return getPlan(planId).capabilities.includes(cap)
+}
+
+export function getPlanAgnesCredits(planId: string): number {
+  return getPlan(planId).agnesCredits
 }
 
 /** Display helper: render the platform cap as a human string. */

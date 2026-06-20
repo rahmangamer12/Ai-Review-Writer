@@ -183,6 +183,7 @@ async function handlePaymentSuccess(event: any) {
 
     // Use CreditsManager as single source of truth for credit amounts
     const planCredits = CreditsManager.getPlanCredits(plan)
+    const planAgnesCredits = CreditsManager.getPlanAgnesCredits(plan)
     const planPlatforms = CreditsManager.getPlanPlatforms(plan)
 
     try {
@@ -215,6 +216,7 @@ async function handlePaymentSuccess(event: any) {
             planType: plan,
             maxPlatforms: planPlatforms,
             aiCredits: { increment: planCredits },
+            agnesCredits: { increment: planAgnesCredits },
             creditsRenewAt: renewAt,
           },
           select: { id: true, email: true, name: true, aiCredits: true },
@@ -268,6 +270,7 @@ async function handleSubscriptionExpired(event: any) {
   if (customData?.userId) {
     try {
       const freeCredits = CreditsManager.getPlanCredits('free')
+      const freeAgnesCredits = CreditsManager.getPlanAgnesCredits('free')
       const freePlatforms = CreditsManager.getPlanPlatforms('free')
 
       const updatedUser = await prisma.user.update({
@@ -275,6 +278,7 @@ async function handleSubscriptionExpired(event: any) {
         data: {
           planType: 'free',
           aiCredits: freeCredits,
+          agnesCredits: freeAgnesCredits,
           maxPlatforms: freePlatforms
         }
       });
