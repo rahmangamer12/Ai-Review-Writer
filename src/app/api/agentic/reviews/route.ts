@@ -4,6 +4,7 @@ import prisma from '@/lib/db'
 import { longcatAI } from '@/lib/longcatAI'
 import { aiProvider } from '@/lib/ai/provider'
 import { CreditsManager } from '@/lib/credits'
+import { serverError } from '@/lib/apiError'
 
 // POST - Run agentic review processing with REAL AI
 // REQUIRES: Growth or Business plan (auto_reply feature)
@@ -178,9 +179,7 @@ export async function POST(req: NextRequest) {
       timestamp: new Date().toISOString()
     })
   } catch (error: unknown) {
-    console.error('[Agentic] Fatal error:', error)
-    const message = error instanceof Error ? error.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return serverError('[Agentic] Fatal error', error, 'Agentic processing failed. Please try again.')
   }
 }
 
@@ -213,8 +212,6 @@ export async function GET(req: NextRequest) {
       ai_provider: 'LongCat AI'
     })
   } catch (error: unknown) {
-    console.error('[Agentic] Status error:', error)
-    const message = error instanceof Error ? error.message : 'Unknown error'
-    return NextResponse.json({ error: message }, { status: 500 })
+    return serverError('[Agentic] Status error', error, 'Failed to load agentic status.')
   }
 }

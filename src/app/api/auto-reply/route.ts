@@ -51,8 +51,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error: unknown) {
     console.error('[Auto Reply API Error]:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -95,8 +94,7 @@ export async function GET(request: NextRequest) {
 
   } catch (error: unknown) {
     console.error('[Auto Reply API Error]:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -129,7 +127,6 @@ export async function PUT(request: NextRequest) {
 
   } catch (error: unknown) {
     console.error('[Auto Reply API Error]:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

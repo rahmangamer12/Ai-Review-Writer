@@ -73,7 +73,7 @@ async function handler(request: NextRequest) {
 
   } catch (error: unknown) {
     console.error('[Process API Error]:', error);
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 

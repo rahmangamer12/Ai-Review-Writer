@@ -61,6 +61,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(normalizeNotification(data))
   } catch (error: unknown) {
-    return NextResponse.json({ error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
+    console.error('[Notifications API Error]:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
 }

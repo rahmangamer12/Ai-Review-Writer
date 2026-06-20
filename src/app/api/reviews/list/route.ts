@@ -121,9 +121,9 @@ export async function GET(req: NextRequest) {
     })
   } catch (error: unknown) {
     console.error('Reviews list API error:', error)
-    return NextResponse.json({ 
+    return NextResponse.json({
       reviews: [], totalCount: 0, totalPages: 0, currentPage: 1, platforms: [],
-      error: error instanceof Error ? error.message : 'Unknown error' 
+      error: 'Internal server error'
     }, { status: 500 })
   }
 }

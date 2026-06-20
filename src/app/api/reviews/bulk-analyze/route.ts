@@ -59,8 +59,7 @@ export async function POST(request: NextRequest) {
 
   } catch (error: unknown) {
     console.error('[Bulk Analyze API Error]:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: 'Failed to analyze reviews', details: message, success: false }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to analyze reviews', success: false }, { status: 500 });
   }
 }
 

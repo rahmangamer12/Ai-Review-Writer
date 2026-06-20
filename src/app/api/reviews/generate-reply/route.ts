@@ -312,10 +312,9 @@ async function handler(request: NextRequest) {
       })
     }
 
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    // Do not leak raw error detail to the client (can disclose DB/internal info).
     return NextResponse.json({
-      error: 'Failed to process request',
-      details: message,
+      error: 'Failed to process request. Please try again.',
       success: false
     }, {
       status: 500,

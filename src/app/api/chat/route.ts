@@ -227,11 +227,12 @@ CRITICAL INSTRUCTIONS FOR YOU:
       }, { status: 400 });
     }
 
-    const message = String(error?.message || 'An error occurred. Please try again.')
+    // Sanitized: surface a helpful hint for key issues, otherwise generic.
+    const raw = String(error?.message || '')
     return NextResponse.json({
-      error: message.includes('API key')
-        ? 'AI provider rejected the request. Please verify the LongCat API key in Vercel.'
-        : message,
+      error: raw.includes('API key')
+        ? 'AI provider rejected the request. Please verify the LongCat API key.'
+        : 'An error occurred while processing your message. Please try again.',
       success: false
     }, { status: 500 });
   }
