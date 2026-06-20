@@ -1,0 +1,40 @@
+name: Scheduled Jobs (free cron — replaces Vercel Pro crons)
+
+# Free alternative to Vercel cron (Hobby allows only 2 daily crons).
+# GitHub Actions runs these on schedule and calls the app's secured cron
+# endpoints with SCHEDULER_SECRET.
+#
+# REQUIRED GitHub repo secrets (Settings → Secrets and variables → Actions):
+#   APP_BASE_URL      e.g. https://ai-review-writer.vercel.app  (no trailing slash)
+#   SCHEDULER_SECRET  same value as the app's SCHEDULER_SECRET env var
+
+on:
+  schedule:
+    - cron: '0 * * * *'    # hourly      → triage / damage-control
+    - cron: '0 0 * * *'    # daily 00:00 → auto-reply scheduler
+    - cron: '0 2 * * *'    # daily 02:00 → monthly credit reset (no-op until due)
+    - cron: '0 9 * * 1'    # Mon  09:00  → weekly insight emails
+  workflow_dispatch: {}     # allow manual "Run workflow" for testing
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    env:
+      BASE: ${{ secrets.APP_BASE_URL }}
+      SECRET: ${{ secrets.SCHEDULER_SECRET }}
+    steps:
+      - name: Triage (hourly)
+        if: github.event.schedule == '0 * * * *' || github.event_name == 'workflow_dispatch'
+        run: curl -fsS -X GET "$BASE/api/agentic/triage" -H "Authorization: Bearer $SECRET"
+
+      - name: Auto-reply scheduler (daily)
+        if: github.event.schedule == '0 0 * * *' || github.event_name == 'workflow_dispatch'
+        run: curl -fsS -X GET "$BASE/api/scheduler" -H "Authorization: Bearer $SECRET"
+
+      - name: Monthly credit reset (daily check)
+        if: github.event.schedule == '0 2 * * *' || github.event_name == 'workflow_dispatch'
+        run: curl -fsS -X GET "$BASE/api/cron/reset-credits" -H "Authorization: Bearer $SECRET"
+
+      - name: Weekly insights (Mondays)
+        if: github.event.schedule == '0 9 * * 1' || github.event_name == 'workflow_dispatch'
+        run: curl -fsS -X GET "$BASE/api/cron/weekly-insights" -H "Authorization: Bearer $SECRET"

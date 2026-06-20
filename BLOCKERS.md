@@ -75,19 +75,20 @@
 - These are **dev/test** keys (not `sk_live_`), so production is not directly exposed,
   but rotate anyway as good hygiene.
 
-## 🔴 New — Cron Authentication & Plan (added autonomous run 2)
+## 🟢 Cron jobs — FREE solution via GitHub Actions (no Vercel Pro needed)
 
-### B5: Set `CRON_SECRET` in Vercel = your `SCHEDULER_SECRET`
-- **Why:** Vercel Cron sends `Authorization: Bearer $CRON_SECRET` to scheduled
-  requests. Our cron routes (`/api/scheduler`, `/api/cron/reset-credits`,
-  `/api/agentic/triage`, `/api/cron/weekly-insights`) authorize against
-  `SCHEDULER_SECRET`. If `CRON_SECRET` ≠ `SCHEDULER_SECRET`, every cron returns 401.
-- **Action:** In Vercel → Settings → Environment Variables, set `CRON_SECRET` to the
-  exact same value as `SCHEDULER_SECRET`.
+Because Vercel Hobby allows only 2 daily crons, scheduled jobs now run through
+**GitHub Actions** (`.github/workflows/scheduled-jobs.yml`) — free, any frequency.
+`vercel.json` no longer defines crons. `CRON_SECRET` is NOT needed.
 
-### B6: Vercel plan must allow 4 cron jobs
-- `vercel.json` now defines **4** crons. Vercel **Hobby allows only 2**; **Pro allows 40**.
-- **Action:** Use a Pro plan, or remove crons you don't need from `vercel.json`.
+### B5 (action): Add 2 GitHub repo secrets
+- In GitHub → repo → **Settings → Secrets and variables → Actions → New repository secret**:
+  1. `APP_BASE_URL` = your production URL, e.g. `https://ai-review-writer.vercel.app` (no trailing slash)
+  2. `SCHEDULER_SECRET` = the exact same value as your app's `SCHEDULER_SECRET` env var
+- That's it — triage (hourly), auto-reply scheduler (daily), credit reset (daily),
+  and weekly insights (Mondays) will run automatically. You can also trigger them
+  manually from the Actions tab ("Run workflow").
+- Note: GitHub Actions schedules use UTC and free private-repo minutes are ample for these.
 
 ## 🟢 Nice-to-Have (Can Add Later)
 
