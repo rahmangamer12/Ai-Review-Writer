@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion'
 import {
-  Activity,
   AlertTriangle,
   Brain,
   CheckCircle,
@@ -56,15 +55,20 @@ export default function OverviewTab({
       <motion.section
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        className="overflow-hidden rounded-2xl border border-white/10 bg-[#0d0d14]/90"
+        className="relative overflow-hidden rounded-3xl border border-white/[0.08] bg-gradient-to-br from-[#0d0d1a] to-[#070710]"
       >
-        <div className="grid gap-6 p-5 sm:p-6 lg:grid-cols-[1.25fr_0.75fr] lg:p-8">
+        <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-fuchsia-600/20 blur-[100px]" />
+        <div className="pointer-events-none absolute -left-20 bottom-0 h-56 w-56 rounded-full bg-cyan-500/10 blur-[90px]" />
+        <div className="relative grid gap-6 p-5 sm:p-6 lg:grid-cols-[1.25fr_0.75fr] lg:p-8">
           <div className="min-w-0">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-cyan-200">
-              <Activity className="h-3.5 w-3.5" />
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-cyan-400/25 bg-cyan-400/10 px-3 py-1 text-xs font-bold uppercase tracking-widest text-cyan-200">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+              </span>
               Live workspace
             </div>
-            <h1 className="max-w-3xl break-words text-2xl font-black tracking-tight text-white sm:text-3xl lg:text-4xl">
+            <h1 className="max-w-3xl break-words bg-gradient-to-br from-white via-white to-white/60 bg-clip-text text-2xl font-black tracking-tight text-transparent sm:text-3xl lg:text-4xl">
               Review command center
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60 sm:text-base">
@@ -73,7 +77,7 @@ export default function OverviewTab({
             <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <button
                 onClick={() => setActiveTab('reviews')}
-                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-black transition hover:bg-white/90 sm:w-auto sm:justify-start"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-500 to-cyan-500 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-violet-500/20 transition hover:scale-[1.02] active:scale-95 sm:w-auto sm:justify-start"
               >
                 <MessageSquare className="h-4 w-4 shrink-0" />
                 Manage reviews
@@ -148,9 +152,10 @@ export default function OverviewTab({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5"
+          className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5"
         >
-          <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-violet-500/15 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100" />
+          <div className="relative mb-4 flex items-center justify-between gap-3">
             <div className="min-w-0">
               <h3 className="text-lg font-semibold text-white">Quick actions</h3>
               <p className="text-sm text-white/45">Add reviews or let AI prepare replies.</p>
@@ -190,9 +195,10 @@ export default function OverviewTab({
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
-          className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5"
+          className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5"
         >
-          <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-emerald-500/15 opacity-0 blur-2xl transition-opacity duration-300 group-hover:opacity-100" />
+          <div className="relative mb-4 flex items-center justify-between gap-3">
             <div className="min-w-0">
               <h3 className="text-lg font-semibold text-white">Workspace health</h3>
               <p className="text-sm text-white/45">Based on saved review records.</p>
