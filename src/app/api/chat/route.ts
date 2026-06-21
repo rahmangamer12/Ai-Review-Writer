@@ -10,24 +10,36 @@ import { LONGCAT_DEFAULT_MODEL } from '@/lib/longcatModels';
 import { resolveChatProvider } from '@/lib/aiModels';
 import { ensureUserAccount } from '@/lib/userAccount';
 import { CreditsManager, type CreditPool } from '@/lib/credits';
+import { searchWeb, formatSearchContext } from '@/lib/webSearch';
 
-// Auto-switch to Agnes (vision + search) when the latest message contains an
-// image or clearly asks for live/search information.
-const SEARCH_HINTS = [
-  'search', 'look up', 'lookup', 'latest', 'current', 'today', 'right now',
-  'news', 'weather', 'price of', 'stock', 'real-time', 'realtime', 'google',
-  'find online', 'who won', 'score', 'recent',
+// Strong, explicit search/live-info triggers only — casual mentions of words
+// like "google" or "today" no longer route to the search path (which would
+// otherwise burn the wrong credit pool).
+const SEARCH_TRIGGERS = [
+  'search for', 'search the web', 'search online', 'web search', 'look up', 'lookup',
+  'look it up', 'google it', 'find online', 'browse the web', 'latest news',
+  'news about', 'recent news', 'current price', 'price of', 'who won', 'live score',
+  'weather in', 'real-time', 'realtime', "what's happening", 'what is happening',
 ]
-function needsAgnes(messages: Array<{ role?: string; content?: unknown }>): boolean {
+
+function lastUserText(messages: Array<{ role?: string; content?: unknown }>): string {
   const last = [...messages].reverse().find((m) => m.role === 'user')
-  if (!last) return false
-  if (Array.isArray(last.content)) {
-    if (last.content.some((p: any) => p?.type === 'image_url' || p?.type === 'image')) return true
-    const text = last.content.map((p: any) => p?.text || '').join(' ').toLowerCase()
-    return SEARCH_HINTS.some((h) => text.includes(h))
-  }
-  const text = String(last.content || '').toLowerCase()
-  return SEARCH_HINTS.some((h) => text.includes(h))
+  if (!last) return ''
+  if (Array.isArray(last.content)) return last.content.map((p: any) => p?.text || '').join(' ')
+  return String(last.content || '')
+}
+
+function hasImage(messages: Array<{ role?: string; content?: unknown }>): boolean {
+  const last = [...messages].reverse().find((m) => m.role === 'user')
+  if (!last || !Array.isArray(last.content)) return false
+  return last.content.some((p: any) => p?.type === 'image_url' || p?.type === 'image')
+}
+
+function isSearchIntent(text: string): boolean {
+  const t = text.toLowerCase().trim()
+  if (!t) return false
+  if (/^(search|google)\s/.test(t)) return true // message that starts with "search ..."
+  return SEARCH_TRIGGERS.some((h) => t.includes(h))
 }
 
 export const dynamic = 'force-dynamic'
@@ -93,8 +105,12 @@ async function handler(request: NextRequest) {
     const validated = chatRequestSchema.parse(body);
 
     const { messages, temperature, max_tokens: requestedMaxTokens, fastMode } = validated;
-    // Auto-switch to Agnes for image (vision) or search-intent messages.
-    const autoSwitched = needsAgnes(messages as any[]);
+    // Detect intent: image → vision; explicit search/live-info → web search.
+    const userText = lastUserText(messages as any[]);
+    const imagePresent = hasImage(messages as any[]);
+    const searchIntent = !imagePresent && isSearchIntent(userText);
+    // Both vision and search use the Agnes pool.
+    const autoSwitched = imagePresent || searchIntent;
     const requestedModel = autoSwitched ? 'agnes-2.0-flash' : validated.model;
     const resolved = resolveChatProvider(requestedModel);
     const selectedModel = resolved.model;
@@ -184,7 +200,19 @@ CRITICAL INSTRUCTIONS FOR YOU:
 5. Always respond in the exact language the user queries you in.`
     };
 
-    const modelMessages = [godTierPrompt, ...formattedMessages.filter((m: any) => m.role !== 'system')];
+    // For search-intent messages, fetch live web results and give them to the
+    // model so it can answer with fresh context and cite sources.
+    let searchContext: string | null = null;
+    if (searchIntent) {
+      const results = await searchWeb(userText, 5).catch(() => []);
+      searchContext = formatSearchContext(userText, results);
+    }
+
+    const modelMessages = [
+      godTierPrompt,
+      ...(searchContext ? [{ role: 'system', content: searchContext }] : []),
+      ...formattedMessages.filter((m: any) => m.role !== 'system'),
+    ];
     const defaultMaxOutputTokens = 1400;
     const maxOutputTokens = Math.min(
       requestedMaxTokens ?? defaultMaxOutputTokens,
@@ -247,6 +275,7 @@ CRITICAL INSTRUCTIONS FOR YOU:
         'x-credit-pool': pool,
         'x-model-used': selectedModel,
         'x-auto-switched': autoSwitched ? '1' : '0',
+        'x-search-used': searchIntent ? '1' : '0',
         'x-credits-per-prompt': '1'
        }
     });
