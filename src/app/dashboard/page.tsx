@@ -318,8 +318,8 @@ export default function Dashboard() {
 
   if (!mounted) {
     return (
-      <div className="min-h-[100dvh] bg-[#0a0a0f] flex items-center justify-center overflow-x-hidden">
-        <div className="text-center">
+      <div className="min-h-[100dvh] bg-[#030308] flex items-center justify-center overflow-x-hidden w-full">
+        <div className="text-center px-4">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500 mb-4"></div>
           <p className="text-gray-400">Loading dashboard...</p>
         </div>
@@ -329,14 +329,14 @@ export default function Dashboard() {
 
   if (isOffline) {
     return (
-      <div className="min-h-[100dvh] bg-[#0a0a0f] text-white overflow-x-hidden">
-        <div className="fixed top-0 left-0 right-0 z-50 bg-yellow-600/90 text-white px-4 py-2 text-center text-sm font-medium">
+      <div className="min-h-[100dvh] bg-[#030308] text-white overflow-x-hidden w-full">
+        <div className="fixed top-0 inset-x-0 z-50 bg-yellow-600/90 text-white px-4 py-2 text-center text-sm font-medium">
           You are currently offline. Some features may not work properly.
         </div>
         <div className="pt-10">
-          <div className="p-4">
-            <h1 className="text-2xl font-bold mb-4">Dashboard (Offline Mode)</h1>
-            <p className="text-gray-400">Your data will sync when you're back online.</p>
+          <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-4">Dashboard (Offline Mode)</h1>
+            <p className="text-gray-400 break-words">Your data will sync when you're back online.</p>
           </div>
         </div>
       </div>
@@ -347,14 +347,14 @@ export default function Dashboard() {
     <div className="min-h-[100dvh] text-white overflow-x-hidden w-full">
       {/* Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none -z-10">
-        <div className="absolute inset-0 bg-[#08080d]" />
+        <div className="absolute inset-0 bg-[#030308]" />
         <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.035)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.035)_1px,transparent_1px)] bg-[size:44px_44px]" />
         <div className="absolute inset-x-0 top-0 h-64 bg-gradient-to-b from-violet-950/25 to-transparent" />
       </div>
 
       {/* Mobile Tabs */}
-      <div className="sticky top-[57px] lg:top-0 z-40 border-b border-white/5 bg-[#0a0a0f]/95 backdrop-blur-xl">
-        <div className="max-w-full mx-auto px-4 sm:px-6 lg:px-8 min-w-0">
+      <div className="sticky top-[57px] lg:top-0 z-40 border-b border-white/5 bg-[#030308]/80 backdrop-blur-xl">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 min-w-0">
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-3 min-w-0">
             {[
               { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -378,25 +378,25 @@ export default function Dashboard() {
         </div>
       </div>
 
-      <main className="relative z-10 w-full px-0 md:px-6 lg:px-8 min-w-0">
+      <main className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-6 min-w-0">
         <AnimatePresence>
           {error && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="mx-4 mb-6 rounded-xl border border-rose-500/20 bg-rose-500/10 p-4"
+              className="mb-6 rounded-xl border border-rose-500/20 bg-rose-500/10 p-4 min-w-0"
             >
-              <div className="flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-rose-400" />
-                <p className="text-rose-400">{error}</p>
-                <button onClick={() => setError(null)} className="ml-auto"><X className="h-4 w-4 text-rose-400" /></button>
+              <div className="flex items-center gap-3 min-w-0">
+                <AlertCircle className="h-5 w-5 text-rose-400 shrink-0" />
+                <p className="text-rose-400 break-words min-w-0">{error}</p>
+                <button onClick={() => setError(null)} className="ml-auto shrink-0"><X className="h-4 w-4 text-rose-400" /></button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
 
-        <div className="px-4 md:px-0">
+        <div className="min-w-0">
           {activeTab === 'overview' && (
             <OverviewTab 
               data={data} 
@@ -463,12 +463,12 @@ export default function Dashboard() {
               onClick={(e) => e.stopPropagation()}
               className="w-full max-w-xs sm:max-w-md rounded-2xl border border-white/10 bg-[#0f0f14] p-4 sm:p-6 shadow-2xl mobile-modal"
             >
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Download className="h-6 w-6 text-purple-400" />
-                  Export Analytics
+              <div className="mb-6 flex items-center justify-between gap-3 min-w-0">
+                <h3 className="text-lg sm:text-xl font-bold text-white flex items-center gap-2 min-w-0">
+                  <Download className="h-6 w-6 text-purple-400 shrink-0" />
+                  <span className="truncate">Export Analytics</span>
                 </h3>
-                <button onClick={() => setShowExportModal(false)} className="rounded-lg p-2 text-gray-400 hover:bg-white/5 hover:text-white">
+                <button onClick={() => setShowExportModal(false)} className="shrink-0 rounded-lg p-2 text-gray-400 hover:bg-white/5 hover:text-white">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -478,40 +478,40 @@ export default function Dashboard() {
               <div className="space-y-3">
                 <button
                   onClick={() => exportData('csv')}
-                  className="w-full flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/10 transition-all"
+                  className="w-full flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/10 transition-all min-w-0"
                 >
-                  <div className="rounded-lg bg-emerald-500/20 p-2">
+                  <div className="shrink-0 rounded-lg bg-emerald-500/20 p-2">
                     <FileText className="h-5 w-5 text-emerald-400" />
                   </div>
-                  <div>
-                    <p className="font-medium text-white">Export as CSV</p>
-                    <p className="text-sm text-gray-500">Spreadsheet format for Excel</p>
+                  <div className="min-w-0">
+                    <p className="font-medium text-white truncate">Export as CSV</p>
+                    <p className="text-sm text-gray-500 truncate">Spreadsheet format for Excel</p>
                   </div>
                 </button>
-                
+
                 <button
                   onClick={() => exportData('json')}
-                  className="w-full flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/10 transition-all"
+                  className="w-full flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/10 transition-all min-w-0"
                 >
-                  <div className="rounded-lg bg-blue-500/20 p-2">
+                  <div className="shrink-0 rounded-lg bg-blue-500/20 p-2">
                     <FileText className="h-5 w-5 text-blue-400" />
                   </div>
-                  <div>
-                    <p className="font-medium text-white">Export as JSON</p>
-                    <p className="text-sm text-gray-500">Raw data format for developers</p>
+                  <div className="min-w-0">
+                    <p className="font-medium text-white truncate">Export as JSON</p>
+                    <p className="text-sm text-gray-500 truncate">Raw data format for developers</p>
                   </div>
                 </button>
-                
+
                 <button
                   onClick={() => exportData('pdf')}
-                  className="w-full flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/10 transition-all"
+                  className="w-full flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 text-left hover:bg-white/10 transition-all min-w-0"
                 >
-                  <div className="rounded-lg bg-rose-500/20 p-2">
+                  <div className="shrink-0 rounded-lg bg-rose-500/20 p-2">
                     <FileText className="h-5 w-5 text-rose-400" />
                   </div>
-                  <div>
-                    <p className="font-medium text-white">Export as PDF</p>
-                    <p className="text-sm text-gray-500">Formatted report for sharing</p>
+                  <div className="min-w-0">
+                    <p className="font-medium text-white truncate">Export as PDF</p>
+                    <p className="text-sm text-gray-500 truncate">Formatted report for sharing</p>
                   </div>
                 </button>
               </div>

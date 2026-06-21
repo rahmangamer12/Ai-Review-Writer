@@ -98,11 +98,11 @@ export default function ReviewsTab({
                   </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-bold text-white text-base sm:text-lg truncate">{review.reviewer_name || review.author_name || 'Anonymous'}</h4>
-                    <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-400 mt-0.5">
-                      <PlatformIcon platform={review.platform} className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                      <span className="capitalize">{review.platform}</span>
-                      <span>•</span>
-                      <span>{new Date(review.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs sm:text-sm text-gray-400 mt-0.5 min-w-0">
+                      <PlatformIcon platform={review.platform} className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
+                      <span className="capitalize truncate min-w-0">{review.platform}</span>
+                      <span className="shrink-0">•</span>
+                      <span className="shrink-0">{new Date(review.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                     </div>
                   </div>
                 </div>
@@ -124,42 +124,42 @@ export default function ReviewsTab({
                 </div>
               </div>
               <div className="mt-4 sm:mt-5 p-3 sm:p-4 bg-white/[0.02] rounded-xl border border-white/5">
-                <p className="text-sm sm:text-[15px] text-gray-300 leading-relaxed whitespace-pre-wrap">{review.review_text || review.content}</p>
+                <p className="text-sm sm:text-[15px] text-gray-300 leading-relaxed whitespace-pre-wrap break-words">{review.review_text || review.content}</p>
               </div>
               {review.reply?.reply_text && (
                 <div className="mt-3 rounded-xl border border-violet-500/20 bg-violet-500/10 p-3 sm:p-4">
                   <p className="mb-1 text-xs font-semibold uppercase tracking-wider text-violet-300">Saved AI Reply</p>
-                  <p className="text-sm text-violet-100/80 leading-relaxed whitespace-pre-wrap">{review.reply.reply_text}</p>
+                  <p className="text-sm text-violet-100/80 leading-relaxed whitespace-pre-wrap break-words">{review.reply.reply_text}</p>
                 </div>
               )}
               <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-white/5 pt-4">
                 <button
                   onClick={() => onUpdateStatus?.(review.id, 'approved')}
-                  className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300 transition-all hover:bg-emerald-500/20 active:scale-[0.98]"
+                  className="inline-flex min-w-0 items-center gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-300 transition-all hover:bg-emerald-500/20 active:scale-[0.98]"
                 >
-                  <CheckCircle className="h-4 w-4" />
-                  Approve
+                  <CheckCircle className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Approve</span>
                 </button>
                 <button
                   onClick={() => onUpdateStatus?.(review.id, 'rejected')}
-                  className="inline-flex items-center gap-2 rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-300 transition-all hover:bg-rose-500/20 active:scale-[0.98]"
+                  className="inline-flex min-w-0 items-center gap-2 rounded-lg border border-rose-500/20 bg-rose-500/10 px-3 py-2 text-xs font-semibold text-rose-300 transition-all hover:bg-rose-500/20 active:scale-[0.98]"
                 >
-                  <XCircle className="h-4 w-4" />
-                  Reject
+                  <XCircle className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Reject</span>
                 </button>
                 <button
                   onClick={() => onEditReply?.(review.id, review.reply?.reply_text || '')}
-                  className="inline-flex items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-300 transition-all hover:bg-blue-500/20 active:scale-[0.98]"
+                  className="inline-flex min-w-0 items-center gap-2 rounded-lg border border-blue-500/20 bg-blue-500/10 px-3 py-2 text-xs font-semibold text-blue-300 transition-all hover:bg-blue-500/20 active:scale-[0.98]"
                 >
-                  <Edit3 className="h-4 w-4" />
-                  Edit Reply
+                  <Edit3 className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Edit Reply</span>
                 </button>
                 <button
                   onClick={() => onDeleteReview?.(review.id)}
-                  className="ml-auto inline-flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-300 transition-all hover:bg-red-500/20 active:scale-[0.98]"
+                  className="ml-auto inline-flex min-w-0 items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-300 transition-all hover:bg-red-500/20 active:scale-[0.98]"
                 >
-                  <Trash2 className="h-4 w-4" />
-                  Delete
+                  <Trash2 className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Delete</span>
                 </button>
               </div>
             </motion.div>
@@ -173,7 +173,7 @@ export default function ReviewsTab({
           {searchQuery ? (
             <>
               <h3 className="text-xl sm:text-2xl font-bold text-white mb-2">No results found</h3>
-              <p className="text-gray-400 max-w-md mx-auto">We couldn't find any reviews matching "{searchQuery}". Try a different term or clear your search.</p>
+              <p className="text-gray-400 max-w-md mx-auto break-words">We couldn't find any reviews matching "{searchQuery}". Try a different term or clear your search.</p>
               <button onClick={() => setSearchQuery('')} className="mt-6 text-violet-400 hover:text-violet-300 font-medium">Clear search</button>
             </>
           ) : (

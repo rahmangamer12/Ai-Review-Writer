@@ -64,25 +64,25 @@ export default function OverviewTab({
               <Activity className="h-3.5 w-3.5" />
               Live workspace
             </div>
-            <h1 className="max-w-3xl text-2xl font-black tracking-tight text-white sm:text-3xl lg:text-4xl">
+            <h1 className="max-w-3xl break-words text-2xl font-black tracking-tight text-white sm:text-3xl lg:text-4xl">
               Review command center
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60 sm:text-base">
               Track real customer reviews from Prisma-backed data, reply with AI, and keep pending feedback moving without fake dashboard numbers.
             </p>
-            <div className="mt-5 flex flex-wrap gap-3">
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <button
                 onClick={() => setActiveTab('reviews')}
-                className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-black transition hover:bg-white/90"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-black transition hover:bg-white/90 sm:w-auto sm:justify-start"
               >
-                <MessageSquare className="h-4 w-4" />
+                <MessageSquare className="h-4 w-4 shrink-0" />
                 Manage reviews
               </button>
               <button
                 onClick={() => router.push('/connect-platforms')}
-                className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-white transition hover:border-white/20 hover:bg-white/10"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-white transition hover:border-white/20 hover:bg-white/10 sm:w-auto sm:justify-start"
               >
-                <Plug className="h-4 w-4" />
+                <Plug className="h-4 w-4 shrink-0" />
                 Connect platform
               </button>
             </div>
@@ -108,7 +108,7 @@ export default function OverviewTab({
         </div>
       </motion.section>
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         <ModernStatCard
           title="Total Reviews"
           value={totalReviews.toString()}
@@ -151,11 +151,11 @@ export default function OverviewTab({
           className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5"
         >
           <div className="mb-4 flex items-center justify-between gap-3">
-            <div>
+            <div className="min-w-0">
               <h3 className="text-lg font-semibold text-white">Quick actions</h3>
               <p className="text-sm text-white/45">Add reviews or let AI prepare replies.</p>
             </div>
-            <Sparkles className="h-5 w-5 text-violet-300" />
+            <Sparkles className="h-5 w-5 shrink-0 text-violet-300" />
           </div>
           <div className="grid gap-3">
             {[
@@ -176,8 +176,8 @@ export default function OverviewTab({
                     <action.icon className="h-6 w-6" />
                   )}
                 </div>
-                <h4 className="mb-1 font-semibold text-white">{action.title}</h4>
-                <p className="pr-8 text-sm text-gray-500">
+                <h4 className="mb-1 truncate font-semibold text-white">{action.title}</h4>
+                <p className="break-words pr-8 text-sm text-gray-500">
                   {action.title === 'Agentic Reviews' && agenticProcessing ? 'Processing pending reviews...' : action.description}
                 </p>
                 <ChevronRight className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-600 opacity-0 transition-all group-hover:right-3 group-hover:opacity-100" />
@@ -192,28 +192,28 @@ export default function OverviewTab({
           transition={{ delay: 0.45 }}
           className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 sm:p-5"
         >
-          <div className="mb-4 flex items-center justify-between">
-            <div>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="min-w-0">
               <h3 className="text-lg font-semibold text-white">Workspace health</h3>
               <p className="text-sm text-white/45">Based on saved review records.</p>
             </div>
             {stats.pendingReviews > 0 ? (
-              <AlertTriangle className="h-5 w-5 text-amber-300" />
+              <AlertTriangle className="h-5 w-5 shrink-0 text-amber-300" />
             ) : (
-              <ShieldCheck className="h-5 w-5 text-emerald-300" />
+              <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-300" />
             )}
           </div>
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             {[
               { label: 'AI reply share', value: `${aiReplyPercent}%`, caption: `${stats.aiGeneratedReplies} AI replies`, color: 'bg-violet-400' },
               { label: 'Needs attention', value: stats.pendingReviews.toString(), caption: 'Pending queue', color: 'bg-amber-400' },
               { label: 'Rejected', value: stats.rejectedReviews.toString(), caption: 'Marked not usable', color: 'bg-rose-400' },
             ].map((metric) => (
-              <div key={metric.label} className="rounded-xl border border-white/10 bg-black/20 p-4">
+              <div key={metric.label} className="min-w-0 rounded-xl border border-white/10 bg-black/20 p-4">
                 <div className={`mb-3 h-1.5 w-10 rounded-full ${metric.color}`} />
-                <p className="text-2xl font-black text-white">{metric.value}</p>
-                <p className="mt-1 text-xs font-bold uppercase tracking-wider text-white/35">{metric.label}</p>
-                <p className="mt-2 text-xs text-white/45">{metric.caption}</p>
+                <p className="truncate text-2xl font-black text-white">{metric.value}</p>
+                <p className="mt-1 truncate text-xs font-bold uppercase tracking-wider text-white/35">{metric.label}</p>
+                <p className="mt-2 truncate text-xs text-white/45">{metric.caption}</p>
               </div>
             ))}
           </div>
@@ -221,9 +221,9 @@ export default function OverviewTab({
       </div>
 
       <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-white">Recent reviews</h3>
-          <button onClick={() => setActiveTab('reviews')} className="flex items-center gap-1 text-sm text-purple-400 hover:text-purple-300 active:scale-[0.98]">
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <h3 className="min-w-0 truncate text-lg font-semibold text-white">Recent reviews</h3>
+          <button onClick={() => setActiveTab('reviews')} className="flex shrink-0 items-center gap-1 text-sm text-purple-400 hover:text-purple-300 active:scale-[0.98]">
             View all <ChevronRight className="h-4 w-4" />
           </button>
         </div>
@@ -248,9 +248,9 @@ export default function OverviewTab({
                       <h4 className="truncate font-medium text-white">{review.reviewer_name || review.author_name || 'Anonymous'}</h4>
                       <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500">
                         <PlatformIcon platform={review.platform} />
-                        <span className="capitalize">{review.platform}</span>
-                        <span>-</span>
-                        <span>{new Date(review.created_at).toLocaleDateString()}</span>
+                        <span className="truncate capitalize">{review.platform}</span>
+                        <span className="shrink-0">-</span>
+                        <span className="shrink-0">{new Date(review.created_at).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </div>
@@ -260,7 +260,7 @@ export default function OverviewTab({
                     ))}
                   </div>
                 </div>
-                <p className="mt-2 line-clamp-2 text-sm text-gray-400">{review.review_text || review.content}</p>
+                <p className="mt-2 line-clamp-2 break-words text-sm text-gray-400">{review.review_text || review.content}</p>
               </motion.div>
             ))
           ) : (
