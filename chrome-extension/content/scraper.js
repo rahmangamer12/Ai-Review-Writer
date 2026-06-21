@@ -22,19 +22,10 @@ function createElement(tag, className, text) {
   return element;
 }
 
-function escapeHtml(value) {
-  return String(value ?? '')
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
-}
-
 // Scrape reviews based on platform
 function scrapeReviews() {
   const reviews = [];
-  
+
   switch (PLATFORM) {
     case 'google':
       reviews.push(...scrapeGoogleReviews());
@@ -52,34 +43,34 @@ function scrapeReviews() {
       reviews.push(...scrapeTrustpilotReviews());
       break;
   }
-  
+
   return reviews;
 }
 
 // Google Maps/Business Reviews - IMPROVED SELECTORS
 function scrapeGoogleReviews() {
   const reviews = [];
-  
+
   // Try multiple selectors for review containers
   let reviewElements = document.querySelectorAll('[data-review-id]');
-  
+
   // Fallback: look for review-like containers
   if (reviewElements.length === 0) {
     reviewElements = document.querySelectorAll('.wiI7pd, [class*="review-text"], [class*="review-body"]');
   }
-  
+
   reviewElements.forEach((el, index) => {
     try {
       // Get text - try multiple selectors
       let text = '';
       const textSelectors = [
-        '[class*="wiI7pd"]', 
+        '[class*="wiI7pd"]',
         '[class*="review-text"]',
         '[class*="review-body"]',
         '.Gveq4b', // Google Maps review text class
         '[data-review-text]'
       ];
-      
+
       for (const selector of textSelectors) {
         const textEl = el.querySelector(selector);
         if (textEl) {
@@ -87,14 +78,14 @@ function scrapeGoogleReviews() {
           if (text) break;
         }
       }
-      
+
       // If no text found, try the element itself
       if (!text && el.textContent) {
         text = el.textContent.trim();
       }
-      
+
       if (!text || text.length < 5) return; // Skip empty/short text
-      
+
       // Get author
       let author = 'Customer';
       const authorSelectors = ['.d4r55', '[class*="author"]', '[class*="y"]', '[data-author]'];
@@ -105,7 +96,7 @@ function scrapeGoogleReviews() {
           if (author && author !== 'Customer') break;
         }
       }
-      
+
       // Get rating
       let rating = 5;
       const ratingSelectors = ['[class*="kvMYJc"]', '[role="img"][aria-label*="star"]', '[aria-label*="star"]'];
@@ -120,7 +111,7 @@ function scrapeGoogleReviews() {
           }
         }
       }
-      
+
       reviews.push({
         id: `google_${index}`,
         author,
@@ -134,7 +125,7 @@ function scrapeGoogleReviews() {
       // Skip errors
     }
   });
-  
+
   return reviews;
 }
 
@@ -142,12 +133,12 @@ function scrapeGoogleReviews() {
 function scrapeFacebookReviews() {
   const reviews = [];
   const reviewElements = document.querySelectorAll('[role="article"]');
-  
+
   reviewElements.forEach((el, index) => {
     try {
       const author = el.querySelector('h3 a, strong, [role="link"]')?.textContent?.trim() || 'Anonymous';
       const text = el.querySelector('[dir="auto"]')?.textContent?.trim() || '';
-      
+
       if (text && text.length > 10) {
         reviews.push({
           id: `facebook_${index}`,
@@ -163,24 +154,24 @@ function scrapeFacebookReviews() {
       console.error('Error scraping Facebook review:', e);
     }
   });
-  
+
   return reviews;
 }
 
 // Yelp Reviews
 function scrapeYelpReviews() {
   const reviews = [];
-  const reviewElements = document.querySelectorAll('.review');
-  
+  const reviewElements = document.querySelectorAll('.review, [class*="review__"]');
+
   reviewElements.forEach((el, index) => {
     try {
-      const author = el.querySelector('.user-display-name')?.textContent?.trim() || 'Anonymous';
-      const ratingEl = el.querySelector('.i-stars');
-      const ratingMatch = ratingEl?.className?.match(/i-stars--(\d)-/);
+      const author = el.querySelector('.user-display-name, [class*="user-name"]')?.textContent?.trim() || 'Anonymous';
+      const ratingEl = el.querySelector('.i-stars, [class*="star-rating"]');
+      const ratingMatch = ratingEl?.className?.match(/i-stars--(\d)-/) || ratingEl?.getAttribute('aria-label')?.match(/(\d)/);
       const rating = ratingMatch ? parseInt(ratingMatch[1]) : 5;
-      const text = el.querySelector('.raw__09f24__T4Ezm, [class*="comment"]')?.textContent?.trim() || '';
-      const date = el.querySelector('.text-color--subtle')?.textContent?.trim() || '';
-      
+      const text = el.querySelector('.raw__09f24__T4Ezm, [class*="comment"], [class*="review-content"]')?.textContent?.trim() || '';
+      const date = el.querySelector('.text-color--subtle, time')?.textContent?.trim() || '';
+
       if (text) {
         reviews.push({
           id: `yelp_${index}`,
@@ -196,24 +187,24 @@ function scrapeYelpReviews() {
       console.error('Error scraping Yelp review:', e);
     }
   });
-  
+
   return reviews;
 }
 
 // TripAdvisor Reviews
 function scrapeTripAdvisorReviews() {
   const reviews = [];
-  const reviewElements = document.querySelectorAll('.review-container');
-  
+  const reviewElements = document.querySelectorAll('.review-container, [class*="review-container"]');
+
   reviewElements.forEach((el, index) => {
     try {
-      const author = el.querySelector('.username, .memberOverlayLink')?.textContent?.trim() || 'Anonymous';
-      const ratingEl = el.querySelector('.ui_bubble_rating');
+      const author = el.querySelector('.username, .memberOverlayLink, [class*="username"]')?.textContent?.trim() || 'Anonymous';
+      const ratingEl = el.querySelector('.ui_bubble_rating, [class*="bubble_"]');
       const ratingClass = ratingEl?.className?.match(/bubble_(\d\d)/);
       const rating = ratingClass ? parseInt(ratingClass[1]) / 10 : 5;
-      const text = el.querySelector('.prw_rup .partial_entry')?.textContent?.trim() || '';
+      const text = el.querySelector('.prw_rup .partial_entry, [class*="partial_entry"], [class*="review-text"]')?.textContent?.trim() || '';
       const date = el.querySelector('.ratingDate')?.getAttribute('title') || '';
-      
+
       if (text) {
         reviews.push({
           id: `tripadvisor_${index}`,
@@ -229,28 +220,28 @@ function scrapeTripAdvisorReviews() {
       console.error('Error scraping TripAdvisor review:', e);
     }
   });
-  
+
   return reviews;
 }
 
 // Trustpilot Reviews
 function scrapeTrustpilotReviews() {
   const reviews = [];
-  const reviewElements = document.querySelectorAll('[data-review-id]');
-  
+  const reviewElements = document.querySelectorAll('[data-review-id], [class*="review-card"]');
+
   reviewElements.forEach((el, index) => {
     try {
-      const author = el.querySelector('[data-consumer-name]')?.textContent?.trim() || 'Anonymous';
-      const ratingEl = el.querySelector('[data-rating]');
-      const rating = parseInt(ratingEl?.getAttribute('data-rating')) || 5;
-      const text = el.querySelector('[data-review-content]')?.textContent?.trim() || '';
+      const author = el.querySelector('[data-consumer-name], [class*="consumer-name"]')?.textContent?.trim() || 'Anonymous';
+      const ratingEl = el.querySelector('[data-rating], [class*="star-rating"]');
+      const rating = parseInt(ratingEl?.getAttribute('data-rating')) || ratingEl?.getAttribute('alt')?.match(/(\d)/)?.[1] || 5;
+      const text = el.querySelector('[data-review-content], [class*="review-content"]')?.textContent?.trim() || '';
       const date = el.querySelector('time')?.textContent?.trim() || '';
-      
+
       if (text) {
         reviews.push({
           id: `trustpilot_${index}`,
           author,
-          rating,
+          rating: parseInt(rating) || 5,
           text,
           date,
           platform: 'trustpilot',
@@ -261,17 +252,17 @@ function scrapeTrustpilotReviews() {
       console.error('Error scraping Trustpilot review:', e);
     }
   });
-  
+
   return reviews;
 }
 
 // Add AI Reply buttons to reviews
 function addAIReplyButtons() {
   const reviewContainers = getAllReviewContainers();
-  
+
   reviewContainers.forEach((container) => {
     if (container.dataset.autoreviewButtonAttached === 'true' || container.querySelector(':scope > .autoreview-ai-btn')) return;
-    
+
     // Check if container is valid
     const reviewData = getReviewFromContainer(container);
     if (!reviewData.text || reviewData.text.length < 5) return;
@@ -281,18 +272,18 @@ function addAIReplyButtons() {
     btn.textContent = 'AI Reply';
     btn.type = 'button';
     btn.setAttribute('aria-label', 'Generate AI reply for this review');
-    
+
     btn.onclick = async (e) => {
       e.preventDefault();
       e.stopPropagation();
-      
+
       // RE-SCRAPE FRESH ON CLICK to ensure we have the right review
       const freshData = getReviewFromContainer(container);
       if (!freshData.text || freshData.text.length < 5) return;
 
       btn.textContent = 'Loading...';
       btn.disabled = true;
-      
+
       try {
         const reply = await generateAIReply(freshData);
         showReplyModal(freshData, reply);
@@ -304,7 +295,7 @@ function addAIReplyButtons() {
         btn.disabled = false;
       }
     };
-    
+
     try {
       // Find a good place to append the button
       const actionsArea = container.querySelector('[role="group"], .m7vYec, ._15_v, .review-footer');
@@ -323,28 +314,28 @@ function addAIReplyButtons() {
 // Get all unique review containers
 function getAllReviewContainers() {
   const containerSet = new Set();
-  
+
   const selectors = [
     '[data-review-id]',
     '[role="article"]',
     '.review',
     '.review-container'
   ];
-  
+
   selectors.forEach(selector => {
     document.querySelectorAll(selector).forEach(el => {
       // Platform specific validation
       if (PLATFORM === 'facebook' && !el.querySelector('[dir="auto"]')) return;
       if (PLATFORM === 'google' && !el.hasAttribute('data-review-id')) {
-         if (!el.querySelector('.wiI7pd') && !el.className.includes('review')) return;
+        if (!el.querySelector('.wiI7pd') && !el.className.includes('review')) return;
       }
-      
+
       const nestedReview = el.parentElement?.closest('[data-review-id], [role="article"], .review, .review-container');
       if (nestedReview && nestedReview !== el) return;
       containerSet.add(el);
     });
   });
-  
+
   return Array.from(containerSet);
 }
 
@@ -354,7 +345,7 @@ function getReviewFromContainer(container) {
   let author = 'Customer';
   let rating = 5;
   let text = '';
-  
+
   try {
     if (platform === 'google') {
       author = container.querySelector('.d4r55, [class*="author"]')?.textContent?.trim() || 'Customer';
@@ -387,7 +378,7 @@ function getReviewFromContainer(container) {
   } catch (e) {
     console.error('Error getting review data:', e);
   }
-  
+
   return { author, rating, text, platform };
 }
 
@@ -396,7 +387,6 @@ async function generateAIReply(review, tone = 'friendly') {
   // Try multiple API endpoints for reliability
   const API_URLS = [
     'https://ai-review-writer.vercel.app/api/reviews/generate-reply',
-    'https://autoreview.ai/api/reviews/generate-reply',
   ];
 
   const payload = {
@@ -408,6 +398,8 @@ async function generateAIReply(review, tone = 'friendly') {
     language: tone === 'desi' ? 'ur' : 'en',
   };
 
+  // Primary path: route through the background service worker (extension origin,
+  // covered by host_permissions — avoids page CORS restrictions).
   try {
     const data = await chrome.runtime.sendMessage({ action: 'generateAIReply', payload });
     if (data?.success && data.reply) {
@@ -416,12 +408,14 @@ async function generateAIReply(review, tone = 'friendly') {
       }
       return data.reply;
     }
-    throw new Error(data?.error || 'AI server did not return a reply');
+    if (data && data.error) {
+      throw new Error(data.error);
+    }
   } catch (error) {
-    console.warn('[AutoReview AI] Background AI request failed:', error.message);
+    console.warn('[AutoReview AI] Background AI request failed, trying direct fetch:', error.message);
   }
 
-  // Try each endpoint in order
+  // Fallback: direct fetch with a timeout.
   for (const API_URL of API_URLS) {
     try {
       const controller = new AbortController();
@@ -454,165 +448,86 @@ async function generateAIReply(review, tone = 'friendly') {
     }
   }
 
-  throw new Error('AI server unavailable. Please check the app URL and AI API keys.');
+  throw new Error('AI server unavailable. Please check your connection and AI API keys.');
 }
 
-// Show reply modal (Improved)
+// Show reply modal (built safely with DOM APIs — no innerHTML)
 function showReplyModal(review, reply) {
   const existing = document.getElementById('autoreview-modal');
   if (existing) existing.remove();
-  
+
   const modal = document.createElement('div');
   modal.id = 'autoreview-modal';
-  const safeAuthor = escapeHtml(review.author);
-  const safeRating = escapeHtml(review.rating);
   const previewText = `${review.text.substring(0, 150)}${review.text.length > 150 ? '...' : ''}`;
-  const safePreviewText = escapeHtml(previewText);
-  const safeReply = escapeHtml(reply);
-  {
-    const overlay = createElement('div', 'autoreview-modal-overlay');
-    const content = createElement('div', 'autoreview-modal-content');
-    const header = createElement('div', 'autoreview-modal-header');
-    const title = createElement('h3', '', 'AI Generated Reply');
-    const closeBtn = createElement('button', 'autoreview-close', 'x');
-    closeBtn.type = 'button';
 
-    const body = createElement('div', 'autoreview-modal-body');
-    const preview = createElement('div', 'autoreview-review-preview');
-    preview.append(
-      createElement('strong', '', `Review by ${review.author} (${review.rating} stars)`),
-      createElement('p', '', previewText)
-    );
+  const overlay = createElement('div', 'autoreview-modal-overlay');
+  const content = createElement('div', 'autoreview-modal-content');
+  const header = createElement('div', 'autoreview-modal-header');
+  const title = createElement('h3', '', 'AI Generated Reply');
+  const closeBtn = createElement('button', 'autoreview-close', 'x');
+  closeBtn.type = 'button';
 
-    const toneRow = createElement('div');
-    toneRow.style.marginBottom = '15px';
-    toneRow.style.display = 'flex';
-    toneRow.style.alignItems = 'center';
-    toneRow.style.gap = '10px';
+  const body = createElement('div', 'autoreview-modal-body');
+  const preview = createElement('div', 'autoreview-review-preview');
+  preview.append(
+    createElement('strong', '', `Review by ${review.author} (${review.rating} stars)`),
+    createElement('p', '', previewText)
+  );
 
-    const toneLabel = createElement('label', '', 'Tone:');
-    toneLabel.style.color = '#a0aec0';
-    toneLabel.style.fontSize = '13px';
+  const toneRow = createElement('div');
+  toneRow.style.marginBottom = '15px';
+  toneRow.style.display = 'flex';
+  toneRow.style.alignItems = 'center';
+  toneRow.style.gap = '10px';
 
-    const toneSelect = document.createElement('select');
-    toneSelect.id = 'autoreview-tone-select';
-    toneSelect.style.background = 'rgba(255,255,255,0.1)';
-    toneSelect.style.border = '1px solid rgba(255,255,255,0.2)';
-    toneSelect.style.color = 'white';
-    toneSelect.style.borderRadius = '4px';
-    toneSelect.style.padding = '4px 8px';
-    toneSelect.style.fontSize = '12px';
-    [
-      ['friendly', 'Friendly'],
-      ['professional', 'Professional'],
-      ['apologetic', 'Apologetic'],
-      ['enthusiastic', 'Enthusiastic'],
-      ['desi', 'Desi Style'],
-    ].forEach(([value, label]) => {
-      const option = createElement('option', '', label);
-      option.value = value;
-      toneSelect.appendChild(option);
-    });
+  const toneLabel = createElement('label', '', 'Tone:');
+  toneLabel.style.color = '#a0aec0';
+  toneLabel.style.fontSize = '13px';
 
-    const replyBox = createElement('div', 'autoreview-reply-box');
-    const textArea = document.createElement('textarea');
-    textArea.id = 'autoreview-reply-text';
-    textArea.rows = 5;
-    textArea.value = reply;
-    replyBox.appendChild(textArea);
+  const toneSelect = document.createElement('select');
+  toneSelect.id = 'autoreview-tone-select';
+  toneSelect.style.background = 'rgba(255,255,255,0.1)';
+  toneSelect.style.border = '1px solid rgba(255,255,255,0.2)';
+  toneSelect.style.color = 'white';
+  toneSelect.style.borderRadius = '4px';
+  toneSelect.style.padding = '4px 8px';
+  toneSelect.style.fontSize = '12px';
+  [
+    ['friendly', 'Friendly'],
+    ['professional', 'Professional'],
+    ['apologetic', 'Apologetic'],
+    ['enthusiastic', 'Enthusiastic'],
+    ['desi', 'Desi Style'],
+  ].forEach(([value, label]) => {
+    const option = createElement('option', '', label);
+    option.value = value;
+    toneSelect.appendChild(option);
+  });
 
-    const footer = createElement('div', 'autoreview-modal-footer');
-    const regenBtn = createElement('button', 'autoreview-btn autoreview-btn-secondary autoreview-regenerate', 'Regenerate');
-    regenBtn.type = 'button';
-    const copyBtn = createElement('button', 'autoreview-btn autoreview-btn-primary autoreview-copy', 'Copy Reply');
-    copyBtn.type = 'button';
+  const replyBox = createElement('div', 'autoreview-reply-box');
+  const textArea = document.createElement('textarea');
+  textArea.id = 'autoreview-reply-text';
+  textArea.rows = 5;
+  textArea.value = reply;
+  replyBox.appendChild(textArea);
 
-    header.append(title, closeBtn);
-    toneRow.append(toneLabel, toneSelect);
-    body.append(preview, toneRow, replyBox);
-    footer.append(regenBtn, copyBtn);
-    content.append(header, body, footer);
-    modal.append(overlay, content);
-    document.body.appendChild(modal);
+  const footer = createElement('div', 'autoreview-modal-footer');
+  const regenBtn = createElement('button', 'autoreview-btn autoreview-btn-secondary autoreview-regenerate', 'Regenerate');
+  regenBtn.type = 'button';
+  const copyBtn = createElement('button', 'autoreview-btn autoreview-btn-primary autoreview-copy', 'Copy Reply');
+  copyBtn.type = 'button';
 
-    closeBtn.onclick = () => modal.remove();
-    overlay.onclick = () => modal.remove();
-
-    copyBtn.onclick = async () => {
-      try {
-        await navigator.clipboard.writeText(textArea.value);
-        copyBtn.textContent = 'Copied!';
-        setTimeout(() => {
-          if (copyBtn) copyBtn.textContent = 'Copy Reply';
-        }, 2000);
-      } catch (err) {
-        console.error('Copy failed:', err);
-      }
-    };
-
-    regenBtn.onclick = async () => {
-      const tone = toneSelect.value;
-      regenBtn.textContent = 'Generating...';
-      regenBtn.disabled = true;
-      try {
-        const newReply = await generateAIReply(review, tone);
-        textArea.value = newReply;
-      } catch (err) {
-        alert(`AI Error: ${err.message}. Could not regenerate.`);
-      } finally {
-        regenBtn.textContent = 'Regenerate';
-        regenBtn.disabled = false;
-      }
-    };
-
-    return;
-  }
-
-  modal.dataset.safeTemplate = `
-    <div class="autoreview-modal-overlay"></div>
-    <div class="autoreview-modal-content">
-      <div class="autoreview-modal-header">
-        <h3>AI Generated Reply</h3>
-        <button class="autoreview-close">&times;</button>
-      </div>
-      <div class="autoreview-modal-body">
-        <div class="autoreview-review-preview">
-          <strong>Review by ${safeAuthor} (${safeRating} stars)</strong>
-          <p>${safePreviewText}</p>
-        </div>
-        
-        <div style="margin-bottom: 15px; display: flex; align-items: center; gap: 10px;">
-          <label style="color: #a0aec0; font-size: 13px;">Tone:</label>
-          <select id="autoreview-tone-select" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; border-radius: 4px; padding: 4px 8px; font-size: 12px;">
-            <option value="friendly">Friendly</option>
-            <option value="professional">Professional</option>
-            <option value="apologetic">Apologetic</option>
-            <option value="enthusiastic">Enthusiastic</option>
-            <option value="desi">Desi Style</option>
-          </select>
-        </div>
-
-        <div class="autoreview-reply-box">
-          <textarea id="autoreview-reply-text" rows="5">${safeReply}</textarea>
-        </div>
-      </div>
-      <div class="autoreview-modal-footer">
-        <button class="autoreview-btn autoreview-btn-secondary autoreview-regenerate">Regenerate</button>
-        <button class="autoreview-btn autoreview-btn-primary autoreview-copy">Copy Reply</button>
-      </div>
-    </div>
-  `;
-  
+  header.append(title, closeBtn);
+  toneRow.append(toneLabel, toneSelect);
+  body.append(preview, toneRow, replyBox);
+  footer.append(regenBtn, copyBtn);
+  content.append(header, body, footer);
+  modal.append(overlay, content);
   document.body.appendChild(modal);
-  
-  const textArea = modal.querySelector('#autoreview-reply-text');
-  const toneSelect = modal.querySelector('#autoreview-tone-select');
-  const regenBtn = modal.querySelector('.autoreview-regenerate');
-  const copyBtn = modal.querySelector('.autoreview-copy');
 
-  modal.querySelector('.autoreview-close').onclick = () => modal.remove();
-  modal.querySelector('.autoreview-modal-overlay').onclick = () => modal.remove();
-  
+  closeBtn.onclick = () => modal.remove();
+  overlay.onclick = () => modal.remove();
+
   copyBtn.onclick = async () => {
     try {
       await navigator.clipboard.writeText(textArea.value);
@@ -624,10 +539,10 @@ function showReplyModal(review, reply) {
       console.error('Copy failed:', err);
     }
   };
-  
+
   regenBtn.onclick = async () => {
     const tone = toneSelect.value;
-    regenbtn.textContent = 'Loading...';
+    regenBtn.textContent = 'Generating...';
     regenBtn.disabled = true;
     try {
       const newReply = await generateAIReply(review, tone);

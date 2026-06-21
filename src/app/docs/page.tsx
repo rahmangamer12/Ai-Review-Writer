@@ -18,14 +18,81 @@ const DocumentationPage = () => {
       content: `
 # AutoReview AI - Local Review Management Guide
 
-AutoReview AI helps local service businesses organize real customer reviews, generate editable AI reply drafts, and keep review work in one authenticated dashboard.
+AutoReview AI helps local service businesses organize real customer reviews, generate editable AI reply drafts, run autonomous review agents, and keep all review work in one authenticated dashboard.
 
 ## Why AutoReview AI?
 
 - **Reply Faster**: Draft professional responses without starting from a blank page.
 - **Stay in Control**: Review, edit, approve, reject, or delete AI replies before using them publicly.
 - **Track Sentiment**: Understand positive, neutral, and negative review patterns.
-- **Use Real Data**: The dashboard is built around saved platform reviews and manual customer reviews.
+- **Use Real Data**: Every page is built around your saved platform reviews and manual customer reviews.
+
+## What's New
+
+- **Dual AI engines**: LongCat for fast text replies and Agnes for image analysis and web-aware answers in chat.
+- **Agentic AI**: An Agent Command Center that reads, triages, and drafts replies as one pipeline.
+- **Chrome Extension v1.2.0**: Cleaner reply modal, more resilient scraping, and one-click AI replies on five platforms.
+      `
+    },
+    {
+      id: 'credits-models',
+      title: 'Credits & AI Models',
+      icon: <CreditCard className="w-5 h-5" />,
+      content: `
+# Credits & AI Models
+
+AutoReview AI runs on two separate monthly credit pools so the right model is used for the right job.
+
+## The Two Pools
+
+- **LongCat credits**: power text replies, sentiment analysis, and the agentic agents.
+- **Agnes credits**: power image analysis and web-aware (search) answers inside chat.
+
+The chat experience **auto-switches** to Agnes the moment you attach an image or ask something that needs fresh, search-style context. You always see both balances in the chat header and in the AI assistant widget.
+
+## Monthly Credits By Plan
+
+- **Free**: 200 LongCat + 50 Agnes
+- **Starter**: 500 LongCat + 150 Agnes
+- **Growth**: 1,500 LongCat + 400 Agnes
+- **Business**: 5,000 LongCat + 1,500 Agnes
+
+Credits renew each month. When a pool runs low, the app shows an inline upgrade path on the **Subscription** page.
+
+## How Credits Are Spent
+
+- Each AI reply or agent action deducts from the matching pool and is written to your credit history.
+- If a pool reaches zero, that capability pauses until renewal or upgrade — your data is never affected.
+      `
+    },
+    {
+      id: 'agentic',
+      title: 'Agentic AI',
+      icon: <Zap className="w-5 h-5" />,
+      content: `
+# Agentic AI: The Agent Command Center
+
+The **Agentic** page runs autonomous agents over your reviews. Every agent shows a live pipeline graph and a streaming execution console, and every action is logged and held for your approval.
+
+> Agentic agents require the **Growth** or **Business** plan.
+
+## Auto-Reply Agent
+
+Reads up to five pending reviews per run, analyses sentiment, and drafts a brand-tone reply for each. Replies are saved as **drafts** — never posted publicly without you.
+
+## Triage / Damage Control
+
+Scans for unanswered 1-2 star reviews, scores urgency (including risk keywords), and recommends a response so you can act before reputation damage spreads.
+
+## Weekly Insight Email
+
+Every Monday an agent summarises your week - trends, sentiment shift, and one concrete suggestion - and emails it to you automatically.
+
+## Guardrails
+
+- AI replies always save as drafts; nothing is auto-posted publicly.
+- Every action is written to your credit and audit history.
+- Per-run caps keep credit spend predictable.
       `
     },
     {
@@ -35,7 +102,7 @@ AutoReview AI helps local service businesses organize real customer reviews, gen
       content: `
 # Chrome Extension: Reply Directly on Platforms
 
-The AutoReview AI Chrome Extension is the ultimate workflow tool. It injects "AI Reply" buttons directly into Google Maps, Yelp, and Facebook, allowing you to generate and post replies without ever leaving the review platform.
+The AutoReview AI Chrome Extension (**v1.2.0**) injects "AI Reply" buttons directly into Google Maps, Yelp, Facebook, TripAdvisor, and Trustpilot, so you can generate replies without ever leaving the review platform. The download on this site is always the latest build.
 
 ## Supported Platforms
 - **Google Maps & Business**
@@ -48,9 +115,14 @@ The AutoReview AI Chrome Extension is the ultimate workflow tool. It injects "AI
 1. Download the **[AutoReview AI Extension (.zip)](/autoreview-ai-extension.zip)**.
 2. Extract the ZIP file to a folder on your desktop.
 3. Open Chrome and navigate to \`chrome://extensions/\`.
-4. Turn on **Developer Mode** (top right toggle).
+4. Turn on **Developer Mode** (top-right toggle).
 5. Click **Load Unpacked** and select the extracted folder.
-6. The extension is now active! Visit any review page to see the ✨ AI Reply buttons.
+6. The extension is now active. Visit any supported review page to see the AI Reply buttons.
+
+## Using It
+- Click **AI Reply** on any detected review to open the reply modal.
+- Pick a tone (Friendly, Professional, Apologetic, Enthusiastic, or Desi Style) and regenerate as needed.
+- Edit the draft, then copy it with one click. Replies are generated by your AutoReview backend, not a local template.
       `
     },
     {

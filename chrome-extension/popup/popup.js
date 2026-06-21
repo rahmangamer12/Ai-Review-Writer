@@ -1,6 +1,6 @@
 // DOM Elements
 // AutoReview AI - Popup Script
-// Version 1.1.4
+// Version 1.2.0
 
 const DEFAULT_API_URL = 'https://ai-review-writer.vercel.app';
 

@@ -55,22 +55,22 @@ const ExtensionPage = () => {
             <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mx-auto mb-3">
               <Star className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-2xl font-bold text-white">Manual</h3>
-            <p className="text-sm text-gray-400">Developer install</p>
+            <h3 className="text-2xl font-bold text-white">5</h3>
+            <p className="text-sm text-gray-400">Supported platforms</p>
           </div>
           <div className="glass-card border border-white/10 rounded-2xl p-6 text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center mx-auto mb-3">
               <Zap className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-2xl font-bold text-white">Google</h3>
-            <p className="text-sm text-gray-400">Review workflow</p>
+            <h3 className="text-2xl font-bold text-white">1-Click</h3>
+            <p className="text-sm text-gray-400">AI reply on page</p>
           </div>
           <div className="glass-card border border-white/10 rounded-2xl p-6 text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mx-auto mb-3">
               <CheckCircle className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-2xl font-bold text-white">PWA</h3>
-            <p className="text-sm text-gray-400">Mobile companion</p>
+            <h3 className="text-2xl font-bold text-white">v1.2.0</h3>
+            <p className="text-sm text-gray-400">Latest build</p>
           </div>
           <div className="glass-card border border-white/10 rounded-2xl p-6 text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-xl flex items-center justify-center mx-auto mb-3">
