@@ -107,7 +107,8 @@ export default function AgenticPage() {
   const consoleRef = useRef<HTMLDivElement>(null)
   const cancelRef = useRef(false)
 
-  const eligible = stats ? ELIGIBLE.includes(stats.plan.toLowerCase()) : true
+  // null = still loading plan; avoids flashing "Run agent" before we know the plan.
+  const eligible: boolean | null = stats ? ELIGIBLE.includes(stats.plan.toLowerCase()) : null
 
   /* ── Load real status ── */
   const loadStats = useCallback(async () => {
@@ -424,7 +425,7 @@ export default function AgenticPage() {
               tint="text-violet-300"
               title="Auto-Reply automation"
               desc="Every few hours, draft replies for new pending reviews. Saved as drafts for your approval."
-              badge={eligible ? undefined : 'Growth / Business'}
+              badge={eligible === false ? 'Growth / Business' : undefined}
               on={automation?.agentAutoReply ?? false}
               disabled={!eligible || savingAuto === 'agentAutoReply'}
               saving={savingAuto === 'agentAutoReply'}
@@ -533,8 +534,9 @@ function AgentCard({
   icon: Icon, tint, glow, title, tagline, desc, eligible, running, disabled, onRun,
 }: {
   icon: any; tint: string; glow: string; title: string; tagline: string; desc: string
-  eligible: boolean; running: boolean; disabled: boolean; onRun: () => void
+  eligible: boolean | null; running: boolean; disabled: boolean; onRun: () => void
 }) {
+  const loading = eligible === null
   return (
     <div className="group relative overflow-hidden rounded-3xl border border-white/[0.07] bg-[#0b0b16] p-6">
       <div className={`pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-gradient-to-br ${glow} to-transparent opacity-0 blur-2xl transition-opacity group-hover:opacity-100`} />
@@ -542,7 +544,11 @@ function AgentCard({
         <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
           <Icon className={`h-6 w-6 ${tint}`} />
         </div>
-        {eligible ? (
+        {loading ? (
+          <span className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-white/40">
+            <Loader2 className="h-3 w-3 animate-spin" /> Checking
+          </span>
+        ) : eligible ? (
           <span className="inline-flex items-center gap-1 rounded-full border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-300">
             <Zap className="h-3 w-3" /> Active
           </span>
@@ -556,7 +562,11 @@ function AgentCard({
       <p className={`relative mb-2 text-xs font-semibold ${tint}`}>{tagline}</p>
       <p className="relative text-sm leading-relaxed text-white/50">{desc}</p>
 
-      {eligible ? (
+      {loading ? (
+        <div className="relative mt-5 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-bold text-white/40">
+          <Loader2 className="h-4 w-4 animate-spin" /> Checking plan…
+        </div>
+      ) : eligible ? (
         <button
           onClick={onRun}
           disabled={disabled}

@@ -217,17 +217,12 @@ async function handler(request: NextRequest) {
     // ─── AI GENERATION (only after successful credit deduction) ─────────────
     console.log('[Generate Reply API] Using LongCat AI to generate reply. Credits after deduction:', deductionResult.balanceAfter)
 
-    // Analyze sentiment first
-    let sentimentResult
-    try {
-      sentimentResult = await aiProvider.analyzeSentiment(reviewText)
-      console.log('[Generate Reply API] Sentiment:', sentimentResult.sentiment)
-    } catch (_e) {
-      console.error('[Generate Reply API] Sentiment analysis failed, using rating heuristic')
-      sentimentResult = {
-        sentiment: (rating || 3) >= 4 ? 'positive' : (rating || 3) <= 2 ? 'negative' : 'neutral',
-        confidence: 0.8
-      }
+    // Derive sentiment from rating heuristically — no extra AI roundtrip.
+    // The reply model already receives the full review text + rating, so quality
+    // is preserved while latency is roughly halved (one AI call instead of two).
+    const sentimentResult = {
+      sentiment: (rating || 3) >= 4 ? 'positive' : (rating || 3) <= 2 ? 'negative' : 'neutral',
+      confidence: 0.8,
     }
 
     // Generate reply using the configured AI provider
