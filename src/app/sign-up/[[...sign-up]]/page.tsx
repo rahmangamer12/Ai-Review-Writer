@@ -2,8 +2,13 @@ import { SignUp } from '@clerk/nextjs'
 
 export default function SignUpPage() {
   return (
-    <div className="min-h-screen bg-[#0a0a0f] flex items-center justify-center p-4">
-      <SignUp />
+    <div className="flex min-h-screen items-center justify-center bg-[#030308] p-4">
+      <SignUp
+        routing="path"
+        path="/sign-up"
+        signInUrl="/sign-in"
+        fallbackRedirectUrl="/dashboard"
+      />
     </div>
   )
 }

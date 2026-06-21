@@ -82,9 +82,13 @@ export default clerkMiddleware(async (auth, request: NextRequest) => {
     return addSecurityHeaders(response);
   }
 
-  // Protect private routes
+  // Protect private routes. Redirect unauthenticated users to the IN-APP
+  // /sign-in page (not Clerk's hosted accounts.dev portal, which renders blank
+  // on the dev instance and causes the login loop).
   if (isProtectedRoute(request)) {
-    await auth.protect();
+    await auth.protect({
+      unauthenticatedUrl: new URL('/sign-in', request.url).toString(),
+    });
   }
 
   // Add security headers to all responses
