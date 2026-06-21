@@ -327,12 +327,12 @@ export default function ProfilePage() {
 
   return (
     <PageTransition>
-    <div className="min-h-[100dvh] overflow-x-hidden w-full bg-[#030308] px-4 py-6 sm:px-6">
+    <div className="min-h-[100dvh] overflow-x-hidden w-full bg-[#030308] py-6">
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute left-1/4 top-0 h-96 w-96 rounded-full bg-violet-600/10 blur-3xl" />
         <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
       </div>
-      <div className="max-w-7xl mx-auto">
+      <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* Profile Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
@@ -343,9 +343,9 @@ export default function ProfilePage() {
           <div className="absolute inset-0 bg-gradient-to-br from-violet-500/15 via-cyan-500/10 to-fuchsia-500/10 opacity-80" />
           
           <div className="relative z-10">
-            <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-4 sm:gap-6">
               {/* Avatar Section */}
-              <div className="relative group">
+              <div className="relative group shrink-0">
                 <div className="w-24 h-24 sm:w-28 sm:h-28 lg:w-32 lg:h-32 rounded-full overflow-hidden border-4 border-primary/30 bg-linear-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                   {(editedProfile.avatar_url || profile.avatar_url) ? (
                     <Image
@@ -385,7 +385,7 @@ export default function ProfilePage() {
               </div>
 
               {/* Profile Info */}
-              <div className="flex-1">
+              <div className="flex-1 min-w-0 w-full">
                 {editing ? (
                   <div className="space-y-3">
                     <input
@@ -412,9 +412,9 @@ export default function ProfilePage() {
                 ) : (
                   <>
                     <p className="mb-2 text-xs font-black uppercase tracking-[0.25em] text-cyan-200/70">Account profile</p>
-                    <h1 className="text-3xl sm:text-5xl font-black text-white mb-2">{profile.full_name}</h1>
-                    <p className="text-white/70 mb-3">{profile.email}</p>
-                    <p className="text-white/80 text-sm mb-4">{profile.bio}</p>
+                    <h1 className="text-2xl sm:text-3xl lg:text-5xl font-black text-white mb-2 break-words">{profile.full_name}</h1>
+                    <p className="text-white/70 mb-3 break-words">{profile.email}</p>
+                    <p className="text-white/80 text-sm mb-4 break-words">{profile.bio}</p>
                     
                     <div className="flex flex-wrap gap-3">
                       <div className="flex items-center gap-2 px-3 py-1.5 rounded-2xl border border-white/10 bg-black/20">
@@ -441,14 +441,14 @@ export default function ProfilePage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col sm:flex-row md:flex-col gap-2 w-full md:w-auto shrink-0">
                 {editing ? (
                   <>
                     <motion.button
                       whileTap={{ scale: 0.98 }}
                       onClick={handleSaveProfile}
                       disabled={saving}
-                      className="px-6 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors flex items-center gap-2 disabled:opacity-50 active:scale-[0.98]"
+                      className="w-full md:w-auto justify-center px-6 py-3 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600 transition-colors flex items-center gap-2 disabled:opacity-50 active:scale-[0.98]"
                     >
                       {saving ? (
                         <>
@@ -468,7 +468,7 @@ export default function ProfilePage() {
                         setEditing(false)
                         setEditedProfile(profile)
                       }}
-                      className="px-6 py-3 glass text-white rounded-lg font-medium hover:bg-white/10 transition-colors flex items-center gap-2 active:scale-[0.98]"
+                      className="w-full md:w-auto justify-center px-6 py-3 glass text-white rounded-lg font-medium hover:bg-white/10 transition-colors flex items-center gap-2 active:scale-[0.98]"
                     >
                       <X className="w-4 h-4" />
                       Cancel
@@ -479,7 +479,7 @@ export default function ProfilePage() {
                     <motion.button
                       whileTap={{ scale: 0.98 }}
                       onClick={() => setEditing(true)}
-                      className="px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 active:scale-[0.98]"
+                      className="w-full md:w-auto justify-center px-6 py-3 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center gap-2 active:scale-[0.98]"
                     >
                       <Edit2 className="w-4 h-4" />
                       Edit Profile
@@ -487,7 +487,7 @@ export default function ProfilePage() {
                     <motion.button
                       whileTap={{ scale: 0.98 }}
                       onClick={() => router.push('/subscription')}
-                      className="px-6 py-3 bg-linear-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:shadow-lg transition-all flex items-center gap-2 active:scale-[0.98]"
+                      className="w-full md:w-auto justify-center px-6 py-3 bg-linear-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:shadow-lg transition-all flex items-center gap-2 active:scale-[0.98]"
                     >
                       <Zap className="w-4 h-4" />
                       Upgrade Plan
@@ -504,7 +504,7 @@ export default function ProfilePage() {
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex flex-wrap gap-2 mb-6"
+          className="flex flex-nowrap sm:flex-wrap gap-2 mb-6 overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0 sm:overflow-visible [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {[
             { id: 'overview', label: 'Overview', icon: <Users className="w-4 h-4" /> },
@@ -516,7 +516,7 @@ export default function ProfilePage() {
             <motion.button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as 'overview' | 'stats' | 'activity' | 'achievements' | 'settings' | string as unknown as 'overview' | 'stats' | 'activity' | 'achievements' | 'settings')}
-              className={`px-4 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 min-h-[44px] text-xs sm:text-sm active:scale-[0.98] ${
+              className={`shrink-0 whitespace-nowrap px-4 py-2.5 rounded-lg font-medium transition-all flex items-center gap-2 min-h-[44px] text-xs sm:text-sm active:scale-[0.98] ${
                 activeTab === tab.id
                   ? 'bg-primary text-primary-foreground shadow-lg'
                   : 'glass text-white/70 hover:text-white hover:bg-white/10'
@@ -541,12 +541,12 @@ export default function ProfilePage() {
             {activeTab === 'overview' && (
               <div className="space-y-6">
                 {/* Quick Stats Grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.1 }}
-                    className="glass-card border border-cyan-500/20 rounded-xl p-6 relative overflow-hidden"
+                    className="glass-card border border-cyan-500/20 rounded-xl p-4 sm:p-6 relative overflow-hidden"
                   >
                     <div className="absolute top-0 right-0 w-20 h-20 bg-cyan-500/10 rounded-full blur-2xl" />
                     <div className="relative">
@@ -556,7 +556,7 @@ export default function ProfilePage() {
                         </div>
                         <span className="text-cyan-400 text-sm font-medium">Total</span>
                       </div>
-                      <p className="text-3xl font-bold text-white mb-1">{profile.stats.total_reviews}</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{profile.stats.total_reviews}</p>
                       <p className="text-white/60 text-sm">Reviews Managed</p>
                       <div className="mt-3 flex items-center gap-2 text-xs">
                         <span className="text-emerald-400">+{profile.stats.reviews_this_month}</span>
@@ -569,7 +569,7 @@ export default function ProfilePage() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.2 }}
-                    className="glass-card border border-yellow-500/20 rounded-xl p-6 relative overflow-hidden"
+                    className="glass-card border border-yellow-500/20 rounded-xl p-4 sm:p-6 relative overflow-hidden"
                   >
                     <div className="absolute top-0 right-0 w-20 h-20 bg-yellow-500/10 rounded-full blur-2xl" />
                     <div className="relative">
@@ -579,7 +579,7 @@ export default function ProfilePage() {
                         </div>
                         <span className="text-yellow-400 text-sm font-medium">Average</span>
                       </div>
-                      <p className="text-3xl font-bold text-white mb-1">{profile.stats.avg_rating.toFixed(1)}</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{profile.stats.avg_rating.toFixed(1)}</p>
                       <p className="text-white/60 text-sm">Rating Score</p>
                       <div className="mt-3 flex gap-1">
                         {Array.from({ length: 5 }, (_, i) => (
@@ -600,7 +600,7 @@ export default function ProfilePage() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.3 }}
-                    className="glass-card border border-emerald-500/20 rounded-xl p-6 relative overflow-hidden"
+                    className="glass-card border border-emerald-500/20 rounded-xl p-4 sm:p-6 relative overflow-hidden"
                   >
                     <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full blur-2xl" />
                     <div className="relative">
@@ -610,7 +610,7 @@ export default function ProfilePage() {
                         </div>
                         <span className="text-emerald-400 text-sm font-medium">Rate</span>
                       </div>
-                      <p className="text-3xl font-bold text-white mb-1">{profile.stats.response_rate.toFixed(0)}%</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{profile.stats.response_rate.toFixed(0)}%</p>
                       <p className="text-white/60 text-sm">Response Rate</p>
                       <div className="mt-3">
                         <div className="w-full bg-white/10 rounded-full h-1.5">
@@ -627,7 +627,7 @@ export default function ProfilePage() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.4 }}
-                    className="glass-card border border-purple-500/20 rounded-xl p-6 relative overflow-hidden"
+                    className="glass-card border border-purple-500/20 rounded-xl p-4 sm:p-6 relative overflow-hidden"
                   >
                     <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/10 rounded-full blur-2xl" />
                     <div className="relative">
@@ -637,7 +637,7 @@ export default function ProfilePage() {
                         </div>
                         <span className="text-purple-400 text-sm font-medium">Speed</span>
                       </div>
-                      <p className="text-3xl font-bold text-white mb-1">{profile.stats.avg_response_time}m</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-white mb-1">{profile.stats.avg_response_time}m</p>
                       <p className="text-white/60 text-sm">Avg Response Time</p>
                       <div className="mt-3 flex items-center gap-2 text-xs">
                         <Zap className="w-3 h-3 text-purple-400" />
@@ -648,13 +648,13 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Profile Details Grid */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                   {/* Personal Information */}
                   <motion.div
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="glass-card border border-primary/20 rounded-xl p-6"
+                    className="glass-card border border-primary/20 rounded-xl p-4 sm:p-6"
                   >
                     <div className="flex items-center gap-3 mb-6">
                       <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
@@ -712,42 +712,42 @@ export default function ProfilePage() {
                         <>
                           {profile.location && (
                             <div className="flex items-center gap-3 p-3 glass rounded-lg">
-                              <MapPin className="w-5 h-5 text-blue-400" />
-                              <div>
+                              <MapPin className="w-5 h-5 text-blue-400 shrink-0" />
+                              <div className="min-w-0">
                                 <p className="text-white/60 text-xs">Location</p>
-                                <p className="text-white font-medium">{profile.location}</p>
+                                <p className="text-white font-medium break-words">{profile.location}</p>
                               </div>
                             </div>
                           )}
 
                           <div className="flex items-center gap-3 p-3 glass rounded-lg">
-                            <Mail className="w-5 h-5 text-cyan-400" />
-                            <div>
+                            <Mail className="w-5 h-5 text-cyan-400 shrink-0" />
+                            <div className="min-w-0">
                               <p className="text-white/60 text-xs">Email</p>
-                              <p className="text-white font-medium">{profile.email}</p>
+                              <p className="text-white font-medium break-all">{profile.email}</p>
                             </div>
                           </div>
 
                           {profile.phone && (
                             <div className="flex items-center gap-3 p-3 glass rounded-lg">
-                              <Phone className="w-5 h-5 text-emerald-400" />
-                              <div>
+                              <Phone className="w-5 h-5 text-emerald-400 shrink-0" />
+                              <div className="min-w-0">
                                 <p className="text-white/60 text-xs">Phone</p>
-                                <p className="text-white font-medium">{profile.phone}</p>
+                                <p className="text-white font-medium break-words">{profile.phone}</p>
                               </div>
                             </div>
                           )}
 
                           {profile.website && (
                             <div className="flex items-center gap-3 p-3 glass rounded-lg">
-                              <Globe className="w-5 h-5 text-purple-400" />
-                              <div>
+                              <Globe className="w-5 h-5 text-purple-400 shrink-0" />
+                              <div className="min-w-0">
                                 <p className="text-white/60 text-xs">Website</p>
                                 <a
                                   href={profile.website}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="text-primary hover:underline font-medium"
+                                  className="text-primary hover:underline font-medium break-all"
                                 >
                                   {profile.website}
                                 </a>
@@ -764,7 +764,7 @@ export default function ProfilePage() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.3 }}
-                    className="glass-card border border-primary/20 rounded-xl p-6"
+                    className="glass-card border border-primary/20 rounded-xl p-4 sm:p-6"
                   >
                     <div className="flex items-center gap-3 mb-6">
                       <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
@@ -857,33 +857,33 @@ export default function ProfilePage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
-                  className="glass-card border border-primary/20 rounded-xl p-6"
+                  className="glass-card border border-primary/20 rounded-xl p-4 sm:p-6"
                 >
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                  <div className="flex items-center justify-between gap-3 flex-wrap mb-6">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center shrink-0">
                         <Award className="w-5 h-5 text-yellow-400" />
                       </div>
-                      <h2 className="text-xl font-bold text-white">Recent Achievements</h2>
+                      <h2 className="text-xl font-bold text-white break-words">Recent Achievements</h2>
                     </div>
                     <button
                       onClick={() => setActiveTab('achievements')}
-                      className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+                      className="shrink-0 text-primary hover:underline text-sm font-medium flex items-center gap-1"
                     >
                       View All
                       <ArrowUpRight className="w-4 h-4" />
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     {(profile.achievements || []).filter(a => a.unlocked).slice(0, 3).map((achievement) => (
                       <motion.div
                         key={achievement.id}
-                        className="p-4 glass rounded-lg border border-yellow-500/20 cursor-pointer active:scale-[0.98]"
+                        className="p-4 glass rounded-lg border border-yellow-500/20 cursor-pointer active:scale-[0.98] min-w-0"
                       >
                         <div className="text-4xl mb-3">{achievement.icon}</div>
-                        <h3 className="text-white font-semibold mb-1">{achievement.title}</h3>
-                        <p className="text-white/60 text-xs">{achievement.description}</p>
+                        <h3 className="text-white font-semibold mb-1 break-words">{achievement.title}</h3>
+                        <p className="text-white/60 text-xs break-words">{achievement.description}</p>
                         {achievement.date && (
                           <p className="text-emerald-400 text-xs mt-2">
                             Unlocked {new Date(achievement.date).toLocaleDateString()}
@@ -900,11 +900,11 @@ export default function ProfilePage() {
             {activeTab === 'stats' && (
               <div className="space-y-6">
                 {/* Performance Overview */}
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="lg:col-span-2 glass-card border border-primary/20 rounded-xl p-6"
+                    className="lg:col-span-2 glass-card border border-primary/20 rounded-xl p-4 sm:p-6"
                   >
                     <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                       <TrendingUp className="w-5 h-5 text-emerald-400" />
@@ -1007,7 +1007,7 @@ export default function ProfilePage() {
                   <motion.div
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="glass-card border border-primary/20 rounded-xl p-6 flex flex-col"
+                    className="glass-card border border-primary/20 rounded-xl p-4 sm:p-6 flex flex-col"
                   >
                     <h2 className="text-xl font-bold text-white mb-4">Satisfaction Score</h2>
                     
@@ -1064,7 +1064,7 @@ export default function ProfilePage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="glass-card border border-primary/20 rounded-xl p-6"
+                  className="glass-card border border-primary/20 rounded-xl p-4 sm:p-6"
                 >
                   <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                     <Globe className="w-5 h-5 text-cyan-400" />
@@ -1168,7 +1168,7 @@ export default function ProfilePage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="glass-card border border-primary/20 rounded-xl p-6"
+                  className="glass-card border border-primary/20 rounded-xl p-4 sm:p-6"
                 >
                   <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                     <BarChart3 className="w-5 h-5 text-purple-400" />
@@ -1233,8 +1233,8 @@ export default function ProfilePage() {
                         const maxReviews = Math.max(...dataWithChanges.map(d => d.reviews), 1)
                         
                         return dataWithChanges.map((data, index) => (
-                          <div key={index} className={`p-4 glass rounded-lg ${data.isCurrentMonth ? 'ring-2 ring-primary/50' : ''}`}>
-                            <p className="text-white/60 text-xs mb-2">
+                          <div key={index} className={`p-3 sm:p-4 glass rounded-lg min-w-0 ${data.isCurrentMonth ? 'ring-2 ring-primary/50' : ''}`}>
+                            <p className="text-white/60 text-xs mb-2 truncate">
                               {data.month}
                               {data.isCurrentMonth && <span className="ml-1 text-primary">Current</span>}
                             </p>
@@ -1352,7 +1352,7 @@ export default function ProfilePage() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="glass-card border border-primary/20 rounded-xl p-6"
+                  className="glass-card border border-primary/20 rounded-xl p-4 sm:p-6"
                 >
                   <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                     <Activity className="w-5 h-5 text-cyan-400" />
@@ -1384,13 +1384,13 @@ export default function ProfilePage() {
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.1 }}
-                            className="flex items-start gap-4 p-4 glass rounded-lg hover:bg-white/5 transition-all"
+                            className="flex items-start gap-3 sm:gap-4 p-4 glass rounded-lg hover:bg-white/5 transition-all"
                           >
                             <div className={`w-12 h-12 ${colorClass} rounded-xl flex items-center justify-center shrink-0`}>
                               {activity.type === 'reply_saved' ? <MessageSquare className="w-5 h-5" /> : activity.type === 'platform_connected' ? <Globe className="w-5 h-5" /> : <Star className="w-5 h-5" />}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="text-white font-medium mb-1">{activity.description}</p>
+                              <p className="text-white font-medium mb-1 break-words">{activity.description}</p>
                               <p className="text-white/60 text-sm">
                                 {new Date(activity.timestamp).toLocaleDateString('en-US', {
                                   month: 'short',
@@ -1401,7 +1401,7 @@ export default function ProfilePage() {
                                 })}
                               </p>
                             </div>
-                            <Link href={activity.type === 'platform_connected' ? '/connect-platforms' : '/reviews'} className="px-3 py-1.5 glass rounded-lg text-white/70 hover:text-white text-sm transition-colors">
+                            <Link href={activity.type === 'platform_connected' ? '/connect-platforms' : '/reviews'} className="shrink-0 px-3 py-1.5 glass rounded-lg text-white/70 hover:text-white text-sm transition-colors">
                               View
                             </Link>
                           </motion.div>
@@ -1417,7 +1417,7 @@ export default function ProfilePage() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.2 }}
-                    className="glass-card border border-primary/20 rounded-xl p-6"
+                    className="glass-card border border-primary/20 rounded-xl p-4 sm:p-6"
                   >
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-white font-semibold">This Week</h3>
@@ -1431,7 +1431,7 @@ export default function ProfilePage() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.3 }}
-                    className="glass-card border border-primary/20 rounded-xl p-6"
+                    className="glass-card border border-primary/20 rounded-xl p-4 sm:p-6"
                   >
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-white font-semibold">Response Time</h3>
@@ -1445,7 +1445,7 @@ export default function ProfilePage() {
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.4 }}
-                    className="glass-card border border-primary/20 rounded-xl p-6"
+                    className="glass-card border border-primary/20 rounded-xl p-4 sm:p-6"
                   >
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-white font-semibold">Total Actions</h3>
@@ -1466,14 +1466,14 @@ export default function ProfilePage() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="glass-card border border-primary/20 rounded-xl p-6"
+                  className="glass-card border border-primary/20 rounded-xl p-4 sm:p-6"
                 >
-                  <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center justify-between gap-3 flex-wrap mb-6">
                     <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                      <Award className="w-5 h-5 text-yellow-400" />
+                      <Award className="w-5 h-5 text-yellow-400 shrink-0" />
                       Your Achievements
                     </h2>
-                    <div className="text-right">
+                    <div className="text-right shrink-0">
                       <p className="text-2xl font-bold text-white">
                         {(profile.achievements || []).filter(a => a.unlocked).length}/{(profile.achievements || []).length}
                       </p>
@@ -1481,14 +1481,14 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {(profile.achievements || []).map((achievement, index) => (
                       <motion.div
                         key={achievement.id}
                         initial={{ opacity: 0, scale: 0.9 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: index * 0.05 }}
-                        className={`p-6 rounded-xl border-2 transition-all ${
+                        className={`p-4 sm:p-6 rounded-xl border-2 transition-all min-w-0 ${
                           achievement.unlocked
                             ? 'glass border-yellow-500/30 hover:border-yellow-500/50'
                             : 'bg-white/5 border-white/10'
@@ -1497,10 +1497,10 @@ export default function ProfilePage() {
                         <div className={`text-5xl mb-4 ${!achievement.unlocked && 'opacity-30 grayscale'}`}>
                           {achievement.icon}
                         </div>
-                        <h3 className={`text-lg font-bold mb-2 ${achievement.unlocked ? 'text-white' : 'text-white/50'}`}>
+                        <h3 className={`text-lg font-bold mb-2 break-words ${achievement.unlocked ? 'text-white' : 'text-white/50'}`}>
                           {achievement.title}
                         </h3>
-                        <p className={`text-sm mb-3 ${achievement.unlocked ? 'text-white/70' : 'text-white/40'}`}>
+                        <p className={`text-sm mb-3 break-words ${achievement.unlocked ? 'text-white/70' : 'text-white/40'}`}>
                           {achievement.description}
                         </p>
                         {achievement.unlocked ? (
@@ -1526,7 +1526,7 @@ export default function ProfilePage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
-                  className="glass-card border border-primary/20 rounded-xl p-6"
+                  className="glass-card border border-primary/20 rounded-xl p-4 sm:p-6"
                 >
                   <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                     <Target className="w-5 h-5 text-cyan-400" />
@@ -1577,7 +1577,7 @@ export default function ProfilePage() {
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="glass-card border border-primary/20 rounded-xl p-6"
+                  className="glass-card border border-primary/20 rounded-xl p-4 sm:p-6"
                 >
                   <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
                     <MapPinned className="w-5 h-5 text-cyan-400" />
@@ -1594,7 +1594,7 @@ export default function ProfilePage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className="glass-card border border-primary/20 rounded-xl p-6"
+                  className="glass-card border border-primary/20 rounded-xl p-4 sm:p-6"
                 >
                   <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                     <Settings className="w-5 h-5 text-cyan-400" />

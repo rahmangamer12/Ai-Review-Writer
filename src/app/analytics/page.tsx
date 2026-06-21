@@ -78,18 +78,18 @@ function MetricCard({ label, value, detail, icon: Icon, tone }: any) {
   }
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-5 shadow-xl">
-      <div className="mb-5 flex items-start justify-between gap-4">
-        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl border ${tones[tone] || tones.violet}`}>
+    <div className="min-w-0 rounded-3xl border border-white/10 bg-white/[0.035] p-4 shadow-xl sm:p-5">
+      <div className="mb-4 flex items-start justify-between gap-3 sm:mb-5">
+        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border sm:h-12 sm:w-12 ${tones[tone] || tones.violet}`}>
           <Icon className="h-5 w-5" />
         </div>
         <div className="rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-white/35">
           Live
         </div>
       </div>
-      <p className="text-[11px] font-black uppercase tracking-[0.22em] text-white/35">{label}</p>
-      <p className="mt-2 text-3xl font-black tracking-tight text-white">{value}</p>
-      <p className="mt-2 text-sm leading-relaxed text-white/45">{detail}</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/35 sm:text-[11px] sm:tracking-[0.22em]">{label}</p>
+      <p className="mt-2 truncate text-2xl font-black tracking-tight text-white sm:text-3xl">{value}</p>
+      <p className="mt-2 text-xs leading-relaxed text-white/45 sm:text-sm">{detail}</p>
     </div>
   )
 }
@@ -192,7 +192,7 @@ function AnalyticsPage() {
         <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
       </div>
 
-      <div className="relative z-10 mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <div className="mb-5 flex items-center justify-between md:hidden">
           <button onClick={() => router.push('/dashboard')} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04]">
             <ChevronLeft className="h-5 w-5" />
@@ -207,25 +207,25 @@ function AnalyticsPage() {
                 <LineChart className="h-3.5 w-3.5" />
                 Local Review Analytics
               </div>
-              <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">Review Analytics</h1>
+              <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl lg:text-4xl">Review Analytics</h1>
               <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/55 sm:text-base">
                 Track rating health, sentiment, response progress, and review volume from real customer feedback.
               </p>
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <div className="flex rounded-2xl border border-white/10 bg-black/20 p-1">
+            <div className="flex w-full flex-wrap items-center gap-3 sm:w-auto">
+              <div className="flex flex-1 rounded-2xl border border-white/10 bg-black/20 p-1 sm:flex-none">
                 {(['7', '30', '90'] as const).map((range) => (
                   <button
                     key={range}
                     onClick={() => setTimeRange(range)}
-                    className={`rounded-xl px-5 py-2.5 text-xs font-black transition-all ${timeRange === range ? 'bg-white text-slate-950' : 'text-white/45 hover:text-white'}`}
+                    className={`flex-1 rounded-xl px-4 py-2.5 text-xs font-black transition-all sm:flex-none sm:px-5 ${timeRange === range ? 'bg-white text-slate-950' : 'text-white/45 hover:text-white'}`}
                   >
                     {range}D
                   </button>
                 ))}
               </div>
-              <button onClick={fetchData} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white/60 hover:text-white">
+              <button onClick={fetchData} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-white/60 hover:text-white">
                 <RefreshCw className="h-5 w-5" />
               </button>
             </div>
@@ -236,30 +236,30 @@ function AnalyticsPage() {
           <EmptyState />
         ) : (
           <div className="space-y-6">
-            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <section className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
               <MetricCard label="Total reviews" value={stats.totalReviews} detail="Reviews saved in your workspace." icon={MessageSquare} tone="violet" />
               <MetricCard label="Average rating" value={`${stats.avgRating}/5`} detail="Current customer rating health." icon={Star} tone="amber" />
               <MetricCard label="Response rate" value={`${stats.responseRate}%`} detail="Reviews with a reply or draft." icon={Zap} tone="emerald" />
               <MetricCard label="Pending work" value={stats.pendingReviews} detail="Reviews still waiting for action." icon={AlertCircle} tone="cyan" />
             </section>
 
-            <section className="grid grid-cols-1 gap-6 xl:grid-cols-[1.4fr_0.9fr]">
-              <div className="rounded-[2rem] border border-white/10 bg-white/[0.035] p-5 shadow-xl sm:p-6">
-                <div className="mb-6 flex items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-xl font-black text-white">Review Volume</h2>
+            <section className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-[1.4fr_0.9fr]">
+              <div className="min-w-0 rounded-[2rem] border border-white/10 bg-white/[0.035] p-5 shadow-xl sm:p-6">
+                <div className="mb-6 flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <h2 className="text-lg font-black text-white sm:text-xl">Review Volume</h2>
                     <p className="mt-1 text-xs text-white/40">Incoming reviews over the selected range.</p>
                   </div>
-                  <BarChart3 className="h-5 w-5 text-violet-300" />
+                  <BarChart3 className="h-5 w-5 shrink-0 text-violet-300" />
                 </div>
-                <div className="flex h-64 items-end gap-2 rounded-3xl border border-white/5 bg-black/20 p-4">
+                <div className="flex h-56 w-full items-end gap-1 rounded-3xl border border-white/5 bg-black/20 p-3 sm:h-64 sm:gap-2 sm:p-4">
                   {timeSeries.length === 0 ? (
                     <div className="flex h-full w-full items-center justify-center text-sm text-white/35">No timeline data yet.</div>
                   ) : (
                     timeSeries.map((day, index) => (
                       <div key={`${day.date}-${index}`} className="group flex h-full flex-1 items-end">
                         <div
-                          className="w-full rounded-t-xl bg-gradient-to-t from-violet-600/60 to-cyan-300 shadow-lg shadow-violet-500/10 transition-all group-hover:from-violet-500"
+                          className="w-full rounded-t-sm bg-gradient-to-t from-violet-600/60 to-cyan-300 shadow-lg shadow-violet-500/10 transition-all group-hover:from-violet-500 sm:rounded-t-xl"
                           style={{ height: `${Math.max((day.count / maxCount) * 100, day.count > 0 ? 8 : 2)}%` }}
                           title={`${day.date}: ${day.count} reviews`}
                         />
@@ -269,9 +269,9 @@ function AnalyticsPage() {
                 </div>
               </div>
 
-              <div className="rounded-[2rem] border border-white/10 bg-white/[0.035] p-5 shadow-xl sm:p-6">
+              <div className="min-w-0 rounded-[2rem] border border-white/10 bg-white/[0.035] p-5 shadow-xl sm:p-6">
                 <div className="mb-6">
-                  <h2 className="text-xl font-black text-white">Sentiment Mix</h2>
+                  <h2 className="text-lg font-black text-white sm:text-xl">Sentiment Mix</h2>
                   <p className="mt-1 text-xs text-white/40">How customers feel across saved reviews.</p>
                 </div>
                 <div className="space-y-5">
@@ -281,9 +281,9 @@ function AnalyticsPage() {
                     { label: 'Negative', value: sentiment.negative, icon: ThumbsDown, color: 'bg-rose-400' },
                   ].map((item) => (
                     <div key={item.label}>
-                      <div className="mb-2 flex items-center justify-between text-sm">
-                        <span className="flex items-center gap-2 text-white/70"><item.icon className="h-4 w-4" /> {item.label}</span>
-                        <span className="font-bold text-white">{Math.round((item.value / totalSentiment) * 100)}%</span>
+                      <div className="mb-2 flex items-center justify-between gap-2 text-sm">
+                        <span className="flex min-w-0 items-center gap-2 text-white/70"><item.icon className="h-4 w-4 shrink-0" /> <span className="truncate">{item.label}</span></span>
+                        <span className="shrink-0 font-bold text-white">{Math.round((item.value / totalSentiment) * 100)}%</span>
                       </div>
                       <div className="h-2 overflow-hidden rounded-full bg-white/10">
                         <div className={`h-full rounded-full ${item.color}`} style={{ width: `${(item.value / totalSentiment) * 100}%` }} />
@@ -294,9 +294,9 @@ function AnalyticsPage() {
               </div>
             </section>
 
-            <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
-              <div className="rounded-[2rem] border border-white/10 bg-white/[0.035] p-5 shadow-xl sm:p-6">
-                <h2 className="text-xl font-black text-white">Rating Breakdown</h2>
+            <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 xl:grid-cols-3">
+              <div className="min-w-0 rounded-[2rem] border border-white/10 bg-white/[0.035] p-5 shadow-xl sm:p-6">
+                <h2 className="text-lg font-black text-white sm:text-xl">Rating Breakdown</h2>
                 <div className="mt-6 space-y-3">
                   {ratingRows.map((row) => (
                     <div key={row.stars} className="grid grid-cols-[44px_1fr_34px] items-center gap-3 text-sm">
@@ -310,30 +310,30 @@ function AnalyticsPage() {
                 </div>
               </div>
 
-              <div className="rounded-[2rem] border border-white/10 bg-white/[0.035] p-5 shadow-xl sm:p-6">
-                <h2 className="text-xl font-black text-white">Platforms</h2>
+              <div className="min-w-0 rounded-[2rem] border border-white/10 bg-white/[0.035] p-5 shadow-xl sm:p-6">
+                <h2 className="text-lg font-black text-white sm:text-xl">Platforms</h2>
                 <div className="mt-6 space-y-3">
                   {topPlatforms.length === 0 ? (
                     <p className="text-sm text-white/40">No connected platform data yet.</p>
                   ) : (
                     topPlatforms.map(([platform, count]) => (
-                      <div key={platform} className="flex items-center justify-between rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
-                        <span className="capitalize text-white/70">{platform}</span>
-                        <span className="font-black text-white">{count}</span>
+                      <div key={platform} className="flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
+                        <span className="truncate capitalize text-white/70">{platform}</span>
+                        <span className="shrink-0 font-black text-white">{count}</span>
                       </div>
                     ))
                   )}
                 </div>
               </div>
 
-              <div className="rounded-[2rem] border border-white/10 bg-white/[0.035] p-5 shadow-xl sm:p-6">
-                <h2 className="text-xl font-black text-white">AI Notes</h2>
+              <div className="min-w-0 rounded-[2rem] border border-white/10 bg-white/[0.035] p-5 shadow-xl sm:col-span-2 sm:p-6 xl:col-span-1">
+                <h2 className="text-lg font-black text-white sm:text-xl">AI Notes</h2>
                 <p className="mt-4 text-sm leading-relaxed text-white/55">
                   {insights?.summary || 'No AI insight summary yet. Add more reviews to generate useful trends.'}
                 </p>
                 <div className="mt-5 space-y-3">
                   {(insights?.improvement_suggestions || []).slice(0, 3).map((item, index) => (
-                    <div key={item} className="rounded-2xl border border-white/10 bg-black/20 p-3 text-sm text-white/60">
+                    <div key={item} className="rounded-2xl border border-white/10 bg-black/20 p-3 text-sm text-white/60 break-words">
                       <span className="mr-2 font-black text-cyan-300">0{index + 1}</span>
                       {item}
                     </div>
@@ -346,7 +346,7 @@ function AnalyticsPage() {
 
         <footer className="mt-10 flex flex-col gap-4 border-t border-white/10 py-8 text-xs text-white/35 sm:flex-row sm:items-center sm:justify-between">
           <span>AutoReview AI - Local Review Analytics</span>
-          <div className="flex gap-5">
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
             <Link href="/docs" className="hover:text-white">Documentation</Link>
             <Link href="/status" className="hover:text-white">API Status</Link>
             <Link href="/compliance" className="hover:text-white">Compliance</Link>

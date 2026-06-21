@@ -86,7 +86,7 @@ const sentimentConfig = {
 
 function ReviewsLoading() {
   return (
-    <div className="min-h-[100dvh] bg-[#0a0a0f] flex items-center justify-center overflow-x-hidden">
+    <div className="min-h-[100dvh] bg-[#030308] flex items-center justify-center overflow-x-hidden px-4">
       <div className="text-center">
         <div className="w-12 h-12 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin mx-auto mb-4" />
         <p className="text-gray-400">Loading reviews...</p>
@@ -426,7 +426,7 @@ function ReviewsContent() {
   if (!mounted) {
     // Render a simple loading state during hydration to prevent mismatches
     return (
-      <div className="min-h-[100dvh] bg-[#0a0a0f] text-white overflow-x-hidden flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-[#030308] text-white overflow-x-hidden flex items-center justify-center px-4">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500 mb-4"></div>
           <p className="text-gray-400">Loading reviews...</p>
@@ -444,8 +444,8 @@ function ReviewsContent() {
       </div>
 
       {/* Header */}
-      <header className="sticky top-0 lg:top-0 z-40 border-b border-white/5 bg-[#0a0a0f]/80 backdrop-blur-xl" suppressHydrationWarning>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <header className="sticky top-0 lg:top-0 z-40 border-b border-white/5 bg-[#030308]/80 backdrop-blur-xl" suppressHydrationWarning>
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex h-14 sm:h-16 items-center justify-between gap-2">
             <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
               <button
@@ -456,7 +456,7 @@ function ReviewsContent() {
               </button>
               <div className="flex-1 min-w-0">
                 <h1 className="text-xs sm:text-lg font-bold text-white truncate">Reviews Manager</h1>
-                <p className="text-[9px] sm:text-xs text-gray-500 hidden xs:block">{totalCount} total</p>
+                <p className="text-[9px] sm:text-xs text-gray-500 truncate">{totalCount} total</p>
               </div>
             </div>
 
@@ -510,28 +510,28 @@ function ReviewsContent() {
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto w-full max-w-7xl px-3 sm:px-6 lg:px-8 min-w-0 pb-[env(safe-area-inset-bottom)]">
-        <section className="mt-6 mb-6 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.035] p-5 shadow-2xl sm:p-7">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.25em] text-cyan-200/70">Review operations</p>
-              <h2 className="mt-2 text-3xl font-black text-white sm:text-4xl">Manage every customer review</h2>
+      <main className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 min-w-0 pb-[env(safe-area-inset-bottom)]">
+        <section className="mt-6 mb-6 overflow-hidden rounded-3xl sm:rounded-[2rem] border border-white/10 bg-white/[0.035] p-5 shadow-2xl sm:p-7">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="min-w-0">
+              <p className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] sm:tracking-[0.25em] text-cyan-200/70">Review operations</p>
+              <h2 className="mt-2 text-2xl font-black text-white sm:text-3xl lg:text-4xl">Manage every customer review</h2>
               <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/55">
                 Sync Google reviews, draft AI replies, filter by sentiment, and keep every response editable before it goes public.
               </p>
             </div>
-            <div className="grid grid-cols-3 gap-2 sm:min-w-[360px]">
+            <div className="grid w-full grid-cols-3 gap-2 lg:w-auto lg:min-w-[360px]">
               <div className="rounded-2xl border border-white/10 bg-black/20 p-3 text-center">
-                <p className="text-2xl font-black text-white">{totalCount}</p>
-                <p className="text-[10px] uppercase tracking-widest text-white/35">Reviews</p>
+                <p className="text-xl sm:text-2xl font-black text-white">{totalCount}</p>
+                <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-white/35">Reviews</p>
               </div>
               <div className="rounded-2xl border border-amber-400/20 bg-amber-500/10 p-3 text-center">
-                <p className="text-2xl font-black text-amber-200">{reviews.filter(r => r.status === 'pending').length}</p>
-                <p className="text-[10px] uppercase tracking-widest text-amber-100/50">Pending</p>
+                <p className="text-xl sm:text-2xl font-black text-amber-200">{reviews.filter(r => r.status === 'pending').length}</p>
+                <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-amber-100/50">Pending</p>
               </div>
               <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-3 text-center">
-                <p className="text-2xl font-black text-emerald-200">{reviews.filter(r => r.reply).length}</p>
-                <p className="text-[10px] uppercase tracking-widest text-emerald-100/50">Drafted</p>
+                <p className="text-xl sm:text-2xl font-black text-emerald-200">{reviews.filter(r => r.reply).length}</p>
+                <p className="text-[9px] sm:text-[10px] uppercase tracking-widest text-emerald-100/50">Drafted</p>
               </div>
             </div>
           </div>
@@ -545,11 +545,11 @@ function ReviewsContent() {
             className="mb-6 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-4"
           >
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div className="rounded-lg bg-emerald-500/20 p-2">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="rounded-lg bg-emerald-500/20 p-2 shrink-0">
                   <Brain className="h-5 w-5 text-emerald-400" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-sm font-medium text-emerald-400">Agentic Mode Active</p>
                   <p className="text-xs text-emerald-400/70">AI auto-generates replies and processes reviews</p>
                 </div>
@@ -642,10 +642,10 @@ function ReviewsContent() {
               exit={{ opacity: 0, height: 0 }}
               className="mb-6 rounded-xl border border-rose-500/20 bg-rose-500/10 p-4"
             >
-              <div className="flex items-center gap-3">
-                <AlertCircle className="h-5 w-5 text-rose-400" />
-                <p className="text-rose-400">{error}</p>
-                <button onClick={() => setError(null)} className="ml-auto">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 shrink-0 text-rose-400" />
+                <p className="min-w-0 flex-1 break-words text-sm sm:text-base text-rose-400">{error}</p>
+                <button onClick={() => setError(null)} className="shrink-0">
                   <X className="h-4 w-4 text-rose-400" />
                 </button>
               </div>
@@ -760,16 +760,16 @@ function ReviewsContent() {
             ))}
           </div>
         ) : reviews.length === 0 ? (
-          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.02] to-white/[0.05] p-12 lg:p-20 text-center relative overflow-hidden">
+          <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-white/[0.02] to-white/[0.05] p-6 sm:p-12 lg:p-20 text-center relative overflow-hidden">
             <div className="absolute top-0 right-1/4 w-[400px] h-[400px] bg-purple-600/10 rounded-full blur-[100px]" />
             <div className="absolute bottom-0 left-1/4 w-[400px] h-[400px] bg-blue-600/10 rounded-full blur-[100px]" />
-            
+
             <div className="relative z-10">
-              <div className="w-24 h-24 bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-2xl">
-                <MessageSquare className="w-12 h-12 text-purple-400" />
+              <div className="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6 sm:mb-8 shadow-2xl">
+                <MessageSquare className="w-10 h-10 sm:w-12 sm:h-12 text-purple-400" />
               </div>
-              <h3 className="text-3xl font-bold text-white mb-4">No Reviews Found</h3>
-              <p className="text-xl text-gray-400 mb-10 max-w-xl mx-auto">
+              <h3 className="text-2xl sm:text-3xl font-bold text-white mb-3 sm:mb-4">No Reviews Found</h3>
+              <p className="text-base sm:text-xl text-gray-400 mb-8 sm:mb-10 max-w-xl mx-auto">
                 {filters.search || filters.status !== 'all' || filters.platform !== 'all'
                   ? "We couldn't find any reviews matching your current filters. Try adjusting them to see more results."
                   : "You haven't collected any real reviews yet. Connect a platform or add a customer review manually to get started."}
@@ -815,7 +815,7 @@ function ReviewsContent() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.95 }}
                       transition={{ delay: index * 0.05 }}
-                      className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] p-5 transition-all hover:border-white/20 hover:bg-white/[0.04]"
+                      className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.02] p-4 sm:p-5 transition-all hover:border-white/20 hover:bg-white/[0.04]"
                     >
                       <div className={`absolute left-0 top-0 h-full w-1 ${
                         review.status === 'approved' ? 'bg-emerald-500' : 
@@ -830,8 +830,8 @@ function ReviewsContent() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex flex-wrap items-center gap-2">
-                                <h4 className="font-semibold text-white text-sm sm:text-base truncate">{authorName}</h4>
-                                <span className={`rounded-full px-2 py-0.5 text-xs sm:text-sm ${platformColor}`}>
+                                <h4 className="max-w-full font-semibold text-white text-sm sm:text-base truncate">{authorName}</h4>
+                                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs sm:text-sm capitalize ${platformColor}`}>
                                   <span className="flex items-center gap-1">
                                     <PlatformIcon platform={review.platform} className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                                     {review.platform}
@@ -998,14 +998,14 @@ function ReviewsContent() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-2xl rounded-t-3xl sm:rounded-2xl max-h-[90dvh] overflow-y-auto border border-white/10 bg-[#0f0f14] p-6 shadow-2xl"
+              className="w-full max-w-[95vw] sm:max-w-2xl rounded-t-3xl sm:rounded-2xl max-h-[90dvh] overflow-y-auto border border-white/10 bg-[#0f0f14] p-4 sm:p-6 shadow-2xl"
             >
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Sparkles className="h-5 w-5 text-purple-400" />
-                  {selectedReview.reply ? 'Edit Reply' : 'Generate AI Reply'}
+              <div className="mb-6 flex items-center justify-between gap-2">
+                <h3 className="min-w-0 text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 shrink-0 text-purple-400" />
+                  <span className="truncate">{selectedReview.reply ? 'Edit Reply' : 'Generate AI Reply'}</span>
                 </h3>
-                <button onClick={() => setShowReplyModal(false)} className="rounded-lg p-2 text-gray-400 hover:bg-white/5 hover:text-white">
+                <button onClick={() => setShowReplyModal(false)} className="shrink-0 rounded-lg p-2 text-gray-400 hover:bg-white/5 hover:text-white">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -1023,14 +1023,14 @@ function ReviewsContent() {
                 placeholder="Type your reply..."
               />
 
-              <div className="flex items-center justify-end gap-3">
-                <button onClick={() => setShowReplyModal(false)} className="rounded-lg border border-white/10 bg-white/5 px-6 py-2.5 text-sm font-medium text-gray-400 hover:text-white">
+              <div className="flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+                <button onClick={() => setShowReplyModal(false)} className="rounded-lg border border-white/10 bg-white/5 px-4 sm:px-6 py-2.5 text-sm font-medium text-gray-400 hover:text-white">
                   Cancel
                 </button>
                 <button
                   onClick={() => generateAIReply(selectedReview)}
                   disabled={generatingReply === selectedReview.id}
-                  className="rounded-lg border border-purple-500/30 bg-purple-500/10 px-6 py-2.5 text-sm font-medium text-purple-400 hover:bg-purple-500/20 disabled:opacity-50"
+                  className="rounded-lg border border-purple-500/30 bg-purple-500/10 px-4 sm:px-6 py-2.5 text-sm font-medium text-purple-400 hover:bg-purple-500/20 disabled:opacity-50"
                 >
                   {generatingReply === selectedReview.id ? <RefreshCw className="mr-2 inline h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 inline h-4 w-4" />}
                   Regenerate
@@ -1038,7 +1038,7 @@ function ReviewsContent() {
                 <button
                   onClick={saveReply}
                   disabled={!replyText.trim()}
-                  className="rounded-lg bg-purple-600 px-6 py-2.5 text-sm font-medium text-white hover:bg-purple-500 disabled:opacity-50"
+                  className="rounded-lg bg-purple-600 px-4 sm:px-6 py-2.5 text-sm font-medium text-white hover:bg-purple-500 disabled:opacity-50"
                 >
                   <Send className="mr-2 inline h-4 w-4" />
                   Save Reply
@@ -1056,7 +1056,7 @@ function ReviewsContent() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4"
             onClick={() => setShowAIInsights(false)}
           >
             <motion.div
@@ -1064,14 +1064,14 @@ function ReviewsContent() {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-2xl rounded-2xl border border-purple-500/20 bg-[#0f0f14] p-6 shadow-2xl"
+              className="w-full max-w-[95vw] sm:max-w-2xl max-h-[90dvh] overflow-y-auto rounded-t-3xl sm:rounded-2xl border border-purple-500/20 bg-[#0f0f14] p-4 sm:p-6 shadow-2xl"
             >
-              <div className="mb-6 flex items-center justify-between">
-                <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Lightbulb className="h-6 w-6 text-purple-400" />
-                  AI Insights
+              <div className="mb-6 flex items-center justify-between gap-2">
+                <h3 className="min-w-0 text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                  <Lightbulb className="h-6 w-6 shrink-0 text-purple-400" />
+                  <span className="truncate">AI Insights</span>
                 </h3>
-                <button onClick={() => setShowAIInsights(false)} className="rounded-lg p-2 text-gray-400 hover:bg-white/5 hover:text-white">
+                <button onClick={() => setShowAIInsights(false)} className="shrink-0 rounded-lg p-2 text-gray-400 hover:bg-white/5 hover:text-white">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -1100,9 +1100,9 @@ function ReviewsContent() {
                   </div>
                   <ul className="space-y-1">
                     {(aiInsights.improvementAreas || []).map((area: string, i: number) => (
-                      <li key={i} className="text-amber-400 text-sm flex items-center gap-2">
-                        <span className="h-1.5 w-1.5 rounded-full bg-amber-400" />
-                        {area}
+                      <li key={i} className="text-amber-400 text-sm flex items-start gap-2">
+                        <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-400" />
+                        <span className="min-w-0 break-words">{area}</span>
                       </li>
                     ))}
                   </ul>
@@ -1115,9 +1115,9 @@ function ReviewsContent() {
                   </div>
                   <ul className="space-y-1">
                     {(aiInsights.recommendations || []).map((rec: string, i: number) => (
-                      <li key={i} className="text-purple-400 text-sm flex items-center gap-2">
-                        <Check className="h-3 w-3" />
-                        {rec}
+                      <li key={i} className="text-purple-400 text-sm flex items-start gap-2">
+                        <Check className="mt-0.5 h-3 w-3 shrink-0" />
+                        <span className="min-w-0 break-words">{rec}</span>
                       </li>
                     ))}
                   </ul>

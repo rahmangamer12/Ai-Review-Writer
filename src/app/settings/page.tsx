@@ -33,7 +33,7 @@ function TabButton({ tab, label, icon, activeTab, onClick }: { tab: TabType; lab
   return (
     <button
       onClick={() => onClick(tab)}
-      className={`flex items-center gap-2 px-4 py-2 md:px-5 md:py-3 rounded-2xl border transition-all text-sm md:text-base whitespace-nowrap ${
+      className={`flex shrink-0 snap-start items-center gap-2 px-4 py-2 md:px-5 md:py-3 rounded-2xl border transition-all text-sm md:text-base whitespace-nowrap ${
         activeTab === tab
           ? 'border-violet-400/40 bg-violet-500/20 text-white shadow-lg shadow-violet-500/10'
           : 'border-white/10 bg-white/[0.04] text-white/65 hover:text-white hover:bg-white/10'
@@ -215,23 +215,23 @@ export default function SettingsPage() {
 
   return (
     <PageTransition>
-      <div className="min-h-[100dvh] overflow-x-hidden w-full bg-[#030308] px-4 py-6 sm:px-6">
+      <div className="min-h-[100dvh] overflow-x-hidden w-full bg-[#030308] py-6">
         <div className="fixed inset-0 pointer-events-none">
           <div className="absolute left-1/4 top-0 h-96 w-96 rounded-full bg-violet-600/10 blur-3xl" />
           <div className="absolute bottom-0 right-1/4 h-96 w-96 rounded-full bg-cyan-500/10 blur-3xl" />
         </div>
-        <div className="max-w-7xl mx-auto">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
           {/* Header */}
-          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="relative mb-6 overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.035] p-6 shadow-2xl sm:p-8">
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="relative mb-6 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.035] p-4 shadow-2xl sm:p-8">
             <div className="relative z-10 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
+              <div className="min-w-0">
                 <p className="text-xs font-black uppercase tracking-[0.25em] text-cyan-200/70">Control center</p>
-                <h1 className="mt-2 text-4xl font-black text-white sm:text-5xl">Settings</h1>
-                <p className="mt-3 max-w-2xl text-white/60">Configure AI behavior, billing, notifications, integrations, and account preferences from one workspace.</p>
+                <h1 className="mt-2 text-2xl font-black text-white sm:text-3xl">Settings</h1>
+                <p className="mt-3 max-w-2xl text-sm text-white/60 sm:text-base">Configure AI behavior, billing, notifications, integrations, and account preferences from one workspace.</p>
               </div>
               <button
                 onClick={handleSave}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-black text-slate-950 shadow-lg shadow-cyan-500/10 transition-all hover:bg-cyan-50"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-black text-slate-950 shadow-lg shadow-cyan-500/10 transition-all hover:bg-cyan-50 sm:w-auto"
               >
                 <Save className="h-4 w-4" />
                 Save Settings
@@ -240,20 +240,18 @@ export default function SettingsPage() {
           </motion.div>
 
           {/* Tabs */}
-          <div className="flex overflow-x-auto pb-4 gap-2 sm:gap-3 mb-4 sm:mb-8 hide-scrollbar snap-x">
-            <div className="flex gap-2 sm:gap-4 snap-start">
-              <TabButton tab="general" label="General" icon={<SettingsIcon className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
-              <TabButton tab="credits" label="Credits" icon={<Gem className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
-              <TabButton tab="notifications" label="Notifications" icon={<Bell className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
-              <TabButton tab="ai" label="AI Settings" icon={<Bot className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
-              <TabButton tab="integrations" label="Integrations" icon={<Plug className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
-              <TabButton tab="billing" label="Billing" icon={<CreditCard className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
-              <TabButton tab="advanced" label="Advanced" icon={<SlidersHorizontal className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
-            </div>
+          <div className="-mx-4 mb-4 flex gap-2 overflow-x-auto px-4 pb-4 hide-scrollbar snap-x sm:mx-0 sm:mb-8 sm:gap-3 sm:px-0">
+            <TabButton tab="general" label="General" icon={<SettingsIcon className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
+            <TabButton tab="credits" label="Credits" icon={<Gem className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
+            <TabButton tab="notifications" label="Notifications" icon={<Bell className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
+            <TabButton tab="ai" label="AI Settings" icon={<Bot className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
+            <TabButton tab="integrations" label="Integrations" icon={<Plug className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
+            <TabButton tab="billing" label="Billing" icon={<CreditCard className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
+            <TabButton tab="advanced" label="Advanced" icon={<SlidersHorizontal className="h-4 w-4" />} activeTab={activeTab} onClick={setActiveTab} />
           </div>
 
           {/* Settings Content */}
-          <div className="glass-card border border-white/10 rounded-[2rem] p-4 sm:p-8 shadow-2xl">
+          <div className="glass-card min-w-0 border border-white/10 rounded-2xl p-4 shadow-2xl sm:rounded-3xl sm:p-8">
             {activeTab === 'general' && (
               <div className="space-y-6 sm:space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8">
@@ -315,9 +313,9 @@ export default function SettingsPage() {
 
             {activeTab === 'credits' && (
               <div className="space-y-6">
-                <div className="relative overflow-hidden rounded-3xl border border-cyan-400/20 bg-gradient-to-r from-cyan-500/15 via-blue-500/10 to-violet-500/15 p-6 sm:p-8">
+                <div className="relative overflow-hidden rounded-2xl border border-cyan-400/20 bg-gradient-to-r from-cyan-500/15 via-blue-500/10 to-violet-500/15 p-4 sm:rounded-3xl sm:p-8">
                   <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-xs font-black uppercase tracking-[0.25em] text-cyan-200/80">Payments</p>
                       <h3 className="mt-2 text-2xl font-black text-white sm:text-3xl">Upgrade Plan</h3>
                       <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/65">
@@ -326,7 +324,7 @@ export default function SettingsPage() {
                     </div>
                     <Link
                       href="/subscription"
-                      className="inline-flex items-center justify-center rounded-2xl bg-white px-6 py-3 text-sm font-black text-slate-950 shadow-lg shadow-cyan-500/20 transition-all hover:bg-cyan-50"
+                      className="inline-flex w-full items-center justify-center rounded-2xl bg-white px-6 py-3 text-sm font-black text-slate-950 shadow-lg shadow-cyan-500/20 transition-all hover:bg-cyan-50 lg:w-auto"
                     >
                       Open Upgrade Plans
                     </Link>
@@ -338,7 +336,7 @@ export default function SettingsPage() {
 
             {activeTab === 'billing' && (
               <div className="space-y-6">
-                <div className="rounded-3xl border border-violet-400/20 bg-violet-500/10 p-6 sm:p-8">
+                <div className="rounded-2xl border border-violet-400/20 bg-violet-500/10 p-4 sm:rounded-3xl sm:p-8">
                   <p className="text-xs font-black uppercase tracking-[0.25em] text-violet-200/80">Billing Setup</p>
                   <h3 className="mt-2 text-2xl font-black text-white">Payment Method</h3>
                   <p className="mt-2 text-sm text-white/60">
@@ -353,14 +351,14 @@ export default function SettingsPage() {
 
             {activeTab === 'ai' && (
               <div className="space-y-8">
-                <div className="glass-card border-2 border-white/10 rounded-2xl p-6">
-                  <h3 className="text-xl font-semibold text-white mb-6">AI Conversational Settings</h3>
-                  
+                <div className="glass-card border-2 border-white/10 rounded-2xl p-4 sm:p-6">
+                  <h3 className="text-lg sm:text-xl font-semibold text-white mb-6">AI Conversational Settings</h3>
+
                   <div className="space-y-6">
-                    <div className="flex items-center justify-between p-4 glass rounded-xl border border-primary/20 bg-primary/5">
-                      <div>
+                    <div className="flex items-center justify-between gap-3 p-4 glass rounded-xl border border-primary/20 bg-primary/5">
+                      <div className="min-w-0">
                         <h4 className="text-white font-medium flex items-center gap-2">
-                          <MessageSquare className="w-4 h-4 text-primary" />
+                          <MessageSquare className="w-4 h-4 shrink-0 text-primary" />
                           Show Sarah AI Chatbot
                         </h4>
                         <p className="text-white/60 text-xs">Toggle the floating chat widget on all pages</p>
@@ -374,8 +372,8 @@ export default function SettingsPage() {
                       />
                     </div>
 
-                    <div className="flex items-center justify-between p-4 glass rounded-xl border border-white/10">
-                      <div>
+                    <div className="flex items-center justify-between gap-3 p-4 glass rounded-xl border border-white/10">
+                      <div className="min-w-0">
                         <h4 className="text-white font-medium">Auto-Reply System</h4>
                         <p className="text-white/60 text-xs">Let AI automatically respond to incoming reviews</p>
                       </div>
@@ -414,21 +412,21 @@ export default function SettingsPage() {
                 animate={{ opacity: 1, y: 0 }}
                 className="space-y-8 pb-12"
               >
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 relative overflow-hidden p-8 rounded-3xl border border-white/10 shadow-[0_0_40px_rgba(99,102,241,0.1)]">
+                <div className="relative flex flex-col gap-4 overflow-hidden rounded-2xl border border-white/10 p-4 shadow-[0_0_40px_rgba(99,102,241,0.1)] sm:flex-row sm:items-center sm:justify-between sm:rounded-3xl sm:p-8">
                   <div className="absolute inset-0 bg-gradient-to-r from-violet-600/20 via-indigo-600/20 to-blue-600/20 backdrop-blur-xl -z-10" />
                   <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-20 mix-blend-overlay -z-10" />
-                  <div className="flex items-center gap-5 z-10">
-                    <div className="w-16 h-16 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
-                      <Zap className="w-8 h-8" />
+                  <div className="flex min-w-0 items-center gap-4 z-10 sm:gap-5">
+                    <div className="h-14 w-14 shrink-0 bg-gradient-to-br from-violet-500 to-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-500/30 sm:h-16 sm:w-16">
+                      <Zap className="h-7 w-7 sm:h-8 sm:w-8" />
                     </div>
-                    <div>
-                      <h3 className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70 tracking-tight">Global Platform Matrix</h3>
+                    <div className="min-w-0">
+                      <h3 className="text-xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white/70 tracking-tight sm:text-2xl">Global Platform Matrix</h3>
                       <p className="text-indigo-200/80 font-medium mt-1 text-sm">Live status from your saved platform connections</p>
                     </div>
                   </div>
                   <button
                     onClick={loadPlatforms}
-                    className="flex items-center gap-2 px-6 py-3 bg-white/5 hover:bg-white/10 rounded-xl text-white font-bold transition-all text-sm border border-white/10 hover:border-white/30 shadow-xl z-10 backdrop-blur-md"
+                    className="z-10 flex w-full shrink-0 items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-6 py-3 text-sm font-bold text-white shadow-xl backdrop-blur-md transition-all hover:border-white/30 hover:bg-white/10 sm:w-auto"
                   >
                     <RefreshCcw className={`w-4 h-4 ${platformsLoading ? 'animate-spin' : ''}`} /> Refresh Status
                   </button>
@@ -439,29 +437,29 @@ export default function SettingsPage() {
                     <motion.div 
                       whileHover={undefined}
                       key={platform.id} 
-                      className={`relative overflow-hidden p-6 rounded-3xl transition-all border-2 ${
-                        platform.connected 
-                          ? 'border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]' 
+                      className={`relative overflow-hidden p-4 rounded-2xl transition-all border-2 sm:p-6 sm:rounded-3xl ${
+                        platform.connected
+                          ? 'border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.1)]'
                           : 'border-white/5 hover:border-indigo-500/30 shadow-xl'
                       }`}
                     >
                       <div className={`absolute inset-0 opacity-10 -z-10 ${platform.connected ? 'bg-gradient-to-br from-emerald-500 to-teal-500' : 'bg-gradient-to-br from-indigo-500 to-purple-500'}`} />
-                      
-                      <div className="flex items-start justify-between mb-6">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-inner ${
+
+                      <div className="flex items-start justify-between gap-3 mb-6">
+                        <div className="flex min-w-0 items-center gap-4">
+                          <div className={`w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center shadow-inner ${
                             platform.connected ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/5'
                           }`}>
                             <PlatformIcon id={platform.id} />
                           </div>
-                          <div>
-                            <h4 className="text-white font-bold text-base tracking-wide">{platform.name}</h4>
+                          <div className="min-w-0">
+                            <h4 className="truncate text-white font-bold text-base tracking-wide">{platform.name}</h4>
                             <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest mt-1">
                               {platform.lastSync ? `Last sync: ${new Date(platform.lastSync).toLocaleDateString()}` : 'Not synced yet'}
                             </p>
                           </div>
                         </div>
-                        <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
+                        <div className={`flex shrink-0 items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-sm ${
                           platform.connected 
                             ? 'bg-emerald-500 text-white shadow-emerald-500/40' 
                             : 'bg-white/5 text-white/40 border border-white/10'
@@ -495,13 +493,13 @@ export default function SettingsPage() {
                 )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="relative overflow-hidden p-8 rounded-3xl border border-white/10 bg-black/40 backdrop-blur-md">
+                  <div className="relative overflow-hidden p-4 rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md sm:p-8 sm:rounded-3xl">
                     <div className="absolute -top-24 -right-24 w-48 h-48 bg-indigo-500/20 rounded-full blur-[60px] pointer-events-none" />
                     <div className="flex items-center gap-4 mb-8">
-                      <div className="w-12 h-12 bg-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400 border border-indigo-500/20">
+                      <div className="w-12 h-12 shrink-0 bg-indigo-500/20 rounded-2xl flex items-center justify-center text-indigo-400 border border-indigo-500/20">
                         <LinkIcon className="w-6 h-6" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <h3 className="text-xl font-black text-white tracking-tight">Advanced Webhooks</h3>
                         <p className="text-xs text-indigo-300/70 font-medium">Real-time event streaming</p>
                       </div>
@@ -524,10 +522,10 @@ export default function SettingsPage() {
                             type="password"
                             value={settings.webhookSecret}
                             onChange={(e) => setSettings({ ...settings, webhookSecret: e.target.value })}
-                            className="flex-1 px-5 py-4 bg-black/50 border border-indigo-500/20 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm font-mono shadow-inner"
+                            className="min-w-0 flex-1 px-4 py-4 sm:px-5 bg-black/50 border border-indigo-500/20 rounded-xl text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all text-sm font-mono shadow-inner"
                             placeholder="RE-xxxxxxxxxxxxxxxx"
                           />
-                          <button className="px-5 py-4 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white rounded-xl text-xs font-black uppercase tracking-widest border border-indigo-500/20 transition-all shadow-lg">
+                          <button className="shrink-0 px-4 py-4 sm:px-5 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white rounded-xl text-xs font-black uppercase tracking-widest border border-indigo-500/20 transition-all shadow-lg">
                             Rotate
                           </button>
                         </div>
@@ -545,22 +543,22 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  <div className="relative overflow-hidden p-8 rounded-3xl border border-white/10 bg-black/40 backdrop-blur-md">
+                  <div className="relative overflow-hidden p-4 rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md sm:p-8 sm:rounded-3xl">
                     <div className="absolute -top-24 -left-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-[60px] pointer-events-none" />
                     <div className="flex items-center gap-4 mb-8">
-                      <div className="w-12 h-12 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+                      <div className="w-12 h-12 shrink-0 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-400 border border-emerald-500/20">
                         <Bell className="w-6 h-6" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <h3 className="text-xl font-black text-white tracking-tight">Alert Destinations</h3>
                         <p className="text-xs text-emerald-300/70 font-medium">Instant notification routing</p>
                       </div>
                     </div>
                     <div className="space-y-4 relative z-10">
-                      <div className="flex items-center justify-between p-5 bg-black/40 rounded-2xl border border-white/5 hover:border-emerald-500/30 transition-all group">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-gradient-to-br from-[#4A154B] to-[#3B113C] rounded-xl flex items-center justify-center text-lg font-black text-white shadow-lg">S</div>
-                          <div>
+                      <div className="flex items-center justify-between gap-3 p-4 bg-black/40 rounded-2xl border border-white/5 hover:border-emerald-500/30 transition-all group sm:p-5">
+                        <div className="flex min-w-0 items-center gap-4">
+                          <div className="w-10 h-10 shrink-0 bg-gradient-to-br from-[#4A154B] to-[#3B113C] rounded-xl flex items-center justify-center text-lg font-black text-white shadow-lg">S</div>
+                          <div className="min-w-0">
                             <p className="text-white text-sm font-bold">Slack Workspace</p>
                             <p className="text-[10px] text-white/50 font-medium uppercase tracking-widest mt-1">Route to #alerts</p>
                           </div>
@@ -574,10 +572,10 @@ export default function SettingsPage() {
                         </div>
                       )}
 
-                      <div className="flex items-center justify-between p-5 bg-black/40 rounded-2xl border border-white/5 hover:border-indigo-500/30 transition-all group">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 bg-gradient-to-br from-[#5865F2] to-[#4752C4] rounded-xl flex items-center justify-center text-lg font-black text-white shadow-lg">D</div>
-                          <div>
+                      <div className="flex items-center justify-between gap-3 p-4 bg-black/40 rounded-2xl border border-white/5 hover:border-indigo-500/30 transition-all group sm:p-5">
+                        <div className="flex min-w-0 items-center gap-4">
+                          <div className="w-10 h-10 shrink-0 bg-gradient-to-br from-[#5865F2] to-[#4752C4] rounded-xl flex items-center justify-center text-lg font-black text-white shadow-lg">D</div>
+                          <div className="min-w-0">
                             <p className="text-white text-sm font-bold">Discord Server</p>
                             <p className="text-[10px] text-white/50 font-medium uppercase tracking-widest mt-1">Real-time community alerts</p>
                           </div>
@@ -609,14 +607,14 @@ export default function SettingsPage() {
                 className="space-y-8 pb-12"
               >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="relative overflow-hidden p-8 rounded-3xl border border-white/10 bg-[#05050A] backdrop-blur-md shadow-2xl">
+                  <div className="relative overflow-hidden p-4 rounded-2xl border border-white/10 bg-[#05050A] backdrop-blur-md shadow-2xl sm:p-8 sm:rounded-3xl">
                      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-50" />
                     <div className="flex items-center gap-4 mb-10">
-                      <div className="w-12 h-12 bg-primary/20 rounded-2xl flex items-center justify-center text-primary border border-primary/30 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
+                      <div className="w-12 h-12 shrink-0 bg-primary/20 rounded-2xl flex items-center justify-center text-primary border border-primary/30 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
                         <Bot className="w-6 h-6" />
                       </div>
-                      <div>
-                        <h3 className="text-2xl font-black text-white tracking-tight">AI Engine Tuning</h3>
+                      <div className="min-w-0">
+                        <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">AI Engine Tuning</h3>
                         <p className="text-xs text-primary/60 font-bold uppercase tracking-widest mt-1">Neural Network Parameters</p>
                       </div>
                     </div>
@@ -662,9 +660,9 @@ export default function SettingsPage() {
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between p-5 bg-primary/5 rounded-2xl border border-primary/20">
-                        <div>
-                          <p className="text-white text-sm font-bold flex items-center gap-2">
+                      <div className="flex items-center justify-between gap-3 p-4 sm:p-5 bg-primary/5 rounded-2xl border border-primary/20">
+                        <div className="min-w-0">
+                          <p className="text-white text-sm font-bold flex flex-wrap items-center gap-2">
                             Beta Algorithms <span className="px-2 py-0.5 bg-primary text-white rounded text-[9px] font-black uppercase tracking-widest shadow-sm">Early Access</span>
                           </p>
                           <p className="text-xs text-white/50 mt-1 font-medium">Next-gen sentiment neural parsing</p>
@@ -674,21 +672,21 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  <div className="relative overflow-hidden p-8 rounded-3xl border border-white/10 bg-[#05050A] backdrop-blur-md shadow-2xl">
+                  <div className="relative overflow-hidden p-4 rounded-2xl border border-white/10 bg-[#05050A] backdrop-blur-md shadow-2xl sm:p-8 sm:rounded-3xl">
                      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-50" />
                     <div className="flex items-center gap-4 mb-10">
-                      <div className="w-12 h-12 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-400 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                      <div className="w-12 h-12 shrink-0 bg-emerald-500/20 rounded-2xl flex items-center justify-center text-emerald-400 border border-emerald-500/30 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
                         <Shield className="w-6 h-6" />
                       </div>
-                      <div>
-                        <h3 className="text-2xl font-black text-white tracking-tight">Trust & Security</h3>
+                      <div className="min-w-0">
+                        <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">Trust & Security</h3>
                         <p className="text-xs text-emerald-400/60 font-bold uppercase tracking-widest mt-1">Compliance & Privacy</p>
                       </div>
                     </div>
 
                     <div className="space-y-8 relative z-10">
-                      <div className="flex items-center justify-between p-5 bg-black/40 rounded-2xl border border-white/5 hover:border-emerald-500/30 transition-all group">
-                        <div>
+                      <div className="flex items-center justify-between gap-3 p-4 sm:p-5 bg-black/40 rounded-2xl border border-white/5 hover:border-emerald-500/30 transition-all group">
+                        <div className="min-w-0">
                           <p className="text-white text-sm font-bold">Aggressive PII Redaction</p>
                           <p className="text-xs text-white/50 mt-1 font-medium">Deep scrub of names/emails before AI processing</p>
                         </div>
@@ -746,12 +744,12 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <div className="relative p-8 rounded-3xl border border-white/10 bg-[#05050A] shadow-2xl">
+                  <div className="relative p-4 rounded-2xl border border-white/10 bg-[#05050A] shadow-2xl sm:p-8 sm:rounded-3xl">
                     <div className="flex items-center gap-4 mb-8">
-                      <div className="w-12 h-12 bg-blue-500/20 rounded-2xl flex items-center justify-center text-blue-400 border border-blue-500/30">
+                      <div className="w-12 h-12 shrink-0 bg-blue-500/20 rounded-2xl flex items-center justify-center text-blue-400 border border-blue-500/30">
                         <Database className="w-6 h-6" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <h3 className="text-xl font-black text-white tracking-tight">Data Portability</h3>
                         <p className="text-xs text-blue-400/60 font-bold uppercase tracking-widest mt-1">Export Architecture</p>
                       </div>
@@ -783,13 +781,13 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  <div className="relative overflow-hidden p-8 rounded-3xl border border-rose-500/20 bg-[#1A0505] shadow-[0_0_30px_rgba(225,29,72,0.05)]">
+                  <div className="relative overflow-hidden p-4 rounded-2xl border border-rose-500/20 bg-[#1A0505] shadow-[0_0_30px_rgba(225,29,72,0.05)] sm:p-8 sm:rounded-3xl">
                     <div className="absolute inset-0 bg-[url('/noise.svg')] opacity-10 mix-blend-overlay -z-10" />
                     <div className="flex items-center gap-4 mb-6">
-                      <div className="w-12 h-12 bg-rose-500/20 rounded-2xl flex items-center justify-center text-rose-500 border border-rose-500/30">
+                      <div className="w-12 h-12 shrink-0 bg-rose-500/20 rounded-2xl flex items-center justify-center text-rose-500 border border-rose-500/30">
                         <AlertCircle className="w-6 h-6" />
                       </div>
-                      <div>
+                      <div className="min-w-0">
                         <h3 className="text-xl font-black text-rose-500 tracking-tight">Danger Zone</h3>
                         <p className="text-xs text-rose-500/60 font-bold uppercase tracking-widest mt-1">Irreversible Actions</p>
                       </div>
@@ -811,7 +809,7 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <div className="relative overflow-hidden p-8 rounded-3xl border border-white/5 bg-gradient-to-b from-white/5 to-transparent text-center">
+                <div className="relative overflow-hidden p-4 rounded-2xl border border-white/5 bg-gradient-to-b from-white/5 to-transparent text-center sm:p-8 sm:rounded-3xl">
                   <h4 className="text-white font-black text-xl mb-3 tracking-tight">AutoReview AI <span className="text-primary">v4.0.2 Premium</span></h4>
                   <p className="text-white/40 text-[10px] uppercase tracking-widest leading-relaxed font-bold">
                     Core Engine Build: stable.260329-0330 <br />
@@ -823,9 +821,9 @@ export default function SettingsPage() {
           </div>
 
           {/* Bottom Bar */}
-          <div className="mt-8 flex justify-end gap-4">
-            <button onClick={handleReset} className="px-6 py-3 glass text-white/70 hover:text-white rounded-lg">Reset</button>
-            <button onClick={handleSave} className="px-8 py-3 bg-primary text-white rounded-lg font-bold">
+          <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-4">
+            <button onClick={handleReset} className="w-full rounded-lg px-6 py-3 glass text-white/70 hover:text-white sm:w-auto">Reset</button>
+            <button onClick={handleSave} className="w-full rounded-lg bg-primary px-8 py-3 font-bold text-white sm:w-auto">
               {saved ? 'Saved!' : 'Save Settings'}
             </button>
           </div>
