@@ -88,9 +88,27 @@ function UserProfile() {
       }
     }, 60000)
 
+    // Refresh the balance immediately when: the user returns to the tab, or a
+    // credit-spending action (e.g. an AI chat reply) dispatches `credits:updated`.
+    // retryCount is reset so these on-demand refetches aren't blocked by an
+    // earlier failed-fetch backoff.
+    const refresh = () => {
+      if (!isMounted) return
+      retryCount = 0
+      fetchUserData()
+    }
+    const onFocus = () => refresh()
+    const onVisible = () => { if (document.visibilityState === 'visible') refresh() }
+    window.addEventListener('focus', onFocus)
+    document.addEventListener('visibilitychange', onVisible)
+    window.addEventListener('credits:updated', refresh)
+
     return () => {
       isMounted = false
       clearInterval(interval)
+      window.removeEventListener('focus', onFocus)
+      document.removeEventListener('visibilitychange', onVisible)
+      window.removeEventListener('credits:updated', refresh)
     }
   }, [isLoaded, isSignedIn])
 

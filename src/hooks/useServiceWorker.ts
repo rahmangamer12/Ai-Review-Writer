@@ -14,12 +14,27 @@ export function useServiceWorker() {
 
     let updateInterval: NodeJS.Timeout | null = null
 
+    // When the active worker changes (a new version took control), reload once
+    // so the user is immediately on the latest deploy — no manual refresh.
+    let reloading = false
+    const onControllerChange = () => {
+      if (reloading) return
+      reloading = true
+      window.location.reload()
+    }
+    navigator.serviceWorker.addEventListener('controllerchange', onControllerChange)
+
     const registerServiceWorker = async () => {
       try {
         const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' })
         setRegistration(reg)
 
-        // Check for updates every 60 seconds - with proper cleanup
+        // A worker already waiting from a previous load? Activate it now.
+        if (reg.waiting && navigator.serviceWorker.controller) {
+          reg.waiting.postMessage({ type: 'SKIP_WAITING' })
+        }
+
+        // Check for a new deploy every 60 seconds.
         updateInterval = setInterval(() => {
           reg.update()
         }, 60000)
@@ -28,16 +43,11 @@ export function useServiceWorker() {
           const newWorker = reg.installing
           if (newWorker) {
             newWorker.addEventListener('statechange', () => {
+              // A new version finished installing while an old one controls the
+              // page → take over immediately. controllerchange then reloads.
               if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                // Only show update notification if there's actually a new version
-                const lastUpdateCheck = localStorage.getItem('last-sw-update')
-                const currentTime = Date.now()
-
-                if (!lastUpdateCheck || (currentTime - parseInt(lastUpdateCheck)) > 3600000) {
-                  // Show update only if last check was more than 1 hour ago
-                  setUpdateAvailable(true)
-                  localStorage.setItem('last-sw-update', currentTime.toString())
-                }
+                setUpdateAvailable(true)
+                newWorker.postMessage({ type: 'SKIP_WAITING' })
               }
             })
           }
@@ -61,6 +71,7 @@ export function useServiceWorker() {
       if (updateInterval) {
         clearInterval(updateInterval)
       }
+      navigator.serviceWorker.removeEventListener('controllerchange', onControllerChange)
       window.removeEventListener('online', handleOnline)
       window.removeEventListener('offline', handleOffline)
     }

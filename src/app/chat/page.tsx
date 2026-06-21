@@ -277,6 +277,12 @@ export default function ChatPage() {
         messages: s.messages.map(m => m.id === aiId ? { ...m, isTyping: false } : m)
       } : s))
 
+      // The reply consumed 1 credit server-side — tell the nav to refresh its
+      // balance immediately instead of waiting for the 60s poll.
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new Event('credits:updated'))
+      }
+
       // Save to backend after successful response
       setSessions(prev => {
         const currentSession = prev.find(s => s.id === sId)

@@ -1,11 +1,12 @@
 // AutoReview AI - Main Service Worker (PWA)
-// Version: 1.0.2 - Fixed for all devices (iOS, Android, Desktop)
+// Version: 1.1.0 - Network-first app shell so deploys go live without a manual
+// refresh or incognito. Only immutable hashed assets + images are cached.
 
-const CACHE_NAME = 'autoreview-ai-v1.0.2';
-const RUNTIME_CACHE = 'autoreview-runtime-v1.0.2';
-const IMAGE_CACHE = 'autoreview-images-v1.0.2';
+const CACHE_NAME = 'autoreview-ai-v1.1.0';
+const RUNTIME_CACHE = 'autoreview-runtime-v1.1.0';
+const IMAGE_CACHE = 'autoreview-images-v1.1.0';
 
-const CACHE_VERSION = '1.0.2';
+const CACHE_VERSION = '1.1.0';
 
 console.log('[SW] AutoReview AI Service Worker v' + CACHE_VERSION + ' loading...');
 
@@ -143,29 +144,50 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  event.respondWith(
-    caches.match(request)
-      .then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
+  // Immutable, content-hashed build assets never change for a given URL, so
+  // cache-first is safe and fast. A new deploy produces new hashed URLs.
+  const isImmutable =
+    url.pathname.startsWith('/_next/static/') ||
+    url.pathname.startsWith('/_next/image');
 
-        return fetch(request)
-          .then((response) => {
-            if (response.ok && request.method === 'GET') {
-              const responseClone = response.clone();
-              caches.open(RUNTIME_CACHE)
-                .then((cache) => cache.put(request, responseClone));
-            }
-            return response;
-          })
-          .catch(() => {
-            return new Response('Network error', {
-              status: 408,
-              headers: { 'Content-Type': 'text/plain' }
-            });
-          });
+  if (isImmutable) {
+    event.respondWith(
+      caches.match(request).then((cached) => {
+        if (cached) return cached;
+        return fetch(request).then((response) => {
+          if (response.ok && request.method === 'GET') {
+            const clone = response.clone();
+            caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, clone));
+          }
+          return response;
+        });
       })
+    );
+    return;
+  }
+
+  // Everything else (RSC payloads, _next/data, fonts, etc.) is network-first so
+  // a fresh deploy is served immediately. Cache is only a last-resort offline
+  // fallback — it never shadows a newer version while the user is online.
+  event.respondWith(
+    fetch(request)
+      .then((response) => {
+        if (response.ok && request.method === 'GET') {
+          const clone = response.clone();
+          caches.open(RUNTIME_CACHE).then((cache) => cache.put(request, clone));
+        }
+        return response;
+      })
+      .catch(() =>
+        caches.match(request).then(
+          (cached) =>
+            cached ||
+            new Response('Network error', {
+              status: 408,
+              headers: { 'Content-Type': 'text/plain' },
+            })
+        )
+      )
   );
 });
 

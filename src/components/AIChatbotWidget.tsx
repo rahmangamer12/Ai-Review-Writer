@@ -537,6 +537,10 @@ export default function AIChatbot() {
 
           setMessages(prev => prev.map(m => m.id === aiMsgId ? { ...m, content: accumulatedContent } : m))
         }
+        // Reply consumed 1 credit server-side — refresh the nav balance now.
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new Event('credits:updated'))
+        }
       } catch (streamErr) {
         // Stream failed mid-response: drop the empty/partial assistant bubble so
         // a blank message isn't left behind, then surface the error banner.
