@@ -133,13 +133,13 @@ export default function SubscriptionPage() {
   }
 
 
-  const getYearlySavings = (monthlyPrice: number) => {
-    return Math.round(monthlyPrice * 12 * 0.15)
+  const getYearlySavings = (plan: SubscriptionPlan) => {
+    return Math.max(0, plan.monthlyPrice * 12 - plan.yearlyPrice)
   }
 
   const getPlanPrice = (plan: SubscriptionPlan) => {
     if (billingCycle === 'yearly') {
-      return Math.round(plan.monthlyPrice * 12 * 0.85)
+      return plan.yearlyPrice
     }
     return plan.monthlyPrice
   }
@@ -280,7 +280,7 @@ export default function SubscriptionPage() {
                     </div>
                     {billingCycle === 'yearly' && plan.monthlyPrice > 0 && (
                       <p className="text-emerald-400 text-xs mt-1 font-medium">
-                        Save ${getYearlySavings(plan.monthlyPrice)}/year
+                        Save ${getYearlySavings(plan)}/year
                       </p>
                     )}
                   </div>

@@ -101,7 +101,20 @@ export async function GET(request: NextRequest) {
         );
       }
 
-      return processCallback(code, state, serverAppId, serverAppSecret);
+      // Fallback: resolve the real userId from Clerk (never trust the raw state string).
+      const { auth } = await import('@clerk/nextjs/server');
+      const session = await auth();
+      if (!session.userId) {
+        return new Response(
+          `<html><body>
+            <script>window.opener?.postMessage({type:'FACEBOOK_AUTH_ERROR',error:${jsString('Not authenticated. Please sign in and try again.')}},'*');window.close();</script>
+            <p>Not authenticated. Please sign in and try again.</p>
+          </body></html>`,
+          { status: 200, headers: { 'Content-Type': 'text/html' } }
+        );
+      }
+
+      return processCallback(code, session.userId, serverAppId, serverAppSecret);
     }
 
     return processCallback(code, stateData.userId, stateData.appId, stateData.appSecret);

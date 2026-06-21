@@ -200,40 +200,41 @@ CRITICAL INSTRUCTIONS FOR YOU:
         // Stream immediately without waiting for DB operations
       },
       onFinish: async ({ text }) => {
-        // Run DB operations in background after streaming completes
-        setImmediate(async () => {
-          try {
-            // Credit model: 1 credit = 1 AI response (atomic, concurrency-safe).
-            // Deduct from the pool that served this request (LongCat or Agnes).
-            const creditResult = await CreditsManager.useCredits(
-              userDb.id,
-              1,
-              'chat_message',
-              `Sarah AI chat (${pool})`,
-              { sessionId, model: selectedModel, autoSwitched },
-              pool
-            );
+        // Run DB operations inline. The AI SDK awaits this callback before the
+        // stream finalizes, so on serverless (Vercel) the work is guaranteed to
+        // run. Deferring it past the response (e.g. setImmediate) risks the
+        // instance being frozen before the credit is ever deducted.
+        try {
+          // Credit model: 1 credit = 1 AI response (atomic, concurrency-safe).
+          // Deduct from the pool that served this request (LongCat or Agnes).
+          const creditResult = await CreditsManager.useCredits(
+            userDb.id,
+            1,
+            'chat_message',
+            `Sarah AI chat (${pool})`,
+            { sessionId, model: selectedModel, autoSwitched },
+            pool
+          );
 
-            if (creditResult.success) {
-              console.log(`[Chat API] Deducted 1 credit. Balance: ${creditResult.balanceAfter}`);
-            } else {
-              console.warn(`[Chat API] Credit deduction skipped: ${creditResult.error}`);
-            }
-
-            // Save assistant message to session
-            if (sessionId && sessionId !== 'new') {
-              await prisma.chatMessage.create({
-                data: {
-                  sessionId,
-                  role: 'assistant',
-                  content: text
-                }
-              });
-            }
-          } catch (dbErr) {
-            console.error('[Chat API] Database error:', dbErr);
+          if (creditResult.success) {
+            console.log(`[Chat API] Deducted 1 credit. Balance: ${creditResult.balanceAfter}`);
+          } else {
+            console.warn(`[Chat API] Credit deduction skipped: ${creditResult.error}`);
           }
-        });
+
+          // Save assistant message to session
+          if (sessionId && sessionId !== 'new') {
+            await prisma.chatMessage.create({
+              data: {
+                sessionId,
+                role: 'assistant',
+                content: text
+              }
+            });
+          }
+        } catch (dbErr) {
+          console.error('[Chat API] Database error:', dbErr);
+        }
       }
     });
 

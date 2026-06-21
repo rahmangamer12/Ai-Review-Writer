@@ -518,7 +518,7 @@ export default function AIChatbot() {
         model: selectedModel,
         isTyping: false // Let's just stream the text directly, it looks cooler!
       }
-      
+
       setMessages(prev => [...prev, aiMsg])
 
       const reader = response.body?.getReader()
@@ -527,14 +527,23 @@ export default function AIChatbot() {
       const decoder = new TextDecoder()
       let accumulatedContent = ''
 
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
+      try {
+        while (true) {
+          const { done, value } = await reader.read()
+          if (done) break
 
-        const chunk = decoder.decode(value, { stream: true })
-        accumulatedContent += chunk
-        
-        setMessages(prev => prev.map(m => m.id === aiMsgId ? { ...m, content: accumulatedContent } : m))
+          const chunk = decoder.decode(value, { stream: true })
+          accumulatedContent += chunk
+
+          setMessages(prev => prev.map(m => m.id === aiMsgId ? { ...m, content: accumulatedContent } : m))
+        }
+      } catch (streamErr) {
+        // Stream failed mid-response: drop the empty/partial assistant bubble so
+        // a blank message isn't left behind, then surface the error banner.
+        if (!accumulatedContent) {
+          setMessages(prev => prev.filter(m => m.id !== aiMsgId))
+        }
+        throw streamErr
       }
     } catch (err: any) {
       setError(err.message || 'An error occurred')

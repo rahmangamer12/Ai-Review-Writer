@@ -116,6 +116,13 @@ export async function POST() {
       )
     }
 
+    if (!credentials.accessTokenEncrypted) {
+      return NextResponse.json(
+        { error: 'Google is not connected via OAuth. Please reconnect Google to sync reviews.', requiresReauth: true },
+        { status: 400 }
+      )
+    }
+
     let accessToken = decryptSensitiveData(credentials.accessTokenEncrypted)
     let updatedCredentials: Record<string, any> = { ...credentials, lastSyncAttemptAt: Date.now() }
 

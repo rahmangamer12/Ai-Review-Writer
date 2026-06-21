@@ -203,15 +203,6 @@ async function processCallback(code: string, userId: string, clientId: string, c
 
     console.log('[Google OAuth] Connected for user:', userId);
     return callbackPage('success', 'Google Connected!', 'Google connected successfully. Open Reviews to sync and manage reviews.');
-
-    return new Response(
-      `<html><body>
-        <h2>✅ Google Connected!</h2>
-        <p>You can close this window.</p>
-        <script>window.opener?.postMessage({type:'GOOGLE_AUTH_SUCCESS',message:'Google connected successfully'},'*');setTimeout(()=>window.close(),2000);</script>
-      </body></html>`,
-      { status: 200, headers: { 'Content-Type': 'text/html' } }
-    );
   } catch (err) {
     console.error('[Google OAuth] Process error:', err);
     return new Response(
