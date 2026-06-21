@@ -101,7 +101,13 @@ Project skills live in `.claude/skills/<skill-name>/SKILL.md`. Claude Code can l
 
 Installed project skills:
 
-- `speckit-plus-autoreview`: spec, plan, tasks, ADR, PHR, and reverse-engineering workflow.
+- `speckit-plus-autoreview`: umbrella spec-driven workflow (spec, plan, tasks, ADR, PHR, reverse-engineering).
+- `speckit-specify`: write/update a feature spec at `specs/NNN-feature/spec.md` before coding.
+- `speckit-plan`: turn an approved spec into `plan.md` (API, data, UI, security, verification).
+- `speckit-tasks`: break a plan into dependency-ordered `tasks.md` checkboxes.
+- `speckit-implement`: build the tasks in small verified slices with `tsc`/`build` checks.
+- `specplus-adr`: record a durable architecture decision in `history/adr/`.
+- `specplus-phr`: record a Prompt History Record in `history/prompts/[stage]/`.
 - `autoreview-real-data-audit`: finds demo/fake/local-only behavior and maps it to real sources.
 - `autoreview-security-review`: checks auth, ownership, billing, OAuth, secrets, and unsafe storage.
 - `autoreview-ui-polish`: improves responsive SaaS UI with icons and honest states.
