@@ -521,10 +521,10 @@ export default function ChatPage() {
               </motion.button>
             </div>
             
-            <button onClick={() => setShowModelSelector(true)} className="flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/5 rounded-xl sm:rounded-2xl border border-white/5 active:scale-95 shadow-lg">
-              {activeModel && <span className="text-xl">{getModelIcon(activeModel.iconName)}</span>}
-              <span className="text-[10px] sm:text-xs font-semibold hidden lg:inline tracking-tight">{activeModel?.shortName}</span>
-              <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/30" />
+            <button onClick={() => setShowModelSelector(true)} className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-4 py-1.5 sm:py-2 bg-white/5 rounded-xl sm:rounded-2xl border border-white/5 active:scale-95 shadow-lg">
+              {activeModel && <span className="text-base sm:text-xl shrink-0">{getModelIcon(activeModel.iconName)}</span>}
+              <span className="text-[10px] sm:text-xs font-semibold inline tracking-tight truncate max-w-[64px] sm:max-w-[120px]">{activeModel?.shortName}</span>
+              <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/30 shrink-0" />
             </button>
 
             <button onClick={() => setShowSettings(true)} className="p-1.5 sm:p-2.5 bg-white/5 rounded-xl sm:rounded-2xl flex items-center justify-center active:bg-white/10">
@@ -581,11 +581,10 @@ export default function ChatPage() {
 
         <div className="shrink-0 fixed bottom-0 left-0 right-0 z-[29] bg-gradient-to-t from-[#030308] via-[#030308]/95 to-transparent pb-[calc(80px+env(safe-area-inset-bottom))] lg:pb-6 pt-3 px-3 sm:px-4 lg:px-12 lg:ml-[calc(16rem+320px)] xl:ml-[calc(18rem+340px)] pointer-events-none">
           <div className="max-w-4xl mx-auto w-full flex flex-col gap-3 pointer-events-auto">
-            <div className="lg:hidden flex items-center justify-between px-2">
-               <button onClick={() => setSidebarOpen(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-white/40 active:scale-95 backdrop-blur-md">
-                 <PanelLeft className="w-3 h-3" /> Logs
-               </button>
-               <button onClick={() => setShowModelSelector(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-violet-400 active:scale-95 backdrop-blur-md">
+            <div className="lg:hidden flex items-center justify-between gap-2 px-2">
+               {/* Mobile usage — credits aren't in the top nav on small screens */}
+               <CreditPills className="flex" refreshKey={messages.length} compact />
+               <button onClick={() => setShowModelSelector(true)} className="flex items-center gap-1.5 px-3 py-1.5 bg-white/5 border border-white/10 rounded-full text-[9px] font-black uppercase tracking-widest text-violet-400 active:scale-95 backdrop-blur-md shrink-0">
                  <Sparkles className="w-3 h-3" /> {activeModel?.shortName || 'Model'}
                </button>
             </div>
