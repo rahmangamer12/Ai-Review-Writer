@@ -257,10 +257,21 @@ async function jina(q: string, maxResults: number): Promise<WebResult[]> {
 /** Format results as a compact context block for the model. */
 export function formatSearchContext(query: string, results: WebResult[]): string {
   if (!results.length) {
-    return `Web search for "${query}" returned no usable results. Answer from your own knowledge and tell the user that live results were unavailable.`
+    return `You ran a live web search for "${query}" but it returned no results. Tell the user the live search came back empty, then answer from general knowledge while noting it may be out of date.`
   }
   const lines = results
-    .map((r, i) => `[${i + 1}] ${r.title}\n${r.snippet}\nSource: ${r.url}`)
+    .map((r, i) => `[${i + 1}] ${r.title}\n${r.snippet}\nURL: ${r.url}`)
     .join('\n\n')
-  return `Live web search results for "${query}" (use these to answer, and cite sources inline as [1], [2] with their URLs at the end):\n\n${lines}`
+  return [
+    `LIVE WEB SEARCH RESULTS for "${query}" — fetched from the internet just now.`,
+    `These results are CURRENT and can contain information that is NEWER than your training data.`,
+    ``,
+    `MANDATORY RULES — follow exactly:`,
+    `1. Treat the results below as the source of truth for anything recent: new AI models, product launches, releases, prices, news, sports, events, dates.`,
+    `2. If a result shows that something EXISTS (a new model, product, person, event) that you believe does not exist, then YOU ARE OUTDATED and the results are correct. NEVER tell the user something "does not exist", is "fake", or is "misinformation" when the results below clearly describe it as real.`,
+    `3. Answer the user's actual question directly using these results. Do not lecture about what you "cannot verify".`,
+    `4. Cite sources inline as [1], [2] etc., and list their URLs at the end.`,
+    ``,
+    lines,
+  ].join('\n')
 }
