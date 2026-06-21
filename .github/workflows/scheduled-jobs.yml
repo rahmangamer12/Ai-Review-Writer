@@ -11,6 +11,7 @@ name: Scheduled Jobs (free cron — replaces Vercel Pro crons)
 on:
   schedule:
     - cron: '0 * * * *'    # hourly      → triage / damage-control
+    - cron: '0 */6 * * *'  # every 6h    → agentic auto-reply automation
     - cron: '0 0 * * *'    # daily 00:00 → auto-reply scheduler
     - cron: '0 2 * * *'    # daily 02:00 → monthly credit reset (no-op until due)
     - cron: '0 9 * * 1'    # Mon  09:00  → weekly insight emails
@@ -26,6 +27,10 @@ jobs:
       - name: Triage (hourly)
         if: github.event.schedule == '0 * * * *' || github.event_name == 'workflow_dispatch'
         run: curl -fsS -X GET "$BASE/api/agentic/triage" -H "Authorization: Bearer $SECRET"
+
+      - name: Agentic auto-reply automation (every 6h)
+        if: github.event.schedule == '0 */6 * * *' || github.event_name == 'workflow_dispatch'
+        run: curl -fsS -X GET "$BASE/api/agentic/cron" -H "Authorization: Bearer $SECRET"
 
       - name: Auto-reply scheduler (daily)
         if: github.event.schedule == '0 0 * * *' || github.event_name == 'workflow_dispatch'

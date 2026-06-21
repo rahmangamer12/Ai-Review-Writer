@@ -130,6 +130,8 @@ export async function GET(request: NextRequest) {
       where: {
         status: 'pending',
         rating: { lte: 2 },
+        // Only users who keep scheduled triage alerts enabled (default on).
+        user: { agentTriageAlerts: true },
       },
       orderBy: { createdAt: 'desc' },
       take: 100,

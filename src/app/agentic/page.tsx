@@ -100,6 +100,8 @@ export default function AgenticPage() {
   const [log, setLog] = useState<LogLine[]>([])
   const [outcome, setOutcome] = useState<Record<AgentKey, RunOutcome | undefined>>({ autoreply: undefined, triage: undefined })
   const [lastRun, setLastRun] = useState<AgentKey | null>(null)
+  const [automation, setAutomation] = useState<{ agentAutoReply: boolean; agentTriageAlerts: boolean } | null>(null)
+  const [savingAuto, setSavingAuto] = useState<string | null>(null)
 
   const logIdRef = useRef(0)
   const consoleRef = useRef<HTMLDivElement>(null)
@@ -126,6 +128,41 @@ export default function AgenticPage() {
   }, [])
 
   useEffect(() => { loadStats() }, [loadStats])
+
+  /* ── Load automation settings ── */
+  const loadSettings = useCallback(async () => {
+    try {
+      const s = await fetch('/api/agentic/settings', { method: 'GET' }).then((r) => r.json()).catch(() => null)
+      if (s && !s.error) setAutomation({ agentAutoReply: !!s.agentAutoReply, agentTriageAlerts: s.agentTriageAlerts !== false })
+    } catch { /* ignore */ }
+  }, [])
+
+  useEffect(() => { loadSettings() }, [loadSettings])
+
+  async function toggleAutomation(key: 'agentAutoReply' | 'agentTriageAlerts', value: boolean) {
+    if (savingAuto) return
+    setSavingAuto(key)
+    // optimistic
+    setAutomation((a) => ({ agentAutoReply: a?.agentAutoReply ?? false, agentTriageAlerts: a?.agentTriageAlerts ?? true, [key]: value }))
+    try {
+      const res = await fetch('/api/agentic/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ [key]: value }),
+      })
+      const data = await res.json().catch(() => null)
+      if (!res.ok || !data?.success) {
+        // revert on failure
+        setAutomation((a) => ({ agentAutoReply: a?.agentAutoReply ?? false, agentTriageAlerts: a?.agentTriageAlerts ?? true, [key]: !value }))
+      } else {
+        setAutomation({ agentAutoReply: !!data.agentAutoReply, agentTriageAlerts: data.agentTriageAlerts !== false })
+      }
+    } catch {
+      setAutomation((a) => ({ agentAutoReply: a?.agentAutoReply ?? false, agentTriageAlerts: a?.agentTriageAlerts ?? true, [key]: !value }))
+    } finally {
+      setSavingAuto(null)
+    }
+  }
 
   /* ── Auto-scroll console ── */
   useEffect(() => {
@@ -373,6 +410,39 @@ export default function AgenticPage() {
           <ResultPanel agent={lastRun} outcome={outcome[lastRun]!} />
         )}
 
+        {/* ── Automation ── */}
+        <div className="mt-6 overflow-hidden rounded-3xl border border-white/[0.07] bg-[#0b0b16] p-5 sm:p-6">
+          <div className="mb-5 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-2 text-sm font-semibold text-white/85">
+              <Cpu className="h-4 w-4 text-fuchsia-300" /> Automation
+            </div>
+            <span className="text-[11px] font-medium text-white/35">Agents run on a schedule — drafts only, you approve</span>
+          </div>
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+            <AutomationRow
+              icon={Bot}
+              tint="text-violet-300"
+              title="Auto-Reply automation"
+              desc="Every few hours, draft replies for new pending reviews. Saved as drafts for your approval."
+              badge={eligible ? undefined : 'Growth / Business'}
+              on={automation?.agentAutoReply ?? false}
+              disabled={!eligible || savingAuto === 'agentAutoReply'}
+              saving={savingAuto === 'agentAutoReply'}
+              onToggle={(v) => toggleAutomation('agentAutoReply', v)}
+            />
+            <AutomationRow
+              icon={AlertTriangle}
+              tint="text-amber-300"
+              title="Triage alerts"
+              desc="Get notified when urgent 1–2★ reviews appear so you can respond fast. On by default."
+              on={automation?.agentTriageAlerts ?? true}
+              disabled={savingAuto === 'agentTriageAlerts'}
+              saving={savingAuto === 'agentTriageAlerts'}
+              onToggle={(v) => toggleAutomation('agentTriageAlerts', v)}
+            />
+          </div>
+        </div>
+
         {/* ── Footer: scheduled + guardrails ── */}
         <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
           <div className="relative overflow-hidden rounded-3xl border border-white/[0.07] bg-[#0b0b16] p-6">
@@ -502,6 +572,42 @@ function AgentCard({
           <Crown className="h-4 w-4" /> Unlock agent <ChevronRight className="h-4 w-4" />
         </Link>
       )}
+    </div>
+  )
+}
+
+function AutomationRow({
+  icon: Icon, tint, title, desc, badge, on, disabled, saving, onToggle,
+}: {
+  icon: any; tint: string; title: string; desc: string; badge?: string
+  on: boolean; disabled: boolean; saving: boolean; onToggle: (v: boolean) => void
+}) {
+  return (
+    <div className="flex items-start gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5">
+        <Icon className={`h-5 w-5 ${tint}`} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <p className="truncate text-sm font-semibold text-white">{title}</p>
+          {badge && (
+            <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-amber-400/25 bg-amber-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-amber-300">
+              <Lock className="h-2.5 w-2.5" /> {badge}
+            </span>
+          )}
+        </div>
+        <p className="mt-0.5 text-xs leading-relaxed text-white/45">{desc}</p>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        disabled={disabled}
+        onClick={() => onToggle(!on)}
+        className={`relative mt-0.5 inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${on ? 'bg-emerald-500' : 'bg-white/15'}`}
+      >
+        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${on ? 'translate-x-6' : 'translate-x-1'} ${saving ? 'animate-pulse' : ''}`} />
+      </button>
     </div>
   )
 }

@@ -25,6 +25,10 @@ model User {
   maxPlatforms     Int      @default(1)
   creditsRenewAt   DateTime? // When both monthly credit allotments next reset to the plan amount
 
+  // Agentic automation (Growth/Business). Off by default — drafts only, human approval preserved.
+  agentAutoReply    Boolean @default(false) // scheduled agent auto-drafts replies for pending reviews
+  agentTriageAlerts Boolean @default(true)  // scheduled triage creates damage-control notifications
+
   // Relations
   platforms        ConnectedPlatform[]
   reviews          Review[]
