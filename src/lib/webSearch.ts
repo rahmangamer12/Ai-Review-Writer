@@ -4,7 +4,8 @@
  * Provider priority (first one configured wins):
  *   1. Tavily   — set TAVILY_API_KEY        (best, AI-optimised, free tier)
  *   2. Brave    — set BRAVE_SEARCH_API_KEY  (good, free tier)
- *   3. DuckDuckGo Instant Answer            — keyless fallback, always available
+ *   3. Jina     — keyless real web results  (optional JINA_API_KEY = higher limits)
+ *   4. DuckDuckGo Instant Answer            — keyless fallback, always available
  *
  * Results are fed to the model so it can answer with fresh context and cite
  * sources. Never throws — returns [] on any failure so chat keeps working.
@@ -31,6 +32,10 @@ export async function searchWeb(query: string, maxResults = 5): Promise<WebResul
   try {
     if (process.env.TAVILY_API_KEY) return await tavily(q, maxResults)
     if (process.env.BRAVE_SEARCH_API_KEY) return await brave(q, maxResults)
+    // Keyless real-web-results provider. Try Jina first (actual SERP results);
+    // if it returns nothing useful, fall back to DuckDuckGo instant answers.
+    const jinaResults = await jina(q, maxResults).catch(() => [])
+    if (jinaResults.length) return jinaResults
     return await duckduckgo(q, maxResults)
   } catch {
     // As a last resort try DDG even if a keyed provider failed.
@@ -39,6 +44,33 @@ export async function searchWeb(query: string, maxResults = 5): Promise<WebResul
     } catch {
       return []
     }
+  }
+}
+
+async function jina(q: string, maxResults: number): Promise<WebResult[]> {
+  const t = withTimeout(TIMEOUT_MS)
+  try {
+    const headers: Record<string, string> = {
+      Accept: 'application/json',
+      // Ask Jina for links/snippets only — we don't need full page bodies.
+      'X-Respond-With': 'no-content',
+    }
+    if (process.env.JINA_API_KEY) headers.Authorization = `Bearer ${process.env.JINA_API_KEY}`
+    const res = await fetch(`https://s.jina.ai/?q=${encodeURIComponent(q)}`, {
+      headers,
+      signal: t.signal,
+    })
+    if (!res.ok) return []
+    const data = await res.json()
+    const items: any[] = Array.isArray(data?.data) ? data.data : []
+    const results: WebResult[] = items.slice(0, maxResults).map((r: any) => ({
+      title: String(r?.title || '').slice(0, 200),
+      snippet: String(r?.description || r?.content || '').slice(0, 500),
+      url: String(r?.url || ''),
+    }))
+    return results.filter((r) => r.url)
+  } finally {
+    t.done()
   }
 }
 

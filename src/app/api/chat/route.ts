@@ -38,7 +38,9 @@ function hasImage(messages: Array<{ role?: string; content?: unknown }>): boolea
 function isSearchIntent(text: string): boolean {
   const t = text.toLowerCase().trim()
   if (!t) return false
-  if (/^(search|google)\s/.test(t)) return true // message that starts with "search ..."
+  // Any message that uses the word "search" auto-shifts to live web search.
+  if (/\bsearch\b/.test(t)) return true
+  if (/^google\s/.test(t)) return true // "google <something>"
   return SEARCH_TRIGGERS.some((h) => t.includes(h))
 }
 

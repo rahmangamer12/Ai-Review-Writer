@@ -9,14 +9,33 @@ type UserAccountInput = {
 const DEFAULT_FREE_CREDITS = 200
 const DEFAULT_FREE_AGNES_CREDITS = 50
 
+// Explicit column list so the generated SQL never references columns that may
+// not yet exist in the production database (e.g. newly added agentic toggles
+// before `prisma db push` runs). Selecting only known-deployed columns keeps
+// auth/chat/profile working even when the schema is ahead of the DB.
+const USER_SELECT = {
+  id: true,
+  email: true,
+  name: true,
+  createdAt: true,
+  updatedAt: true,
+  stripeCustomerId: true,
+  planType: true,
+  aiCredits: true,
+  agnesCredits: true,
+  promptCount: true,
+  maxPlatforms: true,
+  creditsRenewAt: true,
+} as const
+
 function creditsOrDefault(value: number | null | undefined) {
   return value ?? DEFAULT_FREE_CREDITS
 }
 
 export async function ensureUserAccount({ userId, email, name }: UserAccountInput) {
   const [byId, byEmail] = await Promise.all([
-    prisma.user.findUnique({ where: { id: userId } }),
-    prisma.user.findUnique({ where: { email } }).catch(() => null),
+    prisma.user.findUnique({ where: { id: userId }, select: USER_SELECT }),
+    prisma.user.findUnique({ where: { email }, select: USER_SELECT }).catch(() => null),
   ])
 
   if (byId) {
@@ -36,6 +55,7 @@ export async function ensureUserAccount({ userId, email, name }: UserAccountInpu
     return prisma.user.update({
       where: { id: byId.id },
       data: updates,
+      select: USER_SELECT,
     }).catch(() => ({
       ...byId,
       aiCredits: mergedCredits,
@@ -52,6 +72,7 @@ export async function ensureUserAccount({ userId, email, name }: UserAccountInpu
         name: byEmail.name || name,
         aiCredits: repairedCredits,
       },
+      select: USER_SELECT,
     }).catch(() => ({
       ...byEmail,
       aiCredits: repairedCredits,
@@ -74,5 +95,6 @@ export async function ensureUserAccount({ userId, email, name }: UserAccountInpu
       maxPlatforms: 1,
       creditsRenewAt: renewAt,
     },
+    select: USER_SELECT,
   })
 }
