@@ -35,6 +35,21 @@ export const MODELS: AIModel[] = [
     supportsThinking: false
   },
   {
+    id: 'web-search',
+    name: 'Web Search',
+    shortName: 'Web Search',
+    iconName: 'Globe',
+    description: 'Searches the live web (DuckDuckGo) and answers with fresh, cited sources. Auto-engages when your message contains the word "search".',
+    badge: 'LIVE',
+    badgeColor: 'cyan',
+    quality: 93,
+    speed: 'Fast',
+    context: '128k',
+    contextTokens: 128000,
+    supportsVision: false,
+    supportsThinking: false
+  },
+  {
     id: 'agnes-2.0-flash',
     name: 'Agnes 2.0 Flash',
     shortName: 'Agnes 2.0',

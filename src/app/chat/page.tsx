@@ -253,6 +253,11 @@ export default function ChatPage() {
         throw new Error(message)
       }
 
+      // Did the server run a live web search for this reply? (Either the
+      // Web Search model was picked, or a "search" keyword auto-engaged it.)
+      const searchUsed = res.headers.get('x-search-used') === '1'
+      const modelUsedLabel = searchUsed ? 'Web Search' : (res.headers.get('x-model-used') || activeModel?.name)
+
       const reader = res.body?.getReader()
       if (!reader) throw new Error('Response body is null')
 
@@ -274,7 +279,7 @@ export default function ChatPage() {
 
       setSessions(prev => prev.map(s => s.id === sId ? {
         ...s,
-        messages: s.messages.map(m => m.id === aiId ? { ...m, isTyping: false } : m)
+        messages: s.messages.map(m => m.id === aiId ? { ...m, isTyping: false, model: modelUsedLabel } : m)
       } : s))
 
       // The reply consumed 1 credit server-side — tell the nav to refresh its

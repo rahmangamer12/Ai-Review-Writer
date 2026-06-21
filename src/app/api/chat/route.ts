@@ -107,10 +107,13 @@ async function handler(request: NextRequest) {
     const validated = chatRequestSchema.parse(body);
 
     const { messages, temperature, max_tokens: requestedMaxTokens, fastMode } = validated;
-    // Detect intent: image → vision; explicit search/live-info → web search.
+    // Detect intent: image → vision; explicit search model OR search/live-info
+    // keywords → live web search. The "web-search" model id is a virtual UI
+    // model; under the hood it runs on Agnes with web results injected.
     const userText = lastUserText(messages as any[]);
     const imagePresent = hasImage(messages as any[]);
-    const searchIntent = !imagePresent && isSearchIntent(userText);
+    const explicitSearchModel = validated.model === 'web-search';
+    const searchIntent = !imagePresent && (explicitSearchModel || isSearchIntent(userText));
     // Both vision and search use the Agnes pool.
     const autoSwitched = imagePresent || searchIntent;
     const requestedModel = autoSwitched ? 'agnes-2.0-flash' : validated.model;

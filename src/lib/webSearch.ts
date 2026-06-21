@@ -1,11 +1,12 @@
 /**
  * Lightweight web search for the AI chat.
  *
- * Provider priority (first one configured wins):
+ * Provider priority (first one that returns results wins):
  *   1. Tavily   — set TAVILY_API_KEY        (best, AI-optimised, free tier)
  *   2. Brave    — set BRAVE_SEARCH_API_KEY  (good, free tier)
- *   3. Jina     — keyless real web results  (optional JINA_API_KEY = higher limits)
- *   4. DuckDuckGo Instant Answer            — keyless fallback, always available
+ *   3. Jina     — set JINA_API_KEY          (AI-optimised, needs a key now)
+ *   4. DuckDuckGo HTML                       — KEYLESS, returns real web results
+ *   5. DuckDuckGo Instant Answer            — keyless last-resort supplement
  *
  * Results are fed to the model so it can answer with fresh context and cite
  * sources. Never throws — returns [] on any failure so chat keeps working.
@@ -18,6 +19,8 @@ export interface WebResult {
 }
 
 const TIMEOUT_MS = 7000
+const UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
 
 function withTimeout(ms: number) {
   const c = new AbortController()
@@ -30,45 +33,144 @@ export async function searchWeb(query: string, maxResults = 5): Promise<WebResul
   if (!q) return []
 
   try {
-    if (process.env.TAVILY_API_KEY) return await tavily(q, maxResults)
-    if (process.env.BRAVE_SEARCH_API_KEY) return await brave(q, maxResults)
-    // Keyless real-web-results provider. Try Jina first (actual SERP results);
-    // if it returns nothing useful, fall back to DuckDuckGo instant answers.
-    const jinaResults = await jina(q, maxResults).catch(() => [])
-    if (jinaResults.length) return jinaResults
-    return await duckduckgo(q, maxResults)
+    if (process.env.TAVILY_API_KEY) {
+      const r = await tavily(q, maxResults)
+      if (r.length) return r
+    }
+    if (process.env.BRAVE_SEARCH_API_KEY) {
+      const r = await brave(q, maxResults)
+      if (r.length) return r
+    }
+    if (process.env.JINA_API_KEY) {
+      const r = await jina(q, maxResults).catch(() => [])
+      if (r.length) return r
+    }
+    // Keyless real-web-results provider. This is the default that works with no
+    // configuration at all.
+    const html = await ddgHtml(q, maxResults).catch(() => [])
+    if (html.length) return html
+    // Final supplement (entity/definition style answers only).
+    return await ddgInstant(q, maxResults)
   } catch {
-    // As a last resort try DDG even if a keyed provider failed.
     try {
-      return await duckduckgo(q, maxResults)
+      return await ddgHtml(q, maxResults)
     } catch {
       return []
     }
   }
 }
 
-async function jina(q: string, maxResults: number): Promise<WebResult[]> {
+// ─── HTML helpers ───────────────────────────────────────────────────────────
+
+function decodeEntities(s: string): string {
+  return s
+    .replace(/<[^>]+>/g, '') // strip tags (e.g. <b> highlights)
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&#39;/g, "'")
+    .replace(/&#x2F;/g, '/')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(Number(n)))
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/** DuckDuckGo sometimes wraps result URLs in a /l/?uddg=<encoded> redirect. */
+function cleanUrl(href: string): string {
+  let u = href.trim()
+  if (u.startsWith('//')) u = 'https:' + u
+  const m = u.match(/[?&]uddg=([^&]+)/)
+  if (m) {
+    try {
+      return decodeURIComponent(m[1])
+    } catch {
+      return ''
+    }
+  }
+  return u.startsWith('http') ? u : ''
+}
+
+// ─── Providers ───────────────────────────────────────────────────────────────
+
+/** Keyless: scrape DuckDuckGo's HTML results page for real web results. */
+async function ddgHtml(q: string, maxResults: number): Promise<WebResult[]> {
   const t = withTimeout(TIMEOUT_MS)
   try {
-    const headers: Record<string, string> = {
-      Accept: 'application/json',
-      // Ask Jina for links/snippets only — we don't need full page bodies.
-      'X-Respond-With': 'no-content',
-    }
-    if (process.env.JINA_API_KEY) headers.Authorization = `Bearer ${process.env.JINA_API_KEY}`
-    const res = await fetch(`https://s.jina.ai/?q=${encodeURIComponent(q)}`, {
-      headers,
+    const res = await fetch('https://html.duckduckgo.com/html/', {
+      method: 'POST',
+      headers: {
+        'User-Agent': UA,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        Accept: 'text/html',
+      },
+      body: `q=${encodeURIComponent(q)}`,
       signal: t.signal,
     })
     if (!res.ok) return []
+    const html = await res.text()
+
+    // Pull every result anchor (title + href) in document order.
+    const anchorRe = /<a[^>]*class="result__a"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g
+    // Snippets appear once per result, in the same order.
+    const snippetRe = /class="result__snippet"[^>]*>([\s\S]*?)<\/a>/g
+
+    const snippets: string[] = []
+    let s: RegExpExecArray | null
+    while ((s = snippetRe.exec(html)) && snippets.length < maxResults * 2) {
+      snippets.push(decodeEntities(s[1]))
+    }
+
+    const out: WebResult[] = []
+    let m: RegExpExecArray | null
+    let i = 0
+    while ((m = anchorRe.exec(html)) && out.length < maxResults) {
+      const url = cleanUrl(m[1])
+      const title = decodeEntities(m[2])
+      if (!url || !title) {
+        i++
+        continue
+      }
+      out.push({ title: title.slice(0, 200), snippet: (snippets[i] || '').slice(0, 500), url })
+      i++
+    }
+    return out
+  } finally {
+    t.done()
+  }
+}
+
+/** Keyless instant-answer API — only useful for definitions/entities. */
+async function ddgInstant(q: string, maxResults: number): Promise<WebResult[]> {
+  const t = withTimeout(TIMEOUT_MS)
+  try {
+    const res = await fetch(
+      `https://api.duckduckgo.com/?q=${encodeURIComponent(q)}&format=json&no_html=1&skip_disambig=1`,
+      { signal: t.signal, headers: { 'User-Agent': UA } },
+    )
+    if (!res.ok) return []
     const data = await res.json()
-    const items: any[] = Array.isArray(data?.data) ? data.data : []
-    const results: WebResult[] = items.slice(0, maxResults).map((r: any) => ({
-      title: String(r?.title || '').slice(0, 200),
-      snippet: String(r?.description || r?.content || '').slice(0, 500),
-      url: String(r?.url || ''),
-    }))
-    return results.filter((r) => r.url)
+    const out: WebResult[] = []
+    if (data?.AbstractText) {
+      out.push({
+        title: String(data.Heading || q).slice(0, 200),
+        snippet: String(data.AbstractText).slice(0, 500),
+        url: String(data.AbstractURL || ''),
+      })
+    }
+    for (const item of data?.RelatedTopics || []) {
+      if (out.length >= maxResults) break
+      if (item?.Text && item?.FirstURL) {
+        out.push({
+          title: String(item.Text).split(' - ')[0].slice(0, 200),
+          snippet: String(item.Text).slice(0, 500),
+          url: String(item.FirstURL),
+        })
+      }
+    }
+    return out.filter((r) => r.url).slice(0, maxResults)
   } finally {
     t.done()
   }
@@ -127,41 +229,26 @@ async function brave(q: string, maxResults: number): Promise<WebResult[]> {
   }
 }
 
-async function duckduckgo(q: string, maxResults: number): Promise<WebResult[]> {
+async function jina(q: string, maxResults: number): Promise<WebResult[]> {
   const t = withTimeout(TIMEOUT_MS)
   try {
-    const res = await fetch(
-      `https://api.duckduckgo.com/?q=${encodeURIComponent(q)}&format=json&no_html=1&skip_disambig=1`,
-      { signal: t.signal, headers: { 'User-Agent': 'AutoReviewAI/1.0' } },
-    )
+    const res = await fetch(`https://s.jina.ai/?q=${encodeURIComponent(q)}`, {
+      headers: {
+        Accept: 'application/json',
+        'X-Respond-With': 'no-content',
+        Authorization: `Bearer ${process.env.JINA_API_KEY}`,
+      },
+      signal: t.signal,
+    })
     if (!res.ok) return []
     const data = await res.json()
-    const out: WebResult[] = []
-
-    if (data?.AbstractText) {
-      out.push({
-        title: String(data.Heading || q).slice(0, 200),
-        snippet: String(data.AbstractText).slice(0, 500),
-        url: String(data.AbstractURL || ''),
-      })
-    }
-
-    const flatten = (topics: any[]): void => {
-      for (const item of topics || []) {
-        if (out.length >= maxResults) break
-        if (item?.Topics) { flatten(item.Topics); continue }
-        if (item?.Text && item?.FirstURL) {
-          out.push({
-            title: String(item.Text).split(' - ')[0].slice(0, 200),
-            snippet: String(item.Text).slice(0, 500),
-            url: String(item.FirstURL),
-          })
-        }
-      }
-    }
-    flatten(data?.RelatedTopics || [])
-
-    return out.filter((r) => r.url).slice(0, maxResults)
+    const items: any[] = Array.isArray(data?.data) ? data.data : []
+    const results: WebResult[] = items.slice(0, maxResults).map((r: any) => ({
+      title: String(r?.title || '').slice(0, 200),
+      snippet: String(r?.description || r?.content || '').slice(0, 500),
+      url: String(r?.url || ''),
+    }))
+    return results.filter((r) => r.url)
   } finally {
     t.done()
   }
@@ -170,10 +257,10 @@ async function duckduckgo(q: string, maxResults: number): Promise<WebResult[]> {
 /** Format results as a compact context block for the model. */
 export function formatSearchContext(query: string, results: WebResult[]): string {
   if (!results.length) {
-    return `Web search for "${query}" returned no usable results. Answer from your own knowledge and say results were unavailable if the question needs live data.`
+    return `Web search for "${query}" returned no usable results. Answer from your own knowledge and tell the user that live results were unavailable.`
   }
   const lines = results
     .map((r, i) => `[${i + 1}] ${r.title}\n${r.snippet}\nSource: ${r.url}`)
     .join('\n\n')
-  return `Live web search results for "${query}" (use these to answer, and cite sources as [1], [2] with their URLs):\n\n${lines}`
+  return `Live web search results for "${query}" (use these to answer, and cite sources inline as [1], [2] with their URLs at the end):\n\n${lines}`
 }

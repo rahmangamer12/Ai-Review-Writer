@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic'
 import {
   User, Bot, Clock, Copy, Volume2, VolumeX, RefreshCw,
   Check, X, Smartphone, Ghost, Sparkles, Share2, Edit3,
-  ThumbsUp, ThumbsDown, MoreHorizontal, FileText, Image, Square
+  ThumbsUp, ThumbsDown, MoreHorizontal, FileText, Image, Square, Globe
 } from 'lucide-react'
 import type { Message } from './types'
 
@@ -372,10 +372,16 @@ export default function ChatMessages({
                 <span className="text-white/35 whitespace-nowrap">{formatTime(msg.timestamp)}</span>
                 {msg.model && msg.role === 'assistant' && (
                   <>
-                    <span className="text-white/20 hidden sm:inline">•</span>
-                    <span className="hidden sm:inline px-1.5 py-0.5 bg-violet-500/20 text-violet-400 rounded text-[9px] whitespace-nowrap truncate max-w-[100px]">
-                      {msg.model}
-                    </span>
+                    <span className="text-white/20">•</span>
+                    {msg.model === 'Web Search' ? (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-cyan-500/20 text-cyan-300 rounded text-[9px] whitespace-nowrap">
+                        <Globe className="w-2.5 h-2.5" /> Web Search
+                      </span>
+                    ) : (
+                      <span className="px-1.5 py-0.5 bg-violet-500/20 text-violet-400 rounded text-[9px] whitespace-nowrap truncate max-w-[120px]">
+                        {msg.model}
+                      </span>
+                    )}
                   </>
                 )}
               </div>
