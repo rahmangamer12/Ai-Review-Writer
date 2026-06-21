@@ -209,16 +209,40 @@ CRITICAL INSTRUCTIONS FOR YOU:
     // For search-intent messages, fetch live web results and give them to the
     // model so it can answer with fresh context and cite sources.
     let searchContext: string | null = null;
+    let searchHits = 0;
     if (searchIntent) {
       const results = await searchWeb(userText, 5).catch(() => []);
+      searchHits = results.length;
       searchContext = formatSearchContext(userText, results);
     }
 
-    const modelMessages = [
-      godTierPrompt,
-      ...(searchContext ? [{ role: 'system', content: searchContext }] : []),
-      ...formattedMessages.filter((m: any) => m.role !== 'system'),
-    ];
+    // Build the conversation (drop any client-sent system messages).
+    const convo = formattedMessages.filter((m: any) => m.role !== 'system');
+
+    // Inject the live results DIRECTLY into the last user turn rather than as a
+    // separate system message. Lighter chat models (Agnes) reliably read
+    // user-turn content but routinely ignore extra system messages — which is
+    // why the model kept denying real, newly-released things from stale
+    // training. Putting the results in the user's own message removes that
+    // escape hatch. (Search never fires when an image is present, so the last
+    // user turn here is always plain text.)
+    if (searchContext) {
+      for (let i = convo.length - 1; i >= 0; i--) {
+        if (convo[i].role === 'user') {
+          const original = convo[i].content;
+          const origText = typeof original === 'string'
+            ? original
+            : Array.isArray(original) ? original.map((p: any) => p?.text || '').join(' ') : String(original || '');
+          convo[i] = {
+            role: 'user',
+            content: `${searchContext}\n\n———\nUsing ONLY the live web results above (they are current and override your training data), answer this and cite sources as [1], [2]:\n\n${origText}`,
+          };
+          break;
+        }
+      }
+    }
+
+    const modelMessages = [godTierPrompt, ...convo];
     const defaultMaxOutputTokens = 1400;
     const maxOutputTokens = Math.min(
       requestedMaxTokens ?? defaultMaxOutputTokens,
@@ -282,6 +306,7 @@ CRITICAL INSTRUCTIONS FOR YOU:
         'x-model-used': selectedModel,
         'x-auto-switched': autoSwitched ? '1' : '0',
         'x-search-used': searchIntent ? '1' : '0',
+        'x-search-hits': String(searchHits),
         'x-credits-per-prompt': '1'
        }
     });
