@@ -22,6 +22,8 @@ const isPublicRoute = createRouteMatcher([
   '/api/platforms/facebook/callback(.*)',
   '/privacy',
   '/terms',
+  '/refund',
+  '/pricing',
   '/faq',
   '/contact',
   '/docs',
