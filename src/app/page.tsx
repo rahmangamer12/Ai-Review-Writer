@@ -287,9 +287,11 @@ export default async function LandingPage() {
           <div>
             <h4 className="mb-4 font-semibold text-white">Company</h4>
             <ul className="space-y-3 text-sm text-white/40">
+              <li><Link href="/pricing" className="transition-colors hover:text-white">Pricing</Link></li>
               <li><Link href="/contact" className="transition-colors hover:text-white">Contact Us</Link></li>
               <li><Link href="/privacy" className="transition-colors hover:text-white">Privacy Policy</Link></li>
               <li><Link href="/terms" className="transition-colors hover:text-white">Terms of Service</Link></li>
+              <li><Link href="/refund" className="transition-colors hover:text-white">Refund Policy</Link></li>
             </ul>
           </div>
           <div className="col-span-2 md:col-span-1">
