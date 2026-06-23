@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { lemonSqueezy } from '@/lib/lemonsqueezy'
+import { polar } from '@/lib/polar'
 import { auth } from '@clerk/nextjs/server'
 import { withCSRFProtection } from '@/lib/csrfProtection'
 import { rateLimit, RATE_LIMITS, getRateLimitHeaders } from '@/lib/ratelimit'
@@ -33,6 +34,31 @@ async function checkoutHandler(request: NextRequest) {
     }
 
     const paidPlan = plan as 'starter' | 'growth' | 'business'
+    const cycle = billingCycle === 'yearly' ? 'yearly' : 'monthly'
+
+    // Prefer Polar when configured (Merchant of Record). Falls back to
+    // LemonSqueezy below only when Polar is not set up.
+    if (polar.isConfigured()) {
+      const polarCheckout = await polar.createCheckout(paidPlan, cycle, {
+        userId,
+        userEmail,
+        userName,
+      })
+
+      if (!polarCheckout) {
+        return NextResponse.json(
+          { error: 'Failed to create checkout session. Please try again shortly.' },
+          { status: 502 }
+        )
+      }
+
+      return NextResponse.json({
+        success: true,
+        checkoutUrl: polarCheckout.url,
+        checkoutId: polarCheckout.id,
+        provider: 'polar',
+      })
+    }
 
     // Check if Lemon Squeezy is configured
     if (!lemonSqueezy.isConfigured()) {
