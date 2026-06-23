@@ -95,6 +95,9 @@ export const polar = {
           products: [productId],
           success_url: `${appUrl()}/dashboard?checkout_id={CHECKOUT_ID}&upgraded=1`,
           ...(opts.userEmail ? { customer_email: opts.userEmail } : {}),
+          // Link the Polar customer to our Clerk userId so we can later open the
+          // customer portal (manage/cancel) by external id.
+          customer_external_id: opts.userId,
           metadata: {
             userId: opts.userId,
             plan,
@@ -165,6 +168,39 @@ export const polar = {
       }
     }
     return false
+  },
+
+  /**
+   * Create a customer portal session for a user (by Clerk userId / external id).
+   * Returns the portal URL where the customer can manage or cancel their
+   * subscription. Returns null if the customer doesn't exist yet (never paid)
+   * or the API call fails.
+   */
+  async createPortalUrl(userId: string): Promise<string | null> {
+    if (!this.isConfigured()) return null
+    try {
+      const res = await fetch(`${POLAR_API}/customer-sessions/`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token()}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ customer_external_id: userId }),
+      })
+      if (!res.ok) {
+        // 404 / 422 here usually just means "no Polar customer yet" (user hasn't
+        // purchased through Polar). Treat as no-portal rather than an error.
+        if (res.status !== 404 && res.status !== 422) {
+          console.error('[Polar] portal session failed:', res.status, await res.text().catch(() => ''))
+        }
+        return null
+      }
+      const data = await res.json()
+      return data?.customer_portal_url || null
+    } catch (e) {
+      console.error('[Polar] portal session error:', e)
+      return null
+    }
   },
 
   /** Pull userId/plan/billingCycle from a webhook object's various metadata spots. */

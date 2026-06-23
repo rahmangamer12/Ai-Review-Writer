@@ -61,6 +61,7 @@ export default function SubscriptionPage() {
   const [loading, setLoading] = useState<string | null>(null)
   const [currentCredits, setCurrentCredits] = useState<number>(0)
   const [error, setError] = useState<string | null>(null)
+  const [portalLoading, setPortalLoading] = useState(false)
   const { warning: toastWarning } = useToast()
 
 
@@ -133,6 +134,22 @@ export default function SubscriptionPage() {
   }
 
 
+  const openBillingPortal = async () => {
+    setPortalLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/billing/portal', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok || !data.url) {
+        throw new Error(data.error || 'Could not open the billing portal.')
+      }
+      window.location.href = data.url
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not open the billing portal.')
+      setPortalLoading(false)
+    }
+  }
+
   const getYearlySavings = (plan: SubscriptionPlan) => {
     return Math.max(0, plan.monthlyPrice * 12 - plan.yearlyPrice)
   }
@@ -189,6 +206,24 @@ export default function SubscriptionPage() {
                 <span className="text-white/40">|</span>
                 <span>{currentCredits} credits remaining</span>
               </motion.div>
+            )}
+
+            {/* Manage / cancel subscription (paid users) */}
+            {currentPlan !== 'free' && (
+              <div className="mb-6">
+                <button
+                  onClick={openBillingPortal}
+                  disabled={portalLoading}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/15 rounded-xl text-white/80 text-sm transition-colors disabled:opacity-60"
+                >
+                  {portalLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <CreditCard className="w-4 h-4" />
+                  )}
+                  Manage or cancel subscription
+                </button>
+              </div>
             )}
 
             {/* Billing Toggle */}
