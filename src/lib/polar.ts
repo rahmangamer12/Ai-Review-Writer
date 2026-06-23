@@ -24,15 +24,15 @@ type Cycle = 'monthly' | 'yearly'
 const PRODUCTS: Record<PaidPlan, { monthly?: string; yearly?: string }> = {
   starter: {
     monthly: process.env.POLAR_PRODUCT_STARTER_MONTHLY || '99db461b-9669-4df7-ae00-aa8c7cca797d',
-    yearly: process.env.POLAR_PRODUCT_STARTER_YEARLY,
+    yearly: process.env.POLAR_PRODUCT_STARTER_YEARLY || '9e94ed84-6900-447c-b639-b52d7a25384d',
   },
   growth: {
     monthly: process.env.POLAR_PRODUCT_GROWTH_MONTHLY || 'd65ea916-24c3-4ce4-ae66-a8baa0c7e4ea',
-    yearly: process.env.POLAR_PRODUCT_GROWTH_YEARLY,
+    yearly: process.env.POLAR_PRODUCT_GROWTH_YEARLY || 'e0255d14-a7f7-48d1-9a2c-95d65bac1cd4',
   },
   business: {
     monthly: process.env.POLAR_PRODUCT_BUSINESS_MONTHLY || '591eb536-2ca8-4190-993a-b9c3d0245b81',
-    yearly: process.env.POLAR_PRODUCT_BUSINESS_YEARLY,
+    yearly: process.env.POLAR_PRODUCT_BUSINESS_YEARLY || '1580e475-be21-41ed-8e4a-2ce79c413d05',
   },
 }
 
