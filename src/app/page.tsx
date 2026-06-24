@@ -287,6 +287,7 @@ export default async function LandingPage() {
           <div>
             <h4 className="mb-4 font-semibold text-white">Company</h4>
             <ul className="space-y-3 text-sm text-white/40">
+              <li><Link href="/free-reply" className="transition-colors hover:text-white">Free Reply Generator</Link></li>
               <li><Link href="/pricing" className="transition-colors hover:text-white">Pricing</Link></li>
               <li><Link href="/contact" className="transition-colors hover:text-white">Contact Us</Link></li>
               <li><Link href="/privacy" className="transition-colors hover:text-white">Privacy Policy</Link></li>

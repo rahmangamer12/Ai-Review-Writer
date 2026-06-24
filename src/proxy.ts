@@ -19,6 +19,8 @@ const isPublicRoute = createRouteMatcher([
   '/api/waitlist(.*)',
   '/api/contact',
   '/api/feedback',
+  '/api/free-reply',
+  '/free-reply',
   '/api/reviews/generate-reply',  // Chrome extension uses shared secret
   '/api/platforms/google/callback(.*)',
   '/api/platforms/facebook/callback(.*)',
