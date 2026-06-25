@@ -86,29 +86,30 @@ export default async function LandingPage() {
           </div>
 
           <h1 className="animate-fade-in-up animation-delay-100 text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-6xl lg:text-7xl">
-            Turn customer reviews into
+            Reply to every customer review
             <span className="block bg-gradient-to-r from-violet-400 via-fuchsia-400 to-cyan-400 bg-clip-text text-transparent">
-              repeat revenue, with AI
+              in seconds, not hours
             </span>
           </h1>
 
           <p className="animate-fade-in-up animation-delay-200 mt-7 max-w-2xl text-lg leading-relaxed text-white/55 sm:text-xl">
-            Track reviews, understand sentiment, and draft better replies from one simple workspace —
-            built for restaurants, clinics, salons, repair shops, and local service teams.
+            Stop writing every reply by hand. AI drafts a personalized, on-brand response for each
+            Google &amp; Facebook review — you approve and post. Built for restaurants, clinics,
+            salons, repair shops, and local service teams.
           </p>
 
           <div className="animate-fade-in-up animation-delay-300 mt-9 flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row">
-            <Link href="/subscription" className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-7 py-4 font-semibold text-black shadow-[0_0_50px_-12px_rgba(255,255,255,0.4)] transition-transform hover:scale-[1.03] active:scale-95 sm:w-auto">
-              Start managing reviews
+            <Link href="/free-reply" className="group flex w-full items-center justify-center gap-2 rounded-2xl bg-white px-7 py-4 font-semibold text-black shadow-[0_0_50px_-12px_rgba(255,255,255,0.4)] transition-transform hover:scale-[1.03] active:scale-95 sm:w-auto">
+              Try it free — no sign-up
               <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
             </Link>
-            <Link href="/dashboard" className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-7 py-4 font-medium text-white transition-colors hover:bg-white/10 active:scale-95 sm:w-auto">
-              View the dashboard
+            <Link href="/subscription" className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/5 px-7 py-4 font-medium text-white transition-colors hover:bg-white/10 active:scale-95 sm:w-auto">
+              See plans
             </Link>
           </div>
 
           <div className="animate-fade-in-up animation-delay-400 mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-sm text-white/45">
-            <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Best for Google review workflows</span>
+            <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> Reply to all your reviews at once</span>
             <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> AI drafts stay editable</span>
             <span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" /> No credit card to start</span>
           </div>
